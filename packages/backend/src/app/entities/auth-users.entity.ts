@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
-import { UserRoleEnum } from '@org/shared-models';
+import { UserRoleEnum } from '@adminvault/shared-models';
 
 @Entity('auth_users')
 export class AuthUsersEntity extends AbstractEntity {
@@ -22,7 +22,7 @@ export class AuthUsersEntity extends AbstractEntity {
   @Column('text', { name: 'password_hash', nullable: false, comment: 'Hashed password' })
   passwordHash: string;
 
-  @Column('enum', { name: 'user_role', enum: UserRoleEnum, default: UserRoleEnum.USER,nullable: false, comment: 'User role in the system' })
+  @Column('enum', { name: 'user_role', enum: UserRoleEnum, default: UserRoleEnum.USER, nullable: false, comment: 'User role in the system' })
   userRole: UserRoleEnum;
 
   @Column('boolean', { name: 'status', default: true, nullable: false, comment: 'User active status' })

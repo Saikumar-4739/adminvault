@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
-import { AdminRoleEnum, AdminStatusEnum } from '@org/shared-models';
+import { AdminRoleEnum, AdminStatusEnum } from '@adminvault/shared-models';
 
 @Entity('it_admin')
 export class ItAdminEntity extends AbstractEntity {

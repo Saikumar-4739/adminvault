@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { CommentByEnum } from '@org/shared-models';
+import { CommentByEnum } from '@adminvault/shared-models';
 
 @Entity('ticket_comments')
 export class TicketCommentsEntity {

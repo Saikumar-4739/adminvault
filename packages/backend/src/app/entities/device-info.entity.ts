@@ -1,12 +1,12 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { DeviceTypeEnum } from '@org/shared-models';
+import { DeviceTypeEnum } from '@adminvault/shared-models';
 
 @Entity('device_info')
 export class DeviceInfoEntity {
   @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for device info' })
   id: number;
 
-  @Column('enum', { name: 'device_type', enum: DeviceTypeEnum, nullable: false, comment: 'Type of device'})
+  @Column('enum', { name: 'device_type', enum: DeviceTypeEnum, nullable: false, comment: 'Type of device' })
   deviceType: DeviceTypeEnum;
 
   @Column('varchar', { name: 'device_name', length: 255, nullable: false, comment: 'Name of the device' })

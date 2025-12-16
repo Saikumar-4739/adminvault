@@ -3,7 +3,15 @@ import { DataSource } from 'typeorm';
 import { AuthUsersRepository } from '../../repository/auth-users.repository';
 import { AuthUsersEntity } from '../../entities/auth-users.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
-import { ErrorResponse } from '@adminvault/backend-utils';
+import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
+import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel } from '@adminvault/shared-models';
+import { UserRoleEnum } from '@adminvault/shared-models';
+import * as bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken';
+
+
+const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
+const REFRESH_SECRET_KEY = "d9f8a1ec2d6826db2f24ea9f8a1d9bda26f054de88bb90b63934561f7225ab";
 
 @Injectable()
 export class AuthUsersService {
@@ -12,105 +20,149 @@ export class AuthUsersService {
         private authUsersRepo: AuthUsersRepository
     ) { }
 
-    async findAll(): Promise<AuthUsersEntity[]> {
+    //Create User
+    async registerUser(reqModel: RegisterUserModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource)
         try {
-            return await this.authUsersRepo.find();
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    async findOne(id: number): Promise<AuthUsersEntity> {
-        try {
-            const user = await this.authUsersRepo.findOne({ where: { id } });
-            if (!user) {
-                throw new ErrorResponse(0, 'User not found');
+            const existingUser = this.authUsersRepo.find({ where: { email: reqModel.email } })
+            if (!existingUser) {
+                throw new ErrorResponse(0, "Email already exists")
             }
-            return user;
-        } catch (error) {
-            throw error;
-        }
-    }
 
-    async findByEmail(email: string): Promise<AuthUsersEntity> {
-        try {
-            const user = await this.authUsersRepo.findOne({ where: { email } });
-            if (!user) {
-                throw new ErrorResponse(0, 'User not found with this email');
+            if (!reqModel.companyId) {
+                throw new ErrorResponse(0, "Company ID is required")
             }
-            return user;
-        } catch (error) {
-            throw error;
+
+            if (reqModel.password.length < 8) {
+                throw new ErrorResponse(0, "Password must be at least 8 characters long")
+            }
+
+            const passwordHash = await bcrypt.hash(reqModel.password, 10)
+
+            await transManager.startTransaction()
+            const newUser = new AuthUsersEntity()
+            newUser.email = reqModel.email
+            newUser.passwordHash = passwordHash
+            newUser.fullName = reqModel.fullName
+            newUser.phNumber = reqModel.phNumber
+            newUser.companyId = reqModel.companyId
+            newUser.userRole = UserRoleEnum.ADMIN
+            newUser.status = true
+            newUser.createdAt = new Date()
+            newUser.updatedAt = new Date()
+            const save = await transManager.getRepository(AuthUsersEntity).save(newUser)
+            await transManager.completeTransaction()
+            return new GlobalResponse(true, 0, "User Created Successfully")
+        } catch (err) {
+            await transManager.releaseTransaction()
+            throw err
         }
     }
 
-    async create(dto: any): Promise<AuthUsersEntity> {
+    //Helper
+    private generateAccessToken(userId: string): string {
+        return jwt.sign({ userId }, SECRET_KEY, { expiresIn: '1h' });
+    }
+
+    //Helper
+    private generateRefreshToken(userId: string): string {
+        return jwt.sign({ userId }, REFRESH_SECRET_KEY, { expiresIn: '7d' });
+    }
+
+    //login User As per Role Based
+    async loginUser(reqModel: LoginUserModel): Promise<LoginResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            await transManager.startTransaction();
-
-            // Check if email already exists
-            const existingUser = await this.authUsersRepo.findOne({ where: { email: dto.email } });
-            if (existingUser) {
-                throw new ErrorResponse(0, 'User with this email already exists');
+            const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
+            if (!existingUser || existingUser.length === 0) {
+                throw new ErrorResponse(0, "Email does not exist");
             }
 
-            const entity = this.authUsersRepo.create(dto);
-            const savedEntity = await transManager.getRepository(AuthUsersEntity).save(entity);
+            const user = existingUser[0];
+            const isPasswordMatch = await bcrypt.compare(reqModel.password, user.passwordHash);
+            if (!isPasswordMatch) {
+                throw new ErrorResponse(0, "Invalid password");
+            }
 
-            await transManager.completeTransaction();
-            return savedEntity;
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw error;
+            // Generate tokens
+            const accessToken = this.generateAccessToken(user.email);
+            const refreshToken = this.generateRefreshToken(user.email);
+            const userInfo = new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole);
+            return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
+        } catch (err) {
+            throw err;
         }
     }
 
-    async update(id: number, dto: any): Promise<AuthUsersEntity> {
+    //logOut User
+    async logOutUser(reqModel: LogoutUserModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
+            if (!existingUser || existingUser.length === 0) {
+                throw new ErrorResponse(0, "Email does not exist");
+            }
             await transManager.startTransaction();
-
-            const existing = await this.findOne(id);
-            if (!existing) {
-                throw new ErrorResponse(0, 'User not found');
-            }
-
-            // If email is being updated, check for duplicates
-            if (dto.email && dto.email !== existing.email) {
-                const emailExists = await this.authUsersRepo.findOne({ where: { email: dto.email } });
-                if (emailExists) {
-                    throw new ErrorResponse(0, 'Email already in use');
-                }
-            }
-
-            await transManager.getRepository(AuthUsersEntity).update(id, dto);
-            const updated = await transManager.getRepository(AuthUsersEntity).findOne({ where: { id } });
-
+            await this.authUsersRepo.update({ email: reqModel.email }, { lastLogin: Date.now() })
             await transManager.completeTransaction();
-            return updated;
-        } catch (error) {
+            return new GlobalResponse(true, 0, "User Logged Out Successfully");
+        } catch (err) {
             await transManager.releaseTransaction();
-            throw error;
+            throw err;
         }
     }
 
-    async remove(id: number): Promise<void> {
+    //update user
+    async updateUser(reqModel: UpdateUserModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            await transManager.startTransaction();
-
-            const existing = await this.findOne(id);
-            if (!existing) {
-                throw new ErrorResponse(0, 'User not found');
+            const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
+            if (!existingUser) {
+                throw new ErrorResponse(0, "Email does not exist");
             }
-
-            await transManager.getRepository(AuthUsersEntity).softDelete(id);
-
+            await transManager.startTransaction();
+            await this.authUsersRepo.update({ email: reqModel.email }, { fullName: reqModel.fullName, phNumber: reqModel.phNumber })
             await transManager.completeTransaction();
-        } catch (error) {
+            return new GlobalResponse(true, 0, "User Logged Out Successfully");
+        } catch (err) {
             await transManager.releaseTransaction();
-            throw error;
+            throw err;
         }
     }
+
+    //delete user
+    async deleteUser(reqModel: DeleteUserModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
+            if (!existingUser) {
+                throw new ErrorResponse(0, "Email does not exist");
+            }
+            await transManager.startTransaction();
+            await this.authUsersRepo.delete({ email: reqModel.email })
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 0, "User Logged Out Successfully");
+        } catch (err) {
+            await transManager.releaseTransaction();
+            throw err;
+        }
+    }
+
+    //get all users
+    async getAllUsers(reqModel: CompanyIdRequestModel): Promise<GetAllUsersModel> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            const existingUser = await this.authUsersRepo.find({ where: { companyId: reqModel.id } });
+            if (!existingUser) {
+                throw new ErrorResponse(0, "Email does not exist");
+            }
+
+            const users = existingUser.map(user => new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole));
+            return new GetAllUsersModel(true, 0, "User Logged Out Successfully", users);
+        } catch (err) {
+            await transManager.releaseTransaction();
+            throw err;
+        }
+    }
+
 }

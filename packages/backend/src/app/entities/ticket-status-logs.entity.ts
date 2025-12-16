@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
-import { TicketStatusEnum } from '@org/shared-models';
+import { TicketStatusEnum } from '@adminvault/shared-models';
 
 @Entity('ticket_status_logs')
 export class TicketStatusLogsEntity {

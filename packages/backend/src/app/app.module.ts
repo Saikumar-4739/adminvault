@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { DatabaseModule } from '../database/database.module';
 import { CompanyInfoModule } from './features/company-info/company-info.module';
 import { AuthUsersModule } from './features/auth-users/auth-users.module';
 import { EmployeesModule } from './features/employees/employees.module';
@@ -17,30 +21,30 @@ import { EmailAccountsModule } from './features/email-accounts/email-accounts.mo
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '3306'),
-      username: process.env.DB_USERNAME || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_DATABASE || 'adminvault',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
-      logging: process.env.NODE_ENV !== 'production',
-      ssl: process.env.DB_HOST?.includes('aivencloud.com') ? { rejectUnauthorized: false } : false,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
     }),
-    CompanyInfoModule,
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: join(process.cwd(), 'dist/backend/schema.gql'),
+      sortSchema: true,
+      playground: true,
+      introspection: true,
+    }),
+    DatabaseModule,
+    // CompanyInfoModule,
     AuthUsersModule,
-    EmployeesModule,
-    EmailInfoModule,
-    DeviceInfoModule,
-    ItAdminModule,
-    TicketsModule,
-    AssetInfoModule,
-    AssetAssignModule,
-    TicketCommentsModule,
-    TicketStatusLogsModule,
-    EmailAccountsModule,
+    // EmployeesModule,
+    // EmailInfoModule,
+    // DeviceInfoModule,
+    // ItAdminModule,
+    // TicketsModule,
+    // AssetInfoModule,
+    // AssetAssignModule,
+    // TicketCommentsModule,
+    // TicketStatusLogsModule,
+    // EmailAccountsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

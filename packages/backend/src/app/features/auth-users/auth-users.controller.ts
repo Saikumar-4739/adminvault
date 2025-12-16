@@ -1,58 +1,67 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { returnException } from '@adminvault/backend-utils';
+import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
+import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel } from '@adminvault/shared-models';
 
 @ApiTags('Auth Users')
 @Controller('auth-users')
 export class AuthUsersController {
     constructor(
         private service: AuthUsersService
-    ) {}
+    ) { }
 
-    @Get()
-    async findAll(@Body() req: any): Promise<any> {
+    @Post('registerUser')
+    async registerUser(@Body() reqModel: RegisterUserModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findAll();
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.registerUser(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<any> {
+    @Post('loginUser')
+    async loginUser(@Body() reqModel: LoginUserModel): Promise<LoginResponseModel> {
         try {
-            return await this.service.findOne(id);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.loginUser(reqModel);
+        } catch (error) {
+            return returnException(LoginResponseModel, error);
         }
     }
 
-    @Post()
-    async create(@Body() dto: any): Promise<any> {
+    @Post('logOutUser')
+    async logOutUser(@Body() reqModel: LogoutUserModel): Promise<GlobalResponse> {
         try {
-            return await this.service.create(dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.logOutUser(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Patch(':id')
-    async update(@Param('id') id: number, @Body() dto: any): Promise<any> {
+    @Post('updateUser')
+    async updateUser(@Body() reqModel: UpdateUserModel): Promise<GlobalResponse> {
         try {
-            return await this.service.update(id, dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.updateUser(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<any> {
+    @Post('deleteUser')
+    async deleteUser(@Body() reqModel: DeleteUserModel): Promise<GlobalResponse> {
         try {
-            await this.service.remove(id);
-            return { success: true, message: 'User deleted successfully' };
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.deleteUser(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('getAllUsers')
+    async getAllUsers(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllUsersModel> {
+        try {
+            return await this.service.getAllUsers(reqModel);
+        } catch (error) {
+            return returnException(GetAllUsersModel, error);
         }
     }
 }

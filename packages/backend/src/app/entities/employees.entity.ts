@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
-import { EmployeeStatusEnum, DepartmentEnum } from '@org/shared-models';
+import { EmployeeStatusEnum, DepartmentEnum } from '@adminvault/shared-models';
 
 @Entity('employees')
 export class EmployeesEntity extends AbstractEntity {
@@ -22,7 +22,7 @@ export class EmployeesEntity extends AbstractEntity {
   @Column('varchar', { name: 'ph_number', length: 20, nullable: true, comment: 'Employee phone number' })
   phNumber: string;
 
-  @Column('enum', { name: 'emp_status', enum: EmployeeStatusEnum, default: EmployeeStatusEnum.ACTIVE,nullable: false, comment: 'Employee employment status' })
+  @Column('enum', { name: 'emp_status', enum: EmployeeStatusEnum, default: EmployeeStatusEnum.ACTIVE, nullable: false, comment: 'Employee employment status' })
   empStatus: EmployeeStatusEnum;
 
   @Column('decimal', { name: 'billing_amount', precision: 10, scale: 2, nullable: true, comment: 'Employee billing amount' })

@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { EmailTypeEnum, EmailStatusEnum } from '@org/shared-models';
+import { EmailTypeEnum, EmailStatusEnum } from '@adminvault/shared-models';
 
 @Entity('email_accounts')
 export class EmailAccountsEntity {

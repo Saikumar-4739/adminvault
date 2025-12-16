@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { EmailTypeEnum, DepartmentEnum } from '@org/shared-models';
+import { EmailTypeEnum, DepartmentEnum } from '@adminvault/shared-models';
 
 @Entity('email_info')
 export class EmailInfoEntity {
@@ -9,10 +9,10 @@ export class EmailInfoEntity {
   @Column('bigint', { name: 'company_id', nullable: false, comment: 'Reference to company_info table' })
   companyId: number;
 
-  @Column('enum', { name: 'email_type', enum: EmailTypeEnum, nullable: false, comment: 'Type of email'})
+  @Column('enum', { name: 'email_type', enum: EmailTypeEnum, nullable: false, comment: 'Type of email' })
   emailType: EmailTypeEnum;
 
-  @Column('enum', { name: 'department', enum: DepartmentEnum, nullable: false, comment: 'Department associated with email'})
+  @Column('enum', { name: 'department', enum: DepartmentEnum, nullable: false, comment: 'Department associated with email' })
   department: DepartmentEnum;
 
   @Column('varchar', { name: 'email', length: 255, nullable: false, comment: 'Email address' })

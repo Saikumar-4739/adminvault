@@ -1,2 +1,2 @@
-export * from './lib/shared-models.js';
-export * from './lib/enums/index.js';
+export * from './enums';
+export * from './auth';
