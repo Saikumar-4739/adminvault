@@ -1,0 +1,12 @@
+{
+    "watch": [
+        "src",
+        ".env"
+    ],
+    "ext": "ts,js,json,env",
+    "ignore": [
+        "src/**/*.spec.ts"
+    ],
+    "exec": "node ../../dist/backend/main.js",
+    "delay": 1000
+}
