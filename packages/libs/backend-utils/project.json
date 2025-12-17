@@ -1,0 +1,7 @@
+{
+    "name": "@adminvault/backend-utils",
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/libs/backend-utils/src",
+    "projectType": "library",
+    "tags": []
+}

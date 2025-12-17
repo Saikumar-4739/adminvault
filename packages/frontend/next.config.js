@@ -10,6 +10,11 @@ const nextConfig = {
   // Use this to set Nx-specific options
   // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
+  transpilePackages: [
+    '@adminvault/shared-services',
+    '@adminvault/shared-models',
+    '@adminvault/backend-utils',
+  ],
 };
 
 const plugins = [

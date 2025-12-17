@@ -1,0 +1,7 @@
+{
+    "name": "@adminvault/shared-models",
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/libs/shared-models/src",
+    "projectType": "library",
+    "tags": []
+}

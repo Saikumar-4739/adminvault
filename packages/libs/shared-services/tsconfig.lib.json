@@ -1,14 +1,40 @@
 {
-  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "dist",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2022",
+    "lib": [
+      "es2022",
+      "DOM"
+    ],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
-    "emitDeclarationOnly": false,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "importHelpers": true,
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@adminvault/shared-models": [
+        "../shared-models/src/index.ts"
+      ]
+    }
   },
-  "include": ["src/**/*.ts"],
-  "references": []
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../shared-models/tsconfig.lib.json"
+    }
+  ]
 }

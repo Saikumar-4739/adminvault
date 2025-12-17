@@ -1,58 +1,60 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { returnException } from '@adminvault/backend-utils';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AssetAssignService } from './asset-assign.service';
+import { CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
 
 @ApiTags('Asset Assign')
 @Controller('asset-assign')
 export class AssetAssignController {
-    constructor(
-        private service: AssetAssignService
-    ) { }
+    constructor(private service: AssetAssignService) { }
 
-    @Get()
-    async findAll(@Body() req: any): Promise<any> {
+    @Post('createAssignment')
+    @ApiBody({ type: CreateAssetAssignModel })
+    async createAssignment(@Body() reqModel: CreateAssetAssignModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findAll();
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.createAssignment(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<any> {
+    @Post('updateAssignment')
+    @ApiBody({ type: UpdateAssetAssignModel })
+    async updateAssignment(@Body() reqModel: UpdateAssetAssignModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findOne(id);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.updateAssignment(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Post()
-    async create(@Body() dto: any): Promise<any> {
+    @Post('getAssignment')
+    @ApiBody({ type: GetAssetAssignModel })
+    async getAssignment(@Body() reqModel: GetAssetAssignModel): Promise<GetAssetAssignByIdModel> {
         try {
-            return await this.service.create(dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAssignment(reqModel);
+        } catch (error) {
+            return returnException(GetAssetAssignByIdModel, error);
         }
     }
 
-    @Patch(':id')
-    async update(@Param('id') id: number, @Body() dto: any): Promise<any> {
+    @Post('getAllAssignments')
+    async getAllAssignments(): Promise<GetAllAssetAssignsModel> {
         try {
-            return await this.service.update(id, dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAllAssignments();
+        } catch (error) {
+            return returnException(GetAllAssetAssignsModel, error);
         }
     }
 
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<any> {
+    @Post('deleteAssignment')
+    @ApiBody({ type: DeleteAssetAssignModel })
+    async deleteAssignment(@Body() reqModel: DeleteAssetAssignModel): Promise<GlobalResponse> {
         try {
-            await this.service.remove(id);
-            return { success: true, message: 'Asset assignment deleted successfully' };
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.deleteAssignment(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

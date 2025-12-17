@@ -21,7 +21,12 @@
     "importHelpers": true,
     "types": [
       "node"
-    ]
+    ],
+    "paths": {
+      "@adminvault/backend-utils": [
+        "../backend-utils/src/index.ts"
+      ]
+    }
   },
   "include": [
     "src/**/*.ts"

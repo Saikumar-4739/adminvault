@@ -1,58 +1,61 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { returnException } from '@adminvault/backend-utils';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AssetInfoService } from './asset-info.service';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel } from '@adminvault/shared-models';
 
 @ApiTags('Asset Info')
 @Controller('asset-info')
 export class AssetInfoController {
-    constructor(
-        private service: AssetInfoService
-    ) { }
+    constructor(private service: AssetInfoService) { }
 
-    @Get()
-    async findAll(@Body() req: any): Promise<any> {
+    @Post('createAsset')
+    @ApiBody({ type: CreateAssetModel })
+    async createAsset(@Body() reqModel: CreateAssetModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findAll();
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.createAsset(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<any> {
+    @Post('updateAsset')
+    @ApiBody({ type: UpdateAssetModel })
+    async updateAsset(@Body() reqModel: UpdateAssetModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findOne(id);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.updateAsset(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Post()
-    async create(@Body() dto: any): Promise<any> {
+    @Post('getAsset')
+    @ApiBody({ type: GetAssetModel })
+    async getAsset(@Body() reqModel: GetAssetModel): Promise<GetAssetByIdModel> {
         try {
-            return await this.service.create(dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAsset(reqModel);
+        } catch (error) {
+            return returnException(GetAssetByIdModel, error);
         }
     }
 
-    @Patch(':id')
-    async update(@Param('id') id: number, @Body() dto: any): Promise<any> {
+    @Post('getAllAssets')
+    @ApiQuery({ name: 'companyId', required: false, type: Number })
+    async getAllAssets(@Query('companyId') companyId?: number): Promise<GetAllAssetsModel> {
         try {
-            return await this.service.update(id, dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAllAssets(companyId);
+        } catch (error) {
+            return returnException(GetAllAssetsModel, error);
         }
     }
 
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<any> {
+    @Post('deleteAsset')
+    @ApiBody({ type: DeleteAssetModel })
+    async deleteAsset(@Body() reqModel: DeleteAssetModel): Promise<GlobalResponse> {
         try {
-            await this.service.remove(id);
-            return { success: true, message: 'Asset deleted successfully' };
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.deleteAsset(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

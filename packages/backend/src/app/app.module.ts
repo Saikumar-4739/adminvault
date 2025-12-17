@@ -11,9 +11,6 @@ import { ItAdminModule } from './features/it-admin/it-admin.module';
 import { TicketsModule } from './features/tickets/tickets.module';
 import { AssetInfoModule } from './features/asset-info/asset-info.module';
 import { AssetAssignModule } from './features/asset-assign/asset-assign.module';
-import { TicketCommentsModule } from './features/ticket-comments/ticket-comments.module';
-import { TicketStatusLogsModule } from './features/ticket-status-logs/ticket-status-logs.module';
-import { EmailAccountsModule } from './features/email-accounts/email-accounts.module';
 import { DatabaseModule } from '../database/database.module';
 
 @Module({
@@ -23,18 +20,15 @@ import { DatabaseModule } from '../database/database.module';
       envFilePath: '.env',
     }),
     DatabaseModule,
-    // CompanyInfoModule,
+    CompanyInfoModule,
     AuthUsersModule,
-    // EmployeesModule,
-    // EmailInfoModule,
-    // DeviceInfoModule,
-    // ItAdminModule,
-    // TicketsModule,
-    // AssetInfoModule,
-    // AssetAssignModule,
-    // TicketCommentsModule,
-    // TicketStatusLogsModule,
-    // EmailAccountsModule,
+    EmployeesModule,
+    EmailInfoModule,
+    DeviceInfoModule,
+    ItAdminModule,
+    TicketsModule,
+    AssetInfoModule,
+    AssetAssignModule,
   ],
   controllers: [AppController],
   providers: [AppService],

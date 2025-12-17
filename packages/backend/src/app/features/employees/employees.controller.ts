@@ -1,67 +1,63 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { returnException } from '@adminvault/backend-utils';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { EmployeesService } from './employees.service';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesModel, GetEmployeeByIdModel } from '@adminvault/shared-models';
 
 @ApiTags('Employees')
 @Controller('employees')
 export class EmployeesController {
     constructor(
         private service: EmployeesService
-    ) {}
+    ) { }
 
-    @Get()
-    async findAll(@Body() req: any): Promise<any> {
+    @Post('createEmployee')
+    @ApiBody({ type: CreateEmployeeModel })
+    async createEmployee(@Body() reqModel: CreateEmployeeModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findAll();
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.createEmployee(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<any> {
+    @Post('updateEmployee')
+    @ApiBody({ type: UpdateEmployeeModel })
+    async updateEmployee(@Body() reqModel: UpdateEmployeeModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findOne(id);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.updateEmployee(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get('company/:companyId')
-    async findByCompany(@Param('companyId') companyId: number): Promise<any> {
+    @Post('getEmployee')
+    @ApiBody({ type: GetEmployeeModel })
+    async getEmployee(@Body() reqModel: GetEmployeeModel): Promise<GetEmployeeByIdModel> {
         try {
-            return await this.service.findByCompany(companyId);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getEmployee(reqModel);
+        } catch (error) {
+            return returnException(GetEmployeeByIdModel, error);
         }
     }
 
-    @Post()
-    async create(@Body() dto: any): Promise<any> {
+    @Get('getAllEmployees')
+    @ApiQuery({ name: 'companyId', required: false, type: Number })
+    async getAllEmployees(@Query('companyId') companyId?: number): Promise<GetAllEmployeesModel> {
         try {
-            return await this.service.create(dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAllEmployees(companyId);
+        } catch (error) {
+            return returnException(GetAllEmployeesModel, error);
         }
     }
 
-    @Patch(':id')
-    async update(@Param('id') id: number, @Body() dto: any): Promise<any> {
+    @Post('deleteEmployee')
+    @ApiBody({ type: DeleteEmployeeModel })
+    async deleteEmployee(@Body() reqModel: DeleteEmployeeModel): Promise<GlobalResponse> {
         try {
-            return await this.service.update(id, dto);
-        } catch (err) {
-            return returnException(Object, err);
-        }
-    }
-
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<any> {
-        try {
-            await this.service.remove(id);
-            return { success: true, message: 'Employee deleted successfully' };
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.deleteEmployee(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

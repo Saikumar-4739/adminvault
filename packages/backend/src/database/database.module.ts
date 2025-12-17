@@ -1,6 +1,19 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+// Import all entities explicitly for Webpack compatibility
+import { AuthUsersEntity } from '../app/entities/auth-users.entity';
+import { CompanyInfoEntity } from '../app/entities/company-info.entity';
+import { EmployeesEntity } from '../app/entities/employees.entity';
+import { EmailInfoEntity } from '../app/entities/email-info.entity';
+import { DeviceInfoEntity } from '../app/entities/device-info.entity';
+import { ItAdminEntity } from '../app/entities/it-admin.entity';
+import { TicketsEntity } from '../app/entities/tickets.entity';
+import { AssetInfoEntity } from '../app/entities/asset-info.entity';
+import { AssetAssignEntity } from '../app/entities/asset-assign.entity';
+import { TicketCommentsEntity } from '../app/entities/ticket-comments.entity';
+import { TicketStatusLogsEntity } from '../app/entities/ticket-status-logs.entity';
+import { EmailAccountsEntity } from '../app/entities/email-accounts.entity';
 
 @Module({
     imports: [
@@ -14,8 +27,21 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
                 username: configService.get<string>('DB_USERNAME', 'root'),
                 password: configService.get<string>('DB_PASSWORD', ''),
                 database: configService.get<string>('DB_DATABASE', 'adminvault'),
-                entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-                synchronize: configService.get<string>('NODE_ENV') !== 'production',
+                entities: [
+                    AuthUsersEntity,
+                    CompanyInfoEntity,
+                    EmployeesEntity,
+                    EmailInfoEntity,
+                    DeviceInfoEntity,
+                    ItAdminEntity,
+                    TicketsEntity,
+                    AssetInfoEntity,
+                    AssetAssignEntity,
+                    TicketCommentsEntity,
+                    TicketStatusLogsEntity,
+                    EmailAccountsEntity,
+                ],
+                synchronize: false,
                 logging: configService.get<string>('NODE_ENV') !== 'production',
                 ssl: configService.get<string>('DB_HOST')?.includes('aivencloud.com')
                     ? { rejectUnauthorized: false }

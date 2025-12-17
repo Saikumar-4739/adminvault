@@ -1,58 +1,62 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { returnException } from '@adminvault/backend-utils';
+import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { CompanyInfoService } from './company-info.service';
+import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, GetCompanyModel } from '@adminvault/shared-models';
 
 @ApiTags('Company Info')
 @Controller('company-info')
 export class CompanyInfoController {
     constructor(
         private service: CompanyInfoService
-    ) {}
+    ) { }
 
-    @Get()
-    async findAll(@Body() req: any): Promise<any> {
+    @Post('createCompany')
+    @ApiBody({ type: CreateCompanyModel })
+    async createCompany(@Body() reqModel: CreateCompanyModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findAll();
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.createCompany(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<any> {
+    @Post('updateCompany')
+    @ApiBody({ type: UpdateCompanyModel })
+    async updateCompany(@Body() reqModel: UpdateCompanyModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findOne(id);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.updateCompany(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Post()
-    async create(@Body() dto: any): Promise<any> {
+    @Post('getCompany')
+    @ApiBody({ type: GetCompanyModel })
+    async getCompany(@Body() reqModel: GetCompanyModel): Promise<GlobalResponse> {
         try {
-            return await this.service.create(dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getCompany(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Patch(':id')
-    async update(@Param('id') id: number, @Body() dto: any): Promise<any> {
+    @Post('getAllCompanies')
+    async getAllCompanies(): Promise<GlobalResponse> {
         try {
-            return await this.service.update(id, dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAllCompanies();
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<any> {
+    @Post('deleteCompany')
+    @ApiBody({ type: DeleteCompanyModel })
+    async deleteCompany(@Body() reqModel: DeleteCompanyModel): Promise<GlobalResponse> {
         try {
-            await this.service.remove(id);
-            return { success: true, message: 'Company deleted successfully' };
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.deleteCompany(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

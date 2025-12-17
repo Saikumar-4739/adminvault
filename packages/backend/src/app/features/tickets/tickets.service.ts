@@ -3,7 +3,8 @@ import { DataSource } from 'typeorm';
 import { TicketsRepository } from '../../repository/tickets.repository';
 import { TicketsEntity } from '../../entities/tickets.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
-import { ErrorResponse } from '@adminvault/backend-utils';
+import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel } from '@adminvault/shared-models';
 
 @Injectable()
 export class TicketsService {
@@ -12,76 +13,104 @@ export class TicketsService {
         private ticketsRepo: TicketsRepository
     ) { }
 
-    async findAll(): Promise<TicketsEntity[]> {
+    async createTicket(reqModel: CreateTicketModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            return await this.ticketsRepo.find();
+            if (!reqModel.ticketCode) {
+                throw new ErrorResponse(0, "Ticket code is required");
+            }
+            if (!reqModel.employeeId) {
+                throw new ErrorResponse(0, "Employee ID is required");
+            }
+            if (!reqModel.categoryEnum) {
+                throw new ErrorResponse(0, "Category is required");
+            }
+            if (!reqModel.priorityEnum) {
+                throw new ErrorResponse(0, "Priority is required");
+            }
+            if (!reqModel.subject) {
+                throw new ErrorResponse(0, "Subject is required");
+            }
+
+            const existing = await this.ticketsRepo.findOne({ where: { ticketCode: reqModel.ticketCode } });
+            if (existing) {
+                throw new ErrorResponse(0, "Ticket code already exists");
+            }
+
+            await transManager.startTransaction();
+            const entity = this.ticketsRepo.create(reqModel);
+            await transManager.getRepository(TicketsEntity).save(entity);
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 0, "Ticket created successfully");
         } catch (error) {
+            await transManager.releaseTransaction();
             throw error;
         }
     }
 
-    async findOne(id: number): Promise<TicketsEntity> {
+    async updateTicket(reqModel: UpdateTicketModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const ticket = await this.ticketsRepo.findOne({ where: { id } });
+            if (!reqModel.id) {
+                throw new ErrorResponse(0, "Ticket ID is required");
+            }
+            const existing = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
+            if (!existing) {
+                throw new ErrorResponse(0, "Ticket not found");
+            }
+
+            await transManager.startTransaction();
+            await transManager.getRepository(TicketsEntity).update(reqModel.id, reqModel);
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 0, "Ticket updated successfully");
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    async getTicket(reqModel: GetTicketModel): Promise<GetTicketByIdModel> {
+        try {
+            if (!reqModel.id) {
+                throw new ErrorResponse(0, "Ticket ID is required");
+            }
+            const ticket = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
             if (!ticket) {
-                throw new ErrorResponse(0, 'Ticket not found');
+                throw new ErrorResponse(0, "Ticket not found");
             }
-            return ticket;
+
+            const response = new TicketResponseModel(ticket.id, ticket.ticketCode, ticket.employeeId, ticket.categoryEnum, ticket.priorityEnum, ticket.subject, ticket.ticketStatus, ticket.assignAdminId, ticket.resolvedAt);
+            return new GetTicketByIdModel(true, 0, "Ticket retrieved successfully", response);
         } catch (error) {
             throw error;
         }
     }
 
-    async create(dto: any): Promise<TicketsEntity> {
-        const transManager = new GenericTransactionManager(this.dataSource);
+    async getAllTickets(): Promise<GetAllTicketsModel> {
         try {
-            await transManager.startTransaction();
-
-            const entity = this.ticketsRepo.create(dto);
-            const savedEntity = await transManager.getRepository(TicketsEntity).save(entity);
-
-            await transManager.completeTransaction();
-            return savedEntity;
+            const tickets = await this.ticketsRepo.find();
+            const responses = tickets.map(t => new TicketResponseModel(t.id, t.ticketCode, t.employeeId, t.categoryEnum, t.priorityEnum, t.subject, t.ticketStatus, t.assignAdminId, t.resolvedAt));
+            return new GetAllTicketsModel(true, 0, "Tickets retrieved successfully", responses);
         } catch (error) {
-            await transManager.releaseTransaction();
             throw error;
         }
     }
 
-    async update(id: number, dto: any): Promise<TicketsEntity> {
+    async deleteTicket(reqModel: DeleteTicketModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            await transManager.startTransaction();
-
-            const existing = await this.findOne(id);
+            if (!reqModel.id) {
+                throw new ErrorResponse(0, "Ticket ID is required");
+            }
+            const existing = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
-                throw new ErrorResponse(0, 'Ticket not found');
+                throw new ErrorResponse(0, "Ticket not found");
             }
 
-            await transManager.getRepository(TicketsEntity).update(id, dto);
-            const updated = await transManager.getRepository(TicketsEntity).findOne({ where: { id } });
-
-            await transManager.completeTransaction();
-            return updated;
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw error;
-        }
-    }
-
-    async remove(id: number): Promise<void> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
             await transManager.startTransaction();
-
-            const existing = await this.findOne(id);
-            if (!existing) {
-                throw new ErrorResponse(0, 'Ticket not found');
-            }
-
-            await transManager.getRepository(TicketsEntity).softDelete(id);
-
+            await transManager.getRepository(TicketsEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
+            return new GlobalResponse(true, 0, "Ticket deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();
             throw error;

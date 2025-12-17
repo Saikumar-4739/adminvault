@@ -1,67 +1,63 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { returnException } from '@adminvault/backend-utils';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { EmailInfoService } from './email-info.service';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetAllEmailInfoModel, GetEmailInfoByIdModel } from '@adminvault/shared-models';
 
 @ApiTags('Email Info')
 @Controller('email-info')
 export class EmailInfoController {
     constructor(
         private service: EmailInfoService
-    ) {}
+    ) { }
 
-    @Get()
-    async findAll(@Body() req: any): Promise<any> {
+    @Post('createEmailInfo')
+    @ApiBody({ type: CreateEmailInfoModel })
+    async createEmailInfo(@Body() reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findAll();
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.createEmailInfo(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<any> {
+    @Post('updateEmailInfo')
+    @ApiBody({ type: UpdateEmailInfoModel })
+    async updateEmailInfo(@Body() reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findOne(id);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.updateEmailInfo(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get('company/:companyId')
-    async findByCompany(@Param('companyId') companyId: number): Promise<any> {
+    @Post('getEmailInfo')
+    @ApiBody({ type: GetEmailInfoModel })
+    async getEmailInfo(@Body() reqModel: GetEmailInfoModel): Promise<GetEmailInfoByIdModel> {
         try {
-            return await this.service.findByCompany(companyId);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getEmailInfo(reqModel);
+        } catch (error) {
+            return returnException(GetEmailInfoByIdModel, error);
         }
     }
 
-    @Post()
-    async create(@Body() dto: any): Promise<any> {
+    @Get('getAllEmailInfo')
+    @ApiQuery({ name: 'companyId', required: false, type: Number })
+    async getAllEmailInfo(@Query('companyId') companyId?: number): Promise<GetAllEmailInfoModel> {
         try {
-            return await this.service.create(dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAllEmailInfo(companyId);
+        } catch (error) {
+            return returnException(GetAllEmailInfoModel, error);
         }
     }
 
-    @Patch(':id')
-    async update(@Param('id') id: number, @Body() dto: any): Promise<any> {
+    @Post('deleteEmailInfo')
+    @ApiBody({ type: DeleteEmailInfoModel })
+    async deleteEmailInfo(@Body() reqModel: DeleteEmailInfoModel): Promise<GlobalResponse> {
         try {
-            return await this.service.update(id, dto);
-        } catch (err) {
-            return returnException(Object, err);
-        }
-    }
-
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<any> {
-        try {
-            await this.service.remove(id);
-            return { success: true, message: 'Email deleted successfully' };
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.deleteEmailInfo(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

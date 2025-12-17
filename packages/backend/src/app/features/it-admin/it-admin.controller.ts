@@ -1,58 +1,60 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { returnException } from '@adminvault/backend-utils';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ItAdminService } from './it-admin.service';
+import { CreateItAdminModel, UpdateItAdminModel, DeleteItAdminModel, GetItAdminModel, GetAllItAdminsModel, GetItAdminByIdModel } from '@adminvault/shared-models';
 
 @ApiTags('IT Admin')
 @Controller('it-admin')
 export class ItAdminController {
-    constructor(
-        private service: ItAdminService
-    ) { }
+    constructor(private service: ItAdminService) { }
 
-    @Get()
-    async findAll(@Body() req: any): Promise<any> {
+    @Post('createAdmin')
+    @ApiBody({ type: CreateItAdminModel })
+    async createAdmin(@Body() reqModel: CreateItAdminModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findAll();
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.createAdmin(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<any> {
+    @Post('updateAdmin')
+    @ApiBody({ type: UpdateItAdminModel })
+    async updateAdmin(@Body() reqModel: UpdateItAdminModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findOne(id);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.updateAdmin(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Post()
-    async create(@Body() dto: any): Promise<any> {
+    @Post('getAdmin')
+    @ApiBody({ type: GetItAdminModel })
+    async getAdmin(@Body() reqModel: GetItAdminModel): Promise<GetItAdminByIdModel> {
         try {
-            return await this.service.create(dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAdmin(reqModel);
+        } catch (error) {
+            return returnException(GetItAdminByIdModel, error);
         }
     }
 
-    @Patch(':id')
-    async update(@Param('id') id: number, @Body() dto: any): Promise<any> {
+    @Get('getAllAdmins')
+    async getAllAdmins(): Promise<GetAllItAdminsModel> {
         try {
-            return await this.service.update(id, dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAllAdmins();
+        } catch (error) {
+            return returnException(GetAllItAdminsModel, error);
         }
     }
 
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<any> {
+    @Post('deleteAdmin')
+    @ApiBody({ type: DeleteItAdminModel })
+    async deleteAdmin(@Body() reqModel: DeleteItAdminModel): Promise<GlobalResponse> {
         try {
-            await this.service.remove(id);
-            return { success: true, message: 'IT Admin deleted successfully' };
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.deleteAdmin(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

@@ -1,58 +1,60 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { returnException } from '@adminvault/backend-utils';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { TicketsService } from './tickets.service';
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel } from '@adminvault/shared-models';
 
 @ApiTags('Tickets')
 @Controller('tickets')
 export class TicketsController {
-    constructor(
-        private service: TicketsService
-    ) { }
+    constructor(private service: TicketsService) { }
 
-    @Get()
-    async findAll(@Body() req: any): Promise<any> {
+    @Post('createTicket')
+    @ApiBody({ type: CreateTicketModel })
+    async createTicket(@Body() reqModel: CreateTicketModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findAll();
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.createTicket(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<any> {
+    @Post('updateTicket')
+    @ApiBody({ type: UpdateTicketModel })
+    async updateTicket(@Body() reqModel: UpdateTicketModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findOne(id);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.updateTicket(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Post()
-    async create(@Body() dto: any): Promise<any> {
+    @Post('getTicket')
+    @ApiBody({ type: GetTicketModel })
+    async getTicket(@Body() reqModel: GetTicketModel): Promise<GetTicketByIdModel> {
         try {
-            return await this.service.create(dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getTicket(reqModel);
+        } catch (error) {
+            return returnException(GetTicketByIdModel, error);
         }
     }
 
-    @Patch(':id')
-    async update(@Param('id') id: number, @Body() dto: any): Promise<any> {
+    @Get('getAllTickets')
+    async getAllTickets(): Promise<GetAllTicketsModel> {
         try {
-            return await this.service.update(id, dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAllTickets();
+        } catch (error) {
+            return returnException(GetAllTicketsModel, error);
         }
     }
 
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<any> {
+    @Post('deleteTicket')
+    @ApiBody({ type: DeleteTicketModel })
+    async deleteTicket(@Body() reqModel: DeleteTicketModel): Promise<GlobalResponse> {
         try {
-            await this.service.remove(id);
-            return { success: true, message: 'Ticket deleted successfully' };
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.deleteTicket(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

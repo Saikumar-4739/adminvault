@@ -103,7 +103,7 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "Email does not exist");
             }
             await transManager.startTransaction();
-            await this.authUsersRepo.update({ email: reqModel.email }, { lastLogin: Date.now() })
+            await this.authUsersRepo.update({ email: reqModel.email }, { lastLogin: new Date() })
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "User Logged Out Successfully");
         } catch (err) {

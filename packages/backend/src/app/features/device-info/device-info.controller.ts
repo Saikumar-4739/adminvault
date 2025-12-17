@@ -1,58 +1,62 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { returnException } from '@adminvault/backend-utils';
+import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { DeviceInfoService } from './device-info.service';
+import { CreateDeviceModel, UpdateDeviceModel, DeleteDeviceModel, GetDeviceModel, GetAllDevicesModel, GetDeviceByIdModel } from '@adminvault/shared-models';
 
 @ApiTags('Device Info')
 @Controller('device-info')
 export class DeviceInfoController {
     constructor(
         private service: DeviceInfoService
-    ) {}
+    ) { }
 
-    @Get()
-    async findAll(@Body() req: any): Promise<any> {
+    @Post('createDevice')
+    @ApiBody({ type: CreateDeviceModel })
+    async createDevice(@Body() reqModel: CreateDeviceModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findAll();
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.createDevice(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Get(':id')
-    async findOne(@Param('id') id: number): Promise<any> {
+    @Post('updateDevice')
+    @ApiBody({ type: UpdateDeviceModel })
+    async updateDevice(@Body() reqModel: UpdateDeviceModel): Promise<GlobalResponse> {
         try {
-            return await this.service.findOne(id);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.updateDevice(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 
-    @Post()
-    async create(@Body() dto: any): Promise<any> {
+    @Post('getDevice')
+    @ApiBody({ type: GetDeviceModel })
+    async getDevice(@Body() reqModel: GetDeviceModel): Promise<GetDeviceByIdModel> {
         try {
-            return await this.service.create(dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getDevice(reqModel);
+        } catch (error) {
+            return returnException(GetDeviceByIdModel, error);
         }
     }
 
-    @Patch(':id')
-    async update(@Param('id') id: number, @Body() dto: any): Promise<any> {
+    @Post('getAllDevices')
+    async getAllDevices(): Promise<GetAllDevicesModel> {
         try {
-            return await this.service.update(id, dto);
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.getAllDevices();
+        } catch (error) {
+            return returnException(GetAllDevicesModel, error);
         }
     }
 
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<any> {
+    @Post('deleteDevice')
+    @ApiBody({ type: DeleteDeviceModel })
+    async deleteDevice(@Body() reqModel: DeleteDeviceModel): Promise<GlobalResponse> {
         try {
-            await this.service.remove(id);
-            return { success: true, message: 'Device deleted successfully' };
-        } catch (err) {
-            return returnException(Object, err);
+            return await this.service.deleteDevice(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }
