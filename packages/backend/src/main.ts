@@ -13,6 +13,9 @@ async function bootstrap() {
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
 
+  // Enable CORS
+  app.enableCors();
+
   // Swagger Configuration (for REST API documentation)
   const config = new DocumentBuilder()
     .setTitle('AdminVault API')

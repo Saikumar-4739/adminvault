@@ -11,9 +11,9 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         const baseStyles = 'rounded-xl p-6 transition-all duration-300';
 
         const variants = {
-            default: 'bg-slate-800 border border-slate-700',
+            default: 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700',
             glass: 'glass',
-            gradient: 'bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700',
+            gradient: 'bg-gradient-to-br from-indigo-500 to-violet-600 border border-indigo-400 text-white',
         };
 
         return (
@@ -46,7 +46,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadi
     ({ className, ...props }, ref) => (
         <h3
             ref={ref}
-            className={cn('text-xl font-semibold text-slate-100', className)}
+            className={cn('text-xl font-semibold text-slate-900 dark:text-slate-100', className)}
             {...props}
         />
     )
@@ -57,7 +57,7 @@ export const CardDescription = forwardRef<HTMLParagraphElement, HTMLAttributes<H
     ({ className, ...props }, ref) => (
         <p
             ref={ref}
-            className={cn('text-sm text-slate-400 mt-1', className)}
+            className={cn('text-sm text-slate-500 dark:text-slate-400 mt-1', className)}
             {...props}
         />
     )
@@ -75,7 +75,7 @@ export const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivEleme
     ({ className, ...props }, ref) => (
         <div
             ref={ref}
-            className={cn('mt-6 pt-4 border-t border-slate-700', className)}
+            className={cn('mt-6 pt-4 border-t border-slate-200 dark:border-slate-700', className)}
             {...props}
         />
     )

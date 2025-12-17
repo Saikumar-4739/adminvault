@@ -37,6 +37,35 @@ axiosRetry(AxiosInstance, {
     },
 });
 
+// Request interceptor to add auth token
+AxiosInstance.interceptors.request.use(
+    (config) => {
+        if (typeof window !== 'undefined') {
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Response interceptor to handle 401
+AxiosInstance.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError) => {
+        if (typeof window !== 'undefined' && error.response?.status === 401) {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
+
 
 
 

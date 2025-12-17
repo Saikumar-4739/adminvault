@@ -28,13 +28,13 @@ export default function Sidebar() {
     const SidebarContent = () => (
         <>
             {/* Logo */}
-            <div className="flex items-center gap-3 px-6 py-6 border-b border-gray-200 dark:border-gray-700">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center">
+            <div className="flex items-center gap-3 px-6 py-6 border-b border-slate-100">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center shadow-lg shadow-primary-500/20">
                     <Building2 className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">AdminVault</h1>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Enterprise Platform</p>
+                    <h1 className="text-xl font-bold text-slate-900">AdminVault</h1>
+                    <p className="text-xs text-slate-500 font-medium">Enterprise Platform</p>
                 </div>
             </div>
 
@@ -47,13 +47,13 @@ export default function Sidebar() {
                         <a
                             key={item.name}
                             href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
-                                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium'
-                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
+                                ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm shadow-primary-100'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                                 }`}
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
-                            <Icon className="h-5 w-5" />
+                            <Icon className={`h-5 w-5 transition-colors ${isActive ? 'text-primary-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
                             <span>{item.name}</span>
                         </a>
                     );
@@ -61,18 +61,18 @@ export default function Sidebar() {
             </nav>
 
             {/* User Section */}
-            <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+            <div className="border-t border-slate-100 p-4">
                 {user && (
-                    <div className="mb-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="mb-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-primary-700 font-bold border-2 border-white shadow-sm">
                                 {user.fullName.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                <p className="text-sm font-bold text-slate-900 truncate">
                                     {user.fullName}
                                 </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                <p className="text-xs text-slate-500 truncate font-medium">
                                     {user.email}
                                 </p>
                             </div>
@@ -84,7 +84,7 @@ export default function Sidebar() {
                     size="md"
                     leftIcon={<LogOut className="h-4 w-4" />}
                     onClick={handleLogout}
-                    className="w-full"
+                    className="w-full border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 >
                     Logout
                 </Button>
@@ -97,23 +97,23 @@ export default function Sidebar() {
             {/* Mobile Menu Button */}
             <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700"
+                className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-white shadow-lg shadow-slate-200/50 border border-slate-100 text-slate-600"
             >
                 {isMobileMenuOpen ? (
-                    <X className="h-6 w-6 text-gray-900 dark:text-white" />
+                    <X className="h-6 w-6" />
                 ) : (
-                    <Menu className="h-6 w-6 text-gray-900 dark:text-white" />
+                    <Menu className="h-6 w-6" />
                 )}
             </button>
 
             {/* Mobile Sidebar */}
             {isMobileMenuOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+                    className="lg:hidden fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-sm"
                     onClick={() => setIsMobileMenuOpen(false)}
                 >
                     <div
-                        className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-gray-900 shadow-xl flex flex-col animate-slide-in"
+                        className="fixed inset-y-0 left-0 w-72 bg-white shadow-2xl flex flex-col animate-slide-in"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <SidebarContent />
@@ -122,7 +122,7 @@ export default function Sidebar() {
             )}
 
             {/* Desktop Sidebar */}
-            <aside className="hidden lg:flex lg:flex-col lg:w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
+            <aside className="hidden lg:flex lg:flex-col lg:w-72 bg-white border-r border-slate-100 h-screen sticky top-0 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.02)]">
                 <SidebarContent />
             </aside>
         </>

@@ -27,6 +27,11 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([]);
+    const [mounted, setMounted] = useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const removeToast = useCallback((id: string) => {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -66,10 +71,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         [showToast]
     );
 
+    const contextValue = React.useMemo(
+        () => ({ showToast, success, error, warning, info }),
+        [showToast, success, error, warning, info]
+    );
+
     return (
-        <ToastContext.Provider value={{ showToast, success, error, warning, info }}>
+        <ToastContext.Provider value={contextValue}>
             {children}
-            {typeof window !== 'undefined' &&
+            {mounted &&
                 createPortal(
                     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md">
                         {toasts.map((toast) => (

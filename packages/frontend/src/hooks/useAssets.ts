@@ -36,7 +36,7 @@ export function useAssets(companyId?: number) {
         } catch (err: any) {
             const errorMessage = err.message || 'Failed to fetch assets';
             setError(errorMessage);
-            toast.error('Error', errorMessage);
+            // toast.error('Error', errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -49,14 +49,13 @@ export function useAssets(companyId?: number) {
                 const response = await assetService.createAsset(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Asset created successfully');
                     await fetchAssets();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to create asset');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to create asset');
+                // toast.error('Error', err.message || 'Failed to create asset');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -72,14 +71,13 @@ export function useAssets(companyId?: number) {
                 const response = await assetService.updateAsset(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Asset updated successfully');
                     await fetchAssets();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to update asset');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to update asset');
+                // toast.error('Error', err.message || 'Failed to update asset');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -95,14 +93,13 @@ export function useAssets(companyId?: number) {
                 const response = await assetService.deleteAsset(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Asset deleted successfully');
                     await fetchAssets();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to delete asset');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to delete asset');
+                // toast.error('Error', err.message || 'Failed to delete asset');
                 return false;
             } finally {
                 setIsLoading(false);

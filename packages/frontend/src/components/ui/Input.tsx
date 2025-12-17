@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, forwardRef, useState } from 'react';
+import React, { InputHTMLAttributes, forwardRef, useState, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -25,7 +25,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     ) => {
         const [showPassword, setShowPassword] = useState(false);
         const [isFocused, setIsFocused] = useState(false);
-        const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+        const generatedId = useId();
+        const inputId = id || generatedId;
         const isPassword = type === 'password';
         const inputType = isPassword && showPassword ? 'text' : type;
 
@@ -43,10 +44,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                         id={inputId}
                         type={inputType}
                         className={cn(
-                            'w-full h-12 px-4 bg-slate-800 border-2 border-slate-700 rounded-lg text-slate-100 placeholder-slate-500',
-                            'transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
-                            'disabled:opacity-50 disabled:cursor-not-allowed',
-                            error && 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20',
+                            'w-full h-12 px-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500',
+                            'transition-all duration-200 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 dark:focus:ring-primary-400/10',
+                            'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50 dark:disabled:bg-slate-900',
+                            error && 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/10',
                             leftIcon && 'pl-10',
                             (rightIcon || isPassword) && 'pr-10',
                             label && 'pt-6',
@@ -70,8 +71,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                             className={cn(
                                 'absolute left-4 transition-all duration-200 pointer-events-none',
                                 isFocused || props.value
-                                    ? 'top-2 text-xs text-blue-400'
-                                    : 'top-1/2 -translate-y-1/2 text-sm text-slate-400',
+                                    ? 'top-2 text-xs text-primary-600 font-medium'
+                                    : 'top-1/2 -translate-y-1/2 text-sm text-slate-500',
                                 leftIcon && 'left-10'
                             )}
                         >

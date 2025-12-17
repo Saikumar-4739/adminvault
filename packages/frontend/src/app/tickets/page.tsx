@@ -70,17 +70,17 @@ export default function TicketsPage() {
             case 'open': return 'primary';
             case 'in progress': return 'warning';
             case 'resolved': return 'success';
-            case 'closed': return 'secondary';
-            default: return 'secondary';
+            case 'closed': return 'neutral';
+            default: return 'neutral';
         }
     };
 
     const getPriorityColor = (priority?: string) => {
         switch (priority?.toLowerCase()) {
-            case 'high': return 'danger';
+            case 'high': return 'error';
             case 'medium': return 'warning';
             case 'low': return 'success';
-            default: return 'secondary';
+            default: return 'neutral';
         }
     };
 
@@ -97,8 +97,8 @@ export default function TicketsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Support Tickets</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Support Tickets</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
                         Track and manage support requests
                     </p>
                 </div>
@@ -117,12 +117,16 @@ export default function TicketsPage() {
                 {Object.entries(statusCounts).map(([status, count]) => (
                     <Card
                         key={status}
-                        className={`p-4 cursor-pointer transition-all ${statusFilter === status.toLowerCase() ? 'ring-2 ring-primary-500' : ''
+                        className={`p-4 cursor-pointer transition-all border-none shadow-sm hover:shadow-md ${statusFilter === status.toLowerCase()
+                                ? 'bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-500 text-indigo-700 dark:text-indigo-300'
+                                : 'bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50'
                             }`}
                         onClick={() => setStatusFilter(status.toLowerCase())}
                     >
-                        <div className="text-2xl font-bold text-gray-900 dark:text-white">{count}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{status}</div>
+                        <div className={`text-2xl font-bold ${statusFilter === status.toLowerCase() ? 'text-indigo-900 dark:text-indigo-100' : 'text-slate-900 dark:text-white'
+                            }`}>{count}</div>
+                        <div className={`text-sm font-medium ${statusFilter === status.toLowerCase() ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'
+                            }`}>{status}</div>
                     </Card>
                 ))}
             </div>
@@ -143,29 +147,31 @@ export default function TicketsPage() {
             <div className="space-y-4">
                 {isLoading ? (
                     Array.from({ length: 3 }).map((_, i) => (
-                        <Card key={i} className="p-6 animate-pulse">
+                        <Card key={i} className="p-6 animate-pulse bg-white dark:bg-slate-800 border-none shadow-sm">
                             <div className="space-y-3">
-                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
                             </div>
                         </Card>
                     ))
                 ) : filteredTickets.length === 0 ? (
-                    <Card className="p-12">
+                    <Card className="p-12 border-none shadow-sm bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700">
                         <div className="text-center">
-                            <Ticket className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-                            <p className="text-gray-500 dark:text-gray-400">
+                            <div className="bg-slate-100 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <Ticket className="h-8 w-8 text-slate-400" />
+                            </div>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium">
                                 {searchQuery || statusFilter !== 'all' ? 'No tickets found' : 'No tickets yet'}
                             </p>
                         </div>
                     </Card>
                 ) : (
                     filteredTickets.map((ticket) => (
-                        <Card key={ticket.id} className="p-6 hover:shadow-lg transition-shadow">
+                        <Card key={ticket.id} className="p-6 hover:shadow-xl transition-all duration-300 border-none ring-1 ring-slate-200 dark:ring-slate-700 group">
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">
                                             {ticket.title}
                                         </h3>
                                         <Badge variant={getStatusColor(ticket.status) as any}>
@@ -177,11 +183,11 @@ export default function TicketsPage() {
                                         </Badge>
                                     </div>
                                     {ticket.description && (
-                                        <p className="text-gray-600 dark:text-gray-400 mb-3">
+                                        <p className="text-slate-600 dark:text-slate-400 mb-3 leading-relaxed">
                                             {ticket.description}
                                         </p>
                                     )}
-                                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                    <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 font-medium">
                                         <div className="flex items-center gap-1">
                                             <Clock className="h-4 w-4" />
                                             {ticket.createdAt ? formatDateTime(ticket.createdAt) : 'Just now'}
@@ -191,7 +197,7 @@ export default function TicketsPage() {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 ml-4">
+                                <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Button
                                         variant="ghost"
                                         size="sm"

@@ -7,44 +7,19 @@
       "build": {
         "executor": "nx:run-commands",
         "options": {
-          "command": "webpack-cli build",
-          "args": [
-            "--node-env=production"
-          ],
+          "command": "vite build",
           "cwd": "packages/backend"
-        },
-        "configurations": {
-          "development": {
-            "args": [
-              "--node-env=development"
-            ]
-          }
         }
       },
       "serve": {
-        "continuous": true,
         "executor": "nx:run-commands",
-        "defaultConfiguration": "development",
+        "options": {
+          "command": "node dist/packages/backend/main.js",
+          "cwd": "."
+        },
         "dependsOn": [
           "build"
-        ],
-        "options": {
-          "command": "node dist/backend/main.js",
-          "cwd": ".",
-          "parallel": false
-        },
-        "configurations": {
-          "development": {
-            "command": "nodemon dist/backend/main.js",
-            "cwd": ".",
-            "parallel": false
-          },
-          "production": {
-            "command": "node dist/backend/main.js",
-            "cwd": ".",
-            "parallel": false
-          }
-        }
+        ]
       }
     }
   },

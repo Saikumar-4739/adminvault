@@ -82,8 +82,8 @@ export default function EmployeesPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Employees</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Employees</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
                         Manage your organization's employees
                     </p>
                 </div>
@@ -136,65 +136,71 @@ export default function EmployeesPage() {
                     </div>
                 ) : (
                     filteredEmployees.map((employee) => (
-                        <Card key={employee.id} className="p-6 hover:shadow-lg transition-shadow">
+                        <Card key={employee.id} className="p-6 hover:shadow-xl transition-all duration-300 border-none ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-800 group">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold text-lg">
+                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20 ring-4 ring-white dark:ring-slate-800">
                                         {employee.fullName.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-white">
+                                        <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">
                                             {employee.fullName}
                                         </h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                                             {employee.position || 'Employee'}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-2 mb-4">
-                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                    <Mail className="h-4 w-4" />
-                                    <span className="truncate">{employee.email}</span>
+                            <div className="space-y-3 mb-6 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl">
+                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                    <div className="p-1.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm text-slate-400">
+                                        <Mail className="h-3.5 w-3.5" />
+                                    </div>
+                                    <span className="truncate font-medium">{employee.email}</span>
                                 </div>
                                 {employee.phone && (
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                        <Phone className="h-4 w-4" />
-                                        <span>{employee.phone}</span>
+                                    <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                        <div className="p-1.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm text-slate-400">
+                                            <Phone className="h-3.5 w-3.5" />
+                                        </div>
+                                        <span className="font-medium">{employee.phone}</span>
                                     </div>
                                 )}
-                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                    <Building2 className="h-4 w-4" />
-                                    <span>{getCompanyName(employee.companyId)}</span>
+                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                    <div className="p-1.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm text-slate-400">
+                                        <Building2 className="h-3.5 w-3.5" />
+                                    </div>
+                                    <span className="font-medium">{getCompanyName(employee.companyId)}</span>
                                 </div>
                             </div>
 
-                            {employee.department && (
-                                <div className="mb-4">
-                                    <Badge variant="secondary">{employee.department}</Badge>
-                                </div>
-                            )}
+                            <div className="flex items-center justify-between">
+                                {employee.department ? (
+                                    <Badge variant="neutral" className="bg-slate-100 text-slate-600 border-none">
+                                        {employee.department}
+                                    </Badge>
+                                ) : <div></div>}
 
-                            <div className="flex items-center gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    leftIcon={<Edit className="h-4 w-4" />}
-                                    onClick={() => handleEdit(employee)}
-                                    className="flex-1"
-                                >
-                                    Edit
-                                </Button>
-                                <Button
-                                    variant="danger"
-                                    size="sm"
-                                    leftIcon={<Trash2 className="h-4 w-4" />}
-                                    onClick={() => handleDelete(employee)}
-                                    className="flex-1"
-                                >
-                                    Delete
-                                </Button>
+                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-200">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 rounded-full"
+                                        onClick={() => handleEdit(employee)}
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="danger"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 rounded-full"
+                                        onClick={() => handleDelete(employee)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         </Card>
                     ))

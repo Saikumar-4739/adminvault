@@ -1,11 +1,12 @@
 services:
   - type: web
     name: adminvault-backend
-    runtime: node
-    buildCommand: npm install && npx tsc --build packages/libs/shared-models/tsconfig.lib.json && npx tsc --build packages/libs/backend-utils/tsconfig.lib.json && npx nx build backend --configuration=production
-    startCommand: node dist/backend/main.js
+    env: node
+    region: oregon
+    buildCommand: npm install && npm run build:backend
+    startCommand: node dist/packages/backend/main.js
     envVars:
       - key: NODE_VERSION
-        value: 22.16.0
+        value: 18
       - key: NODE_ENV
         value: production

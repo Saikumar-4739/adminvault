@@ -36,7 +36,7 @@ export function useEmployees(companyId?: number) {
         } catch (err: any) {
             const errorMessage = err.message || 'Failed to fetch employees';
             setError(errorMessage);
-            toast.error('Error', errorMessage);
+            // toast.error('Error', errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -49,14 +49,13 @@ export function useEmployees(companyId?: number) {
                 const response = await employeeService.createEmployee(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Employee created successfully');
                     await fetchEmployees();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to create employee');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to create employee');
+                // toast.error('Error', err.message || 'Failed to create employee');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -72,14 +71,13 @@ export function useEmployees(companyId?: number) {
                 const response = await employeeService.updateEmployee(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Employee updated successfully');
                     await fetchEmployees();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to update employee');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to update employee');
+                // toast.error('Error', err.message || 'Failed to update employee');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -95,14 +93,13 @@ export function useEmployees(companyId?: number) {
                 const response = await employeeService.deleteEmployee(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Employee deleted successfully');
                     await fetchEmployees();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to delete employee');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to delete employee');
+                // toast.error('Error', err.message || 'Failed to delete employee');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -123,7 +120,7 @@ export function useEmployees(companyId?: number) {
                     throw new Error(response.message || 'Failed to fetch employee');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to fetch employee');
+                // toast.error('Error', err.message || 'Failed to fetch employee');
                 return null;
             } finally {
                 setIsLoading(false);

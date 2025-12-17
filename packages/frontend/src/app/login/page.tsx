@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Mail, Lock, Building2 } from 'lucide-react';
+import { Building2, ShieldCheck, BarChart3, Users, Zap } from 'lucide-react';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -27,80 +27,129 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-4">
-            <div className="w-full max-w-md">
-                {/* Logo and Title */}
-                <div className="text-center mb-8 animate-slide-up">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 mb-4 shadow-lg shadow-primary-500/30">
-                        <Building2 className="h-8 w-8 text-white" />
+        <div className="min-h-screen flex bg-white font-sans text-slate-900">
+            {/* Left Side - App Info (70%) */}
+            <div className="hidden lg:flex w-[65%] xl:w-[70%] bg-gradient-to-br from-primary-900 via-primary-800 to-indigo-900 relative overflow-hidden items-center justify-center p-16">
+                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.1]"></div>
+
+                {/* Main Content */}
+                <div className="relative z-10 max-w-2xl space-y-12">
+                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm animate-fade-in shadow-xl">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.5)]"></span>
+                        <span className="text-xs font-medium text-indigo-100 tracking-wide uppercase">AdminVault System</span>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        Welcome to AdminVault
+
+                    <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight drop-shadow-sm">
+                        IT Admin <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 animate-gradient-x">Management.</span>
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        Sign in to manage your enterprise
+
+                    <p className="text-lg text-indigo-200 max-w-lg leading-relaxed font-light mt-6">
+                        <span className="font-medium text-white">Experience Control.</span> Securely manage your organization's assets, employees, and operations with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-cyan-200 font-medium">precision and ease.</span>
                     </p>
-                </div>
 
-                {/* Login Form */}
-                <div className="card p-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <Input
-                            label="Email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
-                            leftIcon={<Mail className="h-5 w-5" />}
-                            required
-                            autoComplete="email"
-                        />
-
-                        <Input
-                            label="Password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
-                            leftIcon={<Lock className="h-5 w-5" />}
-                            required
-                            autoComplete="current-password"
-                        />
-
-                        {error && (
-                            <div className="p-3 rounded-lg bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800">
-                                <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
+                    {/* Features Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-white/10">
+                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors group cursor-default w-full h-auto md:h-32">
+                            <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-200 group-hover:text-white group-hover:bg-indigo-500 transition-all">
+                                <ShieldCheck className="w-6 h-6" />
                             </div>
-                        )}
+                            <div>
+                                <h3 className="text-white font-semibold mb-1">Enterprise Security</h3>
+                                <p className="text-indigo-200 text-sm leading-snug">Bank-grade encryption & compliance</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors group cursor-default w-full h-auto md:h-32">
+                            <div className="p-3 rounded-xl bg-violet-500/20 text-violet-200 group-hover:text-white group-hover:bg-violet-500 transition-all">
+                                <BarChart3 className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-semibold mb-1">Real-time Analytics</h3>
+                                <p className="text-indigo-200 text-sm leading-snug">Data-driven decision making</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors group cursor-default w-full h-auto md:h-32">
+                            <div className="p-3 rounded-xl bg-fuchsia-500/20 text-fuchsia-200 group-hover:text-white group-hover:bg-fuchsia-500 transition-all">
+                                <Users className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-semibold mb-1">Global Teams</h3>
+                                <p className="text-indigo-200 text-sm leading-snug">Seamless collaboration tools</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors group cursor-default w-full h-auto md:h-32">
+                            <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-200 group-hover:text-white group-hover:bg-emerald-500 transition-all">
+                                <Zap className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-semibold mb-1">High Performance</h3>
+                                <p className="text-indigo-200 text-sm leading-snug">Optimized for speed & scale</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Side - Login Form (30%) */}
+            <div className="w-full lg:w-[35%] xl:w-[30%] flex flex-col justify-center px-8 lg:px-12 xl:px-16 bg-white relative z-20">
+                <div className="w-full max-w-sm mx-auto space-y-10">
+                    {/* Header */}
+                    <div className="space-y-2">
+                        <div className="mb-8 p-3 bg-primary-50 w-fit rounded-xl border border-primary-100">
+                            <Building2 className="w-8 h-8 text-primary-600" />
+                        </div>
+                        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
+                        <p className="text-slate-500">Please enter your credentials to access the vault.</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-4">
+                            <Input
+                                label="Email address"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="bg-transparent border-slate-200 focus:border-primary-500 focus:ring-primary-500/10 rounded-lg h-12 transition-all"
+                            />
+                            <Input
+                                label="Password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="bg-transparent border-slate-200 focus:border-primary-500 focus:ring-primary-500/10 rounded-lg h-12 transition-all"
+                            />
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+                                <span className="text-sm text-slate-600 group-hover:text-primary-600 transition-colors">Remember me</span>
+                            </label>
+                            <a href="#" className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline">Forgot password?</a>
+                        </div>
+
+                        {/* {error && (
+                            <div className="p-3 bg-primary-50 border border-primary-100 text-primary-700 text-sm font-medium rounded-lg">
+                                {error}
+                            </div>
+                        )} */}
 
                         <Button
                             type="submit"
-                            variant="primary"
-                            size="lg"
-                            className="w-full"
+                            className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-all shadow-lg shadow-primary-500/20"
                             isLoading={isLoading}
                         >
                             Sign In
                         </Button>
                     </form>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Don't have an account?{' '}
-                            <a
-                                href="/register"
-                                className="font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-                            >
-                                Contact your administrator
-                            </a>
-                        </p>
-                    </div>
+                    <p className="text-center text-sm text-slate-500">
+                        Don't have an account?{' '}
+                        <a href="#" className="text-primary-600 font-semibold hover:underline">Request access</a>
+                    </p>
                 </div>
-
-                {/* Footer */}
-                <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-8">
-                    © 2024 AdminVault. All rights reserved.
-                </p>
             </div>
         </div>
     );

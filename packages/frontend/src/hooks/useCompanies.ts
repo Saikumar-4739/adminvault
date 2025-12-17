@@ -34,7 +34,7 @@ export function useCompanies() {
         } catch (err: any) {
             const errorMessage = err.message || 'Failed to fetch companies';
             setError(errorMessage);
-            toast.error('Error', errorMessage);
+            // toast.error('Error', errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -47,14 +47,13 @@ export function useCompanies() {
                 const response = await companyService.createCompany(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Company created successfully');
                     await fetchCompanies();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to create company');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to create company');
+                // toast.error('Error', err.message || 'Failed to create company');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -70,14 +69,13 @@ export function useCompanies() {
                 const response = await companyService.updateCompany(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Company updated successfully');
                     await fetchCompanies();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to update company');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to update company');
+                // toast.error('Error', err.message || 'Failed to update company');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -93,14 +91,13 @@ export function useCompanies() {
                 const response = await companyService.deleteCompany(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Company deleted successfully');
                     await fetchCompanies();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to delete company');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to delete company');
+                // toast.error('Error', err.message || 'Failed to delete company');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -121,7 +118,7 @@ export function useCompanies() {
                     throw new Error(response.message || 'Failed to fetch company');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to fetch company');
+                // toast.error('Error', err.message || 'Failed to fetch company');
                 return null;
             } finally {
                 setIsLoading(false);

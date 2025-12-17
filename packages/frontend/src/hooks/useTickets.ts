@@ -37,7 +37,7 @@ export function useTickets() {
         } catch (err: any) {
             const errorMessage = err.message || 'Failed to fetch tickets';
             setError(errorMessage);
-            toast.error('Error', errorMessage);
+            // toast.error('Error', errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -50,14 +50,13 @@ export function useTickets() {
                 const response = await ticketService.createTicket(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Ticket created successfully');
                     await fetchTickets();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to create ticket');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to create ticket');
+                // toast.error('Error', err.message || 'Failed to create ticket');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -73,14 +72,13 @@ export function useTickets() {
                 const response = await ticketService.updateTicket(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Ticket updated successfully');
                     await fetchTickets();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to update ticket');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to update ticket');
+                // toast.error('Error', err.message || 'Failed to update ticket');
                 return false;
             } finally {
                 setIsLoading(false);
@@ -96,14 +94,13 @@ export function useTickets() {
                 const response = await ticketService.deleteTicket(data);
 
                 if (response.status) {
-                    toast.success('Success', 'Ticket deleted successfully');
                     await fetchTickets();
                     return true;
                 } else {
                     throw new Error(response.message || 'Failed to delete ticket');
                 }
             } catch (err: any) {
-                toast.error('Error', err.message || 'Failed to delete ticket');
+                // toast.error('Error', err.message || 'Failed to delete ticket');
                 return false;
             } finally {
                 setIsLoading(false);

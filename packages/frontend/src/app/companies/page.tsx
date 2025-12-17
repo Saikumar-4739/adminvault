@@ -28,9 +28,20 @@ export default function CompaniesPage() {
         e.preventDefault();
 
         if (editingCompany) {
-            await updateCompany({ ...formData, id: editingCompany.id });
+            await updateCompany({
+                id: editingCompany.id,
+                companyName: formData.name,
+                location: formData.address, // mapping address to location
+                estDate: new Date().toISOString(), // dummy date if not in form
+                ...formData
+            } as any);
         } else {
-            await createCompany(formData as any);
+            await createCompany({
+                companyName: formData.name,
+                location: formData.address,
+                estDate: new Date().toISOString(),
+                ...formData
+            } as any);
         }
 
         handleCloseModal();
@@ -64,8 +75,8 @@ export default function CompaniesPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Companies</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Companies</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
                         Manage your organization's companies
                     </p>
                 </div>
@@ -95,23 +106,23 @@ export default function CompaniesPage() {
             <Card>
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                        <thead className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                     Company
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                     Contact
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                     Address
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-slate-100 dark:divide-slate-800">
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={4} className="px-6 py-12 text-center">
@@ -123,38 +134,40 @@ export default function CompaniesPage() {
                             ) : filteredCompanies.length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="px-6 py-12 text-center">
-                                        <Building2 className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-                                        <p className="text-gray-500 dark:text-gray-400">
+                                        <div className="bg-slate-50 dark:bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                            <Building2 className="h-8 w-8 text-slate-300" />
+                                        </div>
+                                        <p className="text-slate-500 dark:text-slate-400 font-medium">
                                             {searchQuery ? 'No companies found' : 'No companies yet'}
                                         </p>
                                     </td>
                                 </tr>
                             ) : (
                                 filteredCompanies.map((company) => (
-                                    <tr key={company.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                    <tr key={company.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
-                                                <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-                                                    <Building2 className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                                                <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900/50 dark:to-violet-900/50 flex items-center justify-center">
+                                                    <Building2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                                                 </div>
                                                 <div className="ml-4">
-                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    <div className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">
                                                         {company.name}
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900 dark:text-white">{company.email || '-'}</div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400">{company.phone || '-'}</div>
+                                            <div className="text-sm text-slate-900 dark:text-white font-medium">{company.email || '-'}</div>
+                                            <div className="text-sm text-slate-500 dark:text-slate-400">{company.phone || '-'}</div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-900 dark:text-white max-w-xs truncate">
+                                            <div className="text-sm text-slate-600 dark:text-slate-300 max-w-xs truncate">
                                                 {company.address || '-'}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex items-center justify-end gap-2">
+                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"

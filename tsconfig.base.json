@@ -21,6 +21,14 @@
     "target": "es2022",
     "customConditions": [
       "@org/source"
-    ]
+    ],
+    "paths": {
+      "@adminvault/shared-models": [
+        "./packages/libs/shared-models/src/index.ts"
+      ],
+      "@adminvault/backend-utils": [
+        "./packages/libs/backend-utils/src/index.ts"
+      ]
+    }
   }
 }

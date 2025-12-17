@@ -66,12 +66,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     localStorage.setItem('auth_user', JSON.stringify(userData));
                     localStorage.setItem('refresh_token', response.refreshToken);
 
-                    toast.success('Login successful', `Welcome back, ${userData.fullName}!`);
+                    localStorage.setItem('refresh_token', response.refreshToken);
                 } else {
                     throw new Error(response.message || 'Login failed');
                 }
             } catch (error: any) {
-                toast.error('Login failed', error.message || 'Invalid credentials');
+                // toast.error('Login failed', error.message || 'Invalid credentials');
                 throw error;
             } finally {
                 setIsLoading(false);
@@ -87,12 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const response = await authService.registerUser(data);
 
                 if (response.status) {
-                    toast.success('Registration successful', 'Please login with your credentials');
+                    // Registration successful
                 } else {
                     throw new Error(response.message || 'Registration failed');
                 }
             } catch (error: any) {
-                toast.error('Registration failed', error.message);
+                // toast.error('Registration failed', error.message);
                 throw error;
             } finally {
                 setIsLoading(false);

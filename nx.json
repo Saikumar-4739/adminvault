@@ -5,13 +5,29 @@
     "default": {
       "runner": "nx/tasks-runners/default",
       "options": {
-        "cacheableOperations": ["build", "typecheck"]
+        "cacheableOperations": [
+          "build",
+          "typecheck"
+        ]
       }
     }
   },
+  "targetDefaults": {
+    "build": {
+      "outputs": [
+        "{workspaceRoot}/dist/{projectRoot}"
+      ],
+      "cache": true
+    }
+  },
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "production": ["default"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "production": [
+      "default"
+    ],
     "sharedGlobals": []
   },
   "plugins": [
@@ -28,7 +44,9 @@
           "watchDepsName": "watch-deps"
         }
       },
-      "exclude": ["packages/libs/backend-utils/*"]
+      "exclude": [
+        "packages/libs/backend-utils/*"
+      ]
     },
     {
       "plugin": "@nx/next/plugin",
@@ -54,7 +72,9 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "include": ["packages/libs/backend-utils/*"],
+      "include": [
+        "packages/libs/backend-utils/*"
+      ],
       "options": {
         "typecheck": {
           "targetName": "typecheck"
