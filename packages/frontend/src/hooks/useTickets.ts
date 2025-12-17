@@ -29,8 +29,20 @@ export function useTickets() {
             setError(null);
             const response = await ticketService.getAllTickets();
 
-            if (response.status && response.data) {
-                setTickets(response.data as Ticket[]);
+            if (response.status) {
+                const data = (response as any).tickets || response.data || [];
+                const mappedTickets: Ticket[] = data.map((item: any) => ({
+                    id: item.id,
+                    title: item.subject,
+                    description: item.subject, // Fallback as model has no description
+                    status: item.ticketStatus || item.status,
+                    priority: item.priorityEnum || item.priority,
+                    assignedTo: item.assignAdminId,
+                    createdBy: item.employeeId,
+                    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+                    updatedAt: item.updatedAt || item.updated_at
+                }));
+                setTickets(mappedTickets);
             } else {
                 throw new Error(response.message || 'Failed to fetch tickets');
             }

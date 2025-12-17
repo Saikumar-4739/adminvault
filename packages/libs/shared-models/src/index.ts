@@ -3,6 +3,7 @@ export * from './auth';
 export * from './comapany';
 export * from './employee';
 export * from './device';
+export * from './masters/master-models';
 export * from './email';
 export * from './asset';
 export * from './asset-assign';

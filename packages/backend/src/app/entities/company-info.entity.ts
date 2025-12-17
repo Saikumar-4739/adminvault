@@ -12,6 +12,12 @@ export class CompanyInfoEntity extends AbstractEntity {
   @Column('varchar', { name: 'location', length: 255, nullable: false, comment: 'Company location' })
   location: string;
 
-  @Column('date', { name: 'est_date', nullable: false, comment: 'Company establishment date' })
-  estDate: Date;
+  @Column('varchar', { name: 'est_date', nullable: false, comment: 'Company establishment date' })
+  estDate: string;
+
+  @Column('varchar', { name: 'email', length: 255, nullable: true, comment: 'Company email' })
+  email: string;
+
+  @Column('varchar', { name: 'phone', length: 50, nullable: true, comment: 'Company phone number' })
+  phone: string;
 }

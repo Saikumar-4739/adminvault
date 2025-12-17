@@ -3,46 +3,71 @@
 import { useState } from 'react';
 import { useAssets } from '@/hooks/useAssets';
 import { useCompanies } from '@/hooks/useCompanies';
+import { PageLoader } from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
+import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
-import { Plus, Search, Edit, Trash2, Package, Calendar, Hash } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { Search, Plus, Filter, LayoutGrid, List, MoreVertical, Edit, Trash2, CheckCircle, Package, Building2, Calendar, Hash, Laptop, Monitor, Smartphone, Tablet, HardDrive } from 'lucide-react';
+import { AssetStatusEnum } from '@adminvault/shared-models';
+
+const getAssetIcon = (name: string) => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('laptop') || lowerName.includes('macbook')) return Laptop;
+    if (lowerName.includes('monitor') || lowerName.includes('screen') || lowerName.includes('display')) return Monitor;
+    if (lowerName.includes('phone') || lowerName.includes('iphone') || lowerName.includes('android')) return Smartphone;
+    if (lowerName.includes('tablet') || lowerName.includes('ipad')) return Tablet;
+    return HardDrive; // Default
+};
 
 export default function AssetsPage() {
-    const { assets, isLoading, createAsset, updateAsset, deleteAsset } = useAssets();
     const { companies } = useCompanies();
+    const [selectedOrg, setSelectedOrg] = useState<string>('');
+    const { assets, isLoading, createAsset, updateAsset, deleteAsset } = useAssets(selectedOrg ? Number(selectedOrg) : undefined);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAsset, setEditingAsset] = useState<any>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [formData, setFormData] = useState({
-        assetName: '',
-        assetType: '',
+        deviceId: '',
         serialNumber: '',
-        companyId: '',
-        status: 'Available',
         purchaseDate: '',
+        status: 'Available',
+        warrantyExpiry: ''
     });
 
-    const filteredAssets = assets.filter((asset) =>
-        asset.assetName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (asset.serialNumber && asset.serialNumber.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    // Mock devices for dropdown since we don't have useDevices hook yet
+    const deviceOptions = [
+        { id: 1, name: 'MacBook Pro M1' },
+        { id: 2, name: 'Dell XPS 15' },
+        { id: 3, name: 'iPhone 13' },
+        { id: 4, name: 'Monitor 27"' }
+    ];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const data = {
-            ...formData,
-            companyId: parseInt(formData.companyId),
+        const companyId = Number(selectedOrg);
+        if (!companyId) {
+            alert('Please select an organization first');
+            return;
+        }
+
+        const payload = {
+            companyId,
+            deviceId: Number(formData.deviceId),
+            serialNumber: formData.serialNumber,
+            purchaseDate: new Date(formData.purchaseDate),
+            assetStatusEnum: formData.status as any,
+            warrantyExpiry: formData.warrantyExpiry ? new Date(formData.warrantyExpiry) : undefined
         };
 
         if (editingAsset) {
-            await updateAsset({ ...data, id: editingAsset.id } as any);
+            await updateAsset({
+                id: editingAsset.id,
+                ...payload
+            } as any);
         } else {
-            await createAsset(data as any);
+            await createAsset(payload as any);
         }
 
         handleCloseModal();
@@ -51,18 +76,17 @@ export default function AssetsPage() {
     const handleEdit = (asset: any) => {
         setEditingAsset(asset);
         setFormData({
-            assetName: asset.assetName,
-            assetType: asset.assetType || '',
-            serialNumber: asset.serialNumber || '',
-            companyId: asset.companyId.toString(),
+            deviceId: asset.deviceId ? String(asset.deviceId) : '',
+            serialNumber: asset.serialNumber,
+            purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
             status: asset.status || 'Available',
-            purchaseDate: asset.purchaseDate || '',
+            warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : ''
         });
         setIsModalOpen(true);
     };
 
     const handleDelete = async (asset: any) => {
-        if (confirm(`Are you sure you want to delete ${asset.assetName}?`)) {
+        if (confirm(`Are you sure you want to delete asset ${asset.assetName}?`)) {
             await deleteAsset({ id: asset.id });
         }
     };
@@ -70,22 +94,13 @@ export default function AssetsPage() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingAsset(null);
-        setFormData({ assetName: '', assetType: '', serialNumber: '', companyId: '', status: 'Available', purchaseDate: '' });
-    };
-
-    const getCompanyName = (companyId: number) => {
-        const company = companies.find(c => c.id === companyId);
-        return company?.name || 'Unknown';
-    };
-
-    const getStatusColor = (status?: string) => {
-        switch (status?.toLowerCase()) {
-            case 'available': return 'success';
-            case 'assigned': return 'primary';
-            case 'maintenance': return 'warning';
-            case 'retired': return 'neutral';
-            default: return 'neutral';
-        }
+        setFormData({
+            deviceId: '',
+            serialNumber: '',
+            purchaseDate: '',
+            status: 'Available',
+            warrantyExpiry: ''
+        });
     };
 
     return (
@@ -95,142 +110,122 @@ export default function AssetsPage() {
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Assets</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                        Manage your organization's assets and equipment
+                        Manage your organization's physical assets
                     </p>
                 </div>
-                <Button
-                    variant="primary"
-                    size="lg"
-                    leftIcon={<Plus className="h-5 w-5" />}
-                    onClick={() => setIsModalOpen(true)}
-                >
-                    Add Asset
-                </Button>
+                <div className="flex items-center gap-3">
+                    {/* Organization Dropdown */}
+                    <div className="relative">
+                        <select
+                            value={selectedOrg}
+                            onChange={(e) => setSelectedOrg(e.target.value)}
+                            className="appearance-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium h-9"
+                        >
+                            <option value="">Select Organization</option>
+                            {companies.map(company => (
+                                <option key={company.id} value={company.id}>{company.companyName}</option>
+                            ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                            <Building2 className="h-4 w-4" />
+                        </div>
+                    </div>
+
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        className="shadow-md shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-300"
+                        leftIcon={<Plus className="h-4 w-4" />}
+                        onClick={() => setIsModalOpen(true)}
+                        disabled={!selectedOrg}
+                    >
+                        Add Asset
+                    </Button>
+                </div>
             </div>
 
-            {/* Search */}
-            <Card>
-                <div className="p-4">
-                    <Input
-                        placeholder="Search assets by name or serial number..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        leftIcon={<Search className="h-5 w-5" />}
-                    />
-                </div>
-            </Card>
+            {/* Assets Grid View */}
+            {isLoading ? (
+                <PageLoader />
+            ) : assets.length === 0 ? (
+                <Card className="p-12 text-center border-dashed border-2 border-slate-200 dark:border-slate-700 bg-transparent shadow-none">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Package className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">No assets found for this organization</p>
+                </Card>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {assets.map((asset) => {
+                        const AssetIcon = getAssetIcon(asset.assetName || 'Device');
+                        return (
+                            <Card key={asset.id} className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-slate-200 dark:border-slate-700 overflow-hidden relative">
+                                {/* Status Stripe */}
+                                <div className={`absolute top-0 left-0 w-1 h-full ${asset.status === 'Available' ? 'bg-emerald-500' :
+                                    asset.status === 'InUse' ? 'bg-blue-500' :
+                                        'bg-slate-400'
+                                    }`} />
 
-            {/* Assets Table */}
-            <Card>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    Asset
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    Serial Number
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    Company
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    Purchase Date
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-slate-100 dark:divide-slate-800">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center">
-                                        <div className="flex items-center justify-center">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                <div className="p-5 pl-6">
+                                    {/* Header */}
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl">
+                                            <AssetIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
                                         </div>
-                                    </td>
-                                </tr>
-                            ) : filteredAssets.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center">
-                                        <div className="bg-slate-50 dark:bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                                            <Package className="h-8 w-8 text-slate-300" />
+                                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${asset.status === 'Available' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                            asset.status === 'InUse' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                                            }`}>
+                                            {asset.status || 'Unknown'}
+                                        </span>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="space-y-1 mb-4">
+                                        <h3 className="font-bold text-lg text-slate-900 dark:text-white truncate" title={asset.assetName}>{asset.assetName}</h3>
+                                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">SN: {asset.serialNumber}</p>
+                                    </div>
+
+                                    {/* Details Grid */}
+                                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 mb-4">
+                                        <div>
+                                            <span className="block text-slate-400 text-[10px] uppercase">Purchased</span>
+                                            {asset.purchaseDate ? new Date(asset.purchaseDate).toLocaleDateString() : '-'}
                                         </div>
-                                        <p className="text-slate-500 dark:text-slate-400 font-medium">
-                                            {searchQuery ? 'No assets found' : 'No assets yet'}
-                                        </p>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredAssets.map((asset) => (
-                                    <tr key={asset.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 flex items-center justify-center">
-                                                    <Package className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                                </div>
-                                                <div className="ml-4">
-                                                    <div className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">
-                                                        {asset.assetName}
-                                                    </div>
-                                                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                                                        {asset.assetType || 'General'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2 text-sm text-slate-900 dark:text-white font-medium">
-                                                <Hash className="h-3.5 w-3.5 text-slate-400" />
-                                                {asset.serialNumber || '-'}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
-                                            {getCompanyName(asset.companyId)}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <Badge variant={getStatusColor(asset.status) as any}>
-                                                {asset.status || 'Available'}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                                <Calendar className="h-3.5 w-3.5" />
-                                                {asset.purchaseDate ? formatDate(asset.purchaseDate) : '-'}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    leftIcon={<Edit className="h-4 w-4" />}
-                                                    onClick={() => handleEdit(asset)}
-                                                >
-                                                    Edit
-                                                </Button>
-                                                <Button
-                                                    variant="danger"
-                                                    size="sm"
-                                                    leftIcon={<Trash2 className="h-4 w-4" />}
-                                                    onClick={() => handleDelete(asset)}
-                                                >
-                                                    Delete
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                        <div>
+                                            <span className="block text-slate-400 text-[10px] uppercase">Warranty</span>
+                                            {asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toLocaleDateString() : '-'}
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="flex-1 text-xs h-8"
+                                            leftIcon={<Edit className="h-3.5 w-3.5" />}
+                                            onClick={() => handleEdit(asset)}
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            variant="outline" // Changed to outline danger for cleaner look
+                                            size="sm"
+                                            className="flex-1 text-xs h-8 text-rose-600 hover:text-white hover:bg-rose-600 border-rose-200 dark:border-rose-900/30"
+                                            leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+                                            onClick={() => handleDelete(asset)}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            </Card>
+                        )
+                    })}
                 </div>
-            </Card>
+            )}
+
 
             {/* Create/Edit Modal */}
             <Modal
@@ -250,63 +245,55 @@ export default function AssetsPage() {
                 }
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input
-                        label="Asset Name"
-                        value={formData.assetName}
-                        onChange={(e) => setFormData({ ...formData, assetName: e.target.value })}
-                        required
-                        placeholder="MacBook Pro 16"
-                    />
-                    <Input
-                        label="Asset Type"
-                        value={formData.assetType}
-                        onChange={(e) => setFormData({ ...formData, assetType: e.target.value })}
-                        placeholder="Laptop"
-                    />
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            Device Type
+                        </label>
+                        <select
+                            value={formData.deviceId}
+                            onChange={(e) => setFormData({ ...formData, deviceId: e.target.value })}
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            required
+                        >
+                            <option value="">Select Device</option>
+                            {deviceOptions.map(device => (
+                                <option key={device.id} value={device.id}>{device.name}</option>
+                            ))}
+                        </select>
+                    </div>
                     <Input
                         label="Serial Number"
                         value={formData.serialNumber}
                         onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
-                        placeholder="SN123456789"
+                        required
                     />
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Company <span className="text-error-500">*</span>
-                        </label>
-                        <select
-                            value={formData.companyId}
-                            onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                            required
-                            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        >
-                            <option value="">Select a company</option>
-                            {companies.map((company) => (
-                                <option key={company.id} value={company.id}>
-                                    {company.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Status
-                        </label>
-                        <select
-                            value={formData.status}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        >
-                            <option value="Available">Available</option>
-                            <option value="Assigned">Assigned</option>
-                            <option value="Maintenance">Maintenance</option>
-                            <option value="Retired">Retired</option>
-                        </select>
-                    </div>
                     <Input
                         label="Purchase Date"
                         type="date"
                         value={formData.purchaseDate}
                         onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                        required
+                    />
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            Status
+                        </label>
+                        <select
+                            value={formData.status}
+                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                            <option value="Available">Available</option>
+                            <option value="InUse">In Use</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Retired">Retired</option>
+                        </select>
+                    </div>
+                    <Input
+                        label="Warranty Expiry"
+                        type="date"
+                        value={formData.warrantyExpiry}
+                        onChange={(e) => setFormData({ ...formData, warrantyExpiry: e.target.value })}
                     />
                 </form>
             </Modal>

@@ -1,39 +1,99 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Building2, ShieldCheck, BarChart3, Users, Zap } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
+import { Building2, ShieldCheck, BarChart3, Users, Zap, X } from 'lucide-react';
 
 export default function LoginPage() {
     const router = useRouter();
     const { login, isLoading } = useAuth();
+    const { success, error: toastError } = useToast();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
+    // const [error, setError] = useState(''); // Removed local error state in favor of Toast
+
+    // Modals state
+    const [showRequestModal, setShowRequestModal] = useState(false);
+    const [showForgotModal, setShowForgotModal] = useState(false);
+
+    // Request Access Form State
+    const [requestName, setRequestName] = useState('');
+    const [requestEmail, setRequestEmail] = useState('');
+    const [requestDesc, setRequestDesc] = useState('');
+    const [isRequesting, setIsRequesting] = useState(false);
+
+    // Forgot Password Form State
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [isResetting, setIsResetting] = useState(false);
+
+    useEffect(() => {
+        const storedEmail = localStorage.getItem('remember_email');
+        if (storedEmail) {
+            setEmail(storedEmail);
+            setRememberMe(true);
+        }
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
+        // setError(''); // Using toast instead
 
         try {
+            if (rememberMe) {
+                localStorage.setItem('remember_email', email);
+            } else {
+                localStorage.removeItem('remember_email');
+            }
+
             await login({ email, password });
             router.push('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'Login failed');
+            toastError('Login Failed', err.message || 'Invalid credentials');
         }
+    };
+
+    const handleRequestAccess = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsRequesting(true);
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        console.log(`Request sent to inolyse@gmail.com: Name: ${requestName}, Email: ${requestEmail}, Desc: ${requestDesc}`);
+
+        success('Request Sent', 'Your access request has been sent to inolyse@gmail.com');
+        setIsRequesting(false);
+        setShowRequestModal(false);
+        setRequestName('');
+        setRequestEmail('');
+        setRequestDesc('');
+    };
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsResetting(true);
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        success('Reset Link Sent', `Password reset instructions sent to ${forgotEmail}`);
+        setIsResetting(false);
+        setShowForgotModal(false);
+        setForgotEmail('');
     };
 
     return (
         <div className="min-h-screen flex bg-white font-sans text-slate-900">
             {/* Left Side - App Info (70%) */}
-            <div className="hidden lg:flex w-[65%] xl:w-[70%] bg-gradient-to-br from-primary-900 via-primary-800 to-indigo-900 relative overflow-hidden items-center justify-center p-16">
+            <div className="hidden lg:flex w-[70%] bg-slate-900 relative overflow-hidden items-center justify-center p-12">
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.1]"></div>
 
                 {/* Main Content */}
-                <div className="relative z-10 max-w-2xl space-y-12">
+                <div className="relative z-10 max-w-2xl space-y-8">
                     <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm animate-fade-in shadow-xl">
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.5)]"></span>
                         <span className="text-xs font-medium text-indigo-100 tracking-wide uppercase">AdminVault System</span>
@@ -44,8 +104,8 @@ export default function LoginPage() {
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 animate-gradient-x">Management.</span>
                     </h1>
 
-                    <p className="text-lg text-indigo-200 max-w-lg leading-relaxed font-light mt-6">
-                        <span className="font-medium text-white">Experience Control.</span> Securely manage your organization's assets, employees, and operations with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-cyan-200 font-medium">precision and ease.</span>
+                    <p className="text-lg text-indigo-200 max-w-lg leading-relaxed font-light mt-4">
+                        AdminVault is an enterprise IT management platform for inventory control, employee requests, and system administration.
                     </p>
 
                     {/* Features Grid */}
@@ -91,7 +151,7 @@ export default function LoginPage() {
             </div>
 
             {/* Right Side - Login Form (30%) */}
-            <div className="w-full lg:w-[35%] xl:w-[30%] flex flex-col justify-center px-8 lg:px-12 xl:px-16 bg-white relative z-20">
+            <div className="w-full lg:w-[30%] flex flex-col justify-center px-8 sm:px-12 bg-white relative z-20 shadow-2xl">
                 <div className="w-full max-w-sm mx-auto space-y-10">
                     {/* Header */}
                     <div className="space-y-2">
@@ -124,17 +184,22 @@ export default function LoginPage() {
 
                         <div className="flex justify-between items-center">
                             <label className="flex items-center gap-2 cursor-pointer group">
-                                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+                                <input
+                                    type="checkbox"
+                                    className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                />
                                 <span className="text-sm text-slate-600 group-hover:text-primary-600 transition-colors">Remember me</span>
                             </label>
-                            <a href="#" className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline">Forgot password?</a>
+                            <button
+                                type="button"
+                                onClick={() => setShowForgotModal(true)}
+                                className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline"
+                            >
+                                Forgot password?
+                            </button>
                         </div>
-
-                        {/* {error && (
-                            <div className="p-3 bg-primary-50 border border-primary-100 text-primary-700 text-sm font-medium rounded-lg">
-                                {error}
-                            </div>
-                        )} */}
 
                         <Button
                             type="submit"
@@ -147,10 +212,109 @@ export default function LoginPage() {
 
                     <p className="text-center text-sm text-slate-500">
                         Don't have an account?{' '}
-                        <a href="#" className="text-primary-600 font-semibold hover:underline">Request access</a>
+                        <button
+                            type="button"
+                            onClick={() => setShowRequestModal(true)}
+                            className="text-primary-600 font-semibold hover:underline"
+                        >
+                            Request access
+                        </button>
                     </p>
                 </div>
             </div>
+
+            {/* Request Access Modal */}
+            {showRequestModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden animate-in zoom-in-95 duration-200">
+                        <button
+                            onClick={() => setShowRequestModal(false)}
+                            className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Request Access</h3>
+                            <p className="text-sm text-slate-500 mt-1">Submit your details to request an admin account.</p>
+                        </div>
+
+                        <form onSubmit={handleRequestAccess} className="space-y-4">
+                            <Input
+                                label="Full Name"
+                                value={requestName}
+                                onChange={(e) => setRequestName(e.target.value)}
+                                required
+
+                            />
+                            <Input
+                                label="Email Address"
+                                type="email"
+                                value={requestEmail}
+                                onChange={(e) => setRequestEmail(e.target.value)}
+                                required
+
+                            />
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1.5">Description / Reason</label>
+                                <textarea
+                                    className="w-full rounded-lg border-slate-200 focus:border-primary-500 focus:ring-primary-500/10 min-h-[100px] text-sm py-2 px-3"
+                                    value={requestDesc}
+                                    onChange={(e) => setRequestDesc(e.target.value)}
+                                    required
+
+                                />
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full bg-primary-600 hover:bg-primary-700 text-white"
+                                isLoading={isRequesting}
+                            >
+                                Send Request
+                            </Button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Forgot Password Modal */}
+            {showForgotModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden animate-in zoom-in-95 duration-200">
+                        <button
+                            onClick={() => setShowForgotModal(false)}
+                            className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Reset Password</h3>
+                            <p className="text-sm text-slate-500 mt-1">Enter your email to receive reset instructions.</p>
+                        </div>
+
+                        <form onSubmit={handleForgotPassword} className="space-y-4">
+                            <Input
+                                label="Email Address"
+                                type="email"
+                                value={forgotEmail}
+                                onChange={(e) => setForgotEmail(e.target.value)}
+                                required
+
+                            />
+
+                            <Button
+                                type="submit"
+                                className="w-full bg-primary-600 hover:bg-primary-700 text-white"
+                                isLoading={isResetting}
+                            >
+                                Send Reset Link
+                            </Button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

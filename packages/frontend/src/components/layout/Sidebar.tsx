@@ -1,14 +1,12 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { Building2, Users, Package, Ticket, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Building2, Users, Package, Ticket, LayoutDashboard, Menu, X, Database } from 'lucide-react';
 import { useState } from 'react';
-import Button from '../ui/Button';
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Companies', href: '/companies', icon: Building2 },
+    { name: 'Masters', href: '/masters', icon: Database },
     { name: 'Employees', href: '/employees', icon: Users },
     { name: 'Assets', href: '/assets', icon: Package },
     { name: 'Tickets', href: '/tickets', icon: Ticket },
@@ -16,79 +14,56 @@ const navigation = [
 
 export default function Sidebar() {
     const pathname = usePathname();
-    const router = useRouter();
-    const { user, logout } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-    const handleLogout = async () => {
-        await logout();
-        router.push('/login');
-    };
 
     const SidebarContent = () => (
         <>
             {/* Logo */}
-            <div className="flex items-center gap-3 px-6 py-6 border-b border-slate-100">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center shadow-lg shadow-primary-500/20">
-                    <Building2 className="h-6 w-6 text-white" />
+            <div className="flex items-center gap-3 px-6 py-6 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/10">
+                    <Building2 className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-bold text-slate-900">AdminVault</h1>
-                    <p className="text-xs text-slate-500 font-medium">Enterprise Platform</p>
+                    <h1 className="text-xl font-bold text-white tracking-tight">AdminVault</h1>
+                    <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Enterprise Platform</p>
                 </div>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-4 py-6 space-y-1">
-                {navigation.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
-                    return (
-                        <a
-                            key={item.name}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm shadow-primary-100'
-                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                }`}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                            <Icon className={`h-5 w-5 transition-colors ${isActive ? 'text-primary-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
-                            <span>{item.name}</span>
-                        </a>
-                    );
-                })}
-            </nav>
+            <div className="flex-1 px-4 py-2 space-y-8 overflow-y-auto custom-scrollbar">
+                <div>
+                    <h3 className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                        Main Menu
+                    </h3>
+                    <nav className="space-y-1">
+                        {navigation.map((item) => {
+                            const Icon = item.icon;
+                            // Check exact match for dashboard, startsWith for others to handle sub-routes
+                            const isActive = item.href === '/dashboard'
+                                ? pathname === '/dashboard'
+                                : pathname?.startsWith(item.href);
 
-            {/* User Section */}
-            <div className="border-t border-slate-100 p-4">
-                {user && (
-                    <div className="mb-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-primary-700 font-bold border-2 border-white shadow-sm">
-                                {user.fullName.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-slate-900 truncate">
-                                    {user.fullName}
-                                </p>
-                                <p className="text-xs text-slate-500 truncate font-medium">
-                                    {user.email}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                <Button
-                    variant="outline"
-                    size="md"
-                    leftIcon={<LogOut className="h-4 w-4" />}
-                    onClick={handleLogout}
-                    className="w-full border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                >
-                    Logout
-                </Button>
+                            return (
+                                <a
+                                    key={item.name}
+                                    href={item.href}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group font-medium text-sm ${isActive
+                                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-900/30'
+                                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                        }`}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    <Icon className={`h-4.5 w-4.5 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
+                                    <span>{item.name}</span>
+                                    {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-sm" />}
+                                </a>
+                            );
+                        })}
+                    </nav>
+                </div>
             </div>
+
+
         </>
     );
 
@@ -97,23 +72,23 @@ export default function Sidebar() {
             {/* Mobile Menu Button */}
             <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-white shadow-lg shadow-slate-200/50 border border-slate-100 text-slate-600"
+                className="lg:hidden fixed top-3 left-3 z-50 p-2.5 rounded-xl bg-slate-900/90 backdrop-blur-md shadow-lg shadow-slate-900/20 border border-slate-800 text-slate-400 hover:text-white transition-colors"
             >
                 {isMobileMenuOpen ? (
-                    <X className="h-6 w-6" />
+                    <X className="h-5 w-5" />
                 ) : (
-                    <Menu className="h-6 w-6" />
+                    <Menu className="h-5 w-5" />
                 )}
             </button>
 
             {/* Mobile Sidebar */}
             {isMobileMenuOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-sm"
+                    className="lg:hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm transition-opacity"
                     onClick={() => setIsMobileMenuOpen(false)}
                 >
                     <div
-                        className="fixed inset-y-0 left-0 w-72 bg-white shadow-2xl flex flex-col animate-slide-in"
+                        className="fixed inset-y-0 left-0 w-72 bg-slate-900 shadow-2xl flex flex-col border-r border-slate-800"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <SidebarContent />
@@ -122,7 +97,7 @@ export default function Sidebar() {
             )}
 
             {/* Desktop Sidebar */}
-            <aside className="hidden lg:flex lg:flex-col lg:w-72 bg-white border-r border-slate-100 h-screen sticky top-0 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.02)]">
+            <aside className="hidden lg:flex lg:flex-col lg:w-72 bg-slate-900 border-r border-slate-800 h-screen sticky top-0 shadow-2xl z-40">
                 <SidebarContent />
             </aside>
         </>

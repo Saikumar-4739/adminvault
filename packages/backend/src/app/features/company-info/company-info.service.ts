@@ -4,7 +4,7 @@ import { CompanyInfoRepository } from '../../repository/company-info.repository'
 import { CompanyInfoEntity } from '../../entities/company-info.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateCompanyModel, DeleteCompanyModel, GetCompanyModel, UpdateCompanyModel } from '@adminvault/shared-models';
+import { CreateCompanyModel, DeleteCompanyModel, GetCompanyModel, UpdateCompanyModel, CompanyDocs } from '@adminvault/shared-models';
 
 @Injectable()
 export class CompanyInfoService {
@@ -97,10 +97,18 @@ export class CompanyInfoService {
         }
     }
 
-    async getAllCompanies(): Promise<GlobalResponse> {
+    async getAllCompanies(): Promise<GlobalResponse<CompanyDocs[]>> {
         try {
             const companies = await this.companyInfoRepo.find();
-            return new GlobalResponse(true, 0, "Companies retrieved successfully");
+
+            const companyDocs = companies.map(company => new CompanyDocs(
+                company.id,
+                company.companyName,
+                company.location,
+                company.estDate,
+            ));
+
+            return new GlobalResponse(true, 0, "Companies retrieved successfully", companyDocs);
         } catch (error) {
             throw error;
         }

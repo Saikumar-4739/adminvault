@@ -4,44 +4,58 @@ import { useState } from 'react';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCompanies } from '@/hooks/useCompanies';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
+import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
-import { Plus, Search, Edit, Trash2, Users, Mail, Phone, Building2 } from 'lucide-react';
+import { Plus, Building2, Users, Edit, Trash2 } from 'lucide-react';
 
 export default function EmployeesPage() {
-    const { employees, isLoading, createEmployee, updateEmployee, deleteEmployee } = useEmployees();
     const { companies } = useCompanies();
+    // Default to first company if available, or empty
+    const [selectedOrg, setSelectedOrg] = useState<string>('');
+    const { employees, isLoading, createEmployee, updateEmployee, deleteEmployee } = useEmployees(selectedOrg ? Number(selectedOrg) : undefined);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<any>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [formData, setFormData] = useState({
-        fullName: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phone: '',
-        companyId: '',
         department: '',
-        position: '',
+        accountStatus: 'Active',
+        billingAmount: '',
+        remarks: ''
     });
-
-    const filteredEmployees = employees.filter((employee) =>
-        employee.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        employee.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const data = {
-            ...formData,
-            companyId: parseInt(formData.companyId),
+        const companyId = Number(selectedOrg);
+        if (!companyId) {
+            alert('Please select an organization first');
+            return;
+        }
+
+        const payload = {
+            companyId,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phNumber: formData.phone,
+            department: formData.department as any, // Cast for now
+            empStatus: formData.accountStatus as any, // Cast for now
+            billingAmount: Number(formData.billingAmount),
+            remarks: formData.remarks
         };
 
         if (editingEmployee) {
-            await updateEmployee({ ...data, id: editingEmployee.id } as any);
+            await updateEmployee({
+                id: editingEmployee.id,
+                ...payload
+            } as any);
         } else {
-            await createEmployee(data as any);
+            await createEmployee(payload as any);
         }
 
         handleCloseModal();
@@ -50,18 +64,20 @@ export default function EmployeesPage() {
     const handleEdit = (employee: any) => {
         setEditingEmployee(employee);
         setFormData({
-            fullName: employee.fullName,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
             email: employee.email,
             phone: employee.phone || '',
-            companyId: employee.companyId.toString(),
             department: employee.department || '',
-            position: employee.position || '',
+            accountStatus: employee.accountStatus || 'Active',
+            billingAmount: employee.billingAmount ? String(employee.billingAmount) : '',
+            remarks: employee.remarks || ''
         });
         setIsModalOpen(true);
     };
 
     const handleDelete = async (employee: any) => {
-        if (confirm(`Are you sure you want to delete ${employee.fullName}?`)) {
+        if (confirm(`Are you sure you want to delete ${employee.firstName} ${employee.lastName}?`)) {
             await deleteEmployee({ id: employee.id });
         }
     };
@@ -69,12 +85,16 @@ export default function EmployeesPage() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingEmployee(null);
-        setFormData({ fullName: '', email: '', phone: '', companyId: '', department: '', position: '' });
-    };
-
-    const getCompanyName = (companyId: number) => {
-        const company = companies.find(c => c.id === companyId);
-        return company?.name || 'Unknown';
+        setFormData({
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            department: '',
+            accountStatus: 'Active',
+            billingAmount: '',
+            remarks: ''
+        });
     };
 
     return (
@@ -84,135 +104,133 @@ export default function EmployeesPage() {
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Employees</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                        Manage your organization's employees
+                        Manage your organization's workforce
                     </p>
                 </div>
-                <Button
-                    variant="primary"
-                    size="lg"
-                    leftIcon={<Plus className="h-5 w-5" />}
-                    onClick={() => setIsModalOpen(true)}
-                >
-                    Add Employee
-                </Button>
+                <div className="flex items-center gap-3">
+                    {/* Organization Dropdown */}
+                    <div className="relative">
+                        <select
+                            value={selectedOrg}
+                            onChange={(e) => setSelectedOrg(e.target.value)}
+                            className="appearance-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium h-9"
+                        >
+                            <option value="">Select Organization</option>
+                            {companies.map(company => (
+                                <option key={company.id} value={company.id}>{company.companyName}</option>
+                            ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                            <Building2 className="h-4 w-4" />
+                        </div>
+                    </div>
+
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        className="shadow-md shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-300"
+                        leftIcon={<Plus className="h-4 w-4" />}
+                        onClick={() => setIsModalOpen(true)}
+                        disabled={!selectedOrg} // Disable if no org selected
+                    >
+                        Add Employee
+                    </Button>
+                </div>
             </div>
 
-            {/* Search */}
-            <Card>
-                <div className="p-4">
-                    <Input
-                        placeholder="Search employees by name or email..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        leftIcon={<Search className="h-5 w-5" />}
-                    />
+            {/* Employees Table */}
+            <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
+                        <thead className="bg-slate-50/80 dark:bg-slate-800/80">
+                            <tr>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">First Name</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Last Name</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Email Id</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Created Date</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Account Status</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Billing Amount</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Department</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-900">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={10} className="px-6 py-12 text-center border border-slate-200 dark:border-slate-700">
+                                        <div className="flex items-center justify-center">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : employees.length === 0 ? (
+                                <tr>
+                                    <td colSpan={10} className="px-6 py-12 text-center border border-slate-200 dark:border-slate-700">
+                                        <div className="bg-slate-50 dark:bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                            <Users className="h-8 w-8 text-slate-300" />
+                                        </div>
+                                        <p className="text-slate-500 dark:text-slate-400 font-medium">No employees found for this organization</p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                employees.map((emp, index) => (
+                                    <tr key={emp.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{emp.firstName}</td>
+                                        <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white">{emp.lastName}</td>
+                                        <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{emp.email}</td>
+                                        <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">
+                                            {emp.createdDate ? new Date(emp.createdDate).toLocaleDateString() : '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="relative inline-block w-10 h-5 align-middle select-none transition duration-200 ease-in">
+                                                    <input type="checkbox" checked={emp.accountStatus === 'Active'} readOnly className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-indigo-500 transition-transform duration-200 ease-in-out translate-x-5" />
+                                                    <label className="toggle-label block overflow-hidden h-5 rounded-full bg-indigo-500 cursor-pointer"></label>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white">
+                                            {emp.billingAmount ? `$${Number(emp.billingAmount).toLocaleString()}` : '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">
+                                            <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-xs font-medium">
+                                                {emp.department || 'None'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-medium border border-slate-200 dark:border-slate-700">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0"
+                                                    onClick={() => handleEdit(emp)}
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="danger"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0"
+                                                    onClick={() => handleDelete(emp)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </Card>
-
-            {/* Employees Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {isLoading ? (
-                    Array.from({ length: 6 }).map((_, i) => (
-                        <Card key={i} className="p-6 animate-pulse">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                                </div>
-                            </div>
-                        </Card>
-                    ))
-                ) : filteredEmployees.length === 0 ? (
-                    <div className="col-span-full">
-                        <Card className="p-12">
-                            <div className="text-center">
-                                <Users className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-                                <p className="text-gray-500 dark:text-gray-400">
-                                    {searchQuery ? 'No employees found' : 'No employees yet'}
-                                </p>
-                            </div>
-                        </Card>
-                    </div>
-                ) : (
-                    filteredEmployees.map((employee) => (
-                        <Card key={employee.id} className="p-6 hover:shadow-xl transition-all duration-300 border-none ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-800 group">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20 ring-4 ring-white dark:ring-slate-800">
-                                        {employee.fullName.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">
-                                            {employee.fullName}
-                                        </h3>
-                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                                            {employee.position || 'Employee'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3 mb-6 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl">
-                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                                    <div className="p-1.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm text-slate-400">
-                                        <Mail className="h-3.5 w-3.5" />
-                                    </div>
-                                    <span className="truncate font-medium">{employee.email}</span>
-                                </div>
-                                {employee.phone && (
-                                    <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                                        <div className="p-1.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm text-slate-400">
-                                            <Phone className="h-3.5 w-3.5" />
-                                        </div>
-                                        <span className="font-medium">{employee.phone}</span>
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                                    <div className="p-1.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm text-slate-400">
-                                        <Building2 className="h-3.5 w-3.5" />
-                                    </div>
-                                    <span className="font-medium">{getCompanyName(employee.companyId)}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                {employee.department ? (
-                                    <Badge variant="neutral" className="bg-slate-100 text-slate-600 border-none">
-                                        {employee.department}
-                                    </Badge>
-                                ) : <div></div>}
-
-                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-200">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-8 w-8 p-0 rounded-full"
-                                        onClick={() => handleEdit(employee)}
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        size="sm"
-                                        className="h-8 w-8 p-0 rounded-full"
-                                        onClick={() => handleDelete(employee)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </Card>
-                    ))
-                )}
-            </div>
 
             {/* Create/Edit Modal */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 title={editingEmployee ? 'Edit Employee' : 'Add New Employee'}
-                size="md"
+                size="lg"
                 footer={
                     <>
                         <Button variant="outline" onClick={handleCloseModal}>
@@ -224,59 +242,84 @@ export default function EmployeesPage() {
                     </>
                 }
             >
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input
-                        label="Full Name"
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                        required
-                        placeholder="John Doe"
-                    />
-                    <Input
-                        label="Email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                        placeholder="john@example.com"
-                    />
-                    <Input
-                        label="Phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+1 (555) 000-0000"
-                    />
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Company <span className="text-error-500">*</span>
+                <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 sm:col-span-1">
+                        <Input
+                            label="First Name"
+                            value={formData.firstName}
+                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
+                        <Input
+                            label="Last Name"
+                            value={formData.lastName}
+                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <div className="col-span-2">
+                        <Input
+                            label="Email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
+                        <Input
+                            label="Phone"
+                            type="tel"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            Department
                         </label>
                         <select
-                            value={formData.companyId}
-                            onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                            required
-                            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            value={formData.department}
+                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
-                            <option value="">Select a company</option>
-                            {companies.map((company) => (
-                                <option key={company.id} value={company.id}>
-                                    {company.name}
-                                </option>
-                            ))}
+                            <option value="">Select Department</option>
+                            <option value="IT">IT</option>
+                            <option value="HR">HR</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Admin">Admin</option>
                         </select>
                     </div>
-                    <Input
-                        label="Department"
-                        value={formData.department}
-                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        placeholder="Engineering"
-                    />
-                    <Input
-                        label="Position"
-                        value={formData.position}
-                        onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                        placeholder="Software Engineer"
-                    />
+                    <div className="col-span-2 sm:col-span-1">
+                        <Input
+                            label="Billing Amount"
+                            type="number"
+                            value={formData.billingAmount}
+                            onChange={(e) => setFormData({ ...formData, billingAmount: e.target.value })}
+                        />
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            Account Status
+                        </label>
+                        <select
+                            value={formData.accountStatus}
+                            onChange={(e) => setFormData({ ...formData, accountStatus: e.target.value })}
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div className="col-span-2">
+                        <Input
+                            label="Remarks"
+                            value={formData.remarks}
+                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                        />
+                    </div>
                 </form>
             </Modal>
         </div>

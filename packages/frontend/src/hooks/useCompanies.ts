@@ -7,11 +7,11 @@ import { useToast } from '@/contexts/ToastContext';
 
 interface Company {
     id: number;
-    name: string;
-    address?: string;
+    companyName: string;
+    location?: string;
     phone?: string;
     email?: string;
-    createdAt?: string;
+    estDate?: string;
 }
 
 export function useCompanies() {
@@ -27,7 +27,16 @@ export function useCompanies() {
             const response = await companyService.getAllCompanies();
 
             if (response.status && response.data) {
-                setCompanies(response.data as Company[]);
+                const data = response.data as any[];
+                const mappedCompanies: Company[] = data.map((item) => ({
+                    id: item.id,
+                    companyName: item.companyName || item.name || '',
+                    location: item.location || item.address,
+                    phone: item.phone,
+                    email: item.email,
+                    estDate: item.estDate || item.createdAt
+                }));
+                setCompanies(mappedCompanies);
             } else {
                 throw new Error(response.message || 'Failed to fetch companies');
             }

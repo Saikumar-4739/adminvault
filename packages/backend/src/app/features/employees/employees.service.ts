@@ -20,12 +20,7 @@ export class EmployeesService {
             if (!reqModel.companyId) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
-            if (!reqModel.firstName) {
-                throw new ErrorResponse(0, "First name is required");
-            }
-            if (!reqModel.lastName) {
-                throw new ErrorResponse(0, "Last name is required");
-            }
+
             if (!reqModel.email) {
                 throw new ErrorResponse(0, "Email is required");
             }

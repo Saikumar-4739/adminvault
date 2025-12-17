@@ -11,8 +11,10 @@ interface Asset {
     assetType?: string;
     serialNumber?: string;
     companyId: number;
+    deviceId?: number;
     status?: string;
     purchaseDate?: string;
+    warrantyExpiry?: string;
     createdAt?: string;
 }
 
@@ -28,8 +30,21 @@ export function useAssets(companyId?: number) {
             setError(null);
             const response = await assetService.getAllAssets(companyId);
 
-            if (response.status && response.data) {
-                setAssets(response.data as Asset[]);
+            if (response.status) {
+                const data = (response as any).assets || response.data || [];
+                const mappedAssets: Asset[] = data.map((item: any) => ({
+                    id: item.id,
+                    assetName: item.deviceName || `Asset ${item.serialNumber}`,
+                    assetType: item.deviceType || 'Unknown',
+                    serialNumber: item.serialNumber,
+                    companyId: item.companyId,
+                    deviceId: item.deviceId,
+                    status: item.assetStatusEnum || item.status,
+                    purchaseDate: item.purchaseDate,
+                    warrantyExpiry: item.warrantyExpiry,
+                    createdAt: item.createdAt || item.created_at
+                }));
+                setAssets(mappedAssets);
             } else {
                 throw new Error(response.message || 'Failed to fetch assets');
             }

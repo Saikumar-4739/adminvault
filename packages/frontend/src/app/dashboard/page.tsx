@@ -6,7 +6,7 @@ import { useAssets } from '@/hooks/useAssets';
 import { useTickets } from '@/hooks/useTickets';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import { Building2, Users, Package, Ticket, AlertCircle } from 'lucide-react';
+import { Building2, Users, Package, Ticket, AlertCircle, ShieldAlert, AlertTriangle, Lock, Globe } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 
 export default function DashboardPage() {
@@ -207,6 +207,93 @@ export default function DashboardPage() {
                         )}
                     </div>
                 </Card>
+                {/* System Health */}
+                <Card className="p-6 border-none shadow-lg shadow-slate-200/50 dark:shadow-none">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5 text-rose-500" />
+                        System Health
+                    </h2>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/50">
+                            <div className="flex items-center gap-3">
+                                <span className="relative flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                </span>
+                                <div>
+                                    <p className="font-semibold text-emerald-900 dark:text-emerald-100">All Systems Operational</p>
+                                    <p className="text-xs text-emerald-700 dark:text-emerald-300">Database, API, and Storage services running normally</p>
+                                </div>
+                            </div>
+                            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">99.9% Uptime</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Server Load</p>
+                                <div className="flex items-end gap-2">
+                                    <span className="text-2xl font-bold text-slate-900 dark:text-white">24%</span>
+                                    <span className="text-xs text-emerald-500 font-medium mb-1.5">↓ 2%</span>
+                                </div>
+                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mt-2">
+                                    <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: '24%' }}></div>
+                                </div>
+                            </div>
+                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Response Time</p>
+                                <div className="flex items-end gap-2">
+                                    <span className="text-2xl font-bold text-slate-900 dark:text-white">124ms</span>
+                                    <span className="text-xs text-emerald-500 font-medium mb-1.5">~ Stable</span>
+                                </div>
+                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mt-2">
+                                    <div className="bg-violet-500 h-1.5 rounded-full" style={{ width: '45%' }}></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Security Alerts */}
+                <Card className="p-6 border-none shadow-lg shadow-slate-200/50 dark:shadow-none">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <ShieldAlert className="h-5 w-5 text-amber-500" />
+                        Security Alerts
+                    </h2>
+                    <div className="space-y-4">
+                        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/50 flex gap-4">
+                            <div className="shrink-0 pt-1">
+                                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Unusual Login Attempt</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Detected from IP 192.168.1.105 (Singapore) - Blocked automatically.</p>
+                                <span className="text-[10px] font-medium text-slate-400 mt-2 block">2 mins ago</span>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex gap-4 opacity-75 hover:opacity-100 transition-opacity">
+                            <div className="shrink-0 pt-1">
+                                <Lock className="h-5 w-5 text-indigo-500" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Policy Update Required</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">3 new employees need to sign the updated IT security policy.</p>
+                                <span className="text-[10px] font-medium text-slate-400 mt-2 block">4 hours ago</span>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex gap-4 opacity-75 hover:opacity-100 transition-opacity">
+                            <div className="shrink-0 pt-1">
+                                <Globe className="h-5 w-5 text-emerald-500" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Firewall Rules Updated</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">New rules applied for regional offices in EMEA.</p>
+                                <span className="text-[10px] font-medium text-slate-400 mt-2 block">Yesterday</span>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
             </div>
 
             {/* Recent Employees */}
@@ -263,10 +350,10 @@ export default function DashboardPage() {
                                         <td className="px-4 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-600 flex items-center justify-center font-bold text-xs ring-2 ring-white">
-                                                    {employee.fullName.charAt(0).toUpperCase()}
+                                                    {(employee.firstName || '').charAt(0).toUpperCase()}
                                                 </div>
                                                 <div className="font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">
-                                                    {employee.fullName}
+                                                    {employee.firstName} {employee.lastName}
                                                 </div>
                                             </div>
                                         </td>

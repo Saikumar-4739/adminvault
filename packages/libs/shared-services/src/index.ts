@@ -11,4 +11,5 @@ export * from './email/email-info-service';
 export * from './tickets/tickets-service';
 export * from './asset-assign/asset-assign-service';
 export * from './it-admin/it-admin-service';
+export * from './masters/masters-service';
 

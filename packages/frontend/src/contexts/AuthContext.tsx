@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
             localStorage.removeItem('refresh_token');
-            toast.info('Logged out', 'You have been successfully logged out');
+
         }
     }, [user, token, toast]);
 

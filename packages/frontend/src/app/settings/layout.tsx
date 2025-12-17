@@ -3,7 +3,7 @@
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 
-export default function DashboardLayout({
+export default function SettingsLayout({
     children,
 }: {
     children: React.ReactNode;

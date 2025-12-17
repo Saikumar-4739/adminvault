@@ -81,7 +81,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             {children}
             {mounted &&
                 createPortal(
-                    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md">
+                    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-md px-4 sm:px-0">
                         {toasts.map((toast) => (
                             <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
                         ))}

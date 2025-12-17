@@ -9,6 +9,7 @@ import {
     TicketsService,
     AssetAssignService,
     ItAdminService,
+    MastersService,
 } from '@adminvault/shared-services';
 
 // Create singleton instances
@@ -21,6 +22,7 @@ export const emailService = new EmailInfoService();
 export const ticketService = new TicketsService();
 export const assetAssignService = new AssetAssignService();
 export const itAdminService = new ItAdminService();
+export const mastersService = new MastersService();
 
 // Export all services
 export const services = {
@@ -33,4 +35,5 @@ export const services = {
     ticket: ticketService,
     assetAssign: assetAssignService,
     itAdmin: itAdminService,
+    masters: mastersService,
 };

@@ -7,13 +7,16 @@ import { useToast } from '@/contexts/ToastContext';
 
 interface Employee {
     id: number;
-    fullName: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone?: string;
     companyId: number;
     department?: string;
-    position?: string;
-    createdAt?: string;
+    accountStatus?: string; // empStatus
+    billingAmount?: number;
+    remarks?: string;
+    createdDate?: string;
 }
 
 export function useEmployees(companyId?: number) {
@@ -28,8 +31,22 @@ export function useEmployees(companyId?: number) {
             setError(null);
             const response = await employeeService.getAllEmployees(companyId);
 
-            if (response.status && response.data) {
-                setEmployees(response.data as Employee[]);
+            if (response.status) {
+                const data = (response as any).employees || response.data || [];
+                const mappedEmployees: Employee[] = data.map((item: any) => ({
+                    id: item.id,
+                    firstName: item.firstName,
+                    lastName: item.lastName,
+                    email: item.email,
+                    phone: item.phNumber || item.phone,
+                    companyId: item.companyId,
+                    department: item.department,
+                    accountStatus: item.empStatus,
+                    billingAmount: item.billingAmount,
+                    remarks: item.remarks,
+                    createdDate: item.created_at || item.createdAt || new Date().toISOString()
+                }));
+                setEmployees(mappedEmployees);
             } else {
                 throw new Error(response.message || 'Failed to fetch employees');
             }
