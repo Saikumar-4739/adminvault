@@ -1,11 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity } from 'typeorm';
+import { CommonBaseEntity } from './common-base.entity';
 import { DeviceTypeEnum } from '@adminvault/shared-models';
 
 @Entity('device_info')
-export class DeviceInfoEntity {
-  @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for device info' })
-  id: number;
-
+export class DeviceInfoEntity extends CommonBaseEntity {
   @Column('enum', { name: 'device_type', enum: DeviceTypeEnum, nullable: false, comment: 'Type of device' })
   deviceType: DeviceTypeEnum;
 

@@ -1,65 +1,154 @@
-import { AxiosRequestConfig } from "axios";
-import { CommonAxiosService } from "../common-axios-service";
 import {
-    GlobalResponse,
+    CompanyIdRequestModel,
+    CreateAssetTypeModel,
+    CreateAssetTypeResponseModel,
+    CreateBrandModel,
+    CreateBrandResponseModel,
     CreateDepartmentModel,
-    CreateDesignationModel,
-    CreateMasterModel,
-    CreateVendorModel,
+    CreateDepartmentResponseModel,
     CreateLocationModel,
-    CreateTicketCategoryModel
+    CreateLocationResponseModel,
+    CreateTicketCategoryModel,
+    CreateTicketCategoryResponseModel,
+    CreateVendorModel,
+    CreateVendorResponseModel,
+    GetAllAssetTypesResponseModel,
+    GetAllBrandsResponseModel,
+    GetAllDepartmentsResponseModel,
+    GetAllLocationsResponseModel,
+    GetAllTicketCategoriesResponseModel,
+    GetAllVendorsResponseModel,
+    GlobalResponse,
+    IdRequestModel
 } from '@adminvault/shared-models';
+import { CommonAxiosService } from '../common-axios-service';
 
 export class MastersService extends CommonAxiosService {
-    private getUrl(type: string, id?: number) {
-        return `/masters/${type}${id ? '/' + id : ''}`;
+    private readonly BASE_PATH = '/masters';
+
+    // ============================================
+    // DEPARTMENTS
+    // ============================================
+    async getAllDepartments(companyId: number): Promise<GetAllDepartmentsResponseModel> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/getAllDepartments`,
+            new CompanyIdRequestModel(companyId)
+        );
     }
 
-    // Generic Helpers
-    private async getAll(type: string, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosGetCall(this.getUrl(type), config);
+    async createDepartment(data: CreateDepartmentModel): Promise<CreateDepartmentResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/departments`, data);
     }
 
-    private async create(type: string, data: any, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getUrl(type), data, config);
+    async deleteDepartment(id: number): Promise<GlobalResponse> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/deleteDepartment`,
+            new IdRequestModel(id)
+        );
     }
 
-    private async delete(type: string, id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosDeleteCall(this.getUrl(type, id), config);
+    // ============================================
+    // ASSET TYPES
+    // ============================================
+    async getAllAssetTypes(companyId: number): Promise<GetAllAssetTypesResponseModel> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/getAllAssetTypes`,
+            new CompanyIdRequestModel(companyId)
+        );
     }
 
-    // Departments
-    async getAllDepartments() { return this.getAll('departments'); }
-    async createDepartment(data: CreateDepartmentModel) { return this.create('departments', data); }
-    async deleteDepartment(id: number) { return this.delete('departments', id); }
+    async createAssetType(data: CreateAssetTypeModel): Promise<CreateAssetTypeResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/asset-types`, data);
+    }
 
-    // Designations
-    async getAllDesignations() { return this.getAll('designations'); }
-    async createDesignation(data: CreateDesignationModel) { return this.create('designations', data); }
-    async deleteDesignation(id: number) { return this.delete('designations', id); }
+    async deleteAssetType(id: number): Promise<GlobalResponse> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/deleteAssetType`,
+            new IdRequestModel(id)
+        );
+    }
 
-    // Asset Types
-    async getAllAssetTypes() { return this.getAll('asset-types'); }
-    async createAssetType(data: CreateMasterModel) { return this.create('asset-types', data); }
-    async deleteAssetType(id: number) { return this.delete('asset-types', id); }
+    // ============================================
+    // BRANDS
+    // ============================================
+    async getAllBrands(companyId: number): Promise<GetAllBrandsResponseModel> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/getAllBrands`,
+            new CompanyIdRequestModel(companyId)
+        );
+    }
 
-    // Brands
-    async getAllBrands() { return this.getAll('brands'); }
-    async createBrand(data: CreateMasterModel) { return this.create('brands', data); }
-    async deleteBrand(id: number) { return this.delete('brands', id); }
+    async createBrand(data: CreateBrandModel): Promise<CreateBrandResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/brands`, data);
+    }
 
-    // Vendors
-    async getAllVendors() { return this.getAll('vendors'); }
-    async createVendor(data: CreateVendorModel) { return this.create('vendors', data); }
-    async deleteVendor(id: number) { return this.delete('vendors', id); }
+    async deleteBrand(id: number): Promise<GlobalResponse> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/deleteBrand`,
+            new IdRequestModel(id)
+        );
+    }
 
-    // Locations
-    async getAllLocations() { return this.getAll('locations'); }
-    async createLocation(data: CreateLocationModel) { return this.create('locations', data); }
-    async deleteLocation(id: number) { return this.delete('locations', id); }
+    // ============================================
+    // VENDORS
+    // ============================================
+    async getAllVendors(companyId: number): Promise<GetAllVendorsResponseModel> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/getAllVendors`,
+            new CompanyIdRequestModel(companyId)
+        );
+    }
 
-    // Ticket Categories
-    async getAllTicketCategories() { return this.getAll('ticket-categories'); }
-    async createTicketCategory(data: CreateTicketCategoryModel) { return this.create('ticket-categories', data); }
-    async deleteTicketCategory(id: number) { return this.delete('ticket-categories', id); }
+    async createVendor(data: CreateVendorModel): Promise<CreateVendorResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/vendors`, data);
+    }
+
+    async deleteVendor(id: number): Promise<GlobalResponse> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/deleteVendor`,
+            new IdRequestModel(id)
+        );
+    }
+
+    // ============================================
+    // LOCATIONS
+    // ============================================
+    async getAllLocations(companyId: number): Promise<GetAllLocationsResponseModel> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/getAllLocations`,
+            new CompanyIdRequestModel(companyId)
+        );
+    }
+
+    async createLocation(data: CreateLocationModel): Promise<CreateLocationResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/locations`, data);
+    }
+
+    async deleteLocation(id: number): Promise<GlobalResponse> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/deleteLocation`,
+            new IdRequestModel(id)
+        );
+    }
+
+    // ============================================
+    // TICKET CATEGORIES
+    // ============================================
+    async getAllTicketCategories(companyId: number): Promise<GetAllTicketCategoriesResponseModel> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/getAllTicketCategories`,
+            new CompanyIdRequestModel(companyId)
+        );
+    }
+
+    async createTicketCategory(data: CreateTicketCategoryModel): Promise<CreateTicketCategoryResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/ticket-categories`, data);
+    }
+
+    async deleteTicketCategory(id: number): Promise<GlobalResponse> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/deleteTicketCategory`,
+            new IdRequestModel(id)
+        );
+    }
 }

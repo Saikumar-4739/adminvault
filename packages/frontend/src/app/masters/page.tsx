@@ -8,7 +8,6 @@ import { Modal } from '@/components/ui/modal';
 import { Building2, Users, Package, Smartphone, Monitor, ShoppingBag, Briefcase, Tags, Plus } from 'lucide-react';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useMasters } from '@/hooks/useMasters';
-import { CreateMasterModel } from '@adminvault/shared-models';
 import { PageLoader } from '@/components/ui/Spinner';
 
 export default function MastersPage() {
@@ -27,11 +26,9 @@ export default function MastersPage() {
     const tabs = [
         { id: 'companies', label: 'Companies', icon: Building2 },
         { id: 'departments', label: 'Departments', icon: Users },
-        { id: 'designations', label: 'Designations', icon: Briefcase },
         { id: 'asset-types', label: 'Asset Types', icon: Monitor },
         { id: 'device-brands', label: 'Device Brands', icon: Smartphone },
         { id: 'vendors', label: 'Vendors', icon: ShoppingBag },
-        { id: 'locations', label: 'Locations', icon: Package },
         { id: 'ticket-categories', label: 'Ticket Categories', icon: Tags },
     ];
 

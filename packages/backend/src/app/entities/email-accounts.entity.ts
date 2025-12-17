@@ -1,13 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { EmailTypeEnum, EmailStatusEnum } from '@adminvault/shared-models';
+import { CommonBaseEntity } from './common-base.entity';
 
 @Entity('email_accounts')
-export class EmailAccountsEntity {
-    @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for email accounts' })
-    id: number;
-
-    @Column('bigint', { name: 'company_id', nullable: false, comment: 'Reference to company_info table' })
-    companyId: number;
+export class EmailAccountsEntity extends CommonBaseEntity {
 
     @Column('bigint', { name: 'employee_id', nullable: false, comment: 'Reference to employees table' })
     employeeId: number;
@@ -20,10 +16,4 @@ export class EmailAccountsEntity {
 
     @Column('enum', { name: 'status', enum: EmailStatusEnum, default: EmailStatusEnum.ACTIVE, nullable: false, comment: 'Email account status' })
     status: EmailStatusEnum;
-
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp', comment: 'Record creation timestamp' })
-    createdAt: Date;
-
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', comment: 'Record last update timestamp' })
-    updatedAt: Date;
 }

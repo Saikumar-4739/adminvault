@@ -1,11 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity } from 'typeorm';
+import { CommonBaseEntity } from './common-base.entity';
 import { CommentByEnum } from '@adminvault/shared-models';
 
 @Entity('ticket_comments')
-export class TicketCommentsEntity {
-    @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for ticket comments' })
-    id: number;
-
+export class TicketCommentsEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'ticket_id', nullable: false, comment: 'Reference to tickets table' })
     ticketId: number;
 
@@ -17,10 +15,4 @@ export class TicketCommentsEntity {
 
     @Column('bigint', { name: 'commented_by_id', nullable: false, comment: 'ID of the person who commented' })
     commentedById: number;
-
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp', comment: 'Comment creation timestamp' })
-    createdAt: Date;
-
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', comment: 'Comment last update timestamp' })
-    updatedAt: Date;
 }

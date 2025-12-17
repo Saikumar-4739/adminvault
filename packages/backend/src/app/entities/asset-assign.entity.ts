@@ -1,10 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity } from 'typeorm';
+import { CommonBaseEntity } from './common-base.entity';
 
 @Entity('asset_assign')
-export class AssetAssignEntity {
-    @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for asset assignment' })
-    id: number;
-
+export class AssetAssignEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'asset_id', nullable: false, comment: 'Reference to asset_info table' })
     assetId: number;
 

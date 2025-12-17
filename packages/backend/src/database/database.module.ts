@@ -14,6 +14,13 @@ import { AssetAssignEntity } from '../app/entities/asset-assign.entity';
 import { TicketCommentsEntity } from '../app/entities/ticket-comments.entity';
 import { TicketStatusLogsEntity } from '../app/entities/ticket-status-logs.entity';
 import { EmailAccountsEntity } from '../app/entities/email-accounts.entity';
+// Master entities
+import { DepartmentEntity } from '../app/entities/masters/department.entity';
+import { AssetTypeEntity } from '../app/entities/masters/asset-type.entity';
+import { BrandEntity } from '../app/entities/masters/brand.entity';
+import { VendorEntity } from '../app/entities/masters/vendor.entity';
+import { LocationEntity } from '../app/entities/masters/location.entity';
+import { TicketCategoryEntity } from '../app/entities/masters/ticket-category.entity';
 
 @Module({
     imports: [
@@ -40,6 +47,12 @@ import { EmailAccountsEntity } from '../app/entities/email-accounts.entity';
                     TicketCommentsEntity,
                     TicketStatusLogsEntity,
                     EmailAccountsEntity,
+                    DepartmentEntity,
+                    AssetTypeEntity,
+                    BrandEntity,
+                    VendorEntity,
+                    LocationEntity,
+                    TicketCategoryEntity,
                 ],
                 synchronize: false,
                 logging: configService.get<string>('NODE_ENV') !== 'production',

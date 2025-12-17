@@ -1,8 +1,18 @@
 import { Entity, Column } from 'typeorm';
-import { MasterBaseEntity } from './master-base.entity';
+import { CommonBaseEntity } from '../common-base.entity';
 
 @Entity('locations')
-export class LocationEntity extends MasterBaseEntity {
+export class LocationEntity extends CommonBaseEntity {
+
+    @Column({ nullable: false, type: 'varchar' })
+    name: string;
+
+    @Column({ nullable: true, type: 'text' })
+    description: string;
+
+    @Column({ nullable: false, type: 'boolean', default: true })
+    isActive: boolean;
+
     @Column({ nullable: true })
     address: string;
 

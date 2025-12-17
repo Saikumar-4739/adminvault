@@ -1,15 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { AbstractEntity } from './abstract.entity';
+import { Column, Entity } from 'typeorm';
+import { CommonBaseEntity } from './common-base.entity';
 import { EmployeeStatusEnum, DepartmentEnum } from '@adminvault/shared-models';
 
 @Entity('employees')
-export class EmployeesEntity extends AbstractEntity {
-  @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for employees' })
-  id: number;
-
-  @Column('bigint', { name: 'company_id', nullable: false, comment: 'Reference to company_info table' })
-  companyId: number;
-
+export class EmployeesEntity extends CommonBaseEntity {
   @Column('varchar', { name: 'first_name', length: 100, nullable: false, comment: 'Employee first name' })
   firstName: string;
 

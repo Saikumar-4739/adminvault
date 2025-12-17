@@ -1,14 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity } from 'typeorm';
+import { CommonBaseEntity } from './common-base.entity';
 import { AssetStatusEnum } from '@adminvault/shared-models';
 
 @Entity('asset_info')
-export class AssetInfoEntity {
-    @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for asset info' })
-    id: number;
-
-    @Column('bigint', { name: 'company_id', nullable: false, comment: 'Reference to company_info table' })
-    companyId: number;
-
+export class AssetInfoEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'device_id', nullable: false, comment: 'Reference to device_info table' })
     deviceId: number;
 
@@ -23,10 +18,4 @@ export class AssetInfoEntity {
 
     @Column('enum', { name: 'asset_status_enum', enum: AssetStatusEnum, default: AssetStatusEnum.AVAILABLE, nullable: false, comment: 'Current asset status' })
     assetStatusEnum: AssetStatusEnum;
-
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp', comment: 'Record creation timestamp' })
-    createdAt: Date;
-
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', comment: 'Record last update timestamp' })
-    updatedAt: Date;
 }

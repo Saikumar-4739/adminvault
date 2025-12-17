@@ -1,14 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity } from 'typeorm';
+import { CommonBaseEntity } from './common-base.entity';
 import { EmailTypeEnum, DepartmentEnum } from '@adminvault/shared-models';
 
 @Entity('email_info')
-export class EmailInfoEntity {
-  @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for email info' })
-  id: number;
-
-  @Column('bigint', { name: 'company_id', nullable: false, comment: 'Reference to company_info table' })
-  companyId: number;
-
+export class EmailInfoEntity extends CommonBaseEntity {
   @Column('enum', { name: 'email_type', enum: EmailTypeEnum, nullable: false, comment: 'Type of email' })
   emailType: EmailTypeEnum;
 

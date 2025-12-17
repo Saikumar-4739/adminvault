@@ -1,11 +1,9 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { AbstractEntity } from './abstract.entity';
 import { AdminRoleEnum, AdminStatusEnum } from '@adminvault/shared-models';
+import { CommonBaseEntity } from './common-base.entity';
 
 @Entity('it_admin')
-export class ItAdminEntity extends AbstractEntity {
-    @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for IT admin' })
-    id: number;
+export class ItAdminEntity extends CommonBaseEntity {
 
     @Column('varchar', { name: 'admin_code', length: 50, nullable: false, unique: true, comment: 'Unique admin code' })
     adminCode: string;

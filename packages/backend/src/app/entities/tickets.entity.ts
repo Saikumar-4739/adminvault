@@ -1,12 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { AbstractEntity } from './abstract.entity';
+import { Column, Entity } from 'typeorm';
+import { CommonBaseEntity } from './common-base.entity';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
 
 @Entity('tickets')
-export class TicketsEntity extends AbstractEntity {
-    @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for tickets' })
-    id: number;
-
+export class TicketsEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'ticket_code', length: 50, nullable: false, unique: true, comment: 'Unique ticket code' })
     ticketCode: string;
 

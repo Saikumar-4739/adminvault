@@ -110,6 +110,13 @@ export class GetAllUsersModel extends GlobalResponse {
     }
 }
 
+export class IdRequestModel {
+    id: number;
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
 export class CompanyIdRequestModel {
     id: number;
     name?: string;

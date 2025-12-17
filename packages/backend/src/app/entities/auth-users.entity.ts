@@ -1,9 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { AbstractEntity } from './abstract.entity';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
 @Entity('auth_users')
-export class AuthUsersEntity extends AbstractEntity {
+export class AuthUsersEntity {
   @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for auth users' })
   id: number;
 
@@ -30,5 +29,11 @@ export class AuthUsersEntity extends AbstractEntity {
 
   @Column('timestamp', { name: 'last_login', nullable: true, comment: 'Last login timestamp' })
   lastLogin: Date;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', comment: 'Record creation timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', comment: 'Record last update timestamp' })
+  updatedAt: Date;
 }
 

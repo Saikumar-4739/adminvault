@@ -87,6 +87,7 @@ export class AuthUsersService {
             // Generate tokens
             const accessToken = this.generateAccessToken(user.email);
             const refreshToken = this.generateRefreshToken(user.email);
+
             const userInfo = new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole);
             return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
         } catch (err) {

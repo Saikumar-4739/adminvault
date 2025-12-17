@@ -1,8 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { AbstractEntity } from './abstract.entity';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('company_info')
-export class CompanyInfoEntity extends AbstractEntity {
+export class CompanyInfoEntity {
+
   @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for company info' })
   id: number;
 
@@ -20,4 +20,10 @@ export class CompanyInfoEntity extends AbstractEntity {
 
   @Column('varchar', { name: 'phone', length: 50, nullable: true, comment: 'Company phone number' })
   phone: string;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', comment: 'Record creation timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', comment: 'Record last update timestamp' })
+  updatedAt: Date;
 }

@@ -1,8 +1,27 @@
 import { Entity, Column } from 'typeorm';
-import { MasterBaseEntity } from './master-base.entity';
+import { CommonBaseEntity } from '../common-base.entity';
 
 @Entity('device_brands')
-export class BrandEntity extends MasterBaseEntity {
+export class BrandEntity extends CommonBaseEntity {
+
+    @Column({ nullable: false, type: 'varchar' })
+    name: string;
+
+    @Column({ nullable: true, type: 'text' })
+    description: string;
+
+    @Column({ nullable: false, type: 'boolean', default: true })
+    isActive: boolean;
+
+    @Column({ nullable: true, type: 'varchar' })
+    status: string;
+
+    @Column({ nullable: true })
+    logo: string;
+
+    @Column({ nullable: true })
+    code: string;
+
     @Column({ nullable: true })
     website: string;
 }

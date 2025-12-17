@@ -1,10 +1,9 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 import { TicketStatusEnum } from '@adminvault/shared-models';
+import { CommonBaseEntity } from './common-base.entity';
 
 @Entity('ticket_status_logs')
-export class TicketStatusLogsEntity {
-    @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for ticket status logs' })
-    id: number;
+export class TicketStatusLogsEntity extends CommonBaseEntity {
 
     @Column('bigint', { name: 'ticket_id', nullable: false, comment: 'Reference to tickets table' })
     ticketId: number;

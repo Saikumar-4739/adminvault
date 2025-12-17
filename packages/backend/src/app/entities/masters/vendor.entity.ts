@@ -1,9 +1,18 @@
 import { Entity, Column } from 'typeorm';
-import { MasterBaseEntity } from './master-base.entity';
+import { CommonBaseEntity } from '../common-base.entity';
 
 @Entity('vendors')
-export class VendorEntity extends MasterBaseEntity {
-    @Column({ nullable: true })
+export class VendorEntity extends CommonBaseEntity {
+    @Column({ nullable: false, type: 'varchar' })
+    name: string;
+
+    @Column({ nullable: true, type: 'text' })
+    description: string;
+
+    @Column({ nullable: false, type: 'boolean', default: true })
+    isActive: boolean;
+
+    @Column({ nullable: true, type: 'varchar' })
     contactPerson: string;
 
     @Column({ nullable: true })
