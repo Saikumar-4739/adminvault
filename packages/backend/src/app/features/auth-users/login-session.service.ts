@@ -158,9 +158,8 @@ export class LoginSessionService {
                     session.postcode = locationData.postcode;
                     session.fullAddress = locationData.fullAddress;
                 }
-            } else {
-                throw new Error('No location data available');
             }
+            // Location data is optional - allow login to proceed even if unavailable (e.g., localhost)
 
             session.browser = deviceInfo.browser || '';
             session.os = deviceInfo.os || '';
