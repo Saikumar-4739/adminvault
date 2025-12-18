@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react';
 import { mastersService } from '@/lib/api/services';
-import { useToast } from '@/contexts/ToastContext';
 import {
     Department, AssetType, DeviceBrand, Vendor, Location, TicketCategory,
     CreateDepartmentModel, CreateMasterModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel
@@ -17,7 +16,6 @@ export function useMasters() {
     const [ticketCategories, setTicketCategories] = useState<TicketCategory[]>([]);
 
     const [isLoading, setIsLoading] = useState(false);
-    const toast = useToast();
 
     // Helper to get companyId from localStorage
     const getCompanyId = (): number => {
