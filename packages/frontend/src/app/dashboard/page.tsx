@@ -9,7 +9,7 @@ import Badge from '@/components/ui/Badge';
 import { Building2, Users, Package, Ticket, AlertCircle, ShieldAlert, AlertTriangle, Lock, Globe } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum } from '@adminvault/shared-models';
+import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
 
 export default function DashboardPage() {
     const { companies, isLoading: loadingCompanies } = useCompanies();
@@ -47,7 +47,7 @@ export default function DashboardPage() {
         },
         {
             title: 'Open Tickets',
-            value: tickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length,
+            value: tickets.filter(t => t.ticketStatus === TicketStatusEnum.OPEN || t.ticketStatus === TicketStatusEnum.IN_PROGRESS).length,
             icon: Ticket,
             color: 'from-amber-500 to-orange-600',
             bgColor: 'bg-amber-50 dark:bg-amber-900/20',
@@ -184,19 +184,19 @@ export default function DashboardPage() {
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 <div className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary-700 transition-colors">
-                                                    {ticket.title}
+                                                    {ticket.subject}
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Badge
                                                         variant={
-                                                            ticket.status === 'Open' ? 'primary' :
-                                                                ticket.status === 'In Progress' ? 'warning' :
-                                                                    ticket.status === 'Resolved' ? 'success' : 'neutral'
+                                                            ticket.ticketStatus === TicketStatusEnum.OPEN ? 'primary' :
+                                                                ticket.ticketStatus === TicketStatusEnum.IN_PROGRESS ? 'warning' :
+                                                                    ticket.ticketStatus === TicketStatusEnum.RESOLVED ? 'success' : 'neutral'
                                                         }
                                                     >
-                                                        {ticket.status}
+                                                        {ticket.ticketStatus.replace('_', ' ')}
                                                     </Badge>
-                                                    {ticket.priority === 'High' && (
+                                                    {(ticket.priorityEnum === TicketPriorityEnum.HIGH || ticket.priorityEnum === TicketPriorityEnum.URGENT) && (
                                                         <Badge variant="error" className="animate-pulse-slow">
                                                             <AlertCircle className="h-3 w-3 mr-1" />
                                                             High Priority
