@@ -44,7 +44,7 @@ export class LoginSessionService {
                     country: response.data.country,
                     region: response.data.regionName,
                     city: response.data.city,
-                    district: response.data.district || response.data.regionName, // Use district or fallback to region
+                    district: response.data.district || response.data.regionName,
                     latitude: response.data.lat,
                     longitude: response.data.lon,
                     timezone: response.data.timezone
@@ -52,6 +52,65 @@ export class LoginSessionService {
             }
         } catch (error) {
             console.error('Geolocation API error:', error);
+        }
+        return null;
+    }
+
+    /**
+     * Reverse geocode GPS coordinates to get address using Google Geocoding API
+     * @param latitude - GPS latitude
+     * @param longitude - GPS longitude
+     */
+    private async reverseGeocode(latitude: number, longitude: number) {
+        try {
+            // Google Geocoding API endpoint
+            const apiKey = process.env.GOOGLE_GEOCODING_API_KEY;
+
+            if (!apiKey) {
+                console.warn('Google Geocoding API key not configured');
+                return null;
+            }
+
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
+            const response = await axios.get(url, { timeout: 5000 });
+            console.log(response.data, 'response.data');
+
+            if (response.data.status === 'OK' && response.data.results.length > 0) {
+                const result = response.data.results[0];
+                const addressComponents = result.address_components;
+
+                // Extract location components
+                let city = null;
+                let district = null;
+                let region = null;
+                let country = null;
+
+                for (const component of addressComponents) {
+                    const types = component.types;
+
+                    if (types.includes('locality')) {
+                        city = component.long_name;
+                    } else if (types.includes('administrative_area_level_3')) {
+                        district = component.long_name;
+                    } else if (types.includes('administrative_area_level_2') && !district) {
+                        district = component.long_name;
+                    } else if (types.includes('administrative_area_level_1')) {
+                        region = component.long_name;
+                    } else if (types.includes('country')) {
+                        country = component.long_name;
+                    }
+                }
+
+                return {
+                    country,
+                    region,
+                    city,
+                    district,
+                    formattedAddress: result.formatted_address
+                };
+            }
+        } catch (error) {
+            console.error('Reverse geocoding error:', error);
         }
         return null;
     }
@@ -80,18 +139,39 @@ export class LoginSessionService {
     async createLoginSession(reqModel: CreateLoginSessionModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            console.log('=== LOGIN SESSION DEBUG ===');
+            console.log('Request has GPS:', !!reqModel.latitude && !!reqModel.longitude);
+            console.log('GPS Coordinates:', { lat: reqModel.latitude, lng: reqModel.longitude });
+            console.log('IP Address:', reqModel.ipAddress);
+
             let locationData = null;
             let usesFrontendLocation = false;
 
             // Check if frontend provided exact GPS coordinates
             if (reqModel.latitude && reqModel.longitude) {
-                // Use exact location from frontend
                 usesFrontendLocation = true;
-                // Optionally get additional location data from IP for city/district if not provided
-                locationData = await this.getLocationFromIP(reqModel.ipAddress);
+                console.log('✅ Using frontend GPS coordinates');
+
+                // Use Google Geocoding API to get address from GPS coordinates
+                console.log('Calling Google Geocoding API...');
+                locationData = await this.reverseGeocode(reqModel.latitude, reqModel.longitude);
+
+                if (locationData) {
+                    console.log('✅ Google Geocoding successful:', locationData);
+                } else {
+                    console.warn('❌ Reverse geocoding failed, falling back to IP-based location');
+                    locationData = await this.getLocationFromIP(reqModel.ipAddress);
+                }
             } else {
+                console.log('⚠️ No GPS coordinates from frontend, using IP-based location');
                 // Fallback to IP-based geolocation
                 locationData = await this.getLocationFromIP(reqModel.ipAddress);
+
+                if (locationData) {
+                    console.log('✅ IP-based location:', locationData);
+                } else {
+                    console.log('❌ IP-based location failed (likely localhost)');
+                }
             }
 
             // Parse user agent
@@ -113,18 +193,29 @@ export class LoginSessionService {
             if (usesFrontendLocation) {
                 session.latitude = reqModel.latitude ?? null;
                 session.longitude = reqModel.longitude ?? null;
-            } else if (locationData) {
+                console.log('Storing GPS coordinates:', { lat: session.latitude, lng: session.longitude });
+            } else if (locationData && 'latitude' in locationData) {
+                // Only use lat/lng from IP-based lookup
                 session.latitude = locationData.latitude;
                 session.longitude = locationData.longitude;
+                console.log('Storing IP-based coordinates:', { lat: session.latitude, lng: session.longitude });
             }
 
-            // Add location data if available from IP lookup
+            // Add location data if available from reverse geocoding or IP lookup
             if (locationData) {
                 session.country = locationData.country;
                 session.region = locationData.region;
                 session.city = locationData.city;
                 session.district = locationData.district;
-                session.timezone = locationData.timezone;
+                session.timezone = ('timezone' in locationData) ? locationData.timezone : null;
+                console.log('Location data stored:', {
+                    country: session.country,
+                    region: session.region,
+                    city: session.city,
+                    district: session.district
+                });
+            } else {
+                console.log('⚠️ No location data available');
             }
 
             // Add device info
@@ -138,8 +229,10 @@ export class LoginSessionService {
             await transManager.getRepository(UserLoginSessionEntity).save(session);
             await transManager.completeTransaction();
 
+            console.log('=== SESSION SAVED SUCCESSFULLY ===\n');
             return new GlobalResponse(true, 0, "Login session created successfully");
         } catch (error) {
+            console.error('❌ ERROR in createLoginSession:', error);
             await transManager.releaseTransaction();
             throw error;
         }

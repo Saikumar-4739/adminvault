@@ -54,7 +54,7 @@ import { UserLoginSessionEntity } from '../app/entities/user-login-sessions.enti
                     TicketCategoryEntity,
                     UserLoginSessionEntity
                 ],
-                synchronize: false,
+                synchronize: true,
                 logging: configService.get<string>('NODE_ENV') !== 'production',
                 ssl: configService.get<string>('DB_HOST')?.includes('aivencloud.com')
                     ? { rejectUnauthorized: false }

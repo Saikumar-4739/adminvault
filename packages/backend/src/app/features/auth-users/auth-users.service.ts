@@ -74,8 +74,16 @@ export class AuthUsersService {
     //login User As per Role Based
     async loginUser(reqModel: LoginUserModel, req?: any): Promise<LoginResponseModel> {
         try {
+            console.log('\n🔐 === LOGIN ATTEMPT ===');
+            console.log('Email:', reqModel.email);
+            console.log('Has GPS:', !!reqModel.latitude && !!reqModel.longitude);
+            if (reqModel.latitude && reqModel.longitude) {
+                console.log('GPS Coordinates:', { lat: reqModel.latitude, lng: reqModel.longitude });
+            }
+
             const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
             if (!existingUser || existingUser.length === 0) {
+                console.log('❌ Login failed: Email not found');
                 // Track failed login - email not found
                 if (req) {
                     await this.trackFailedLogin(req, reqModel.email, 'email_not_found');
@@ -86,12 +94,15 @@ export class AuthUsersService {
             const user = existingUser[0];
             const isPasswordMatch = await bcrypt.compare(reqModel.password, user.passwordHash);
             if (!isPasswordMatch) {
+                console.log('❌ Login failed: Invalid password');
                 // Track failed login - invalid password
                 if (req) {
                     await this.trackFailedLogin(req, reqModel.email, 'invalid_password', user.id, user.companyId);
                 }
                 throw new ErrorResponse(0, "Invalid password");
             }
+
+            console.log('✅ Authentication successful for user:', user.email);
 
             // Generate tokens
             const accessToken = this.generateAccessToken(user.email);
@@ -103,6 +114,7 @@ export class AuthUsersService {
                     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || '127.0.0.1';
                     const userAgent = req.headers['user-agent'];
 
+                    console.log('Creating login session...');
                     await this.loginSessionService.createLoginSession(
                         new CreateLoginSessionModel(
                             user.id,
@@ -123,6 +135,7 @@ export class AuthUsersService {
 
 
             const userInfo = new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole);
+            console.log('✅ Login successful!\n');
             return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
         } catch (err) {
             throw err;

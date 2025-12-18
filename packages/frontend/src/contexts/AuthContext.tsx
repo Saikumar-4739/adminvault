@@ -48,14 +48,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
                 setIsLoading(true);
 
+                console.log('🌍 Attempting to get location...');
+
                 // Attempt to get exact location from browser (non-blocking)
                 let location: { latitude: number; longitude: number } | null = null;
                 try {
                     const { geolocationService } = await import('@adminvault/shared-services');
+                    console.log('✅ Geolocation service loaded');
+
                     location = await geolocationService.getCurrentPosition();
+
+                    if (location) {
+                        console.log('✅ Location captured:', location);
+                    } else {
+                        console.warn('⚠️ Location is null (permission denied or unavailable)');
+                    }
                 } catch (geoError) {
                     // Silently fail - location is optional
-                    console.info('Location capture skipped:', geoError);
+                    console.error('❌ Location capture error:', geoError);
                 }
 
                 // Include location in login request if available
@@ -65,6 +75,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     location?.latitude,
                     location?.longitude
                 );
+
+                console.log('📤 Sending login request with:', {
+                    email: credentials.email,
+                    hasLocation: !!location,
+                    latitude: loginData.latitude,
+                    longitude: loginData.longitude
+                });
 
                 const response: LoginResponseModel = await authService.loginUser(loginData);
 
@@ -91,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
             } catch (error: any) {
                 // toast.error('Login failed', error.message || 'Invalid credentials');
+                console.error('❌ Login error:', error);
                 throw error;
             } finally {
                 setIsLoading(false);

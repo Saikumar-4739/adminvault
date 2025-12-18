@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geolocation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f0f0f0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌍 Geolocation Test</h1>
+    <p>Click the button below to test if your browser can capture GPS coordinates:</p>
+    
+    <button onclick="testGeolocation()">Test Geolocation</button>
+    
+    <div id="result"></div>
+
+    <script>
+        function testGeolocation() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">⏳ Requesting location...</div>';
+            
+            if (!navigator.geolocation) {
+                resultDiv.innerHTML = '<div class="result error">❌ Geolocation is not supported by your browser</div>';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Success!</h3>
+                            <p><strong>Latitude:</strong> ${lat}</p>
+                            <p><strong>Longitude:</strong> ${lng}</p>
+                            <p><strong>Accuracy:</strong> ±${accuracy.toFixed(0)} meters</p>
+                            <p><strong>Timestamp:</strong> ${new Date(position.timestamp).toLocaleString()}</p>
+                        </div>
+                    `;
+                    
+                    console.log('✅ Geolocation success:', {
+                        latitude: lat,
+                        longitude: lng,
+                        accuracy: accuracy
+                    });
+                },
+                (error) => {
+                    let errorMessage = '';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'User denied the request for Geolocation. Please allow location access and try again.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Location information is unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'The request to get user location timed out.';
+                            break;
+                        default:
+                            errorMessage = 'An unknown error occurred.';
+                    }
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Error</h3>
+                            <p><strong>Error Code:</strong> ${error.code}</p>
+                            <p><strong>Message:</strong> ${errorMessage}</p>
+                        </div>
+                    `;
+                    
+                    console.error('❌ Geolocation error:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+    </script>
+</body>
+</html>
