@@ -10,6 +10,8 @@ export class CreateLoginSessionModel {
     userAgent?: string;
     loginMethod?: string;
     sessionToken?: string;
+    latitude?: number;
+    longitude?: number;
 
     constructor(
         userId: number,
@@ -17,7 +19,9 @@ export class CreateLoginSessionModel {
         ipAddress: string,
         userAgent?: string,
         loginMethod?: string,
-        sessionToken?: string
+        sessionToken?: string,
+        latitude?: number,
+        longitude?: number
     ) {
         this.userId = userId;
         this.companyId = companyId;
@@ -25,6 +29,8 @@ export class CreateLoginSessionModel {
         this.userAgent = userAgent;
         this.loginMethod = loginMethod;
         this.sessionToken = sessionToken;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 }
 
@@ -42,6 +48,7 @@ export class LoginSessionResponseModel {
     country?: string;
     region?: string;
     city?: string;
+    district?: string;
     latitude?: number;
     longitude?: number;
     timezone?: string;
@@ -63,6 +70,7 @@ export class LoginSessionResponseModel {
         country?: string,
         region?: string,
         city?: string,
+        district?: string,
         latitude?: number,
         longitude?: number,
         timezone?: string,
@@ -81,6 +89,7 @@ export class LoginSessionResponseModel {
         this.country = country;
         this.region = region;
         this.city = city;
+        this.district = district;
         this.latitude = latitude;
         this.longitude = longitude;
         this.timezone = timezone;

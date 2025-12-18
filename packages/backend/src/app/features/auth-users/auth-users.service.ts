@@ -109,7 +109,10 @@ export class AuthUsersService {
                             user.companyId,
                             ipAddress,
                             userAgent,
-                            'email_password'
+                            'email_password',
+                            undefined,
+                            reqModel.latitude,
+                            reqModel.longitude
                         )
                     );
                 } catch (sessionError) {

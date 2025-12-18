@@ -36,9 +36,13 @@ export class DeleteUserModel {
 export class LoginUserModel {
     email: string;
     password: string;
-    constructor(email: string, password: string) {
+    latitude?: number;
+    longitude?: number;
+    constructor(email: string, password: string, latitude?: number, longitude?: number) {
         this.email = email;
         this.password = password;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 }
 

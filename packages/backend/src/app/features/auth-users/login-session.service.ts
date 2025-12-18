@@ -44,6 +44,7 @@ export class LoginSessionService {
                     country: response.data.country,
                     region: response.data.regionName,
                     city: response.data.city,
+                    district: response.data.district || response.data.regionName, // Use district or fallback to region
                     latitude: response.data.lat,
                     longitude: response.data.lon,
                     timezone: response.data.timezone
@@ -79,8 +80,19 @@ export class LoginSessionService {
     async createLoginSession(reqModel: CreateLoginSessionModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            // Get location data from IP
-            const locationData = await this.getLocationFromIP(reqModel.ipAddress);
+            let locationData = null;
+            let usesFrontendLocation = false;
+
+            // Check if frontend provided exact GPS coordinates
+            if (reqModel.latitude && reqModel.longitude) {
+                // Use exact location from frontend
+                usesFrontendLocation = true;
+                // Optionally get additional location data from IP for city/district if not provided
+                locationData = await this.getLocationFromIP(reqModel.ipAddress);
+            } else {
+                // Fallback to IP-based geolocation
+                locationData = await this.getLocationFromIP(reqModel.ipAddress);
+            }
 
             // Parse user agent
             const deviceInfo = this.parseUserAgent(reqModel.userAgent || '');
@@ -97,13 +109,21 @@ export class LoginSessionService {
             session.userAgent = reqModel.userAgent || '';
             session.loginMethod = reqModel.loginMethod || 'email_password';
 
-            // Add location data if available
+            // Prioritize frontend GPS coordinates
+            if (usesFrontendLocation) {
+                session.latitude = reqModel.latitude ?? null;
+                session.longitude = reqModel.longitude ?? null;
+            } else if (locationData) {
+                session.latitude = locationData.latitude;
+                session.longitude = locationData.longitude;
+            }
+
+            // Add location data if available from IP lookup
             if (locationData) {
                 session.country = locationData.country;
                 session.region = locationData.region;
                 session.city = locationData.city;
-                session.latitude = locationData.latitude;
-                session.longitude = locationData.longitude;
+                session.district = locationData.district;
                 session.timezone = locationData.timezone;
             }
 
@@ -267,8 +287,9 @@ export class LoginSessionService {
             session.country,
             session.region,
             session.city,
-            session.latitude,
-            session.longitude,
+            session.district ?? undefined,
+            session.latitude ?? undefined,
+            session.longitude ?? undefined,
             session.timezone,
             session.deviceType,
             session.browser,
@@ -316,6 +337,7 @@ export class LoginSessionService {
                 session.country = locationData.country;
                 session.region = locationData.region;
                 session.city = locationData.city;
+                session.district = locationData.district;
                 session.latitude = locationData.latitude;
                 session.longitude = locationData.longitude;
                 session.timezone = locationData.timezone;

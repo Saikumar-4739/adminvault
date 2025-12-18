@@ -32,11 +32,14 @@ export class UserLoginSessionEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'city', length: 100, nullable: true, comment: 'City name' })
     city: string;
 
+    @Column('varchar', { name: 'district', length: 100, nullable: true, comment: 'District/County name' })
+    district: string | null;
+
     @Column('decimal', { name: 'latitude', precision: 10, scale: 8, nullable: true, comment: 'Latitude coordinate' })
-    latitude: number;
+    latitude: number | null;
 
     @Column('decimal', { name: 'longitude', precision: 11, scale: 8, nullable: true, comment: 'Longitude coordinate' })
-    longitude: number;
+    longitude: number | null;
 
     @Column('varchar', { name: 'timezone', length: 50, nullable: true, comment: 'Timezone identifier' })
     timezone: string;

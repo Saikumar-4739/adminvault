@@ -47,7 +47,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         async (credentials: LoginUserModel) => {
             try {
                 setIsLoading(true);
-                const response: LoginResponseModel = await authService.loginUser(credentials);
+
+                // Attempt to get exact location from browser (non-blocking)
+                let location: { latitude: number; longitude: number } | null = null;
+                try {
+                    const { geolocationService } = await import('@adminvault/shared-services');
+                    location = await geolocationService.getCurrentPosition();
+                } catch (geoError) {
+                    // Silently fail - location is optional
+                    console.info('Location capture skipped:', geoError);
+                }
+
+                // Include location in login request if available
+                const loginData = new LoginUserModel(
+                    credentials.email,
+                    credentials.password,
+                    location?.latitude,
+                    location?.longitude
+                );
+
+                const response: LoginResponseModel = await authService.loginUser(loginData);
 
                 if (response.status && response.accessToken) {
                     const userData: User = {
