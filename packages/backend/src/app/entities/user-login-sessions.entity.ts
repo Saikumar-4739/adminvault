@@ -1,10 +1,6 @@
 import { Column, Entity } from 'typeorm';
 import { CommonBaseEntity } from './common-base.entity';
 
-/**
- * Entity for tracking user login sessions
- * Records IP addresses, locations, device info, and session status
- */
 @Entity('user_login_sessions')
 export class UserLoginSessionEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'session_token', length: 255, unique: true, nullable: true, comment: 'Unique session identifier' })
@@ -19,7 +15,6 @@ export class UserLoginSessionEntity extends CommonBaseEntity {
     @Column('boolean', { name: 'is_active', default: true, comment: 'Whether session is currently active' })
     isActive: boolean;
 
-    // IP & Location Information
     @Column('varchar', { name: 'ip_address', length: 45, nullable: false, comment: 'User IP address (IPv4/IPv6)' })
     ipAddress: string;
 
@@ -35,6 +30,21 @@ export class UserLoginSessionEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'district', length: 100, nullable: true, comment: 'District/County name' })
     district: string | null;
 
+    @Column('varchar', { name: 'location_name', length: 255, nullable: true, comment: 'Specific location/place name (e.g., hotel, building)' })
+    locationName: string | null;
+
+    @Column('varchar', { name: 'road', length: 255, nullable: true, comment: 'Road/Street name' })
+    road: string | null;
+
+    @Column('varchar', { name: 'suburb', length: 100, nullable: true, comment: 'Suburb/Neighborhood name' })
+    suburb: string | null;
+
+    @Column('varchar', { name: 'postcode', length: 20, nullable: true, comment: 'Postal/ZIP code' })
+    postcode: string | null;
+
+    @Column('text', { name: 'full_address', nullable: true, comment: 'Complete formatted address' })
+    fullAddress: string | null;
+
     @Column('decimal', { name: 'latitude', precision: 10, scale: 8, nullable: true, comment: 'Latitude coordinate' })
     latitude: number | null;
 
@@ -44,7 +54,6 @@ export class UserLoginSessionEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'timezone', length: 50, nullable: true, comment: 'Timezone identifier' })
     timezone: string;
 
-    // Device & Browser Information
     @Column('text', { name: 'user_agent', nullable: true, comment: 'Full user agent string' })
     userAgent: string;
 
@@ -57,7 +66,6 @@ export class UserLoginSessionEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'os', length: 100, nullable: true, comment: 'Operating system' })
     os: string;
 
-    // Security & Audit
     @Column('varchar', { name: 'login_method', length: 50, nullable: true, comment: 'Authentication method used' })
     loginMethod: string;
 

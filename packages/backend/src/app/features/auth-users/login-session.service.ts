@@ -84,13 +84,22 @@ export class LoginSessionService {
                 const district = address.state_district || address.county || address.district;
                 const region = address.state || address.region;
                 const country = address.country;
+                const locationName = response.data.name || null;
+                const road = address.road || null;
+                const suburb = address.suburb || address.quarter || address.neighbourhood || null;
+                const postcode = address.postcode || null;
+                const fullAddress = response.data.display_name || null;
 
                 return {
                     country,
                     region,
                     city,
                     district,
-                    formattedAddress: response.data.display_name
+                    locationName,
+                    road,
+                    suburb,
+                    postcode,
+                    fullAddress
                 };
             }
         } catch (error) {
@@ -192,11 +201,25 @@ export class LoginSessionService {
                 session.city = locationData.city;
                 session.district = locationData.district;
                 session.timezone = ('timezone' in locationData) ? locationData.timezone : null;
+
+                // Store detailed location info from Nominatim
+                if ('locationName' in locationData) {
+                    session.locationName = locationData.locationName;
+                    session.road = locationData.road;
+                    session.suburb = locationData.suburb;
+                    session.postcode = locationData.postcode;
+                    session.fullAddress = locationData.fullAddress;
+                }
+
                 console.log('Location data stored:', {
                     country: session.country,
                     region: session.region,
                     city: session.city,
-                    district: session.district
+                    district: session.district,
+                    locationName: session.locationName,
+                    road: session.road,
+                    suburb: session.suburb,
+                    postcode: session.postcode
                 });
             } else {
                 console.log('⚠️ No location data available');
@@ -450,10 +473,23 @@ export class LoginSessionService {
                 session.district = locationData.district;
                 session.timezone = ('timezone' in locationData) ? locationData.timezone : null;
 
+                // Store detailed location info from Nominatim
+                if ('locationName' in locationData) {
+                    session.locationName = locationData.locationName;
+                    session.road = locationData.road;
+                    session.suburb = locationData.suburb;
+                    session.postcode = locationData.postcode;
+                    session.fullAddress = locationData.fullAddress;
+                }
+
                 console.log('✅ Location data for failed login:', {
                     country: session.country,
                     city: session.city,
-                    district: session.district
+                    district: session.district,
+                    locationName: session.locationName,
+                    road: session.road,
+                    suburb: session.suburb,
+                    postcode: session.postcode
                 });
             }
 
