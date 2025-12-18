@@ -53,7 +53,7 @@ export function useEmployees(companyId?: number) {
         } catch (err: any) {
             const errorMessage = err.message || 'Failed to fetch employees';
             setError(errorMessage);
-            // toast.error('Error', errorMessage);
+            toast.error('Error', errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -72,7 +72,8 @@ export function useEmployees(companyId?: number) {
                     throw new Error(response.message || 'Failed to create employee');
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to create employee');
+                const errorMessage = err.message || 'Failed to create employee';
+                toast.error('Error', errorMessage);
                 return false;
             } finally {
                 setIsLoading(false);
@@ -94,7 +95,8 @@ export function useEmployees(companyId?: number) {
                     throw new Error(response.message || 'Failed to update employee');
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to update employee');
+                const errorMessage = err.message || 'Failed to update employee';
+                toast.error('Error', errorMessage);
                 return false;
             } finally {
                 setIsLoading(false);
@@ -116,7 +118,8 @@ export function useEmployees(companyId?: number) {
                     throw new Error(response.message || 'Failed to delete employee');
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to delete employee');
+                const errorMessage = err.message || 'Failed to delete employee';
+                toast.error('Error', errorMessage);
                 return false;
             } finally {
                 setIsLoading(false);
@@ -137,7 +140,8 @@ export function useEmployees(companyId?: number) {
                     throw new Error(response.message || 'Failed to fetch employee');
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to fetch employee');
+                const errorMessage = err.message || 'Failed to fetch employee';
+                toast.error('Error', errorMessage);
                 return null;
             } finally {
                 setIsLoading(false);

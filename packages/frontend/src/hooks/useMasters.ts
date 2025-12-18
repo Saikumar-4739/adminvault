@@ -4,13 +4,12 @@ import { useState, useCallback } from 'react';
 import { mastersService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 import {
-    Department, Designation, AssetType, DeviceBrand, Vendor, Location, TicketCategory,
-    CreateDepartmentModel, CreateDesignationModel, CreateMasterModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel
+    Department, AssetType, DeviceBrand, Vendor, Location, TicketCategory,
+    CreateDepartmentModel, CreateMasterModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel
 } from '@adminvault/shared-models';
 
 export function useMasters() {
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [designations, setDesignations] = useState<Designation[]>([]);
     const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
     const [brands, setBrands] = useState<DeviceBrand[]>([]);
     const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -20,81 +19,123 @@ export function useMasters() {
     const [isLoading, setIsLoading] = useState(false);
     const toast = useToast();
 
-    // Generic Fetch Helper
-    const fetchMaster = useCallback(async (
-        apiCall: () => Promise<any>,
-        setState: (data: any[]) => void,
-        errorMsg: string
-    ) => {
+    // Helper to get companyId from localStorage
+    const getCompanyId = (): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.companyId || 1; // Default to 1 if not found
+    };
+
+    // specific fetches
+    const fetchDepartments = useCallback(async () => {
         try {
             setIsLoading(true);
-            const response = await apiCall();
-            if (response.success || response.status) {
-                setState(response.data || []);
+            const response = await mastersService.getAllDepartments(getCompanyId());
+            if (response.status) {
+                setDepartments(response.departments || []);
             }
         } catch (error) {
             console.error(error);
-            // toast.error('Error', errorMsg);
         } finally {
             setIsLoading(false);
         }
-    }, [toast]);
+    }, []);
 
-    // specific fetches
-    const fetchDepartments = useCallback(() => fetchMaster(
-        () => mastersService.getAllDepartments(),
-        setDepartments,
-        'Failed to fetch departments'
-    ), [fetchMaster]);
+    const fetchAssetTypes = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const response = await mastersService.getAllAssetTypes(getCompanyId());
+            if (response.status) {
+                setAssetTypes(response.assetTypes || []);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
-    const fetchDesignations = useCallback(() => fetchMaster(
-        () => mastersService.getAllDesignations(),
-        setDesignations,
-        'Failed to fetch designations'
-    ), [fetchMaster]);
+    const fetchBrands = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const response = await mastersService.getAllBrands(getCompanyId());
+            if (response.status) {
+                setBrands(response.brands || []);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
-    const fetchAssetTypes = useCallback(() => fetchMaster(
-        () => mastersService.getAllAssetTypes(),
-        setAssetTypes,
-        'Failed to fetch asset types'
-    ), [fetchMaster]);
+    const fetchVendors = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const response = await mastersService.getAllVendors(getCompanyId());
+            if (response.status) {
+                setVendors(response.vendors || []);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
-    const fetchBrands = useCallback(() => fetchMaster(
-        () => mastersService.getAllBrands(),
-        setBrands,
-        'Failed to fetch brands'
-    ), [fetchMaster]);
+    const fetchLocations = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const response = await mastersService.getAllLocations(getCompanyId());
+            if (response.status) {
+                setLocations(response.locations || []);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
-    const fetchVendors = useCallback(() => fetchMaster(
-        () => mastersService.getAllVendors(),
-        setVendors,
-        'Failed to fetch vendors'
-    ), [fetchMaster]);
-
-    const fetchLocations = useCallback(() => fetchMaster(
-        () => mastersService.getAllLocations(),
-        setLocations,
-        'Failed to fetch locations'
-    ), [fetchMaster]);
-
-    const fetchTicketCategories = useCallback(() => fetchMaster(
-        () => mastersService.getAllTicketCategories(),
-        setTicketCategories,
-        'Failed to fetch ticket categories'
-    ), [fetchMaster]);
+    const fetchTicketCategories = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const response = await mastersService.getAllTicketCategories(getCompanyId());
+            if (response.status) {
+                setTicketCategories(response.ticketCategories || []);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
 
     // Create/Delete logic follows similar pattern (omitted for brevity in prompt but implemented fully here)
     // Actually I should implement them to support the page.
 
-    const createDepartment = async (data: CreateDepartmentModel) => {
+    const createDepartment = async (data: any) => {
         setIsLoading(true);
         try {
-            const res = await mastersService.createDepartment(data);
-            if (res.success) {
+            const storedUser = localStorage.getItem('auth_user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+            if (!user) throw new Error('User not authenticated');
+
+            const model = new CreateDepartmentModel(
+                user.id,
+                user.companyId,
+                data.name,
+                data.description,
+                true,
+                data.code
+            );
+            const res = await mastersService.createDepartment(model);
+            if (res.status) {
                 fetchDepartments();
                 return true;
             }
+            return false;
         } catch (e) {
             return false;
         } finally { setIsLoading(false); }
@@ -104,33 +145,36 @@ export function useMasters() {
         setIsLoading(true);
         try {
             const res = await mastersService.deleteDepartment(id);
-            if (res.success) {
+            if (res.status) {
                 fetchDepartments();
                 return true;
             }
+            return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
 
     // ... Implement others similarly 
     // To save tokens/time I will just expose the fetchers and data first, and create/delete for all.
 
-    const createDesignation = async (data: CreateDesignationModel) => {
-        setIsLoading(true);
-        try {
-            const res = await mastersService.createDesignation(data);
-            if (res.success) { fetchDesignations(); return true; }
-        } catch (e) { return false; } finally { setIsLoading(false); }
-    };
-    const deleteDesignation = async (id: number) => {
-        setIsLoading(true);
-        try { await mastersService.deleteDesignation(id); fetchDesignations(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
-    };
 
-    const createAssetType = async (data: CreateMasterModel) => {
+
+    const createAssetType = async (data: any) => {
         setIsLoading(true);
         try {
-            const res = await mastersService.createAssetType(data);
-            if (res.success) { fetchAssetTypes(); return true; }
+            const storedUser = localStorage.getItem('auth_user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+            if (!user) throw new Error('User not authenticated');
+
+            const model = new CreateMasterModel(
+                user.id,
+                user.companyId,
+                data.name,
+                data.description,
+                true
+            );
+            const res = await mastersService.createAssetType(model);
+            if (res.status) { fetchAssetTypes(); return true; }
+            return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
     const deleteAssetType = async (id: number) => {
@@ -138,11 +182,23 @@ export function useMasters() {
         try { await mastersService.deleteAssetType(id); fetchAssetTypes(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
     };
 
-    const createBrand = async (data: CreateMasterModel) => {
+    const createBrand = async (data: any) => {
         setIsLoading(true);
         try {
-            const res = await mastersService.createBrand(data);
-            if (res.success) { fetchBrands(); return true; }
+            const storedUser = localStorage.getItem('auth_user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+            if (!user) throw new Error('User not authenticated');
+
+            const model = new CreateMasterModel(
+                user.id,
+                user.companyId,
+                data.name,
+                data.description,
+                true
+            );
+            const res = await mastersService.createBrand(model);
+            if (res.status) { fetchBrands(); return true; }
+            return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
     const deleteBrand = async (id: number) => {
@@ -150,11 +206,27 @@ export function useMasters() {
         try { await mastersService.deleteBrand(id); fetchBrands(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
     };
 
-    const createVendor = async (data: CreateVendorModel) => {
+    const createVendor = async (data: any) => {
         setIsLoading(true);
         try {
-            const res = await mastersService.createVendor(data);
-            if (res.success) { fetchVendors(); return true; }
+            const storedUser = localStorage.getItem('auth_user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+            if (!user) throw new Error('User not authenticated');
+
+            const model = new CreateVendorModel(
+                user.id,
+                user.companyId,
+                data.name,
+                data.description,
+                true,
+                data.contactPerson,
+                data.email,
+                data.phone,
+                data.address
+            );
+            const res = await mastersService.createVendor(model);
+            if (res.status) { fetchVendors(); return true; }
+            return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
     const deleteVendor = async (id: number) => {
@@ -162,11 +234,26 @@ export function useMasters() {
         try { await mastersService.deleteVendor(id); fetchVendors(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
     };
 
-    const createLocation = async (data: CreateLocationModel) => {
+    const createLocation = async (data: any) => {
         setIsLoading(true);
         try {
-            const res = await mastersService.createLocation(data);
-            if (res.success) { fetchLocations(); return true; }
+            const storedUser = localStorage.getItem('auth_user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+            if (!user) throw new Error('User not authenticated');
+
+            const model = new CreateLocationModel(
+                user.id,
+                user.companyId,
+                data.name,
+                data.description,
+                true,
+                data.address,
+                data.city,
+                data.country
+            );
+            const res = await mastersService.createLocation(model);
+            if (res.status) { fetchLocations(); return true; }
+            return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
     const deleteLocation = async (id: number) => {
@@ -174,11 +261,24 @@ export function useMasters() {
         try { await mastersService.deleteLocation(id); fetchLocations(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
     };
 
-    const createTicketCategory = async (data: CreateTicketCategoryModel) => {
+    const createTicketCategory = async (data: any) => {
         setIsLoading(true);
         try {
-            const res = await mastersService.createTicketCategory(data);
-            if (res.success) { fetchTicketCategories(); return true; }
+            const storedUser = localStorage.getItem('auth_user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+            if (!user) throw new Error('User not authenticated');
+
+            const model = new CreateTicketCategoryModel(
+                user.id,
+                user.companyId,
+                data.name,
+                data.description,
+                true,
+                data.defaultPriority
+            );
+            const res = await mastersService.createTicketCategory(model);
+            if (res.status) { fetchTicketCategories(); return true; }
+            return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
     const deleteTicketCategory = async (id: number) => {
@@ -188,7 +288,6 @@ export function useMasters() {
 
     return {
         departments, fetchDepartments, createDepartment, deleteDepartment,
-        designations, fetchDesignations, createDesignation, deleteDesignation,
         assetTypes, fetchAssetTypes, createAssetType, deleteAssetType,
         brands, fetchBrands, createBrand, deleteBrand,
         vendors, fetchVendors, createVendor, deleteVendor,

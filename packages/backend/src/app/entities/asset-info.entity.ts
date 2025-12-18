@@ -7,13 +7,28 @@ export class AssetInfoEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'device_id', nullable: false, comment: 'Reference to device_info table' })
     deviceId: number;
 
-    @Column('varchar', { name: 'serial_number', length: 255, nullable: false, unique: true, comment: 'Asset serial number' })
+    @Column('bigint', { name: 'brand_id', nullable: true, comment: 'Reference to brand master table' })
+    brandId: number;
+
+    @Column('varchar', { name: 'model', length: 255, nullable: true, comment: 'Asset model' })
+    model: string;
+
+    @Column('varchar', { name: 'serial_number', length: 255, nullable: false, unique: true, comment: 'Asset serial number / Service Tag' })
     serialNumber: string;
 
-    @Column('date', { name: 'purchase_date', nullable: false, comment: 'Asset purchase date' })
+    @Column('text', { name: 'configuration', nullable: true, comment: 'Asset configuration details' })
+    configuration: string;
+
+    @Column('bigint', { name: 'assigned_to_employee_id', nullable: true, comment: 'Reference to employees table - current user' })
+    assignedToEmployeeId: number;
+
+    @Column('bigint', { name: 'previous_user_employee_id', nullable: true, comment: 'Reference to employees table - previous user' })
+    previousUserEmployeeId: number;
+
+    @Column('varchar', { name: 'purchase_date', nullable: true, comment: 'Asset purchase date' })
     purchaseDate: Date;
 
-    @Column('date', { name: 'warranty_expiry', nullable: true, comment: 'Warranty expiration date' })
+    @Column('varchar', { name: 'warranty_expiry', nullable: true, comment: 'Warranty expiration date' })
     warrantyExpiry: Date;
 
     @Column('enum', { name: 'asset_status_enum', enum: AssetStatusEnum, default: AssetStatusEnum.AVAILABLE, nullable: false, comment: 'Current asset status' })

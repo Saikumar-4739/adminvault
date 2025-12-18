@@ -3,24 +3,36 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserRoleEnum } from '@adminvault/shared-models';
 
 export default function HomePage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
-      if (isAuthenticated) {
-        router.push('/dashboard');
+      if (isAuthenticated && user) {
+        // Redirect based on user role
+        const userRole = user.role as UserRoleEnum;
+        if (userRole === UserRoleEnum.USER || userRole === UserRoleEnum.VIEWER) {
+          // Regular users go to tickets page
+          router.push('/tickets');
+        } else {
+          // Admins and managers go to dashboard
+          router.push('/dashboard');
+        }
       } else {
         router.push('/login');
       }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, user, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-slate-400 text-sm">Loading...</p>
+      </div>
     </div>
   );
 }

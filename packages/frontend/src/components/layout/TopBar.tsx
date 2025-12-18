@@ -4,11 +4,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, User, ChevronDown, LogOut, CalendarClock, Settings } from 'lucide-react';
+import { Bell, User, ChevronDown, LogOut, CalendarClock, Settings, Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const TopBar: React.FC = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const { user, logout } = useAuth();
+    const { isDarkMode, toggleDarkMode } = useTheme();
     const router = useRouter();
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -48,6 +50,18 @@ const TopBar: React.FC = () => {
                 <button className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white group">
                     <Bell className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-rose-500 rounded-full animate-pulse shadow-lg shadow-rose-500/50" />
+                </button>
+
+                {/* Dark Mode Toggle */}
+                <button
+                    onClick={toggleDarkMode}
+                    className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white group"
+                    aria-label="Toggle dark mode"
+                >
+                    <div className="relative w-5 h-5">
+                        <Sun className={`absolute inset-0 h-5 w-5 transition-all duration-300 ${isDarkMode ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}`} />
+                        <Moon className={`absolute inset-0 h-5 w-5 transition-all duration-300 ${isDarkMode ? '-rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`} />
+                    </div>
                 </button>
 
                 {/* User menu */}

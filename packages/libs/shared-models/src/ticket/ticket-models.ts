@@ -3,7 +3,7 @@ import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '../enu
 
 export class CreateTicketModel {
     ticketCode: string;
-    employeeId: number;
+    employeeId?: number; // Optional - will be set from authenticated user
     assignAdminId?: number;
     categoryEnum: TicketCategoryEnum;
     priorityEnum: TicketPriorityEnum;
@@ -13,11 +13,11 @@ export class CreateTicketModel {
 
     constructor(
         ticketCode: string,
-        employeeId: number,
         categoryEnum: TicketCategoryEnum,
         priorityEnum: TicketPriorityEnum,
         subject: string,
         ticketStatus: TicketStatusEnum = TicketStatusEnum.OPEN,
+        employeeId?: number,
         assignAdminId?: number,
         resolvedAt?: Date
     ) {
@@ -38,15 +38,15 @@ export class UpdateTicketModel extends CreateTicketModel {
     constructor(
         id: number,
         ticketCode: string,
-        employeeId: number,
         categoryEnum: TicketCategoryEnum,
         priorityEnum: TicketPriorityEnum,
         subject: string,
         ticketStatus: TicketStatusEnum = TicketStatusEnum.OPEN,
+        employeeId?: number,
         assignAdminId?: number,
         resolvedAt?: Date
     ) {
-        super(ticketCode, employeeId, categoryEnum, priorityEnum, subject, ticketStatus, assignAdminId, resolvedAt);
+        super(ticketCode, categoryEnum, priorityEnum, subject, ticketStatus, employeeId, assignAdminId, resolvedAt);
         this.id = id;
     }
 }

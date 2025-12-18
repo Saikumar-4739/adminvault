@@ -71,7 +71,6 @@ export class AuthUsersService {
 
     //login User As per Role Based
     async loginUser(reqModel: LoginUserModel): Promise<LoginResponseModel> {
-        const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
             if (!existingUser || existingUser.length === 0) {

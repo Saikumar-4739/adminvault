@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AssetInfoService } from './asset-info.service';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel } from '@adminvault/shared-models';
 
 @ApiTags('Asset Info')
 @Controller('asset-info')
@@ -56,6 +56,36 @@ export class AssetInfoController {
             return await this.service.deleteAsset(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('statistics')
+    @ApiBody({ schema: { properties: { companyId: { type: 'number' } } } })
+    async getStatistics(@Body('companyId') companyId: number): Promise<AssetStatisticsResponseModel> {
+        try {
+            return await this.service.getAssetStatistics(companyId);
+        } catch (error) {
+            return returnException(AssetStatisticsResponseModel, error);
+        }
+    }
+
+    @Post('search')
+    @ApiBody({ type: AssetSearchRequestModel })
+    async searchAssets(@Body() reqModel: AssetSearchRequestModel): Promise<GetAllAssetsModel> {
+        try {
+            return await this.service.searchAssets(reqModel);
+        } catch (error) {
+            return returnException(GetAllAssetsModel, error);
+        }
+    }
+
+    @Post('with-assignments')
+    @ApiBody({ schema: { properties: { companyId: { type: 'number' } } } })
+    async getAssetsWithAssignments(@Body('companyId') companyId: number): Promise<GetAssetsWithAssignmentsResponseModel> {
+        try {
+            return await this.service.getAssetsWithAssignments(companyId);
+        } catch (error) {
+            return returnException(GetAssetsWithAssignmentsResponseModel, error);
         }
     }
 }

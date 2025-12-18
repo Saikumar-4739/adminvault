@@ -1,20 +1,39 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Building2, Users, Package, Ticket, LayoutDashboard, Menu, X, Database } from 'lucide-react';
+import { Building2, Users, Package, Ticket, LayoutDashboard, Menu, X, Database, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
+import { usePermissions } from '@/hooks/usePermissions';
+import { UserRoleEnum } from '@adminvault/shared-models';
 
-const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Masters', href: '/masters', icon: Database },
-    { name: 'Employees', href: '/employees', icon: Users },
-    { name: 'Assets', href: '/assets', icon: Package },
-    { name: 'Tickets', href: '/tickets', icon: Ticket },
+interface NavigationItem {
+    name: string;
+    href: string;
+    icon: any;
+    roles?: UserRoleEnum[]; // Empty array or undefined means accessible to all
+}
+
+const allNavigation: NavigationItem[] = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Masters', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
+    { name: 'Employees', href: '/employees', icon: Users, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Assets', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Tickets', href: '/tickets', icon: Ticket }, // All users
+    { name: 'Support Chat', href: '/support', icon: MessageSquare }, // All users
 ];
 
 export default function Sidebar() {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const permissions = usePermissions();
+
+    // Filter navigation based on user permissions
+    const navigation = allNavigation.filter(item => {
+        // If no roles specified, accessible to all
+        if (!item.roles || item.roles.length === 0) return true;
+        // Check if user has required role
+        return permissions.hasRole(item.roles);
+    });
 
     const SidebarContent = () => (
         <>

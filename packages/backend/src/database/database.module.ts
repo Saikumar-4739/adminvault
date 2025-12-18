@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-// Import all entities explicitly for Webpack compatibility
 import { AuthUsersEntity } from '../app/entities/auth-users.entity';
 import { CompanyInfoEntity } from '../app/entities/company-info.entity';
 import { EmployeesEntity } from '../app/entities/employees.entity';
@@ -14,7 +13,6 @@ import { AssetAssignEntity } from '../app/entities/asset-assign.entity';
 import { TicketCommentsEntity } from '../app/entities/ticket-comments.entity';
 import { TicketStatusLogsEntity } from '../app/entities/ticket-status-logs.entity';
 import { EmailAccountsEntity } from '../app/entities/email-accounts.entity';
-// Master entities
 import { DepartmentEntity } from '../app/entities/masters/department.entity';
 import { AssetTypeEntity } from '../app/entities/masters/asset-type.entity';
 import { BrandEntity } from '../app/entities/masters/brand.entity';

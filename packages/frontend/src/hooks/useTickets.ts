@@ -2,17 +2,19 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ticketService } from '@/lib/api/services';
-import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel } from '@adminvault/shared-models';
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
 import { useToast } from '@/contexts/ToastContext';
 
 interface Ticket {
     id: number;
-    title: string;
-    description?: string;
-    status?: string;
-    priority?: string;
-    assignedTo?: number;
-    createdBy?: number;
+    ticketCode: string;
+    subject: string;
+    categoryEnum: TicketCategoryEnum;
+    priorityEnum: TicketPriorityEnum;
+    ticketStatus: TicketStatusEnum;
+    employeeId: number;
+    assignAdminId?: number;
+    resolvedAt?: string;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -31,15 +33,18 @@ export function useTickets() {
 
             if (response.status) {
                 const data = (response as any).tickets || response.data || [];
+                // Map backend response directly to Ticket interface
                 const mappedTickets: Ticket[] = data.map((item: any) => ({
                     id: item.id,
-                    title: item.subject,
-                    description: item.subject, // Fallback as model has no description
-                    status: item.ticketStatus || item.status,
-                    priority: item.priorityEnum || item.priority,
-                    assignedTo: item.assignAdminId,
-                    createdBy: item.employeeId,
-                    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+                    ticketCode: item.ticketCode,
+                    subject: item.subject,
+                    categoryEnum: item.categoryEnum,
+                    priorityEnum: item.priorityEnum,
+                    ticketStatus: item.ticketStatus,
+                    employeeId: item.employeeId,
+                    assignAdminId: item.assignAdminId,
+                    resolvedAt: item.resolvedAt,
+                    createdAt: item.createdAt || item.created_at,
                     updatedAt: item.updatedAt || item.updated_at
                 }));
                 setTickets(mappedTickets);
@@ -49,7 +54,7 @@ export function useTickets() {
         } catch (err: any) {
             const errorMessage = err.message || 'Failed to fetch tickets';
             setError(errorMessage);
-            // toast.error('Error', errorMessage);
+            toast.error('Error', errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -63,12 +68,16 @@ export function useTickets() {
 
                 if (response.status) {
                     await fetchTickets();
+                    toast.success('Success', 'Ticket created successfully');
                     return true;
                 } else {
-                    throw new Error(response.message || 'Failed to create ticket');
+                    const errorMsg = response.message || 'Failed to create ticket';
+                    toast.error('Error', errorMsg);
+                    throw new Error(errorMsg);
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to create ticket');
+                const errorMessage = err.message || 'Failed to create ticket';
+                toast.error('Error', errorMessage);
                 return false;
             } finally {
                 setIsLoading(false);

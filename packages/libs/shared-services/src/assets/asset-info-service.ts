@@ -7,7 +7,10 @@ import {
     GetAssetModel,
     GetAssetByIdModel,
     GetAllAssetsModel,
-    GlobalResponse
+    GlobalResponse,
+    AssetStatisticsResponseModel,
+    AssetSearchRequestModel,
+    GetAssetsWithAssignmentsResponseModel
 } from '@adminvault/shared-models';
 
 export class AssetInfoService extends CommonAxiosService {
@@ -36,5 +39,19 @@ export class AssetInfoService extends CommonAxiosService {
 
     async deleteAsset(reqObj: DeleteAssetModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteAsset'), reqObj, config);
+    }
+
+    // New Methods for Enhanced Asset Management
+
+    async getAssetStatistics(companyId: number, config?: AxiosRequestConfig): Promise<AssetStatisticsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('statistics'), { companyId }, config);
+    }
+
+    async searchAssets(reqObj: AssetSearchRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetsModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('search'), reqObj, config);
+    }
+
+    async getAssetsWithAssignments(companyId: number, config?: AxiosRequestConfig): Promise<GetAssetsWithAssignmentsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('with-assignments'), { companyId }, config);
     }
 }

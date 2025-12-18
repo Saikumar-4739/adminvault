@@ -1,8 +1,6 @@
 export enum AssetStatusEnum {
     AVAILABLE = 'available',
-    ASSIGNED = 'assigned',
-    IN_REPAIR = 'in_repair',
+    IN_USE = 'in_use',
+    MAINTENANCE = 'maintenance',
     RETIRED = 'retired',
-    LOST = 'lost',
-    DAMAGED = 'damaged',
 }

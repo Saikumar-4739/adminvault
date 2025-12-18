@@ -16,12 +16,7 @@ export class TicketsService {
     async createTicket(reqModel: CreateTicketModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            if (!reqModel.ticketCode) {
-                throw new ErrorResponse(0, "Ticket code is required");
-            }
-            if (!reqModel.employeeId) {
-                throw new ErrorResponse(0, "Employee ID is required");
-            }
+
             if (!reqModel.categoryEnum) {
                 throw new ErrorResponse(0, "Category is required");
             }
@@ -32,13 +27,26 @@ export class TicketsService {
                 throw new ErrorResponse(0, "Subject is required");
             }
 
-            const existing = await this.ticketsRepo.findOne({ where: { ticketCode: reqModel.ticketCode } });
-            if (existing) {
-                throw new ErrorResponse(0, "Ticket code already exists");
+            if (!reqModel.ticketCode) {
+                reqModel.ticketCode = await this.generateTicketCode();
+            } else {
+                // If provided, check for duplicates
+                const existing = await this.ticketsRepo.findOne({ where: { ticketCode: reqModel.ticketCode } });
+                if (existing) {
+                    throw new ErrorResponse(0, "Ticket code already exists");
+                }
             }
 
             await transManager.startTransaction();
-            const entity = this.ticketsRepo.create(reqModel);
+
+            // Set employeeId from userId (authenticated user)
+            // TODO: Get userId from JWT token in request context
+            const entity = this.ticketsRepo.create({
+                ...reqModel,
+                employeeId: reqModel.employeeId || 1, // Use provided employeeId or default
+                // userId will be set by CommonBaseEntity from request context
+            });
+
             await transManager.getRepository(TicketsEntity).save(entity);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Ticket created successfully");
@@ -46,6 +54,30 @@ export class TicketsService {
             await transManager.releaseTransaction();
             throw error;
         }
+    }
+
+    private async generateTicketCode(): Promise<string> {
+        const today = new Date();
+        const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+
+        // Find the latest ticket code for today
+        const latestTicket = await this.ticketsRepo
+            .createQueryBuilder('ticket')
+            .where('ticket.ticketCode LIKE :prefix', { prefix: `TKT-${dateStr}-%` })
+            .orderBy('ticket.ticketCode', 'DESC')
+            .getOne();
+
+        let sequence = 1;
+        if (latestTicket) {
+            // Extract sequence number from last ticket code
+            const parts = latestTicket.ticketCode.split('-');
+            if (parts.length === 3) {
+                sequence = parseInt(parts[2]) + 1;
+            }
+        }
+
+        // Format: TKT-YYYYMMDD-XXXX
+        return `TKT-${dateStr}-${sequence.toString().padStart(4, '0')}`;
     }
 
     async updateTicket(reqModel: UpdateTicketModel): Promise<GlobalResponse> {
