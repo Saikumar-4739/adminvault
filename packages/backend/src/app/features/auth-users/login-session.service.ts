@@ -402,11 +402,31 @@ export class LoginSessionService {
         loginMethod?: string;
         failureReason: string;
         attemptedEmail?: string;
+        latitude?: number;
+        longitude?: number;
     }): Promise<void> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            // Get location data from IP
-            const locationData = await this.getLocationFromIP(data.ipAddress);
+            console.log('📝 Recording failed login attempt with GPS:', {
+                hasGPS: !!data.latitude && !!data.longitude,
+                lat: data.latitude,
+                lng: data.longitude
+            });
+
+            // Get location data from IP (or use GPS if provided)
+            let locationData = null;
+            if (data.latitude && data.longitude) {
+                // Use Google Geocoding API to get address from GPS coordinates
+                locationData = await this.reverseGeocode(data.latitude, data.longitude);
+
+                if (!locationData) {
+                    // Fallback to IP-based location
+                    locationData = await this.getLocationFromIP(data.ipAddress);
+                }
+            } else {
+                // Use IP-based geolocation
+                locationData = await this.getLocationFromIP(data.ipAddress);
+            }
 
             // Parse user agent
             const deviceInfo = this.parseUserAgent(data.userAgent || '');
@@ -425,15 +445,32 @@ export class LoginSessionService {
             session.loginMethod = data.loginMethod || 'email_password';
             session.failedAttempts = 1;
 
+            // Store GPS coordinates if provided
+            if (data.latitude && data.longitude) {
+                session.latitude = data.latitude;
+                session.longitude = data.longitude;
+                console.log('✅ Storing GPS coordinates for failed login:', {
+                    lat: session.latitude,
+                    lng: session.longitude
+                });
+            } else if (locationData && 'latitude' in locationData) {
+                session.latitude = locationData.latitude;
+                session.longitude = locationData.longitude;
+            }
+
             // Add location data if available
             if (locationData) {
                 session.country = locationData.country;
                 session.region = locationData.region;
                 session.city = locationData.city;
                 session.district = locationData.district;
-                session.latitude = locationData.latitude;
-                session.longitude = locationData.longitude;
-                session.timezone = locationData.timezone;
+                session.timezone = ('timezone' in locationData) ? locationData.timezone : null;
+
+                console.log('✅ Location data for failed login:', {
+                    country: session.country,
+                    city: session.city,
+                    district: session.district
+                });
             }
 
             // Add device info
@@ -446,6 +483,8 @@ export class LoginSessionService {
 
             await transManager.getRepository(UserLoginSessionEntity).save(session);
             await transManager.completeTransaction();
+
+            console.log('✅ Failed login attempt recorded\n');
         } catch (error) {
             await transManager.releaseTransaction();
             console.error('Error creating failed login attempt:', error);

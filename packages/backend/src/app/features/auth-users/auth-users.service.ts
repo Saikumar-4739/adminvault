@@ -86,7 +86,7 @@ export class AuthUsersService {
                 console.log('❌ Login failed: Email not found');
                 // Track failed login - email not found
                 if (req) {
-                    await this.trackFailedLogin(req, reqModel.email, 'email_not_found');
+                    await this.trackFailedLogin(req, reqModel.email, 'email_not_found', undefined, undefined, reqModel.latitude, reqModel.longitude);
                 }
                 throw new ErrorResponse(0, "Email does not exist");
             }
@@ -97,7 +97,7 @@ export class AuthUsersService {
                 console.log('❌ Login failed: Invalid password');
                 // Track failed login - invalid password
                 if (req) {
-                    await this.trackFailedLogin(req, reqModel.email, 'invalid_password', user.id, user.companyId);
+                    await this.trackFailedLogin(req, reqModel.email, 'invalid_password', user.id, user.companyId, reqModel.latitude, reqModel.longitude);
                 }
                 throw new ErrorResponse(0, "Invalid password");
             }
@@ -145,7 +145,15 @@ export class AuthUsersService {
     /**
      * Track failed login attempts for security monitoring
      */
-    private async trackFailedLogin(req: any, email: string, reason: string, userId?: number, companyId?: number) {
+    private async trackFailedLogin(
+        req: any,
+        email: string,
+        reason: string,
+        userId?: number,
+        companyId?: number,
+        latitude?: number,
+        longitude?: number
+    ): Promise<void> {
         try {
             const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || '127.0.0.1';
             const userAgent = req.headers['user-agent'];
@@ -157,7 +165,9 @@ export class AuthUsersService {
                 userAgent,
                 loginMethod: 'email_password',
                 failureReason: reason,
-                attemptedEmail: email
+                attemptedEmail: email,
+                latitude,
+                longitude
             });
         } catch (error) {
             console.error('Failed to track failed login:', error);
