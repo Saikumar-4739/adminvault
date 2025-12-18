@@ -1,4 +1,4 @@
-import { GeolocationPosition, GeolocationError } from '../types/geolocation.types';
+import { GeolocationPosition } from '../types/geolocation.types';
 
 /**
  * Geolocation Service
