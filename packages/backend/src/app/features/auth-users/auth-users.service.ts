@@ -76,12 +76,20 @@ export class AuthUsersService {
         try {
             const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
             if (!existingUser || existingUser.length === 0) {
+                // Track failed login - email not found
+                if (req) {
+                    await this.trackFailedLogin(req, reqModel.email, 'email_not_found');
+                }
                 throw new ErrorResponse(0, "Email does not exist");
             }
 
             const user = existingUser[0];
             const isPasswordMatch = await bcrypt.compare(reqModel.password, user.passwordHash);
             if (!isPasswordMatch) {
+                // Track failed login - invalid password
+                if (req) {
+                    await this.trackFailedLogin(req, reqModel.email, 'invalid_password', user.id, user.companyId);
+                }
                 throw new ErrorResponse(0, "Invalid password");
             }
 
@@ -115,6 +123,28 @@ export class AuthUsersService {
             return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
         } catch (err) {
             throw err;
+        }
+    }
+
+    /**
+     * Track failed login attempts for security monitoring
+     */
+    private async trackFailedLogin(req: any, email: string, reason: string, userId?: number, companyId?: number) {
+        try {
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || '127.0.0.1';
+            const userAgent = req.headers['user-agent'];
+
+            await this.loginSessionService.createFailedLoginAttempt({
+                userId: userId || 0, // 0 for non-existent users
+                companyId: companyId || 0,
+                ipAddress,
+                userAgent,
+                loginMethod: 'email_password',
+                failureReason: reason,
+                attemptedEmail: email
+            });
+        } catch (error) {
+            console.error('Failed to track failed login:', error);
         }
     }
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import axios from 'axios';
-import UAParser from 'ua-parser-js';
+import * as UAParser from 'ua-parser-js';
 import { UserLoginSessionRepository } from '../../repository/user-login-session.repository';
 import { UserLoginSessionEntity } from '../../entities/user-login-sessions.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
@@ -50,7 +50,7 @@ export class LoginSessionService {
                 };
             }
         } catch (error) {
-            console.error('Geolocation API error:', error.message);
+            console.error('Geolocation API error:', error);
         }
         return null;
     }
@@ -63,7 +63,7 @@ export class LoginSessionService {
             return { browser: null, os: null, deviceType: null };
         }
 
-        const parser = new UAParser(userAgent);
+        const parser = new UAParser.UAParser(userAgent);
         const result = parser.getResult();
 
         return {
@@ -83,7 +83,7 @@ export class LoginSessionService {
             const locationData = await this.getLocationFromIP(reqModel.ipAddress);
 
             // Parse user agent
-            const deviceInfo = this.parseUserAgent(reqModel.userAgent);
+            const deviceInfo = this.parseUserAgent(reqModel.userAgent || '');
 
             await transManager.startTransaction();
 
@@ -94,7 +94,7 @@ export class LoginSessionService {
             session.sessionToken = reqModel.sessionToken || this.generateSessionToken();
             session.loginTimestamp = new Date();
             session.isActive = true;
-            session.userAgent = reqModel.userAgent;
+            session.userAgent = reqModel.userAgent || '';
             session.loginMethod = reqModel.loginMethod || 'email_password';
 
             // Add location data if available
@@ -108,9 +108,9 @@ export class LoginSessionService {
             }
 
             // Add device info
-            session.browser = deviceInfo.browser;
-            session.os = deviceInfo.os;
-            session.deviceType = deviceInfo.deviceType;
+            session.browser = deviceInfo.browser || '';
+            session.os = deviceInfo.os || '';
+            session.deviceType = deviceInfo.deviceType || 'Desktop';
 
             // Check for suspicious activity
             session.isSuspicious = await this.detectSuspiciousActivity(reqModel.userId, reqModel.ipAddress, locationData?.country);
@@ -275,5 +275,92 @@ export class LoginSessionService {
             session.os,
             session.loginMethod
         );
+    }
+
+    /**
+     * Create a failed login attempt record
+     */
+    async createFailedLoginAttempt(data: {
+        userId: number;
+        companyId: number;
+        ipAddress: string;
+        userAgent?: string;
+        loginMethod?: string;
+        failureReason: string;
+        attemptedEmail?: string;
+    }): Promise<void> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            // Get location data from IP
+            const locationData = await this.getLocationFromIP(data.ipAddress);
+
+            // Parse user agent
+            const deviceInfo = this.parseUserAgent(data.userAgent || '');
+
+            await transManager.startTransaction();
+
+            const session = new UserLoginSessionEntity();
+            session.userId = data.userId;
+            session.companyId = data.companyId;
+            session.ipAddress = data.ipAddress;
+            session.sessionToken = `failed_${Date.now()}`;
+            session.loginTimestamp = new Date();
+            session.isActive = false; // Failed login is not active
+            session.logoutTimestamp = new Date(); // Immediately mark as logged out
+            session.userAgent = data.userAgent || '';
+            session.loginMethod = data.loginMethod || 'email_password';
+            session.failedAttempts = 1;
+
+            // Add location data if available
+            if (locationData) {
+                session.country = locationData.country;
+                session.region = locationData.region;
+                session.city = locationData.city;
+                session.latitude = locationData.latitude;
+                session.longitude = locationData.longitude;
+                session.timezone = locationData.timezone;
+            }
+
+            // Add device info
+            session.browser = deviceInfo.browser || '';
+            session.os = deviceInfo.os || '';
+            session.deviceType = deviceInfo.deviceType || 'Desktop';
+
+            // Mark as suspicious if multiple failed attempts from same IP
+            session.isSuspicious = await this.detectSuspiciousFailedAttempts(data.ipAddress);
+
+            await transManager.getRepository(UserLoginSessionEntity).save(session);
+            await transManager.completeTransaction();
+        } catch (error) {
+            await transManager.releaseTransaction();
+            console.error('Error creating failed login attempt:', error);
+        }
+    }
+
+    /**
+     * Detect suspicious failed login attempts from same IP
+     */
+    private async detectSuspiciousFailedAttempts(ipAddress: string): Promise<boolean> {
+        try {
+            // Get recent failed attempts from this IP (last 30 minutes)
+            const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+            const recentFailedAttempts = await this.loginSessionRepo.find({
+                where: {
+                    ipAddress,
+                    isActive: false,
+                    failedAttempts: 1
+                },
+                order: { loginTimestamp: 'DESC' },
+                take: 10
+            });
+
+            const recentFailed = recentFailedAttempts.filter(s => s.loginTimestamp > thirtyMinutesAgo);
+
+            // More than 3 failed attempts in 30 minutes is suspicious
+            return recentFailed.length >= 3;
+        } catch (error) {
+            console.error('Error detecting suspicious failed attempts:', error);
+            return false;
+        }
     }
 }

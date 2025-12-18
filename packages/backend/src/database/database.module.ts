@@ -19,6 +19,7 @@ import { BrandEntity } from '../app/entities/masters/brand.entity';
 import { VendorEntity } from '../app/entities/masters/vendor.entity';
 import { LocationEntity } from '../app/entities/masters/location.entity';
 import { TicketCategoryEntity } from '../app/entities/masters/ticket-category.entity';
+import { UserLoginSessionEntity } from '../app/entities/user-login-sessions.entity';
 
 @Module({
     imports: [
@@ -51,8 +52,9 @@ import { TicketCategoryEntity } from '../app/entities/masters/ticket-category.en
                     VendorEntity,
                     LocationEntity,
                     TicketCategoryEntity,
+                    UserLoginSessionEntity
                 ],
-                synchronize: false,
+                synchronize: true,
                 logging: configService.get<string>('NODE_ENV') !== 'production',
                 ssl: configService.get<string>('DB_HOST')?.includes('aivencloud.com')
                     ? { rejectUnauthorized: false }
