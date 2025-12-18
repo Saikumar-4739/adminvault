@@ -13,16 +13,18 @@
       },
       "serve": {
         "executor": "nx:run-commands",
-        "scripts": {
-          "build": "nx build backend",
-          "start": "node ../../dist/packages/backend/main.js",
-          "dev": "nx serve backend"
+        "options": {
+          "command": "node dist/packages/backend/main.js",
+          "cwd": "."
         },
         "dependsOn": [
           "build"
         ]
       }
     }
+  },
+  "scripts": {
+    "start": "node ../../dist/packages/backend/main.js"
   },
   "dependencies": {
     "@adminvault/backend-utils": "*",
