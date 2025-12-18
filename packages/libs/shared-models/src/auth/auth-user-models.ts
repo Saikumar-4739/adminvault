@@ -1,5 +1,5 @@
 import { GlobalResponse } from '@adminvault/backend-utils';
-import { UserRoleEnum } from 'src/enums';
+import { UserRoleEnum } from '../enums';
 
 export class RegisterUserModel {
     fullName: string;
