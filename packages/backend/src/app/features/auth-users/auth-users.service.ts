@@ -95,20 +95,21 @@ export class AuthUsersService {
                     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || '127.0.0.1';
                     const userAgent = req.headers['user-agent'];
 
-                    // Import and use LoginSessionService here
-                    // Note: This will be injected via constructor in the next step
-                    // await this.loginSessionService.createLoginSession({
-                    //     userId: user.id,
-                    //     companyId: user.companyId,
-                    //     ipAddress,
-                    //     userAgent,
-                    //     loginMethod: 'email_password'
-                    // });
+                    await this.loginSessionService.createLoginSession(
+                        new CreateLoginSessionModel(
+                            user.id,
+                            user.companyId,
+                            ipAddress,
+                            userAgent,
+                            'email_password'
+                        )
+                    );
                 } catch (sessionError) {
                     // Log error but don't fail login if session tracking fails
                     console.error('Failed to create login session:', sessionError);
                 }
             }
+
 
             const userInfo = new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole);
             return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
