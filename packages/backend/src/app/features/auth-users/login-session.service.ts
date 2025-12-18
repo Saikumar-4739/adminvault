@@ -6,18 +6,8 @@ import { UserLoginSessionRepository } from '../../repository/user-login-session.
 import { UserLoginSessionEntity } from '../../entities/user-login-sessions.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import {
-    CreateLoginSessionModel,
-    LoginSessionResponseModel,
-    GetUserLoginHistoryModel,
-    GetActiveSessionsModel,
-    LogoutSessionModel
-} from '@adminvault/shared-models';
+import { CreateLoginSessionModel, LoginSessionResponseModel, GetUserLoginHistoryModel, GetActiveSessionsModel, LogoutSessionModel } from '@adminvault/shared-models';
 
-/**
- * Service for managing user login sessions
- * Tracks IP addresses, locations, device info, and session status
- */
 @Injectable()
 export class LoginSessionService {
     constructor(
@@ -30,15 +20,11 @@ export class LoginSessionService {
      */
     private async getLocationFromIP(ipAddress: string) {
         try {
-            // Skip for localhost/private IPs
             if (ipAddress === '127.0.0.1' || ipAddress === '::1' || ipAddress.startsWith('192.168.')) {
                 return null;
             }
 
-            const response = await axios.get(`http://ip-api.com/json/${ipAddress}`, {
-                timeout: 5000
-            });
-
+            const response = await axios.get(`http://ip-api.com/json/${ipAddress}`, { timeout: 5000 });
             if (response.data.status === 'success') {
                 return {
                     country: response.data.country,
@@ -51,7 +37,7 @@ export class LoginSessionService {
                 };
             }
         } catch (error) {
-            console.error('Geolocation API error:', error);
+            throw error;
         }
         return null;
     }
@@ -66,20 +52,10 @@ export class LoginSessionService {
         try {
             // Nominatim API endpoint (OpenStreetMap - FREE!)
             const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
-
-            const response = await axios.get(url, {
-                timeout: 5000,
-                headers: {
-                    'User-Agent': 'AdminVault-LocationTracking/1.0' // Required by Nominatim
-                }
-            });
-
-            console.log('Nominatim API response:', response.data);
+            const response = await axios.get(url, { timeout: 5000, headers: { 'User-Agent': 'AdminVault-LocationTracking/1.0' } });
 
             if (response.data && response.data.address) {
                 const address = response.data.address;
-
-                // Extract location components
                 const city = address.city || address.town || address.village || address.municipality;
                 const district = address.state_district || address.county || address.district;
                 const region = address.state || address.region;
@@ -89,21 +65,10 @@ export class LoginSessionService {
                 const suburb = address.suburb || address.quarter || address.neighbourhood || null;
                 const postcode = address.postcode || null;
                 const fullAddress = response.data.display_name || null;
-
-                return {
-                    country,
-                    region,
-                    city,
-                    district,
-                    locationName,
-                    road,
-                    suburb,
-                    postcode,
-                    fullAddress
-                };
+                return { country, region, city, district, locationName, road, suburb, postcode, fullAddress };
             }
         } catch (error) {
-            console.error('Reverse geocoding error:', error);
+            throw error;
         }
         return null;
     }
@@ -118,7 +83,6 @@ export class LoginSessionService {
 
         const parser = new UAParser.UAParser(userAgent);
         const result = parser.getResult();
-
         return {
             browser: result.browser.name ? `${result.browser.name} ${result.browser.version || ''}`.trim() : null,
             os: result.os.name ? `${result.os.name} ${result.os.version || ''}`.trim() : null,
@@ -132,27 +96,15 @@ export class LoginSessionService {
     async createLoginSession(reqModel: CreateLoginSessionModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            console.log('=== LOGIN SESSION DEBUG ===');
-            console.log('Request has GPS:', !!reqModel.latitude && !!reqModel.longitude);
-            console.log('GPS Coordinates:', { lat: reqModel.latitude, lng: reqModel.longitude });
-            console.log('IP Address:', reqModel.ipAddress);
-
             let locationData = null;
             let usesFrontendLocation = false;
-
             // Check if frontend provided exact GPS coordinates
             if (reqModel.latitude && reqModel.longitude) {
                 usesFrontendLocation = true;
-                console.log('✅ Using frontend GPS coordinates');
-
                 // Use Google Geocoding API to get address from GPS coordinates
-                console.log('Calling Google Geocoding API...');
                 locationData = await this.reverseGeocode(reqModel.latitude, reqModel.longitude);
-
                 if (locationData) {
-                    console.log('✅ Google Geocoding successful:', locationData);
                 } else {
-                    console.warn('❌ Reverse geocoding failed, falling back to IP-based location');
                     locationData = await this.getLocationFromIP(reqModel.ipAddress);
                 }
             } else {
@@ -182,16 +134,12 @@ export class LoginSessionService {
             session.userAgent = reqModel.userAgent || '';
             session.loginMethod = reqModel.loginMethod || 'email_password';
 
-            // Prioritize frontend GPS coordinates
             if (usesFrontendLocation) {
                 session.latitude = reqModel.latitude ?? null;
                 session.longitude = reqModel.longitude ?? null;
-                console.log('Storing GPS coordinates:', { lat: session.latitude, lng: session.longitude });
             } else if (locationData && 'latitude' in locationData) {
-                // Only use lat/lng from IP-based lookup
                 session.latitude = locationData.latitude;
                 session.longitude = locationData.longitude;
-                console.log('Storing IP-based coordinates:', { lat: session.latitude, lng: session.longitude });
             }
 
             // Add location data if available from reverse geocoding or IP lookup
@@ -210,36 +158,18 @@ export class LoginSessionService {
                     session.postcode = locationData.postcode;
                     session.fullAddress = locationData.fullAddress;
                 }
-
-                console.log('Location data stored:', {
-                    country: session.country,
-                    region: session.region,
-                    city: session.city,
-                    district: session.district,
-                    locationName: session.locationName,
-                    road: session.road,
-                    suburb: session.suburb,
-                    postcode: session.postcode
-                });
             } else {
-                console.log('⚠️ No location data available');
+                throw new Error('No location data available');
             }
 
-            // Add device info
             session.browser = deviceInfo.browser || '';
             session.os = deviceInfo.os || '';
             session.deviceType = deviceInfo.deviceType || 'Desktop';
-
-            // Check for suspicious activity
             session.isSuspicious = await this.detectSuspiciousActivity(reqModel.userId, reqModel.ipAddress, locationData?.country);
-
             await transManager.getRepository(UserLoginSessionEntity).save(session);
             await transManager.completeTransaction();
-
-            console.log('=== SESSION SAVED SUCCESSFULLY ===\n');
             return new GlobalResponse(true, 0, "Login session created successfully");
         } catch (error) {
-            console.error('❌ ERROR in createLoginSession:', error);
             await transManager.releaseTransaction();
             throw error;
         }
@@ -281,14 +211,9 @@ export class LoginSessionService {
             if (!session) {
                 throw new ErrorResponse(0, "Session not found");
             }
-
             await transManager.startTransaction();
-            await transManager.getRepository(UserLoginSessionEntity).update(
-                reqModel.sessionId,
-                { isActive: false, logoutTimestamp: new Date() }
-            );
+            await transManager.getRepository(UserLoginSessionEntity).update(reqModel.sessionId, { isActive: false, logoutTimestamp: new Date() });
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Session logged out successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -327,27 +252,16 @@ export class LoginSessionService {
     private async detectSuspiciousActivity(userId: number, ipAddress: string, country: string): Promise<boolean> {
         try {
             // Get recent logins (last 24 hours)
-            const recentSessions = await this.loginSessionRepo.find({
-                where: { userId },
-                order: { loginTimestamp: 'DESC' },
-                take: 10
-            });
-
+            const recentSessions = await this.loginSessionRepo.find({ where: { userId }, order: { loginTimestamp: 'DESC' }, take: 10 });
             if (recentSessions.length === 0) {
                 return false; // First login, not suspicious
             }
 
             // Check for login from different country within 1 hour
             const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-            const recentDifferentCountry = recentSessions.find(s =>
-                s.loginTimestamp > oneHourAgo &&
-                s.country &&
-                country &&
-                s.country !== country
-            );
-
+            const recentDifferentCountry = recentSessions.find(s => s.loginTimestamp > oneHourAgo && s.country && country && s.country !== country);
             if (recentDifferentCountry) {
-                return true; // Login from different country too quickly
+                return true;
             }
 
             // Check for too many logins in short time
@@ -356,7 +270,6 @@ export class LoginSessionService {
             if (recentLogins.length > 5) {
                 return true; // Too many login attempts
             }
-
             return false;
         } catch (error) {
             console.error('Error detecting suspicious activity:', error);
@@ -375,59 +288,20 @@ export class LoginSessionService {
      * Map entity to response model
      */
     private mapToResponseModel(session: UserLoginSessionEntity): LoginSessionResponseModel {
-        return new LoginSessionResponseModel(
-            session.id,
-            session.userId,
-            session.sessionToken,
-            session.loginTimestamp,
-            session.isActive,
-            session.ipAddress,
-            session.isSuspicious,
-            session.logoutTimestamp,
-            session.country,
-            session.region,
-            session.city,
-            session.district ?? undefined,
-            session.latitude ?? undefined,
-            session.longitude ?? undefined,
-            session.timezone,
-            session.deviceType,
-            session.browser,
-            session.os,
-            session.loginMethod
-        );
+        return new LoginSessionResponseModel(session.id, session.userId, session.sessionToken, session.loginTimestamp, session.isActive, session.ipAddress, session.isSuspicious, session.logoutTimestamp, session.country, session.region, session.city, session.district ?? undefined, session.latitude ?? undefined, session.longitude ?? undefined, session.timezone, session.deviceType, session.browser, session.os, session.loginMethod);
     }
 
     /**
      * Create a failed login attempt record
      */
-    async createFailedLoginAttempt(data: {
-        userId: number;
-        companyId: number;
-        ipAddress: string;
-        userAgent?: string;
-        loginMethod?: string;
-        failureReason: string;
-        attemptedEmail?: string;
-        latitude?: number;
-        longitude?: number;
-    }): Promise<void> {
+    async createFailedLoginAttempt(data: { userId: number; companyId: number; ipAddress: string; userAgent?: string; loginMethod?: string; failureReason: string; attemptedEmail?: string; latitude?: number; longitude?: number; }): Promise<void> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            console.log('📝 Recording failed login attempt with GPS:', {
-                hasGPS: !!data.latitude && !!data.longitude,
-                lat: data.latitude,
-                lng: data.longitude
-            });
-
             // Get location data from IP (or use GPS if provided)
             let locationData = null;
             if (data.latitude && data.longitude) {
-                // Use Google Geocoding API to get address from GPS coordinates
                 locationData = await this.reverseGeocode(data.latitude, data.longitude);
-
                 if (!locationData) {
-                    // Fallback to IP-based location
                     locationData = await this.getLocationFromIP(data.ipAddress);
                 }
             } else {
@@ -446,8 +320,8 @@ export class LoginSessionService {
             session.ipAddress = data.ipAddress;
             session.sessionToken = `failed_${Date.now()}`;
             session.loginTimestamp = new Date();
-            session.isActive = false; // Failed login is not active
-            session.logoutTimestamp = new Date(); // Immediately mark as logged out
+            session.isActive = false;
+            session.logoutTimestamp = new Date();
             session.userAgent = data.userAgent || '';
             session.loginMethod = data.loginMethod || 'email_password';
             session.failedAttempts = 1;
@@ -456,10 +330,6 @@ export class LoginSessionService {
             if (data.latitude && data.longitude) {
                 session.latitude = data.latitude;
                 session.longitude = data.longitude;
-                console.log('✅ Storing GPS coordinates for failed login:', {
-                    lat: session.latitude,
-                    lng: session.longitude
-                });
             } else if (locationData && 'latitude' in locationData) {
                 session.latitude = locationData.latitude;
                 session.longitude = locationData.longitude;
@@ -481,33 +351,17 @@ export class LoginSessionService {
                     session.postcode = locationData.postcode;
                     session.fullAddress = locationData.fullAddress;
                 }
-
-                console.log('✅ Location data for failed login:', {
-                    country: session.country,
-                    city: session.city,
-                    district: session.district,
-                    locationName: session.locationName,
-                    road: session.road,
-                    suburb: session.suburb,
-                    postcode: session.postcode
-                });
             }
 
-            // Add device info
             session.browser = deviceInfo.browser || '';
             session.os = deviceInfo.os || '';
             session.deviceType = deviceInfo.deviceType || 'Desktop';
-
-            // Mark as suspicious if multiple failed attempts from same IP
             session.isSuspicious = await this.detectSuspiciousFailedAttempts(data.ipAddress);
-
             await transManager.getRepository(UserLoginSessionEntity).save(session);
             await transManager.completeTransaction();
-
-            console.log('✅ Failed login attempt recorded\n');
         } catch (error) {
             await transManager.releaseTransaction();
-            console.error('Error creating failed login attempt:', error);
+            throw error;
         }
     }
 
@@ -516,25 +370,12 @@ export class LoginSessionService {
      */
     private async detectSuspiciousFailedAttempts(ipAddress: string): Promise<boolean> {
         try {
-            // Get recent failed attempts from this IP (last 30 minutes)
             const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-            const recentFailedAttempts = await this.loginSessionRepo.find({
-                where: {
-                    ipAddress,
-                    isActive: false,
-                    failedAttempts: 1
-                },
-                order: { loginTimestamp: 'DESC' },
-                take: 10
-            });
-
+            const recentFailedAttempts = await this.loginSessionRepo.find({ where: { ipAddress, isActive: false, failedAttempts: 1 }, order: { loginTimestamp: 'DESC' }, take: 10 });
             const recentFailed = recentFailedAttempts.filter(s => s.loginTimestamp > thirtyMinutesAgo);
-
-            // More than 3 failed attempts in 30 minutes is suspicious
             return recentFailed.length >= 3;
         } catch (error) {
-            console.error('Error detecting suspicious failed attempts:', error);
-            return false;
+            throw error;
         }
     }
 }

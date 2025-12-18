@@ -11,23 +11,13 @@ export class GeolocationService {
      * @returns Promise with latitude/longitude or null if unavailable/denied
      */
     async getCurrentPosition(timeout: number = 30000): Promise<GeolocationPosition | null> {
-        // Check if geolocation is supported
         if (!navigator.geolocation) {
-            console.warn('Geolocation is not supported by this browser');
             return null;
         }
-
-        console.log('📍 Requesting geolocation with', timeout / 1000, 'second timeout...');
 
         return new Promise((resolve) => {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    console.log('✅ Geolocation success:', {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        accuracy: position.coords.accuracy
-                    });
-
                     resolve({
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
@@ -37,12 +27,12 @@ export class GeolocationService {
                 },
                 (error) => {
                     this.handleGeolocationError(error);
-                    resolve(null); // Gracefully return null on error
+                    resolve(null);
                 },
                 {
-                    enableHighAccuracy: false, // Disabled for faster response on desktop
+                    enableHighAccuracy: false,
                     timeout: timeout,
-                    maximumAge: 300000 // Accept cached position up to 5 minutes old
+                    maximumAge: 300000
                 }
             );
         });
@@ -52,19 +42,7 @@ export class GeolocationService {
      * Handle geolocation errors
      */
     private handleGeolocationError(error: GeolocationPositionError): void {
-        switch (error.code) {
-            case error.PERMISSION_DENIED:
-                console.info('User denied location permission');
-                break;
-            case error.POSITION_UNAVAILABLE:
-                console.warn('Location information unavailable');
-                break;
-            case error.TIMEOUT:
-                console.warn('Location request timed out');
-                break;
-            default:
-                console.error('Unknown geolocation error:', error.message);
-        }
+        // Silently handle errors
     }
 
     /**
@@ -80,7 +58,6 @@ export class GeolocationService {
             const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
             return result.state;
         } catch (error) {
-            console.warn('Unable to check geolocation permission:', error);
             return null;
         }
     }

@@ -33,7 +33,7 @@ export function useMasters() {
                 setDepartments(response.departments || []);
             }
         } catch (error) {
-            console.error(error);
+            // Silent error handling
         } finally {
             setIsLoading(false);
         }
@@ -47,7 +47,7 @@ export function useMasters() {
                 setAssetTypes(response.assetTypes || []);
             }
         } catch (error) {
-            console.error(error);
+            // Silent error handling
         } finally {
             setIsLoading(false);
         }
@@ -61,7 +61,7 @@ export function useMasters() {
                 setBrands(response.brands || []);
             }
         } catch (error) {
-            console.error(error);
+            // Silent error handling
         } finally {
             setIsLoading(false);
         }
@@ -75,7 +75,7 @@ export function useMasters() {
                 setVendors(response.vendors || []);
             }
         } catch (error) {
-            console.error(error);
+            // Silent error handling
         } finally {
             setIsLoading(false);
         }
@@ -89,7 +89,7 @@ export function useMasters() {
                 setLocations(response.locations || []);
             }
         } catch (error) {
-            console.error(error);
+            // Silent error handling
         } finally {
             setIsLoading(false);
         }
@@ -103,7 +103,7 @@ export function useMasters() {
                 setTicketCategories(response.ticketCategories || []);
             }
         } catch (error) {
-            console.error(error);
+            // Silent error handling
         } finally {
             setIsLoading(false);
         }
