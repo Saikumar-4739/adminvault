@@ -4,10 +4,11 @@ import { AuthUsersRepository } from '../../repository/auth-users.repository';
 import { AuthUsersEntity } from '../../entities/auth-users.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel } from '@adminvault/shared-models';
+import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, CreateLoginSessionModel } from '@adminvault/shared-models';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import * as bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken';
+import { LoginSessionService } from './login-session.service';
 
 
 const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
@@ -17,7 +18,8 @@ const REFRESH_SECRET_KEY = "d9f8a1ec2d6826db2f24ea9f8a1d9bda26f054de88bb90b63934
 export class AuthUsersService {
     constructor(
         private dataSource: DataSource,
-        private authUsersRepo: AuthUsersRepository
+        private authUsersRepo: AuthUsersRepository,
+        private loginSessionService: LoginSessionService
     ) { }
 
     //Create User
@@ -70,7 +72,7 @@ export class AuthUsersService {
     }
 
     //login User As per Role Based
-    async loginUser(reqModel: LoginUserModel): Promise<LoginResponseModel> {
+    async loginUser(reqModel: LoginUserModel, req?: any): Promise<LoginResponseModel> {
         try {
             const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
             if (!existingUser || existingUser.length === 0) {
@@ -86,6 +88,27 @@ export class AuthUsersService {
             // Generate tokens
             const accessToken = this.generateAccessToken(user.email);
             const refreshToken = this.generateRefreshToken(user.email);
+
+            // Create login session record (if request object is available)
+            if (req) {
+                try {
+                    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || '127.0.0.1';
+                    const userAgent = req.headers['user-agent'];
+
+                    // Import and use LoginSessionService here
+                    // Note: This will be injected via constructor in the next step
+                    // await this.loginSessionService.createLoginSession({
+                    //     userId: user.id,
+                    //     companyId: user.companyId,
+                    //     ipAddress,
+                    //     userAgent,
+                    //     loginMethod: 'email_password'
+                    // });
+                } catch (sessionError) {
+                    // Log error but don't fail login if session tracking fails
+                    console.error('Failed to create login session:', sessionError);
+                }
+            }
 
             const userInfo = new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole);
             return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);

@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel } from '@adminvault/shared-models';
+import { Request } from 'express';
 
 @ApiTags('Auth Users')
 @Controller('auth-users')
@@ -21,9 +22,9 @@ export class AuthUsersController {
     }
 
     @Post('loginUser')
-    async loginUser(@Body() reqModel: LoginUserModel): Promise<LoginResponseModel> {
+    async loginUser(@Body() reqModel: LoginUserModel, @Req() req: Request): Promise<LoginResponseModel> {
         try {
-            return await this.service.loginUser(reqModel);
+            return await this.service.loginUser(reqModel, req);
         } catch (error) {
             return returnException(LoginResponseModel, error);
         }

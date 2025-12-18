@@ -1,5 +1,6 @@
 export * from './enums';
 export * from './auth';
+export * from './auth/login-session-models';
 export * from './comapany';
 export * from './employee';
 export * from './device';
