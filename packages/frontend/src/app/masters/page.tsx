@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button';
 import Card, { CardHeader, CardContent } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
-import { Building2, Users, Package, Smartphone, Monitor, ShoppingBag, Briefcase, Tags, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Building2, Users, Smartphone, Monitor, ShoppingBag, Tags, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useMasters } from '@/hooks/useMasters';
 import { PageLoader } from '@/components/ui/Spinner';
