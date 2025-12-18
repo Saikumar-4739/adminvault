@@ -61,12 +61,7 @@ export default function AssetsPage() {
         }
     }, [companies, selectedOrg]);
 
-    const deviceOptions = [
-        { id: 1, name: 'MacBook Pro M1' },
-        { id: 2, name: 'Dell XPS 15' },
-        { id: 3, name: 'iPhone 13' },
-        { id: 4, name: 'Monitor 27"' }
-    ];
+    // Device options removed - should be fetched from backend device_info table
 
     const handleSearch = () => {
         const status = statusFilter ? (statusFilter as AssetStatusEnum) : undefined;
