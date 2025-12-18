@@ -57,56 +57,40 @@ export class LoginSessionService {
     }
 
     /**
-     * Reverse geocode GPS coordinates to get address using Google Geocoding API
+     * Reverse geocode GPS coordinates to get address using Nominatim (OpenStreetMap)
+     * FREE alternative - no API key required!
      * @param latitude - GPS latitude
      * @param longitude - GPS longitude
      */
     private async reverseGeocode(latitude: number, longitude: number) {
         try {
-            // Google Geocoding API endpoint
-            const apiKey = process.env.GOOGLE_GEOCODING_API_KEY;
+            // Nominatim API endpoint (OpenStreetMap - FREE!)
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
 
-            if (!apiKey) {
-                console.warn('Google Geocoding API key not configured');
-                return null;
-            }
+            const response = await axios.get(url, {
+                timeout: 5000,
+                headers: {
+                    'User-Agent': 'AdminVault-LocationTracking/1.0' // Required by Nominatim
+                }
+            });
 
-            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
-            const response = await axios.get(url, { timeout: 5000 });
-            console.log(response.data, 'response.data');
+            console.log('Nominatim API response:', response.data);
 
-            if (response.data.status === 'OK' && response.data.results.length > 0) {
-                const result = response.data.results[0];
-                const addressComponents = result.address_components;
+            if (response.data && response.data.address) {
+                const address = response.data.address;
 
                 // Extract location components
-                let city = null;
-                let district = null;
-                let region = null;
-                let country = null;
-
-                for (const component of addressComponents) {
-                    const types = component.types;
-
-                    if (types.includes('locality')) {
-                        city = component.long_name;
-                    } else if (types.includes('administrative_area_level_3')) {
-                        district = component.long_name;
-                    } else if (types.includes('administrative_area_level_2') && !district) {
-                        district = component.long_name;
-                    } else if (types.includes('administrative_area_level_1')) {
-                        region = component.long_name;
-                    } else if (types.includes('country')) {
-                        country = component.long_name;
-                    }
-                }
+                const city = address.city || address.town || address.village || address.municipality;
+                const district = address.state_district || address.county || address.district;
+                const region = address.state || address.region;
+                const country = address.country;
 
                 return {
                     country,
                     region,
                     city,
                     district,
-                    formattedAddress: result.formatted_address
+                    formattedAddress: response.data.display_name
                 };
             }
         } catch (error) {
