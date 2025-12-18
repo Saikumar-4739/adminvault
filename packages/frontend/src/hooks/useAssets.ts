@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { assetService } from '@/lib/api/services';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, AssetSearchRequestModel, AssetStatusEnum } from '@adminvault/shared-models';
-import { useToast } from '@/contexts/ToastContext';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, AssetSearchRequestModel, AssetStatusEnum } from '@adminvault/shared-models';
 
 interface Asset {
     id: number;
@@ -33,7 +32,6 @@ export function useAssets(companyId?: number) {
     const [statistics, setStatistics] = useState<AssetStatistics | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const toast = useToast();
 
     const fetchAssets = useCallback(async () => {
         try {
