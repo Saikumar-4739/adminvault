@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Building2, Users, Package, Ticket, LayoutDashboard, Menu, X, Database, MessageSquare } from 'lucide-react';
+import { Building2, Users, Package, Ticket, LayoutDashboard, Menu, X, Database, MessageSquare, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { UserRoleEnum } from '@adminvault/shared-models';
@@ -19,7 +19,8 @@ const allNavigation: NavigationItem[] = [
     { name: 'Employees', href: '/employees', icon: Users, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Assets', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Tickets', href: '/tickets', icon: Ticket }, // All users
-    { name: 'Support Chat', href: '/support', icon: MessageSquare }, // All users
+    { name: 'Chat', href: '/support', icon: MessageSquare }, // All users
+    { name: 'Email', href: '/emails', icon: Settings, roles: [UserRoleEnum.ADMIN] },
 ];
 
 export default function Sidebar() {

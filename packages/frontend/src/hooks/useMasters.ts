@@ -125,8 +125,7 @@ export function useMasters() {
                 user.companyId,
                 data.name,
                 data.description,
-                true,
-                data.code
+                true
             );
             const res = await mastersService.createDepartment(model);
             if (res.status) {
@@ -149,6 +148,23 @@ export function useMasters() {
             }
             return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
+    const updateDepartment = async (data: any) => {
+        setIsLoading(true);
+        try {
+            // Note: Using createDepartment as updateDepartment doesn't exist in service
+            const res = await mastersService.createDepartment(data);
+            if (res.status) {
+                fetchDepartments();
+                return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // ... Implement others similarly 
@@ -175,6 +191,24 @@ export function useMasters() {
             return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
+
+    const updateAssetType = async (data: any) => {
+        setIsLoading(true);
+        try {
+            // Note: Using createAssetType as updateAssetType doesn't exist in service
+            const res = await mastersService.createAssetType(data);
+            if (res.status) {
+                fetchAssetTypes();
+                return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const deleteAssetType = async (id: number) => {
         setIsLoading(true);
         try { await mastersService.deleteAssetType(id); fetchAssetTypes(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
@@ -285,8 +319,8 @@ export function useMasters() {
     };
 
     return {
-        departments, fetchDepartments, createDepartment, deleteDepartment,
-        assetTypes, fetchAssetTypes, createAssetType, deleteAssetType,
+        departments, fetchDepartments, createDepartment, updateDepartment, deleteDepartment,
+        assetTypes, fetchAssetTypes, createAssetType, updateAssetType, deleteAssetType,
         brands, fetchBrands, createBrand, deleteBrand,
         vendors, fetchVendors, createVendor, deleteVendor,
         locations, fetchLocations, createLocation, deleteLocation,

@@ -14,6 +14,7 @@ import { BrandEntity } from '../../entities/masters/brand.entity';
 import { VendorEntity } from '../../entities/masters/vendor.entity';
 import { LocationEntity } from '../../entities/masters/location.entity';
 import { TicketCategoryEntity } from '../../entities/masters/ticket-category.entity';
+import { CompanyInfoRepository } from '../../repository';
 
 @Module({
     imports: [
@@ -34,7 +35,8 @@ import { TicketCategoryEntity } from '../../entities/masters/ticket-category.ent
         BrandRepository,
         VendorRepository,
         LocationRepository,
-        TicketCategoryRepository
+        TicketCategoryRepository,
+        CompanyInfoRepository
     ],
     exports: [MastersService]
 })

@@ -1,5 +1,6 @@
-import { Entity, Column } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { CommonBaseEntity } from '../common-base.entity';
+import { CompanyInfoEntity } from '../company-info.entity';
 
 @Entity('departments')
 export class DepartmentEntity extends CommonBaseEntity {
@@ -21,4 +22,8 @@ export class DepartmentEntity extends CommonBaseEntity {
 
     @Column({ nullable: true, type: 'varchar' })
     code: string;
+
+    @ManyToOne(() => CompanyInfoEntity)
+    @JoinColumn({ name: 'companyId' })
+    company: CompanyInfoEntity;
 }

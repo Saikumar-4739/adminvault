@@ -16,13 +16,18 @@ export interface MasterBase {
 
 export interface Department extends MasterBase {
     code?: string;
+    status?: string;
+    level?: string;
+    companyName?: string;
 }
 
 export interface Designation extends MasterBase {
     level?: string;
 }
 
-export interface AssetType extends MasterBase { }
+export interface AssetType extends MasterBase {
+    companyName?: string;
+}
 
 export interface DeviceBrand extends MasterBase {
     website?: string;
@@ -68,10 +73,14 @@ export class CreateMasterModel {
 
 export class CreateDepartmentModel extends CreateMasterModel {
     code?: string;
+    status?: string;
+    level?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, status?: string, level?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.code = code;
+        this.status = status;
+        this.level = level;
     }
 }
 
@@ -132,6 +141,117 @@ export class CreateTicketCategoryModel extends CreateMasterModel {
 
     constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', id?: number) {
         super(userId, companyId, name, description, isActive, id);
+        this.defaultPriority = defaultPriority;
+    }
+}
+
+// ============================================
+// REQUEST MODELS - UPDATE
+// ============================================
+export class UpdateDepartmentModel {
+    id: number;
+    name: string;
+    description?: string;
+    isActive: boolean;
+    code?: string;
+    status?: string;
+    level?: string;
+
+    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string, status?: string, level?: string) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.isActive = isActive ?? true;
+        this.code = code;
+        this.status = status;
+        this.level = level;
+    }
+}
+
+export class UpdateAssetTypeModel {
+    id: number;
+    name: string;
+    description?: string;
+    isActive: boolean;
+
+    constructor(id: number, name: string, description?: string, isActive?: boolean) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.isActive = isActive ?? true;
+    }
+}
+
+export class UpdateBrandModel {
+    id: number;
+    name: string;
+    description?: string;
+    isActive: boolean;
+    website?: string;
+
+    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.isActive = isActive ?? true;
+        this.website = website;
+    }
+}
+
+export class UpdateVendorModel {
+    id: number;
+    name: string;
+    description?: string;
+    isActive: boolean;
+    contactPerson?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+
+    constructor(id: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.isActive = isActive ?? true;
+        this.contactPerson = contactPerson;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+    }
+}
+
+export class UpdateLocationModel {
+    id: number;
+    name: string;
+    description?: string;
+    isActive: boolean;
+    address?: string;
+    city?: string;
+    country?: string;
+
+    constructor(id: number, name: string, description?: string, isActive?: boolean, address?: string, city?: string, country?: string) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.isActive = isActive ?? true;
+        this.address = address;
+        this.city = city;
+        this.country = country;
+    }
+}
+
+export class UpdateTicketCategoryModel {
+    id: number;
+    name: string;
+    description?: string;
+    isActive: boolean;
+    defaultPriority?: 'Low' | 'Medium' | 'High';
+
+    constructor(id: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High') {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.isActive = isActive ?? true;
         this.defaultPriority = defaultPriority;
     }
 }
@@ -260,6 +380,63 @@ export class CreateLocationResponseModel extends GlobalResponse {
 }
 
 export class CreateTicketCategoryResponseModel extends GlobalResponse {
+    ticketCategory: TicketCategory;
+
+    constructor(status: boolean, code: number, message: string, ticketCategory: TicketCategory) {
+        super(status, code, message);
+        this.ticketCategory = ticketCategory;
+    }
+}
+
+// ============================================
+// RESPONSE MODELS - UPDATE (Single Item)
+// ============================================
+export class UpdateDepartmentResponseModel extends GlobalResponse {
+    department: Department;
+
+    constructor(status: boolean, code: number, message: string, department: Department) {
+        super(status, code, message);
+        this.department = department;
+    }
+}
+
+export class UpdateAssetTypeResponseModel extends GlobalResponse {
+    assetType: AssetType;
+
+    constructor(status: boolean, code: number, message: string, assetType: AssetType) {
+        super(status, code, message);
+        this.assetType = assetType;
+    }
+}
+
+export class UpdateBrandResponseModel extends GlobalResponse {
+    brand: DeviceBrand;
+
+    constructor(status: boolean, code: number, message: string, brand: DeviceBrand) {
+        super(status, code, message);
+        this.brand = brand;
+    }
+}
+
+export class UpdateVendorResponseModel extends GlobalResponse {
+    vendor: Vendor;
+
+    constructor(status: boolean, code: number, message: string, vendor: Vendor) {
+        super(status, code, message);
+        this.vendor = vendor;
+    }
+}
+
+export class UpdateLocationResponseModel extends GlobalResponse {
+    location: Location;
+
+    constructor(status: boolean, code: number, message: string, location: Location) {
+        super(status, code, message);
+        this.location = location;
+    }
+}
+
+export class UpdateTicketCategoryResponseModel extends GlobalResponse {
     ticketCategory: TicketCategory;
 
     constructor(status: boolean, code: number, message: string, ticketCategory: TicketCategory) {

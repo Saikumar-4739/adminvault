@@ -6,10 +6,6 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateCompanyModel, DeleteCompanyModel, GetCompanyModel, UpdateCompanyModel, CompanyDocs } from '@adminvault/shared-models';
 
-/**
- * Service for managing company information
- * Handles CRUD operations for companies in the system
- */
 @Injectable()
 export class CompanyInfoService {
     constructor(
@@ -28,7 +24,6 @@ export class CompanyInfoService {
     async createCompany(reqModel: CreateCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            // Validate required fields
             if (!reqModel.companyName) {
                 throw new ErrorResponse(0, "Company name is required");
             }
@@ -41,26 +36,20 @@ export class CompanyInfoService {
                 throw new ErrorResponse(0, "Establishment date is required");
             }
 
-            // Check for duplicate company name
-            const existingCompany = await this.companyInfoRepo.findOne({
-                where: { companyName: reqModel.companyName }
-            });
-
+            const existingCompany = await this.companyInfoRepo.findOne({ where: { companyName: reqModel.companyName } });
             if (existingCompany) {
                 throw new ErrorResponse(0, "Company with this name already exists");
             }
 
             await transManager.startTransaction();
-
-            // Create new company entity
             const newCompany = new CompanyInfoEntity();
             newCompany.companyName = reqModel.companyName;
             newCompany.location = reqModel.location;
-            newCompany.estDate = reqModel.estDate as any; // estDate is string in both entity and model
-
+            newCompany.estDate = reqModel.estDate as any;
+            newCompany.email = reqModel.email && reqModel.email.trim() !== '' ? reqModel.email : null;
+            newCompany.phone = reqModel.phone && reqModel.phone.trim() !== '' ? reqModel.phone : null;
             await transManager.getRepository(CompanyInfoEntity).save(newCompany);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Company created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -83,19 +72,23 @@ export class CompanyInfoService {
                 throw new ErrorResponse(0, "Company ID is required");
             }
 
-            // Verify company exists
             const existingCompany = await this.companyInfoRepo.findOne({ where: { id: reqModel.id } });
             if (!existingCompany) {
                 throw new ErrorResponse(0, "Company not found");
             }
 
             await transManager.startTransaction();
-
-            // Build update data with only provided fields
             const updateData: Partial<CompanyInfoEntity> = {};
-            if (reqModel.companyName) updateData.companyName = reqModel.companyName;
-            if (reqModel.location) updateData.location = reqModel.location;
+            updateData.companyName = reqModel.companyName;
+            updateData.location = reqModel.location;
             if (reqModel.estDate) updateData.estDate = reqModel.estDate as any;
+            // Convert empty strings to null for optional fields
+            if (reqModel.email !== undefined) {
+                updateData.email = reqModel.email && reqModel.email.trim() !== '' ? reqModel.email : null;
+            }
+            if (reqModel.phone !== undefined) {
+                updateData.phone = reqModel.phone && reqModel.phone.trim() !== '' ? reqModel.phone : null;
+            }
 
             await transManager.getRepository(CompanyInfoEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
@@ -131,7 +124,9 @@ export class CompanyInfoService {
                 company.id,
                 company.companyName,
                 company.location,
-                company.estDate as any // string type
+                company.estDate as any, // string type
+                company.email,
+                company.phone
             );
 
             return new GlobalResponse(true, 0, "Company retrieved successfully", companyDoc);
@@ -156,6 +151,8 @@ export class CompanyInfoService {
                 company.companyName,
                 company.location,
                 company.estDate as any, // string type
+                company.email,
+                company.phone
             ));
 
             return new GlobalResponse(true, 0, "Companies retrieved successfully", companyDocs);

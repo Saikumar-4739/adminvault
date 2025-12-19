@@ -47,7 +47,7 @@ export function useCompanies() {
         } finally {
             setIsLoading(false);
         }
-    }, [toast]);
+    }, []);
 
     const createCompany = useCallback(
         async (data: CreateCompanyModel) => {

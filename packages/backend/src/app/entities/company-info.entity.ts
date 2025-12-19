@@ -16,10 +16,10 @@ export class CompanyInfoEntity {
   estDate: string;
 
   @Column('varchar', { name: 'email', length: 255, nullable: true, comment: 'Company email' })
-  email: string;
+  email: string | null;
 
   @Column('varchar', { name: 'phone', length: 50, nullable: true, comment: 'Company phone number' })
-  phone: string;
+  phone: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', comment: 'Record creation timestamp' })
   createdAt: Date;

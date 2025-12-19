@@ -19,7 +19,11 @@ import {
     GetAllTicketCategoriesResponseModel,
     GetAllVendorsResponseModel,
     GlobalResponse,
-    IdRequestModel
+    IdRequestModel,
+    UpdateAssetTypeModel,
+    UpdateAssetTypeResponseModel,
+    UpdateDepartmentModel,
+    UpdateDepartmentResponseModel
 } from '@adminvault/shared-models';
 import { CommonAxiosService } from '../common-axios-service';
 
@@ -38,6 +42,10 @@ export class MastersService extends CommonAxiosService {
 
     async createDepartment(data: CreateDepartmentModel): Promise<CreateDepartmentResponseModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/departments`, data);
+    }
+
+    async updateDepartment(data: UpdateDepartmentModel): Promise<UpdateDepartmentResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/updateDepartment`, data);
     }
 
     async deleteDepartment(id: number): Promise<GlobalResponse> {
@@ -59,6 +67,10 @@ export class MastersService extends CommonAxiosService {
 
     async createAssetType(data: CreateAssetTypeModel): Promise<CreateAssetTypeResponseModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/asset-types`, data);
+    }
+
+    async updateAssetType(data: UpdateAssetTypeModel): Promise<UpdateAssetTypeResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/updateAssetType`, data);
     }
 
     async deleteAssetType(id: number): Promise<GlobalResponse> {

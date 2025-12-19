@@ -3,8 +3,10 @@ import { MastersService } from './masters.service';
 import {
     CreateAssetTypeModel, CreateBrandModel, CreateDepartmentModel, CreateDesignationModel,
     CreateLocationModel, CreateTicketCategoryModel, CreateVendorModel,
+    UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel, UpdateLocationModel, UpdateTicketCategoryModel,
     GetAllDepartmentsResponseModel, GetAllDesignationsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel,
     CreateDepartmentResponseModel, CreateDesignationResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateLocationResponseModel, CreateTicketCategoryResponseModel,
+    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateLocationResponseModel, UpdateTicketCategoryResponseModel,
     IdRequestModel, CompanyIdRequestModel
 } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -29,6 +31,15 @@ export class MastersController {
             return await this.mastersService.createDepartment(data);
         } catch (error) {
             return returnException(CreateDepartmentResponseModel, error);
+        }
+    }
+
+    @Post('updateDepartment')
+    async updateDepartment(@Body() data: UpdateDepartmentModel): Promise<UpdateDepartmentResponseModel> {
+        try {
+            return await this.mastersService.updateDepartment(data);
+        } catch (error) {
+            return returnException(UpdateDepartmentResponseModel, error);
         }
     }
 
@@ -57,6 +68,15 @@ export class MastersController {
             return await this.mastersService.createAssetType(data);
         } catch (error) {
             return returnException(CreateAssetTypeResponseModel, error);
+        }
+    }
+
+    @Post('updateAssetType')
+    async updateAssetType(@Body() data: UpdateAssetTypeModel): Promise<UpdateAssetTypeResponseModel> {
+        try {
+            return await this.mastersService.updateAssetType(data);
+        } catch (error) {
+            return returnException(UpdateAssetTypeResponseModel, error);
         }
     }
 

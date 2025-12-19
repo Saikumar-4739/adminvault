@@ -2,9 +2,9 @@ export class CreateCompanyModel {
     companyName: string;
     location: string;
     estDate: Date;
-    email?: string;
-    phone?: string;
-    constructor(companyName: string, location: string, estDate: Date, email?: string, phone?: string) {
+    email?: string | null;
+    phone?: string | null;
+    constructor(companyName: string, location: string, estDate: Date, email?: string | null, phone?: string | null) {
         this.companyName = companyName;
         this.location = location;
         this.estDate = estDate;
@@ -16,7 +16,7 @@ export class CreateCompanyModel {
 
 export class UpdateCompanyModel extends CreateCompanyModel {
     id: number;
-    constructor(id: number, companyName: string, location: string, estDate: Date, email?: string, phone?: string) {
+    constructor(id: number, companyName: string, location: string, estDate: Date, email?: string | null, phone?: string | null) {
         super(companyName, location, estDate, email, phone);
         this.id = id;
     }
@@ -41,15 +41,15 @@ export class CompanyDocs {
     companyName: string;
     location: string;
     estDate: Date;
-    email?: string;
-    phone?: string;
+    email?: string | null;
+    phone?: string | null;
     constructor(
         id: number,
         companyName: string,
         location: string,
         estDate: Date,
-        email?: string,
-        phone?: string
+        email?: string | null,
+        phone?: string | null
     ) {
         this.id = id;
         this.companyName = companyName;
