@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Moon, Sun, Shield, Lock, Mail, Palette, Languages, Database } from 'lucide-react';
+import { Bell, Shield, Lock, Mail, Palette, Languages, Database } from 'lucide-react';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 
