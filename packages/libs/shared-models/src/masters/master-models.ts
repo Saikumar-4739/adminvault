@@ -446,5 +446,3 @@ export class UpdateTicketCategoryResponseModel extends GlobalResponse {
     }
 }
 
-// Export ticket category models from separate file
-export * from './ticket-category.model';
