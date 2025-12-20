@@ -47,6 +47,7 @@ export interface Location extends MasterBase {
 }
 
 export interface TicketCategory extends MasterBase {
+    status?: string;
     defaultPriority?: 'Low' | 'Medium' | 'High' | null;
 }
 
@@ -444,3 +445,6 @@ export class UpdateTicketCategoryResponseModel extends GlobalResponse {
         this.ticketCategory = ticketCategory;
     }
 }
+
+// Export ticket category models from separate file
+export * from './ticket-category.model';

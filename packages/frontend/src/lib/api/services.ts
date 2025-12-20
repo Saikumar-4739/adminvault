@@ -1,4 +1,4 @@
-import { AuthUserHelperService, CompanyInfoService, EmployeesService, AssetInfoService, DeviceInfoService, EmailInfoService, TicketsService, AssetAssignService, ItAdminService, MastersService } from '@adminvault/shared-services';
+import { AuthUserHelperService, CompanyInfoService, EmployeesService, AssetInfoService, DeviceInfoService, EmailInfoService, TicketsService, AssetAssignService, ItAdminService, MastersService, TicketCategoryService } from '@adminvault/shared-services';
 
 // Create singleton instances
 export const authService = new AuthUserHelperService();
@@ -11,5 +11,6 @@ export const ticketService = new TicketsService();
 export const assetAssignService = new AssetAssignService();
 export const itAdminService = new ItAdminService();
 export const mastersService = new MastersService();
+export const ticketCategoryService = new TicketCategoryService();
 
-export const services = { auth: authService, company: companyService, employee: employeeService, asset: assetService, device: deviceService, email: emailService, ticket: ticketService, assetAssign: assetAssignService, itAdmin: itAdminService, masters: mastersService, };
+export const services = { auth: authService, company: companyService, employee: employeeService, asset: assetService, device: deviceService, email: emailService, ticket: ticketService, assetAssign: assetAssignService, itAdmin: itAdminService, masters: mastersService, ticketCategory: ticketCategoryService };

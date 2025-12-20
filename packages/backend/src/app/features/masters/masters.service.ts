@@ -33,13 +33,8 @@ export class MastersService {
     // Departments
     async getAllDepartments(reqModel: CompanyIdRequestModel): Promise<GetAllDepartmentsResponseModel> {
         try {
-            // Fetch departments
             const departments = await this.deptRepo.find({ where: { companyId: reqModel.id } });
-
-            // Fetch company information from company repository
             const company = await this.companyRepo.findOne({ where: { id: reqModel.id } });
-
-            // Map company name to each department
             const departmentsWithCompanyName = departments.map(dept => ({
                 id: dept.id,
                 userId: dept.userId,
@@ -54,7 +49,6 @@ export class MastersService {
                 code: dept.code,
                 companyName: company?.companyName
             }));
-
             return new GetAllDepartmentsResponseModel(true, 200, 'Departments retrieved successfully', departmentsWithCompanyName);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Departments');
@@ -123,12 +117,9 @@ export class MastersService {
     // Asset Types
     async getAllAssetTypes(reqModel: CompanyIdRequestModel): Promise<GetAllAssetTypesResponseModel> {
         try {
-            // Fetch asset types
             const assetTypes = await this.assetTypeRepo.find({ where: { companyId: reqModel.id } });
-
             // Fetch company information from company repository
             const company = await this.companyRepo.findOne({ where: { id: reqModel.id } });
-
             // Map company name to each asset type
             const assetTypesWithCompanyName = assetTypes.map(asset => ({
                 id: asset.id,
@@ -141,7 +132,6 @@ export class MastersService {
                 isActive: asset.isActive,
                 companyName: company?.companyName
             }));
-
             return new GetAllAssetTypesResponseModel(true, 200, 'Asset Types retrieved successfully', assetTypesWithCompanyName);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Asset Types');
@@ -173,11 +163,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(AssetTypeEntity);
-            await repo.update(data.id, {
-                name: data.name,
-                description: data.description,
-                isActive: data.isActive
-            });
+            await repo.update(data.id, { name: data.name, description: data.description, isActive: data.isActive});
             const updated = await repo.findOne({ where: { id: data.id } });
             if (!updated) {
                 throw new ErrorResponse(500, 'Failed to retrieve updated asset type');
@@ -282,81 +268,4 @@ export class MastersService {
         }
     }
 
-    // Locations
-    async getAllLocations(reqModel: CompanyIdRequestModel): Promise<GetAllLocationsResponseModel> {
-        try {
-            const locations = await this.locationRepo.find({ where: { companyId: reqModel.id } });
-            return new GetAllLocationsResponseModel(true, 200, 'Locations retrieved successfully', locations);
-        } catch (error) {
-            throw new ErrorResponse(500, 'Failed to fetch Locations');
-        }
-    }
-
-    async createLocation(data: CreateLocationModel): Promise<CreateLocationResponseModel> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            await transManager.startTransaction();
-            const repo = transManager.getRepository(LocationEntity);
-            const newItem = repo.create(data);
-            const savedItem = await repo.save(newItem);
-            await transManager.completeTransaction();
-            return new CreateLocationResponseModel(true, 201, 'Location created successfully', savedItem);
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to create Location');
-        }
-    }
-
-    async deleteLocation(reqModel: IdRequestModel): Promise<GlobalResponse> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            await transManager.startTransaction();
-            const repo = transManager.getRepository(LocationEntity);
-            await repo.delete(reqModel.id);
-            await transManager.completeTransaction();
-            return new GlobalResponse(true, 200, 'Location deleted successfully');
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to delete Location');
-        }
-    }
-
-    // Ticket Categories
-    async getAllTicketCategories(reqModel: CompanyIdRequestModel): Promise<GetAllTicketCategoriesResponseModel> {
-        try {
-            const ticketCategories = await this.ticketCatRepo.find({ where: { companyId: reqModel.id } });
-            return new GetAllTicketCategoriesResponseModel(true, 200, 'Ticket Categories retrieved successfully', ticketCategories);
-        } catch (error) {
-            throw new ErrorResponse(500, 'Failed to fetch Ticket Categories');
-        }
-    }
-
-    async createTicketCategory(data: CreateTicketCategoryModel): Promise<CreateTicketCategoryResponseModel> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            await transManager.startTransaction();
-            const repo = transManager.getRepository(TicketCategoryEntity);
-            const newItem = repo.create(data);
-            const savedItem = await repo.save(newItem);
-            await transManager.completeTransaction();
-            return new CreateTicketCategoryResponseModel(true, 201, 'Ticket Category created successfully', savedItem);
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to create Ticket Category');
-        }
-    }
-
-    async deleteTicketCategory(reqModel: IdRequestModel): Promise<GlobalResponse> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            await transManager.startTransaction();
-            const repo = transManager.getRepository(TicketCategoryEntity);
-            await repo.delete(reqModel.id);
-            await transManager.completeTransaction();
-            return new GlobalResponse(true, 200, 'Ticket Category deleted successfully');
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to delete Ticket Category');
-        }
-    }
 }

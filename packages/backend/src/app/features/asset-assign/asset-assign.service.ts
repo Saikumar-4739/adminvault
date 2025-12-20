@@ -42,18 +42,14 @@ export class AssetAssignService {
             }
 
             await transManager.startTransaction();
-
-            // Create new assignment entity
             const newAssetAssign = new AssetAssignEntity();
             newAssetAssign.assetId = reqModel.assetId;
             newAssetAssign.employeeId = reqModel.employeeId;
             newAssetAssign.assignedById = reqModel.assignedById;
             newAssetAssign.assignedDate = reqModel.assignedDate;
-            newAssetAssign.userId = reqModel.employeeId; // Track who created this record
-
+            newAssetAssign.userId = reqModel.employeeId; 
             await transManager.getRepository(AssetAssignEntity).save(newAssetAssign);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Asset assigned successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -83,8 +79,6 @@ export class AssetAssignService {
             }
 
             await transManager.startTransaction();
-
-            // Update assignment entity
             const updatedAssetAssign = new AssetAssignEntity();
             updatedAssetAssign.id = reqModel.id;
             updatedAssetAssign.assetId = reqModel.assetId;
@@ -92,10 +86,8 @@ export class AssetAssignService {
             updatedAssetAssign.assignedById = reqModel.assignedById;
             updatedAssetAssign.assignedDate = reqModel.assignedDate;
             updatedAssetAssign.userId = reqModel.employeeId;
-
             await transManager.getRepository(AssetAssignEntity).update(reqModel.id, updatedAssetAssign);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Assignment updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -122,16 +114,7 @@ export class AssetAssignService {
                 throw new ErrorResponse(0, "Assignment not found");
             }
 
-            const response = new AssetAssignResponseModel(
-                assignment.id,
-                assignment.assetId,
-                assignment.employeeId,
-                assignment.assignedById,
-                assignment.assignedDate,
-                assignment.returnDate,
-                assignment.remarks
-            );
-
+            const response = new AssetAssignResponseModel(assignment.id,assignment.assetId,assignment.employeeId,assignment.assignedById,assignment.assignedDate,assignment.returnDate,assignment.remarks);
             return new GetAssetAssignByIdModel(true, 0, "Assignment retrieved successfully", response);
         } catch (error) {
             throw error;
@@ -178,7 +161,6 @@ export class AssetAssignService {
             await transManager.startTransaction();
             await transManager.getRepository(AssetAssignEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Assignment deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { ItAdminRepository } from '../../repository/it-admin.repository';
-import { ItAdminEntity } from '../../entities/it-admin.entity';
-import { GenericTransactionManager } from '../../../database/typeorm-transactions';
+import { ItAdminRepository } from '../../../repository/it-admin.repository';
+import { ItAdminEntity } from '../../../entities/it-admin.entity';
+import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateItAdminModel, UpdateItAdminModel, DeleteItAdminModel, GetItAdminModel, GetAllItAdminsModel, GetItAdminByIdModel, ItAdminResponseModel } from '@adminvault/shared-models';
 

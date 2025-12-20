@@ -1,14 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CreateEmployeeModel,
-    UpdateEmployeeModel,
-    DeleteEmployeeModel,
-    GetEmployeeModel,
-    GetEmployeeByIdModel,
-    GetAllEmployeesModel,
-    GlobalResponse
-} from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetEmployeeByIdModel, GetAllEmployeesModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class EmployeesService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {

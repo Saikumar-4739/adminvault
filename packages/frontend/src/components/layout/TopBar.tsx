@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, User, ChevronDown, LogOut, CalendarClock, Settings, Moon, Sun } from 'lucide-react';
+import { User, ChevronDown, LogOut, CalendarClock, Settings, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const TopBar: React.FC = () => {
@@ -46,11 +46,6 @@ const TopBar: React.FC = () => {
 
             {/* Right section */}
             <div className="flex items-center gap-4">
-                {/* Notifications */}
-                <button className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white group">
-                    <Bell className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-rose-500 rounded-full animate-pulse shadow-lg shadow-rose-500/50" />
-                </button>
 
                 {/* Dark Mode Toggle */}
                 <button

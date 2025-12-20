@@ -1,12 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CreateCompanyModel,
-    UpdateCompanyModel,
-    DeleteCompanyModel,
-    GetCompanyModel,
-    GlobalResponse
-} from '@adminvault/shared-models';
+import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, GetCompanyModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class CompanyInfoService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {

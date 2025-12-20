@@ -9,6 +9,8 @@ import { UserRoleEnum } from '@adminvault/shared-models';
 import * as bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken';
 import { LoginSessionService } from './login-session.service';
+import { MailService } from '../mail/mail.service';
+import { RequestAccessModel } from '@adminvault/shared-models';
 
 
 const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
@@ -19,14 +21,15 @@ export class AuthUsersService {
     constructor(
         private dataSource: DataSource,
         private authUsersRepo: AuthUsersRepository,
-        private loginSessionService: LoginSessionService
+        private loginSessionService: LoginSessionService,
+        private mailService: MailService
     ) { }
 
     //Create User
     async registerUser(reqModel: RegisterUserModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource)
         try {
-            const existingUser = this.authUsersRepo.find({ where: { email: reqModel.email } })
+            const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } })
             if (!existingUser) {
                 throw new ErrorResponse(0, "Email already exists")
             }
@@ -78,15 +81,14 @@ export class AuthUsersService {
                 // GPS coordinates provided
             }
 
-            const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
-            if (!existingUser || existingUser.length === 0) {
+            const user = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
+            if (!user) {
                 if (req) {
                     await this.trackFailedLogin(req, reqModel.email, 'email_not_found', undefined, undefined, reqModel.latitude, reqModel.longitude);
                 }
                 throw new ErrorResponse(0, "Email does not exist");
             }
 
-            const user = existingUser[0];
             const isPasswordMatch = await bcrypt.compare(reqModel.password, user.passwordHash);
             if (!isPasswordMatch) {
                 if (req) {
@@ -115,6 +117,15 @@ export class AuthUsersService {
         }
     }
 
+    async requestAccess(reqModel: RequestAccessModel): Promise<GlobalResponse> {
+        try {
+            await this.mailService.sendAccessRequestEmail(reqModel);
+            return new GlobalResponse(true, 0, "Access request sent successfully");
+        } catch (error) {
+            throw error;
+        }
+    }
+
     /**
      * Track failed login attempts for security monitoring
      */
@@ -133,8 +144,8 @@ export class AuthUsersService {
     async logOutUser(reqModel: LogoutUserModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
-            if (!existingUser || existingUser.length === 0) {
+            const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
+            if (!existingUser) {
                 throw new ErrorResponse(0, "Email does not exist");
             }
             await transManager.startTransaction();
@@ -151,7 +162,7 @@ export class AuthUsersService {
     async updateUser(reqModel: UpdateUserModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
+            const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
             if (!existingUser) {
                 throw new ErrorResponse(0, "Email does not exist");
             }
@@ -169,7 +180,7 @@ export class AuthUsersService {
     async deleteUser(reqModel: DeleteUserModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existingUser = await this.authUsersRepo.find({ where: { email: reqModel.email } });
+            const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
             if (!existingUser) {
                 throw new ErrorResponse(0, "Email does not exist");
             }

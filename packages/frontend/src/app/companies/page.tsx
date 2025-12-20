@@ -13,17 +13,8 @@ export default function CompaniesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCompany, setEditingCompany] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [formData, setFormData] = useState({
-        companyName: '',
-        location: '',
-        estDate: '',
-        phone: '',
-        email: '',
-    });
-
-    const filteredCompanies = companies.filter((company) =>
-        (company.companyName || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const [formData, setFormData] = useState({ companyName: '', location: '', estDate: '', phone: '', email: '',});
+    const filteredCompanies = companies.filter((company) => (company.companyName || '').toLowerCase().includes(searchQuery.toLowerCase()));
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

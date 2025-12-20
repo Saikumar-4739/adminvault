@@ -9,8 +9,11 @@ import { UserLoginSessionRepository } from '../../repository/user-login-session.
 import { LoginSessionService } from './login-session.service';
 import { LoginSessionController } from './login-session.controller';
 
+import { MailModule } from '../mail/mail.module';
+
 @Module({
     imports: [
+        MailModule,
         TypeOrmModule.forFeature([AuthUsersEntity, UserLoginSessionEntity])
     ],
     controllers: [AuthUsersController, LoginSessionController],

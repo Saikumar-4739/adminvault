@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { CompanyInfoRepository } from '../../repository/company-info.repository';
-import { CompanyInfoEntity } from '../../entities/company-info.entity';
-import { GenericTransactionManager } from '../../../database/typeorm-transactions';
+import { CompanyInfoRepository } from '../../../repository/company-info.repository';
+import { CompanyInfoEntity } from '../../../entities/company-info.entity';
+import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateCompanyModel, DeleteCompanyModel, GetCompanyModel, UpdateCompanyModel, CompanyDocs } from '@adminvault/shared-models';
 
@@ -82,7 +82,6 @@ export class CompanyInfoService {
             updateData.companyName = reqModel.companyName;
             updateData.location = reqModel.location;
             if (reqModel.estDate) updateData.estDate = reqModel.estDate as any;
-            // Convert empty strings to null for optional fields
             if (reqModel.email !== undefined) {
                 updateData.email = reqModel.email && reqModel.email.trim() !== '' ? reqModel.email : null;
             }
@@ -92,7 +91,6 @@ export class CompanyInfoService {
 
             await transManager.getRepository(CompanyInfoEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Company updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -118,17 +116,7 @@ export class CompanyInfoService {
             if (!company) {
                 throw new ErrorResponse(0, "Company not found");
             }
-
-            // CompanyDocs expects string for estDate (matches entity)
-            const companyDoc = new CompanyDocs(
-                company.id,
-                company.companyName,
-                company.location,
-                company.estDate as any, // string type
-                company.email,
-                company.phone
-            );
-
+            const companyDoc = new CompanyDocs(company.id,company.companyName,company.location,company.estDate as any, company.email,company.phone);
             return new GlobalResponse(true, 0, "Company retrieved successfully", companyDoc);
         } catch (error) {
             throw error;
@@ -145,16 +133,7 @@ export class CompanyInfoService {
     async getAllCompanies(): Promise<GlobalResponse<CompanyDocs[]>> {
         try {
             const companies = await this.companyInfoRepo.find();
-
-            const companyDocs = companies.map(company => new CompanyDocs(
-                company.id,
-                company.companyName,
-                company.location,
-                company.estDate as any, // string type
-                company.email,
-                company.phone
-            ));
-
+            const companyDocs = companies.map(company => new CompanyDocs(company.id,company.companyName,company.location,company.estDate as any, company.email,company.phone));
             return new GlobalResponse(true, 0, "Companies retrieved successfully", companyDocs);
         } catch (error) {
             throw error;
@@ -177,7 +156,6 @@ export class CompanyInfoService {
                 throw new ErrorResponse(0, "Company ID is required");
             }
 
-            // Verify company exists
             const existingCompany = await this.companyInfoRepo.findOne({ where: { id: reqModel.id } });
             if (!existingCompany) {
                 throw new ErrorResponse(0, "Company not found");
@@ -186,7 +164,6 @@ export class CompanyInfoService {
             await transManager.startTransaction();
             await transManager.getRepository(CompanyInfoEntity).delete(reqModel.id);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Company deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();

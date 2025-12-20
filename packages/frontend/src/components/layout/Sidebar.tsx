@@ -1,7 +1,8 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Building2, Users, Package, Ticket, LayoutDashboard, Menu, X, Database, MessageSquare, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { Building2, Users, Package, Ticket, LayoutDashboard, Menu, X, Database, MessageSquare, PieChart, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { UserRoleEnum } from '@adminvault/shared-models';
@@ -15,12 +16,13 @@ interface NavigationItem {
 
 const allNavigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Masters', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
-    { name: 'Employees', href: '/employees', icon: Users, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Assets', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Tickets', href: '/tickets', icon: Ticket }, // All users
-    { name: 'Chat', href: '/support', icon: MessageSquare }, // All users
-    { name: 'Email', href: '/emails', icon: Settings, roles: [UserRoleEnum.ADMIN] },
+    { name: 'System Config', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
+    { name: 'Inventory', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Support Tickets', href: '/tickets', icon: Ticket },
+    { name: 'Internal Chat', href: '/support', icon: MessageSquare },
+    { name: 'Email Setup', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
+    { name: 'User Directory', href: '/employees', icon: Users, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'All Reports', href: '/reports', icon: PieChart, roles: [UserRoleEnum.ADMIN] },
 ];
 
 export default function Sidebar() {
@@ -64,7 +66,7 @@ export default function Sidebar() {
                                 : pathname?.startsWith(item.href);
 
                             return (
-                                <a
+                                <Link
                                     key={item.name}
                                     href={item.href}
                                     className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group font-medium text-sm ${isActive
@@ -76,7 +78,7 @@ export default function Sidebar() {
                                     <Icon className={`h-4.5 w-4.5 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
                                     <span>{item.name}</span>
                                     {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-sm" />}
-                                </a>
+                                </Link>
                             );
                         })}
                     </nav>

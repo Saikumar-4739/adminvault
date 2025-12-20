@@ -36,9 +36,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         };
 
         const sizes = {
-            sm: 'h-8 px-3 text-sm',
-            md: 'h-10 px-4 text-base',
-            lg: 'h-12 px-6 text-lg',
+            sm: 'h-9 px-3 text-sm',  // 36px - acceptable for secondary actions
+            md: 'h-11 px-4 text-base',  // 44px - meets touch target minimum
+            lg: 'h-12 px-6 text-lg',  // 48px - exceeds minimum
         };
 
         return (

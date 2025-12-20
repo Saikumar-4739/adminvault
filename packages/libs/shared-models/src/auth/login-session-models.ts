@@ -1,8 +1,5 @@
 import { GlobalResponse } from '@adminvault/backend-utils';
 
-/**
- * Model for creating a new login session
- */
 export class CreateLoginSessionModel {
     userId: number;
     companyId: number;
@@ -34,9 +31,6 @@ export class CreateLoginSessionModel {
     }
 }
 
-/**
- * Response model for login session data
- */
 export class LoginSessionResponseModel {
     id: number;
     userId: number;
@@ -101,27 +95,18 @@ export class LoginSessionResponseModel {
     }
 }
 
-/**
- * Response model for user login history
- */
 export class GetUserLoginHistoryModel extends GlobalResponse<LoginSessionResponseModel[]> {
     constructor(status: boolean, code: number, message: string, data?: LoginSessionResponseModel[]) {
         super(status, code, message, data);
     }
 }
 
-/**
- * Response model for active sessions
- */
 export class GetActiveSessionsModel extends GlobalResponse<LoginSessionResponseModel[]> {
     constructor(status: boolean, code: number, message: string, data?: LoginSessionResponseModel[]) {
         super(status, code, message, data);
     }
 }
 
-/**
- * Model for logout session request
- */
 export class LogoutSessionModel {
     sessionId: number;
 

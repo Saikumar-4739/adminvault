@@ -4,10 +4,10 @@ export abstract class CommonBaseEntity {
     @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
     id: number;
 
-    @Column({ type: 'bigint', name: 'user_id', nullable: false })
+    @Column({ type: 'bigint', name: 'user_id', nullable: true })
     userId: number;
 
-    @Column({ type: 'bigint', name: 'company_id', nullable: false })
+    @Column({ type: 'bigint', name: 'company_id', nullable: true })
     companyId: number;
 
     @CreateDateColumn({ type: 'timestamp', name: 'created_at' })

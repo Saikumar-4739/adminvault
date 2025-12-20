@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
-import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel } from '@adminvault/shared-models';
+import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel } from '@adminvault/shared-models';
 import type { Request } from 'express';
 
 @ApiTags('Auth Users')
@@ -63,6 +63,15 @@ export class AuthUsersController {
             return await this.service.getAllUsers(reqModel);
         } catch (error) {
             return returnException(GetAllUsersModel, error);
+        }
+    }
+
+    @Post('requestAccess')
+    async requestAccess(@Body() reqModel: RequestAccessModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.requestAccess(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

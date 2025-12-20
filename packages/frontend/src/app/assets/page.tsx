@@ -37,31 +37,17 @@ export default function AssetsPage() {
     const { companies } = useCompanies();
     const [selectedOrg, setSelectedOrg] = useState<string>('');
     const { assets, statistics, isLoading, createAsset, updateAsset, deleteAsset, searchAssets } = useAssets(selectedOrg ? Number(selectedOrg) : undefined);
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAsset, setEditingAsset] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('');
-    const [formData, setFormData] = useState({
-        brand: '',
-        model: '',
-        serviceTag: '',
-        configuration: '',
-        assignedTo: '',
-        previousUser: '',
-        purchaseDate: '',
-        warrantyExpiry: '',
-        status: 'available'
-    });
+    const [formData, setFormData] = useState({ brand: '', model: '', serviceTag: '', configuration: '', assignedTo: '', previousUser: '', purchaseDate: '', warrantyExpiry: '', status: 'available'});
 
-    // Auto-select first organization when companies load
     useEffect(() => {
         if (companies.length > 0 && !selectedOrg) {
             setSelectedOrg(String(companies[0].id));
         }
     }, [companies, selectedOrg]);
-
-    // Device options removed - should be fetched from backend device_info table
 
     const handleSearch = () => {
         const status = statusFilter ? (statusFilter as AssetStatusEnum) : undefined;
@@ -75,20 +61,17 @@ export default function AssetsPage() {
             alert('Please select an organization first');
             return;
         }
-
-        // Get userId from localStorage
         const userData = localStorage.getItem('user');
         const userId = userData ? JSON.parse(userData).id : 1;
-
         // For now, using serviceTag as serialNumber and creating a mock deviceId
         const payload = {
             companyId,
-            deviceId: 1, // Mock device ID - should be selected from devices in future
+            deviceId: 1,
             serialNumber: formData.serviceTag,
             purchaseDate: new Date(formData.purchaseDate),
             assetStatusEnum: formData.status as any,
             warrantyExpiry: formData.warrantyExpiry ? new Date(formData.warrantyExpiry) : undefined,
-            userId // Add userId from localStorage
+            userId 
         };
 
         if (editingAsset) {
@@ -124,17 +107,7 @@ export default function AssetsPage() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingAsset(null);
-        setFormData({
-            brand: '',
-            model: '',
-            serviceTag: '',
-            configuration: '',
-            assignedTo: '',
-            previousUser: '',
-            purchaseDate: '',
-            warrantyExpiry: '',
-            status: 'available'
-        });
+        setFormData({ brand: '', model: '', serviceTag: '', configuration: '', assignedTo: '', previousUser: '', purchaseDate: '', warrantyExpiry: '', status: 'available'});
     };
 
     return (

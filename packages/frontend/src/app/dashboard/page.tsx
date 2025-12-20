@@ -68,11 +68,11 @@ export default function DashboardPage() {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 space-y-6">
+            <div className="p-4 md:p-6 space-y-4 md:space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm md:text-base font-medium">
                         Welcome to AdminVault - Your enterprise management platform
                     </p>
                 </div>

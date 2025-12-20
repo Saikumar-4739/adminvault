@@ -1,42 +1,11 @@
-import {
-    CompanyIdRequestModel,
-    CreateAssetTypeModel,
-    CreateAssetTypeResponseModel,
-    CreateBrandModel,
-    CreateBrandResponseModel,
-    CreateDepartmentModel,
-    CreateDepartmentResponseModel,
-    CreateLocationModel,
-    CreateLocationResponseModel,
-    CreateTicketCategoryModel,
-    CreateTicketCategoryResponseModel,
-    CreateVendorModel,
-    CreateVendorResponseModel,
-    GetAllAssetTypesResponseModel,
-    GetAllBrandsResponseModel,
-    GetAllDepartmentsResponseModel,
-    GetAllLocationsResponseModel,
-    GetAllTicketCategoriesResponseModel,
-    GetAllVendorsResponseModel,
-    GlobalResponse,
-    IdRequestModel,
-    UpdateAssetTypeModel,
-    UpdateAssetTypeResponseModel,
-    UpdateDepartmentModel,
-    UpdateDepartmentResponseModel
-} from '@adminvault/shared-models';
+import { CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel } from '@adminvault/shared-models';
 import { CommonAxiosService } from '../common-axios-service';
 
 export class MastersService extends CommonAxiosService {
     private readonly BASE_PATH = '/masters';
 
-    // ============================================
-    // DEPARTMENTS
-    // ============================================
     async getAllDepartments(companyId: number): Promise<GetAllDepartmentsResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/getAllDepartments`,
-            new CompanyIdRequestModel(companyId)
+        return await this.axiosPostCall( `${this.BASE_PATH}/getAllDepartments`, new CompanyIdRequestModel(companyId)
         );
     }
 

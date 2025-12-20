@@ -1,16 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CompanyIdRequestModel,
-    DeleteUserModel,
-    GetAllUsersModel,
-    GlobalResponse,
-    LoginResponseModel,
-    LoginUserModel,
-    LogoutUserModel,
-    RegisterUserModel,
-    UpdateUserModel
-} from '@adminvault/shared-models';
+import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, GlobalResponse, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel } from '@adminvault/shared-models';
 
 export class AuthUserHelperService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -39,5 +29,9 @@ export class AuthUserHelperService extends CommonAxiosService {
 
     async getAllUsers(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllUsersModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllUsers'), reqObj, config);
+    }
+
+    async requestAccess(reqObj: RequestAccessModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('requestAccess'), reqObj, config);
     }
 }

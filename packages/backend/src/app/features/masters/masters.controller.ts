@@ -1,12 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { MastersService } from './masters.service';
-import {
-    CreateAssetTypeModel, CreateBrandModel, CreateDepartmentModel, CreateDesignationModel,
-    CreateLocationModel, CreateTicketCategoryModel, CreateVendorModel,
-    UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel, UpdateLocationModel, UpdateTicketCategoryModel,
-    GetAllDepartmentsResponseModel, GetAllDesignationsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel,
-    CreateDepartmentResponseModel, CreateDesignationResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateLocationResponseModel, CreateTicketCategoryResponseModel,
-    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateLocationResponseModel, UpdateTicketCategoryResponseModel,
+import { CreateAssetTypeModel, CreateBrandModel, CreateDepartmentModel, CreateVendorModel, UpdateDepartmentModel, UpdateAssetTypeModel, 
+    GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, 
+    CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, 
+    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, 
     IdRequestModel, CompanyIdRequestModel
 } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -145,59 +142,4 @@ export class MastersController {
         }
     }
 
-    // Locations
-    @Post('getAllLocations')
-    async getAllLocations(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllLocationsResponseModel> {
-        try {
-            return await this.mastersService.getAllLocations(reqModel);
-        } catch (error) {
-            return returnException(GetAllLocationsResponseModel, error);
-        }
-    }
-
-    @Post('locations')
-    async createLocation(@Body() data: CreateLocationModel): Promise<CreateLocationResponseModel> {
-        try {
-            return await this.mastersService.createLocation(data);
-        } catch (error) {
-            return returnException(CreateLocationResponseModel, error);
-        }
-    }
-
-    @Post('deleteLocation')
-    async deleteLocation(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
-        try {
-            return await this.mastersService.deleteLocation(reqModel);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    // Ticket Categories
-    @Post('getAllTicketCategories')
-    async getAllTicketCategories(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllTicketCategoriesResponseModel> {
-        try {
-            return await this.mastersService.getAllTicketCategories(reqModel);
-        } catch (error) {
-            return returnException(GetAllTicketCategoriesResponseModel, error);
-        }
-    }
-
-    @Post('ticket-categories')
-    async createTicketCategory(@Body() data: CreateTicketCategoryModel): Promise<CreateTicketCategoryResponseModel> {
-        try {
-            return await this.mastersService.createTicketCategory(data);
-        } catch (error) {
-            return returnException(CreateTicketCategoryResponseModel, error);
-        }
-    }
-
-    @Post('deleteTicketCategory')
-    async deleteTicketCategory(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
-        try {
-            return await this.mastersService.deleteTicketCategory(reqModel);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
 }

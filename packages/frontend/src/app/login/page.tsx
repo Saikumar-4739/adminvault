@@ -8,6 +8,8 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
 import { Building2, ShieldCheck, BarChart3, Users, Zap, X } from 'lucide-react';
+import { authService } from '@/lib/api/services';
+import { RequestAccessModel } from '@adminvault/shared-models';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -25,7 +27,7 @@ export default function LoginPage() {
     // Request Access Form State
     const [requestName, setRequestName] = useState('');
     const [requestEmail, setRequestEmail] = useState('');
-    const [requestDesc, setRequestDesc] = useState('');
+
     const [isRequesting, setIsRequesting] = useState(false);
 
     // Forgot Password Form State
@@ -61,17 +63,25 @@ export default function LoginPage() {
     const handleRequestAccess = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsRequesting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
 
-        console.log(`Request sent to inolyse@gmail.com: Name: ${requestName}, Email: ${requestEmail}, Desc: ${requestDesc}`);
+        try {
+            const requestModel = new RequestAccessModel(requestName, requestEmail);
+            const response = await authService.requestAccess(requestModel);
 
-        success('Request Sent', 'Your access request has been sent to inolyse@gmail.com');
-        setIsRequesting(false);
-        setShowRequestModal(false);
-        setRequestName('');
-        setRequestEmail('');
-        setRequestDesc('');
+            if (response.status) {
+                success('Request Sent', 'Your access request has been sent to inolyse@gmail.com');
+                setIsRequesting(false);
+                setShowRequestModal(false);
+                setRequestName('');
+                setRequestEmail('');
+            } else {
+                toastError('Request Failed', response.message || 'Could not send request');
+                setIsRequesting(false);
+            }
+        } catch (error: any) {
+            toastError('Request Failed', error.message || 'An error occurred');
+            setIsRequesting(false);
+        }
     };
 
     const handleForgotPassword = async (e: React.FormEvent) => {
@@ -182,25 +192,6 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        <div className="flex justify-between items-center">
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                    checked={rememberMe}
-                                    onChange={(e) => setRememberMe(e.target.checked)}
-                                />
-                                <span className="text-sm text-slate-600 group-hover:text-primary-600 transition-colors">Remember me</span>
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => setShowForgotModal(true)}
-                                className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline"
-                            >
-                                Forgot password?
-                            </button>
-                        </div>
-
                         <Button
                             type="submit"
                             className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-all shadow-lg shadow-primary-500/20"
@@ -256,14 +247,6 @@ export default function LoginPage() {
 
                             />
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1.5">Description / Reason</label>
-                                <textarea
-                                    className="w-full rounded-lg border-slate-200 focus:border-primary-500 focus:ring-primary-500/10 min-h-[100px] text-sm py-2 px-3"
-                                    value={requestDesc}
-                                    onChange={(e) => setRequestDesc(e.target.value)}
-                                    required
-
-                                />
                             </div>
 
                             <Button

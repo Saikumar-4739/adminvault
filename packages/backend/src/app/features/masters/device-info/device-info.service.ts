@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { DeviceInfoRepository } from '../../repository/device-info.repository';
-import { DeviceInfoEntity } from '../../entities/device-info.entity';
-import { GenericTransactionManager } from '../../../database/typeorm-transactions';
+import { DeviceInfoRepository } from '../../../repository/device-info.repository';
+import { DeviceInfoEntity } from '../../../entities/device-info.entity';
+import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateDeviceModel, UpdateDeviceModel, DeleteDeviceModel, GetDeviceModel, GetAllDevicesModel, GetDeviceByIdModel, DeviceResponseModel } from '@adminvault/shared-models';
 
@@ -16,7 +16,6 @@ export class DeviceInfoService {
     async createDevice(reqModel: CreateDeviceModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            // Validation
             if (!reqModel.deviceType) {
                 throw new ErrorResponse(0, "Device type is required");
             }
@@ -25,7 +24,6 @@ export class DeviceInfoService {
             }
 
             await transManager.startTransaction();
-
             const newDevice = new DeviceInfoEntity();
             newDevice.deviceType = reqModel.deviceType;
             newDevice.deviceName = reqModel.deviceName;
@@ -107,7 +105,6 @@ export class DeviceInfoService {
                 throw new ErrorResponse(0, "Device ID is required");
             }
 
-            // Check if device exists
             const existingDevice = await this.deviceInfoRepo.findOne({ where: { id: reqModel.id } });
 
             if (!existingDevice) {

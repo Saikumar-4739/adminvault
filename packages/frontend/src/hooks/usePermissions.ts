@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
@@ -53,7 +54,7 @@ export function usePermissions() {
         return hasRole([UserRoleEnum.ADMIN]);
     };
 
-    return {
+    return useMemo(() => ({
         hasRole,
         isAdmin,
         isManager,
@@ -66,5 +67,5 @@ export function usePermissions() {
         canAccessSupport,
         canManageUsers,
         canManageCompany,
-    };
+    }), [user]);
 }

@@ -143,7 +143,7 @@ export default function TicketsPage() {
                     />
                 </div>
 
-                <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                     {['All', 'Open', 'In Progress', 'Resolved'].map((status) => (
                         <button
                             key={status}

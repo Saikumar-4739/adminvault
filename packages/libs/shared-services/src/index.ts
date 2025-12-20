@@ -12,6 +12,7 @@ export * from './tickets/tickets-service';
 export * from './asset-assign/asset-assign-service';
 export * from './it-admin/it-admin-service';
 export * from './masters/masters-service';
+export * from './masters/ticket-category-service';
 export * from './utils/geolocation-service';
 export * from './types/geolocation.types';
 

@@ -1,14 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CreateAssetAssignModel,
-    UpdateAssetAssignModel,
-    DeleteAssetAssignModel,
-    GetAssetAssignModel,
-    GetAssetAssignByIdModel,
-    GetAllAssetAssignsModel,
-    GlobalResponse
-} from '@adminvault/shared-models';
+import { CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel, GetAssetAssignModel, GetAssetAssignByIdModel, GetAllAssetAssignsModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class AssetAssignService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {

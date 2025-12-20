@@ -16,7 +16,6 @@ export class EmployeesService {
     async createEmployee(reqModel: CreateEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            // Validation
             if (!reqModel.companyId) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
@@ -28,17 +27,12 @@ export class EmployeesService {
                 throw new ErrorResponse(0, "Department is required");
             }
 
-            // Check if email already exists
-            const existingEmployee = await this.employeesRepo.findOne({
-                where: { email: reqModel.email }
-            });
-
+            const existingEmployee = await this.employeesRepo.findOne({where: { email: reqModel.email }});
             if (existingEmployee) {
                 throw new ErrorResponse(0, "Employee with this email already exists");
             }
 
             await transManager.startTransaction();
-
             const newEmployee = new EmployeesEntity();
             newEmployee.companyId = reqModel.companyId;
             newEmployee.firstName = reqModel.firstName;
@@ -62,14 +56,12 @@ export class EmployeesService {
                 throw new ErrorResponse(0, "Employee ID is required");
             }
 
-            // Check if employee exists
             const existingEmployee = await this.employeesRepo.findOne({ where: { id: reqModel.id } });
             if (!existingEmployee) {
                 throw new ErrorResponse(0, "Employee not found");
             }
 
             await transManager.startTransaction();
-
             const updateData: Partial<EmployeesEntity> = {};
             updateData.firstName = reqModel.firstName;
             updateData.lastName = reqModel.lastName;
@@ -79,7 +71,6 @@ export class EmployeesService {
             updateData.billingAmount = reqModel.billingAmount;
             updateData.department = reqModel.department;
             updateData.remarks = reqModel.remarks;
-
             await transManager.getRepository(EmployeesEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Employee updated successfully");
@@ -131,7 +122,6 @@ export class EmployeesService {
                 throw new ErrorResponse(0, "Employee ID is required");
             }
 
-            // Check if employee exists
             const existingEmployee = await this.employeesRepo.findOne({ where: { id: reqModel.id } });
             if (!existingEmployee) {
                 throw new ErrorResponse(0, "Employee not found");

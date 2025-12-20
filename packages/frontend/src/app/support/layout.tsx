@@ -9,9 +9,9 @@ export default function SupportLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
             <Sidebar />
-            <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+            <div className="flex-1 flex flex-col overflow-hidden">
                 <TopBar />
                 <main className="flex-1 overflow-auto bg-slate-50/50 dark:bg-slate-900/50">
                     {children}
@@ -20,3 +20,4 @@ export default function SupportLayout({
         </div>
     );
 }
+

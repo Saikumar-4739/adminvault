@@ -6,10 +6,6 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, AssetWithAssignmentModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum } from '@adminvault/shared-models';
 
-/**
- * Service for managing asset information
- * Handles CRUD operations, statistics, search, and assignment tracking for assets
- */
 @Injectable()
 export class AssetInfoService {
     constructor(
@@ -28,7 +24,6 @@ export class AssetInfoService {
     async createAsset(reqModel: CreateAssetModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            // Validate required fields
             if (!reqModel.companyId) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
@@ -39,24 +34,19 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Serial number is required");
             }
 
-            // Check for duplicate serial number
             const existing = await this.assetInfoRepo.findOne({ where: { serialNumber: reqModel.serialNumber } });
             if (existing) {
                 throw new ErrorResponse(0, "Serial number already exists");
             }
 
             await transManager.startTransaction();
-
-            // Create new asset entity
             const entity = new AssetInfoEntity();
             entity.companyId = reqModel.companyId;
             entity.deviceId = reqModel.deviceId;
             entity.serialNumber = reqModel.serialNumber;
             entity.assetStatusEnum = reqModel.assetStatusEnum;
-
             await transManager.getRepository(AssetInfoEntity).save(entity);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Asset created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -85,17 +75,13 @@ export class AssetInfoService {
             }
 
             await transManager.startTransaction();
-
-            // Update asset entity
             const entity = new AssetInfoEntity();
             entity.companyId = reqModel.companyId;
             entity.deviceId = reqModel.deviceId;
             entity.serialNumber = reqModel.serialNumber;
             entity.assetStatusEnum = reqModel.assetStatusEnum;
-
             await transManager.getRepository(AssetInfoEntity).update(reqModel.id, entity);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Asset updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -122,18 +108,7 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Asset not found");
             }
 
-            const response = new AssetResponseModel(
-                asset.id,
-                asset.companyId,
-                asset.deviceId,
-                asset.serialNumber,
-                asset.assetStatusEnum,
-                asset.createdAt,
-                asset.updatedAt,
-                asset.purchaseDate,
-                asset.warrantyExpiry
-            );
-
+            const response = new AssetResponseModel(asset.id,asset.companyId,asset.deviceId,asset.serialNumber,asset.assetStatusEnum,asset.createdAt,asset.updatedAt,asset.purchaseDate,asset.warrantyExpiry);
             return new GetAssetByIdModel(true, 0, "Asset retrieved successfully", response);
         } catch (error) {
             throw error;
@@ -150,22 +125,8 @@ export class AssetInfoService {
      */
     async getAllAssets(companyId?: number): Promise<GetAllAssetsModel> {
         try {
-            const assets = companyId
-                ? await this.assetInfoRepo.find({ where: { companyId } })
-                : await this.assetInfoRepo.find();
-
-            const responses = assets.map(a => new AssetResponseModel(
-                a.id,
-                a.companyId,
-                a.deviceId,
-                a.serialNumber,
-                a.assetStatusEnum,
-                a.createdAt,
-                a.updatedAt,
-                a.purchaseDate,
-                a.warrantyExpiry
-            ));
-
+            const assets = companyId ? await this.assetInfoRepo.find({ where: { companyId } }) : await this.assetInfoRepo.find();
+            const responses = assets.map(a => new AssetResponseModel(a.id,a.companyId,a.deviceId,a.serialNumber,a.assetStatusEnum,a.createdAt,a.updatedAt,a.purchaseDate,a.warrantyExpiry));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
         } catch (error) {
             throw error;
@@ -195,7 +156,6 @@ export class AssetInfoService {
             await transManager.startTransaction();
             await transManager.getRepository(AssetInfoEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Asset deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -218,9 +178,7 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Company ID is required");
             }
 
-            // Use repository method for statistics
             const statsData = await this.assetInfoRepo.getAssetStatistics(companyId);
-
             // Transform to expected format
             const statistics = {
                 total: statsData.reduce((sum, item) => sum + parseInt(item.count), 0),
@@ -251,10 +209,8 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Company ID is required");
             }
 
-            // Use repository method for searching assets
             const assets = await this.assetInfoRepo.searchAssets(reqModel.companyId, reqModel.searchQuery, reqModel.statusFilter);
             const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry));
-
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
         } catch (error) {
             throw error;
@@ -275,10 +231,7 @@ export class AssetInfoService {
             if (!companyId) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
-
-            // Use repository method for getting assets with assignments
             const assets = await this.assetInfoRepo.getAssetsWithAssignments(companyId);
-
             return new GetAssetsWithAssignmentsResponseModel(true, 0, "Assets with assignments retrieved successfully", assets);
         } catch (error) {
             throw error;

@@ -1,14 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CreateItAdminModel,
-    UpdateItAdminModel,
-    DeleteItAdminModel,
-    GetItAdminModel,
-    GetItAdminByIdModel,
-    GetAllItAdminsModel,
-    GlobalResponse
-} from '@adminvault/shared-models';
+import { CreateItAdminModel, UpdateItAdminModel, DeleteItAdminModel, GetItAdminModel, GetItAdminByIdModel, GetAllItAdminsModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class ItAdminService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {

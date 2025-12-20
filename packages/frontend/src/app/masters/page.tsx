@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Building2, Users, Package, Smartphone, Store, MapPin, Tag } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, Store, Tag, AppWindow, FolderKanban, Receipt, Clock, Calendar, KeySquare } from 'lucide-react';
 import CompaniesMasterView from './components/companies-master-view';
 import DepartmentsMasterView from './components/departments-master-view';
 import AssetTypesMasterView from './components/asset-types-master-view';
 import DeviceBrandsMasterView from './components/device-brands-master-view';
 import VendorsMasterView from './components/vendors-master-view';
-import LocationsMasterView from './components/locations-master-view';
+
 import TicketCategoriesMasterView from './components/ticket-categories-master-view';
 
 export default function MastersPage() {
@@ -57,12 +57,12 @@ export default function MastersPage() {
             component: VendorsMasterView
         },
         {
-            id: 'locations',
-            title: 'Locations',
-            description: 'Manage locations',
-            icon: MapPin,
+            id: 'applications',
+            title: 'Applications',
+            description: 'Manage applications',
+            icon: AppWindow,
             color: 'from-teal-500 to-teal-600',
-            component: LocationsMasterView
+            component: () => <div className="p-6 text-center text-slate-500">Applications Master - Coming Soon</div>
         },
         {
             id: 'ticket-categories',
@@ -71,6 +71,46 @@ export default function MastersPage() {
             icon: Tag,
             color: 'from-rose-500 to-rose-600',
             component: TicketCategoriesMasterView
+        },
+        {
+            id: 'projects',
+            title: 'Projects',
+            description: 'Manage projects',
+            icon: FolderKanban,
+            color: 'from-indigo-500 to-indigo-600',
+            component: () => <div className="p-6 text-center text-slate-500">Projects Master - Coming Soon</div>
+        },
+        {
+            id: 'expense-categories',
+            title: 'Expense Categories',
+            description: 'Manage expense categories',
+            icon: Receipt,
+            color: 'from-amber-500 to-amber-600',
+            component: () => <div className="p-6 text-center text-slate-500">Expense Categories Master - Coming Soon</div>
+        },
+        {
+            id: 'shift-timings',
+            title: 'Shift Timings',
+            description: 'Manage shift timings',
+            icon: Clock,
+            color: 'from-cyan-500 to-cyan-600',
+            component: () => <div className="p-6 text-center text-slate-500">Shift Timings Master - Coming Soon</div>
+        },
+        {
+            id: 'holidays',
+            title: 'Holidays',
+            description: 'Manage company holidays',
+            icon: Calendar,
+            color: 'from-emerald-500 to-emerald-600',
+            component: () => <div className="p-6 text-center text-slate-500">Holidays Master - Coming Soon</div>
+        },
+        {
+            id: 'license-types',
+            title: 'License Types',
+            description: 'Manage license types',
+            icon: KeySquare,
+            color: 'from-violet-500 to-violet-600',
+            component: () => <div className="p-6 text-center text-slate-500">License Types Master - Coming Soon</div>
         }
     ];
 
@@ -97,58 +137,60 @@ export default function MastersPage() {
     }
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Page Header */}
-            <div className="flex items-center justify-between">
+        <div className="h-screen flex flex-col overflow-hidden">
+            {/* Fixed Page Header */}
+            <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-slate-700">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Masters Management</h1>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">System Configuration</h1>
+                    <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1">
                         Manage all master data for your organization
                     </p>
                 </div>
             </div>
 
-            {/* Masters Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {masters.map((master) => {
-                    const Icon = master.icon;
-                    return (
-                        <Card
-                            key={master.id}
-                            className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-slate-200 dark:border-slate-700"
-                            onClick={() => setSelectedMaster(master.id)}
-                        >
-                            <div className="p-6 space-y-4">
-                                {/* Icon */}
-                                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${master.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                    <Icon className="h-7 w-7 text-white" />
-                                </div>
+            {/* Scrollable Masters Grid */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 pt-3 md:pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6">
+                    {masters.map((master) => {
+                        const Icon = master.icon;
+                        return (
+                            <Card
+                                key={master.id}
+                                className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-slate-200 dark:border-slate-700"
+                                onClick={() => setSelectedMaster(master.id)}
+                            >
+                                <div className="p-6 space-y-4">
+                                    {/* Icon */}
+                                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${master.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                        <Icon className="h-7 w-7 text-white" />
+                                    </div>
 
-                                {/* Content */}
-                                <div>
-                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                        {master.title}
-                                    </h3>
-                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                                        {master.description}
-                                    </p>
-                                </div>
+                                    {/* Content */}
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                            {master.title}
+                                        </h3>
+                                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                            {master.description}
+                                        </p>
+                                    </div>
 
-                                {/* Button */}
-                                <Button
-                                    variant="outline"
-                                    className="w-full group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedMaster(master.id);
-                                    }}
-                                >
-                                    Manage {master.title}
-                                </Button>
-                            </div>
-                        </Card>
-                    );
-                })}
+                                    {/* Button */}
+                                    <Button
+                                        variant="outline"
+                                        className="w-full group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedMaster(master.id);
+                                        }}
+                                    >
+                                        Manage {master.title}
+                                    </Button>
+                                </div>
+                            </Card>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

@@ -1,14 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CreateEmailInfoModel,
-    UpdateEmailInfoModel,
-    DeleteEmailInfoModel,
-    GetEmailInfoModel,
-    GetEmailInfoByIdModel,
-    GetAllEmailInfoModel,
-    GlobalResponse
-} from '@adminvault/shared-models';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, GetAllEmailInfoModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class EmailInfoService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -28,9 +20,7 @@ export class EmailInfoService extends CommonAxiosService {
     }
 
     async getAllEmailInfo(companyId?: number, config?: AxiosRequestConfig): Promise<GetAllEmailInfoModel> {
-        const url = companyId
-            ? this.getURLwithMainEndPoint(`getAllEmailInfo?companyId=${companyId}`)
-            : this.getURLwithMainEndPoint('getAllEmailInfo');
+        const url = companyId ? this.getURLwithMainEndPoint(`getAllEmailInfo?companyId=${companyId}`) : this.getURLwithMainEndPoint('getAllEmailInfo');
         return await this.axiosGetCall(url, config);
     }
 

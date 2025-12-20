@@ -16,7 +16,6 @@ export class EmailInfoService {
     async createEmailInfo(reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            // Validation
             if (!reqModel.companyId) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
@@ -43,7 +42,6 @@ export class EmailInfoService {
             newEmailInfo.emailType = reqModel.emailType;
             newEmailInfo.department = reqModel.department;
             newEmailInfo.email = reqModel.email;
-
             await transManager.getRepository(EmailInfoEntity).save(newEmailInfo);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Email info created successfully");
@@ -60,7 +58,6 @@ export class EmailInfoService {
                 throw new ErrorResponse(0, "Email info ID is required");
             }
 
-            // Check if email info exists
             const existingEmailInfo = await this.emailInfoRepo.findOne({ where: { id: reqModel.id } });
             if (!existingEmailInfo) {
                 throw new ErrorResponse(0, "Email info not found");
@@ -73,7 +70,6 @@ export class EmailInfoService {
             updateData.department = reqModel.department;
             updateData.email = reqModel.email;
             updateData.employeeId = reqModel.employeeId;
-
             await transManager.getRepository(EmailInfoEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Email info updated successfully");

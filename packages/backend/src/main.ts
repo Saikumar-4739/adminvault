@@ -1,7 +1,6 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 config({ path: resolve(__dirname, '../.env') });
-
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -12,8 +11,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
-
-  // Enable CORS
   app.enableCors();
 
   // Swagger Configuration (for REST API documentation)
@@ -36,9 +33,6 @@ async function bootstrap() {
   await app.listen(port);
   Logger.log(
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`
-  );
-  Logger.log(
-    `🎮 GraphQL Playground available at: http://localhost:${port}/graphql`
   );
   Logger.log(
     `📚 Swagger documentation available at: http://localhost:${port}/${globalPrefix}/docs`
