@@ -81,9 +81,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             {children}
             {mounted &&
                 createPortal(
-                    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-md px-4 sm:px-0">
+                    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-3 w-full max-w-md px-4 pointer-events-none">
                         {toasts.map((toast) => (
-                            <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
+                            <div key={toast.id} className="pointer-events-auto">
+                                <ToastItem toast={toast} onClose={() => removeToast(toast.id)} />
+                            </div>
                         ))}
                     </div>,
                     document.body
@@ -94,37 +96,52 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
     const icons = {
-        success: <CheckCircle className="h-5 w-5" />,
-        error: <AlertCircle className="h-5 w-5" />,
-        warning: <AlertTriangle className="h-5 w-5" />,
-        info: <Info className="h-5 w-5" />,
+        success: <CheckCircle className="h-6 w-6" />,
+        error: <AlertCircle className="h-6 w-6" />,
+        warning: <AlertTriangle className="h-6 w-6" />,
+        info: <Info className="h-6 w-6" />,
     };
 
     const styles = {
-        success: 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800 text-success-800 dark:text-success-200',
-        error: 'bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800 text-error-800 dark:text-error-200',
-        warning: 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800 text-warning-800 dark:text-warning-200',
-        info: 'bg-info-50 dark:bg-info-900/20 border-info-200 dark:border-info-800 text-info-800 dark:text-info-200',
+        success: 'bg-white dark:bg-slate-800 border-green-500 dark:border-green-600',
+        error: 'bg-white dark:bg-slate-800 border-red-500 dark:border-red-600',
+        warning: 'bg-white dark:bg-slate-800 border-amber-500 dark:border-amber-600',
+        info: 'bg-white dark:bg-slate-800 border-blue-500 dark:border-blue-600',
+    };
+
+    const iconColors = {
+        success: 'text-green-600 dark:text-green-400',
+        error: 'text-red-600 dark:text-red-400',
+        warning: 'text-amber-600 dark:text-amber-400',
+        info: 'text-blue-600 dark:text-blue-400',
+    };
+
+    const textColors = {
+        success: 'text-green-900 dark:text-green-100',
+        error: 'text-red-900 dark:text-red-100',
+        warning: 'text-amber-900 dark:text-amber-100',
+        info: 'text-blue-900 dark:text-blue-100',
     };
 
     return (
         <div
             className={cn(
-                'flex items-start gap-3 p-4 rounded-lg border shadow-lg animate-slide-in',
-                styles[toast.type]
+                'flex items-start gap-4 p-4 pr-3 rounded-xl border-l-4 shadow-2xl animate-slide-in transform transition-all duration-300 hover:scale-105',
+                styles[toast.type],
+                textColors[toast.type]
             )}
         >
-            <div className="flex-shrink-0 mt-0.5">{icons[toast.type]}</div>
+            <div className={cn('flex-shrink-0 mt-0.5', iconColors[toast.type])}>{icons[toast.type]}</div>
             <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{toast.title}</p>
-                {toast.message && <p className="text-sm mt-1 opacity-90">{toast.message}</p>}
+                <p className="font-bold text-base">{toast.title}</p>
+                {toast.message && <p className="text-sm mt-1 opacity-80">{toast.message}</p>}
             </div>
             <button
                 onClick={onClose}
                 className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                 aria-label="Close"
             >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
             </button>
         </div>
     );

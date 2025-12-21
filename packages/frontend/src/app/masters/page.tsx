@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Building2, Users, Package, Smartphone, Store, Tag, AppWindow, FolderKanban, Receipt, Clock, Calendar, KeySquare } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, Store, Tag, AppWindow, Receipt } from 'lucide-react';
 import CompaniesMasterView from './components/companies-master-view';
 import DepartmentsMasterView from './components/departments-master-view';
 import AssetTypesMasterView from './components/asset-types-master-view';
@@ -72,14 +72,7 @@ export default function MastersPage() {
             color: 'from-rose-500 to-rose-600',
             component: TicketCategoriesMasterView
         },
-        {
-            id: 'projects',
-            title: 'Projects',
-            description: 'Manage projects',
-            icon: FolderKanban,
-            color: 'from-indigo-500 to-indigo-600',
-            component: () => <div className="p-6 text-center text-slate-500">Projects Master - Coming Soon</div>
-        },
+
         {
             id: 'expense-categories',
             title: 'Expense Categories',
@@ -88,30 +81,6 @@ export default function MastersPage() {
             color: 'from-amber-500 to-amber-600',
             component: () => <div className="p-6 text-center text-slate-500">Expense Categories Master - Coming Soon</div>
         },
-        {
-            id: 'shift-timings',
-            title: 'Shift Timings',
-            description: 'Manage shift timings',
-            icon: Clock,
-            color: 'from-cyan-500 to-cyan-600',
-            component: () => <div className="p-6 text-center text-slate-500">Shift Timings Master - Coming Soon</div>
-        },
-        {
-            id: 'holidays',
-            title: 'Holidays',
-            description: 'Manage company holidays',
-            icon: Calendar,
-            color: 'from-emerald-500 to-emerald-600',
-            component: () => <div className="p-6 text-center text-slate-500">Holidays Master - Coming Soon</div>
-        },
-        {
-            id: 'license-types',
-            title: 'License Types',
-            description: 'Manage license types',
-            icon: KeySquare,
-            color: 'from-violet-500 to-violet-600',
-            component: () => <div className="p-6 text-center text-slate-500">License Types Master - Coming Soon</div>
-        }
     ];
 
     const selectedMasterData = masters.find(m => m.id === selectedMaster);
@@ -119,19 +88,8 @@ export default function MastersPage() {
     if (selectedMaster && selectedMasterData) {
         const MasterComponent = selectedMasterData.component;
         return (
-            <div className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{selectedMasterData.title}</h1>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                            {selectedMasterData.description}
-                        </p>
-                    </div>
-                    <Button variant="outline" onClick={() => setSelectedMaster(null)}>
-                        ← Back to Masters
-                    </Button>
-                </div>
-                <MasterComponent />
+            <div className="p-6">
+                <MasterComponent onBack={() => setSelectedMaster(null)} />
             </div>
         );
     }

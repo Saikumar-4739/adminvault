@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/modal';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Trash2 } from 'lucide-react';
 
-export default function VendorsMasterView() {
+export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
     const { vendors, isLoading, createVendor, deleteVendor } = useMasters();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '' });
@@ -33,10 +33,17 @@ export default function VendorsMasterView() {
         <>
             <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100">Vendors List ({vendors?.length || 0})</h3>
-                    <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
-                        Add Vendor
-                    </Button>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100">Vendors</h3>
+                    <div className="flex items-center gap-3">
+                        {onBack && (
+                            <Button size="sm" variant="outline" onClick={onBack}>
+                                ← Back to Masters
+                            </Button>
+                        )}
+                        <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
+                            Add Vendor
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-4">
                     {isLoading ? (
@@ -67,7 +74,7 @@ export default function VendorsMasterView() {
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.email || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-600 dark:text-rose-400 transition-colors" title="Delete">
+                                                        <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>

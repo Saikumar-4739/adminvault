@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/modal';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 
-export default function DepartmentsMasterView() {
+export default function DepartmentsMasterView({ onBack }: { onBack?: () => void }) {
     const { departments, isLoading, createDepartment, updateDepartment, deleteDepartment, fetchDepartments } = useMasters();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -96,10 +96,17 @@ export default function DepartmentsMasterView() {
         <>
             <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100">Departments List ({departments?.length || 0})</h3>
-                    <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
-                        Add Department
-                    </Button>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100">Departments</h3>
+                    <div className="flex items-center gap-3">
+                        {onBack && (
+                            <Button size="sm" variant="outline" onClick={onBack}>
+                                ← Back to Masters
+                            </Button>
+                        )}
+                        <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
+                            Add Department
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-4">
                     {isLoading ? (
@@ -140,10 +147,10 @@ export default function DepartmentsMasterView() {
                                                 </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleEdit(d)} className="p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 transition-colors" title="Edit">
+                                                        <button onClick={() => handleEdit(d)} className="p-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
-                                                        <button onClick={() => handleDelete(d)} className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-600 dark:text-rose-400 transition-colors" title="Delete">
+                                                        <button onClick={() => handleDelete(d)} className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>
