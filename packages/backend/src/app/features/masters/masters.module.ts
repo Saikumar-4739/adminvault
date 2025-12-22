@@ -14,6 +14,8 @@ import { BrandEntity } from '../../entities/masters/brand.entity';
 import { VendorEntity } from '../../entities/masters/vendor.entity';
 import { LocationEntity } from '../../entities/masters/location.entity';
 import { TicketCategoryEntity } from '../../entities/masters/ticket-category.entity';
+import { ApplicationEntity } from '../../entities/masters/application.entity';
+import { ExpenseCategoryEntity } from '../../entities/masters/expense-category.entity';
 import { CompanyInfoRepository } from '../../repository';
 
 @Module({
@@ -24,7 +26,9 @@ import { CompanyInfoRepository } from '../../repository';
             BrandEntity,
             VendorEntity,
             LocationEntity,
-            TicketCategoryEntity
+            TicketCategoryEntity,
+            ApplicationEntity,
+            ExpenseCategoryEntity
         ])
     ],
     controllers: [MastersController],

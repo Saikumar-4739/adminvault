@@ -1,11 +1,15 @@
-import { CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel } from '@adminvault/shared-models';
+import {
+    CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, CreateApplicationModel, CreateApplicationResponseModel, CreateExpenseCategoryModel, CreateExpenseCategoryResponseModel,
+    GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel,
+    GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateBrandModel, UpdateBrandResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, UpdateTicketCategoryModel, UpdateTicketCategoryResponseModel, UpdateVendorModel, UpdateVendorResponseModel, UpdateApplicationModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel
+} from '@adminvault/shared-models';
 import { CommonAxiosService } from '../common-axios-service';
 
 export class MastersService extends CommonAxiosService {
     private readonly BASE_PATH = '/masters';
 
     async getAllDepartments(companyId: number): Promise<GetAllDepartmentsResponseModel> {
-        return await this.axiosPostCall( `${this.BASE_PATH}/getAllDepartments`, new CompanyIdRequestModel(companyId)
+        return await this.axiosPostCall(`${this.BASE_PATH}/getAllDepartments`, new CompanyIdRequestModel(companyId)
         );
     }
 
@@ -63,6 +67,10 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(`${this.BASE_PATH}/brands`, data);
     }
 
+    async updateBrand(data: UpdateBrandModel): Promise<UpdateBrandResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/updateBrand`, data);
+    }
+
     async deleteBrand(id: number): Promise<GlobalResponse> {
         return await this.axiosPostCall(
             `${this.BASE_PATH}/deleteBrand`,
@@ -82,6 +90,10 @@ export class MastersService extends CommonAxiosService {
 
     async createVendor(data: CreateVendorModel): Promise<CreateVendorResponseModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/vendors`, data);
+    }
+
+    async updateVendor(data: UpdateVendorModel): Promise<UpdateVendorResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/updateVendor`, data);
     }
 
     async deleteVendor(id: number): Promise<GlobalResponse> {
@@ -126,9 +138,61 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(`${this.BASE_PATH}/ticket-categories`, data);
     }
 
+    async updateTicketCategory(data: UpdateTicketCategoryModel): Promise<UpdateTicketCategoryResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/updateTicketCategory`, data);
+    }
+
     async deleteTicketCategory(id: number): Promise<GlobalResponse> {
         return await this.axiosPostCall(
             `${this.BASE_PATH}/deleteTicketCategory`,
+            new IdRequestModel(id)
+        );
+    }
+
+    // ============================================
+    // APPLICATIONS
+    // ============================================
+    async getAllApplications(companyId: number): Promise<GetAllApplicationsResponseModel> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/getAllApplications`,
+            new CompanyIdRequestModel(companyId)
+        );
+    }
+
+    async createApplication(data: CreateApplicationModel): Promise<CreateApplicationResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/applications`, data);
+    }
+
+    async updateApplication(data: UpdateApplicationModel): Promise<UpdateApplicationResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/updateApplication`, data);
+    }
+
+    async deleteApplication(id: number): Promise<GlobalResponse> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/deleteApplication`,
+            new IdRequestModel(id)
+        );
+    }
+
+    // Expense Categories
+    async getAllExpenseCategories(companyId: number): Promise<GetAllExpenseCategoriesResponseModel> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/getAllExpenseCategories`,
+            new CompanyIdRequestModel(companyId)
+        );
+    }
+
+    async createExpenseCategory(data: CreateExpenseCategoryModel): Promise<CreateExpenseCategoryResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/expense-categories`, data);
+    }
+
+    async updateExpenseCategory(data: UpdateExpenseCategoryModel): Promise<UpdateExpenseCategoryResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/updateExpenseCategory`, data);
+    }
+
+    async deleteExpenseCategory(id: number): Promise<GlobalResponse> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/deleteExpenseCategory`,
             new IdRequestModel(id)
         );
     }

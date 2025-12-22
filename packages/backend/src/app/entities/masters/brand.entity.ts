@@ -24,4 +24,7 @@ export class BrandEntity extends CommonBaseEntity {
 
     @Column({ nullable: true })
     website: string;
+
+    @Column({ nullable: true, type: 'decimal', precision: 3, scale: 2 })
+    rating: number;
 }

@@ -1,31 +1,95 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMasters } from '@/hooks/useMasters';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
-    const { vendors, isLoading, createVendor, deleteVendor } = useMasters();
+    const { vendors, isLoading, createVendor, updateVendor, deleteVendor, fetchVendors } = useMasters();
+    const { success, error } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
     const [formData, setFormData] = useState({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '' });
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+
+    useEffect(() => {
+        fetchVendors();
+    }, [fetchVendors]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await createVendor(formData);
-        handleCloseModal();
+        try {
+            if (isEditMode && editingId) {
+                const result = await updateVendor({ ...formData, id: editingId });
+                if (result) {
+                    success('Vendor Updated Successfully');
+                    handleCloseModal();
+                } else {
+                    error('Failed to Update Vendor');
+                }
+            } else {
+                const result = await createVendor(formData);
+                if (result) {
+                    success('Vendor Created Successfully');
+                    handleCloseModal();
+                } else {
+                    error('Failed to Create Vendor');
+                }
+            }
+        } catch (err) {
+            error('An error occurred');
+        }
     };
 
-    const handleDelete = async (id: number) => {
-        if (confirm('Delete this vendor?')) await deleteVendor(id);
+    const handleEdit = (item: any) => {
+        setIsEditMode(true);
+        setEditingId(item.id);
+        setFormData({
+            name: item.name,
+            description: item.description || '',
+            contactPerson: item.contactPerson || '',
+            email: item.email || '',
+            phone: item.phone || '',
+            address: item.address || ''
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleDeleteClick = (id: number) => {
+        setDeletingId(id);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (deletingId) {
+            try {
+                const result = await deleteVendor(deletingId);
+                if (result) {
+                    success('Vendor Deleted Successfully');
+                } else {
+                    error('Failed to Delete Vendor');
+                }
+            } catch (err) {
+                error('An error occurred');
+            }
+            setIsDeleteDialogOpen(false);
+            setDeletingId(null);
+        }
     };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
+        setIsEditMode(false);
+        setEditingId(null);
         setFormData({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '' });
     };
 
@@ -53,11 +117,11 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
                             <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
                                 <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                     <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Sno</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Name</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Address</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Contact Person</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Email</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Phone</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                     </tr>
                                 </thead>
@@ -67,14 +131,17 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
                                     ) : (
                                         vendors?.map((item: any, index: number) => (
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{index + 1}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.companyName || 'N/A'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.address || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.contactPerson || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.email || '-'}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.phone || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <button onClick={() => handleEdit(item)} className="p-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteClick(item.id)} className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>
@@ -89,7 +156,7 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
                 </CardContent>
             </Card>
 
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Add Vendor">
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Vendor" : "Add Vendor"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input label="Vendor Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
                     <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
@@ -100,10 +167,19 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>
-                        <Button variant="primary" type="submit">Create</Button>
+                        <Button variant="primary" type="submit">{isEditMode ? 'Update' : 'Create'}</Button>
                     </div>
                 </form>
             </Modal>
+
+            <ConfirmDialog
+                isOpen={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Vendor"
+                message="Are you sure you want to delete this vendor? This action cannot be undone."
+                variant="danger"
+            />
         </>
     );
 }

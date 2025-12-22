@@ -116,7 +116,6 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                             <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
                                 <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                     <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Sno</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Name</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Code</th>
@@ -131,7 +130,6 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                                     ) : (
                                         departments?.map((d: any, index: number) => (
                                             <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{index + 1}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{d.companyName || 'N/A'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{d.name}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{d.code || '-'}</td>

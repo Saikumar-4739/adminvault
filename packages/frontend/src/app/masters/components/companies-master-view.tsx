@@ -6,6 +6,7 @@ import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
@@ -17,6 +18,8 @@ export default function CompaniesMasterView({ onAddClick, onBack }: { onAddClick
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingCompanyId, setEditingCompanyId] = useState<number | null>(null);
     const [formData, setFormData] = useState({ companyName: '', location: '', email: '', phone: '' });
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [deletingCompanyId, setDeletingCompanyId] = useState<number | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,14 +58,20 @@ export default function CompaniesMasterView({ onAddClick, onBack }: { onAddClick
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id: number) => {
-        if (confirm('Delete this company?')) {
-            const result = await deleteCompany({ id });
+    const handleDeleteClick = (id: number) => {
+        setDeletingCompanyId(id);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (deletingCompanyId) {
+            const result = await deleteCompany({ id: deletingCompanyId });
             if (result) {
                 success('Company Deleted Successfully');
             } else {
                 error('Failed to Delete Company');
             }
+            setDeletingCompanyId(null);
         }
     };
 
@@ -123,7 +132,7 @@ export default function CompaniesMasterView({ onAddClick, onBack }: { onAddClick
                                                         <button onClick={() => handleEdit(company)} className="p-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
-                                                        <button onClick={() => handleDelete(company.id)} className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <button onClick={() => handleDeleteClick(company.id)} className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>
@@ -150,6 +159,17 @@ export default function CompaniesMasterView({ onAddClick, onBack }: { onAddClick
                     </div>
                 </form>
             </Modal>
+
+            <ConfirmDialog
+                isOpen={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Company"
+                message="Are you sure you want to delete this company? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+            />
         </>
     );
 }

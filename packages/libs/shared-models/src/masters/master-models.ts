@@ -51,6 +51,17 @@ export interface TicketCategory extends MasterBase {
     defaultPriority?: 'Low' | 'Medium' | 'High' | null;
 }
 
+export interface Application extends MasterBase {
+    ownerName?: string;
+    appReleaseDate?: Date;
+    companyName?: string;
+}
+
+export interface ExpenseCategory extends MasterBase {
+    categoryType?: string;
+    budgetLimit?: number;
+}
+
 // ============================================
 // REQUEST MODELS - CREATE
 // ============================================
@@ -102,10 +113,12 @@ export class CreateAssetTypeModel extends CreateMasterModel {
 
 export class CreateBrandModel extends CreateMasterModel {
     website?: string;
+    rating?: number;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, website?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.website = website;
+        this.rating = rating;
     }
 }
 
@@ -143,6 +156,28 @@ export class CreateTicketCategoryModel extends CreateMasterModel {
     constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.defaultPriority = defaultPriority;
+    }
+}
+
+export class CreateApplicationModel extends CreateMasterModel {
+    ownerName?: string;
+    appReleaseDate?: Date;
+
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, ownerName?: string, appReleaseDate?: Date, id?: number) {
+        super(userId, companyId, name, description, isActive, id);
+        this.ownerName = ownerName;
+        this.appReleaseDate = appReleaseDate;
+    }
+}
+
+export class CreateExpenseCategoryModel extends CreateMasterModel {
+    categoryType?: string;
+    budgetLimit?: number;
+
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, categoryType?: string, budgetLimit?: number, id?: number) {
+        super(userId, companyId, name, description, isActive, id);
+        this.categoryType = categoryType;
+        this.budgetLimit = budgetLimit;
     }
 }
 
@@ -189,13 +224,15 @@ export class UpdateBrandModel {
     description?: string;
     isActive: boolean;
     website?: string;
+    rating?: number;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
         this.website = website;
+        this.rating = rating;
     }
 }
 
@@ -254,6 +291,42 @@ export class UpdateTicketCategoryModel {
         this.description = description;
         this.isActive = isActive ?? true;
         this.defaultPriority = defaultPriority;
+    }
+}
+
+export class UpdateApplicationModel {
+    id: number;
+    name: string;
+    description?: string;
+    isActive: boolean;
+    ownerName?: string;
+    appReleaseDate?: Date;
+
+    constructor(id: number, name: string, description?: string, isActive: boolean = true, ownerName?: string, appReleaseDate?: Date) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.isActive = isActive;
+        this.ownerName = ownerName;
+        this.appReleaseDate = appReleaseDate;
+    }
+}
+
+export class UpdateExpenseCategoryModel {
+    id: number;
+    name: string;
+    description?: string;
+    isActive: boolean;
+    categoryType?: string;
+    budgetLimit?: number;
+
+    constructor(id: number, name: string, description?: string, isActive: boolean = true, categoryType?: string, budgetLimit?: number) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.isActive = isActive;
+        this.categoryType = categoryType;
+        this.budgetLimit = budgetLimit;
     }
 }
 
@@ -323,6 +396,24 @@ export class GetAllTicketCategoriesResponseModel extends GlobalResponse {
     }
 }
 
+export class GetAllApplicationsResponseModel extends GlobalResponse {
+    applications: Application[];
+
+    constructor(status: boolean, code: number, message: string, applications: Application[]) {
+        super(status, code, message);
+        this.applications = applications;
+    }
+}
+
+export class GetAllExpenseCategoriesResponseModel extends GlobalResponse {
+    expenseCategories: ExpenseCategory[];
+
+    constructor(status: boolean, code: number, message: string, expenseCategories: ExpenseCategory[]) {
+        super(status, code, message);
+        this.expenseCategories = expenseCategories;
+    }
+}
+
 // ============================================
 // RESPONSE MODELS - CREATE (Single Item)
 // ============================================
@@ -389,6 +480,24 @@ export class CreateTicketCategoryResponseModel extends GlobalResponse {
     }
 }
 
+export class CreateApplicationResponseModel extends GlobalResponse {
+    application: Application;
+
+    constructor(status: boolean, code: number, message: string, application: Application) {
+        super(status, code, message);
+        this.application = application;
+    }
+}
+
+export class CreateExpenseCategoryResponseModel extends GlobalResponse {
+    expenseCategory: ExpenseCategory;
+
+    constructor(status: boolean, code: number, message: string, expenseCategory: ExpenseCategory) {
+        super(status, code, message);
+        this.expenseCategory = expenseCategory;
+    }
+}
+
 // ============================================
 // RESPONSE MODELS - UPDATE (Single Item)
 // ============================================
@@ -443,6 +552,24 @@ export class UpdateTicketCategoryResponseModel extends GlobalResponse {
     constructor(status: boolean, code: number, message: string, ticketCategory: TicketCategory) {
         super(status, code, message);
         this.ticketCategory = ticketCategory;
+    }
+}
+
+export class UpdateApplicationResponseModel extends GlobalResponse {
+    application: Application;
+
+    constructor(status: boolean, code: number, message: string, application: Application) {
+        super(status, code, message);
+        this.application = application;
+    }
+}
+
+export class UpdateExpenseCategoryResponseModel extends GlobalResponse {
+    expenseCategory: ExpenseCategory;
+
+    constructor(status: boolean, code: number, message: string, expenseCategory: ExpenseCategory) {
+        super(status, code, message);
+        this.expenseCategory = expenseCategory;
     }
 }
 

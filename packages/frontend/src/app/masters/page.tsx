@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Building2, Users, Package, Smartphone, Store, Tag, AppWindow, Receipt } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, Truck, MapPin, Tag, Receipt, Laptop, Store, AppWindow } from 'lucide-react';
 import CompaniesMasterView from './components/companies-master-view';
 import DepartmentsMasterView from './components/departments-master-view';
 import AssetTypesMasterView from './components/asset-types-master-view';
 import DeviceBrandsMasterView from './components/device-brands-master-view';
 import VendorsMasterView from './components/vendors-master-view';
-
+import ApplicationsMasterView from './components/applications-master-view';
 import TicketCategoriesMasterView from './components/ticket-categories-master-view';
+import ExpenseCategoriesMasterView from './components/expense-categories-master-view';
 
 export default function MastersPage() {
     const [selectedMaster, setSelectedMaster] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export default function MastersPage() {
             description: 'Manage applications',
             icon: AppWindow,
             color: 'from-teal-500 to-teal-600',
-            component: () => <div className="p-6 text-center text-slate-500">Applications Master - Coming Soon</div>
+            component: ApplicationsMasterView
         },
         {
             id: 'ticket-categories',
@@ -79,7 +80,7 @@ export default function MastersPage() {
             description: 'Manage expense categories',
             icon: Receipt,
             color: 'from-amber-500 to-amber-600',
-            component: () => <div className="p-6 text-center text-slate-500">Expense Categories Master - Coming Soon</div>
+            component: ExpenseCategoriesMasterView
         },
     ];
 

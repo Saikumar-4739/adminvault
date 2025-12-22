@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useMasters } from '@/hooks/useMasters';
-import { useCompanies } from '@/hooks/useCompanies';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -12,39 +11,43 @@ import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
 
-export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }) {
-    const { assetTypes, isLoading, createAssetType, updateAssetType, deleteAssetType, fetchAssetTypes } = useMasters();
-    const { companies } = useCompanies();
+export default function ApplicationsMasterView({ onBack }: { onBack?: () => void }) {
+    const { applications, isLoading, createApplication, updateApplication, deleteApplication, fetchApplications } = useMasters();
     const { success, error } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ companyId: '', name: '', description: '', isActive: true });
+    const [formData, setFormData] = useState({ name: '', description: '', ownerName: '', appReleaseDate: '' });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
     useEffect(() => {
-        fetchAssetTypes();
-    }, [fetchAssetTypes]);
+        fetchApplications();
+    }, [fetchApplications]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            const submitData = {
+                ...formData,
+                appReleaseDate: formData.appReleaseDate ? new Date(formData.appReleaseDate) : undefined
+            };
+
             if (isEditMode && editingId) {
-                const result = await updateAssetType({ ...formData, id: editingId });
+                const result = await updateApplication({ ...submitData, id: editingId });
                 if (result) {
-                    success('Asset Type Updated Successfully');
+                    success('Application Updated Successfully');
                     handleCloseModal();
                 } else {
-                    error('Failed to Update Asset Type');
+                    error('Failed to Update Application');
                 }
             } else {
-                const result = await createAssetType(formData);
+                const result = await createApplication(submitData);
                 if (result) {
-                    success('Asset Type Created Successfully');
+                    success('Application Created Successfully');
                     handleCloseModal();
                 } else {
-                    error('Failed to Create Asset Type');
+                    error('Failed to Create Application');
                 }
             }
         } catch (err) {
@@ -56,10 +59,10 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
         setIsEditMode(true);
         setEditingId(item.id);
         setFormData({
-            companyId: item.companyId?.toString() || '',
             name: item.name,
             description: item.description || '',
-            isActive: item.isActive ?? true
+            ownerName: item.ownerName || '',
+            appReleaseDate: item.appReleaseDate ? new Date(item.appReleaseDate).toISOString().split('T')[0] : ''
         });
         setIsModalOpen(true);
     };
@@ -69,14 +72,19 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
         setIsDeleteDialogOpen(true);
     };
 
-    const handleDeleteConfirm = async () => {
+    const handleConfirmDelete = async () => {
         if (deletingId) {
-            const result = await deleteAssetType(deletingId);
-            if (result) {
-                success('Asset Type Deleted Successfully');
-            } else {
-                error('Failed to Delete Asset Type');
+            try {
+                const result = await deleteApplication(deletingId);
+                if (result) {
+                    success('Application Deleted Successfully');
+                } else {
+                    error('Failed to Delete Application');
+                }
+            } catch (err) {
+                error('An error occurred');
             }
+            setIsDeleteDialogOpen(false);
             setDeletingId(null);
         }
     };
@@ -85,14 +93,21 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ companyId: '', name: '', description: '', isActive: true });
+        setFormData({ name: '', description: '', ownerName: '', appReleaseDate: '' });
     };
+
+    const formatDate = (date: any) => {
+        if (!date) return '-';
+        return new Date(date).toLocaleDateString();
+    };
+
+    if (isLoading && applications.length === 0) return <PageLoader />;
 
     return (
         <>
             <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100">Asset Types</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100">Applications</h3>
                     <div className="flex items-center gap-3">
                         {onBack && (
                             <Button size="sm" variant="outline" onClick={onBack}>
@@ -100,7 +115,7 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                             </Button>
                         )}
                         <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
-                            Add Asset Type
+                            Add Application
                         </Button>
                     </div>
                 </CardHeader>
@@ -112,21 +127,23 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                             <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
                                 <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                     <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company Name</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Asset Type</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Application Name</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Owner Name</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">App Release Date</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Last Update</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white dark:bg-gray-900">
-                                    {assetTypes?.length === 0 ? (
-                                        <tr><td colSpan={4} className="p-8 text-center text-slate-500">No asset types found</td></tr>
+                                    {applications?.length === 0 ? (
+                                        <tr><td colSpan={5} className="p-8 text-center text-slate-500">No applications found</td></tr>
                                     ) : (
-                                        assetTypes?.map((item: any, index: number) => (
+                                        applications?.map((item: any) => (
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.companyName || 'N/A'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.description || '-'}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.ownerName || '-'}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{formatDate(item.appReleaseDate)}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{formatDate(item.updatedAt)}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <div className="flex justify-center gap-2">
                                                         <button onClick={() => handleEdit(item)} className="p-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
@@ -147,57 +164,12 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                 </CardContent>
             </Card>
 
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Asset Type" : "Add Asset Type"}>
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Application" : "Add Application"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Company Name <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={formData.companyId}
-                            onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                            required
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        >
-                            <option value="">Select Company</option>
-                            {companies?.map((company) => (
-                                <option key={company.id} value={company.id}>
-                                    {company.companyName}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <Input
-                        label="Asset Type Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                    />
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Description
-                        </label>
-                        <textarea
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
-                            placeholder="Enter asset type description..."
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="isActive"
-                            checked={formData.isActive}
-                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                        />
-                        <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</label>
-                    </div>
+                    <Input label="Application Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+                    <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+                    <Input label="Owner Name" value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} />
+                    <Input label="App Release Date" type="date" value={formData.appReleaseDate} onChange={(e) => setFormData({ ...formData, appReleaseDate: e.target.value })} />
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>
@@ -209,11 +181,9 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
             <ConfirmDialog
                 isOpen={isDeleteDialogOpen}
                 onClose={() => setIsDeleteDialogOpen(false)}
-                onConfirm={handleDeleteConfirm}
-                title="Delete Asset Type"
-                message="Are you sure you want to delete this asset type? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
+                onConfirm={handleConfirmDelete}
+                title="Delete Application"
+                message="Are you sure you want to delete this application? This action cannot be undone."
                 variant="danger"
             />
         </>

@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/modal';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Trash2 } from 'lucide-react';
 
-export default function LocationsMasterView() {
+export default function LocationsMasterView({ onBack }: { onBack?: () => void }) {
     const { locations, isLoading, createLocation, deleteLocation } = useMasters();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ name: '', description: '', address: '', city: '', country: '' });
@@ -34,9 +34,16 @@ export default function LocationsMasterView() {
             <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Locations List ({locations?.length || 0})</h3>
-                    <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
-                        Add Location
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        {onBack && (
+                            <Button size="sm" variant="outline" onClick={onBack}>
+                                ← Back to Masters
+                            </Button>
+                        )}
+                        <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
+                            Add Location
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-4">
                     {isLoading ? (

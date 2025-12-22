@@ -3,8 +3,8 @@
 import { useState, useCallback } from 'react';
 import { mastersService } from '@/lib/api/services';
 import {
-    Department, AssetType, DeviceBrand, Vendor, Location, TicketCategory,
-    CreateDepartmentModel, CreateMasterModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel
+    Department, AssetType, DeviceBrand, Vendor, Location, TicketCategory, Application,
+    CreateDepartmentModel, CreateMasterModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel, CreateBrandModel, CreateApplicationModel, CreateExpenseCategoryModel
 } from '@adminvault/shared-models';
 
 export function useMasters() {
@@ -14,6 +14,7 @@ export function useMasters() {
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
     const [ticketCategories, setTicketCategories] = useState<TicketCategory[]>([]);
+    const [applications, setApplications] = useState<Application[]>([]);
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -22,6 +23,12 @@ export function useMasters() {
         const storedUser = localStorage.getItem('auth_user');
         const user = storedUser ? JSON.parse(storedUser) : null;
         return user?.companyId || 1; // Default to 1 if not found
+    };
+
+    const getUserId = (): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.id || 1; // Default to 1 if not found
     };
 
     // specific fetches
@@ -181,10 +188,10 @@ export function useMasters() {
 
             const model = new CreateMasterModel(
                 user.id,
-                user.companyId,
+                parseInt(data.companyId) || user.companyId,
                 data.name,
                 data.description,
-                true
+                data.isActive ?? true
             );
             const res = await mastersService.createAssetType(model);
             if (res.status) { fetchAssetTypes(); return true; }
@@ -195,8 +202,7 @@ export function useMasters() {
     const updateAssetType = async (data: any) => {
         setIsLoading(true);
         try {
-            // Note: Using createAssetType as updateAssetType doesn't exist in service
-            const res = await mastersService.createAssetType(data);
+            const res = await mastersService.updateAssetType(data);
             if (res.status) {
                 fetchAssetTypes();
                 return true;
@@ -221,18 +227,37 @@ export function useMasters() {
             const user = storedUser ? JSON.parse(storedUser) : null;
             if (!user) throw new Error('User not authenticated');
 
-            const model = new CreateMasterModel(
+            const model = new CreateBrandModel(
                 user.id,
                 user.companyId,
                 data.name,
                 data.description,
-                true
+                true,
+                data.website,
+                data.rating ? parseFloat(data.rating) : undefined
             );
             const res = await mastersService.createBrand(model);
             if (res.status) { fetchBrands(); return true; }
             return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
+
+    const updateBrand = async (data: any) => {
+        setIsLoading(true);
+        try {
+            const res = await mastersService.updateBrand(data);
+            if (res.status) {
+                fetchBrands();
+                return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const deleteBrand = async (id: number) => {
         setIsLoading(true);
         try { await mastersService.deleteBrand(id); fetchBrands(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
@@ -261,6 +286,23 @@ export function useMasters() {
             return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
+
+    const updateVendor = async (data: any) => {
+        setIsLoading(true);
+        try {
+            const res = await mastersService.updateVendor(data);
+            if (res.status) {
+                fetchVendors();
+                return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const deleteVendor = async (id: number) => {
         setIsLoading(true);
         try { await mastersService.deleteVendor(id); fetchVendors(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
@@ -313,18 +355,104 @@ export function useMasters() {
             return false;
         } catch (e) { return false; } finally { setIsLoading(false); }
     };
+
+    const updateTicketCategory = async (data: any) => {
+        setIsLoading(true);
+        try {
+            const res = await mastersService.updateTicketCategory(data);
+            if (res.status) { fetchTicketCategories(); return true; }
+            return false;
+        } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
     const deleteTicketCategory = async (id: number) => {
         setIsLoading(true);
         try { await mastersService.deleteTicketCategory(id); fetchTicketCategories(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
     };
 
+    // Applications
+    const fetchApplications = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const storedUser = localStorage.getItem('auth_user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+            if (!user) return;
+            const res = await mastersService.getAllApplications(user.companyId);
+            if (res.status) setApplications(res.applications);
+        } catch (e) { } finally { setIsLoading(false); }
+    }, []);
+
+    const createApplication = async (data: any) => {
+        setIsLoading(true);
+        try {
+            const storedUser = localStorage.getItem('auth_user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+            if (!user) return false;
+            const model = new CreateApplicationModel(user.id, user.companyId, data.name, data.description, true, data.ownerName, data.appReleaseDate);
+            const res = await mastersService.createApplication(model);
+            if (res.status) { fetchApplications(); return true; }
+            return false;
+        } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
+    const updateApplication = async (data: any) => {
+        setIsLoading(true);
+        try {
+            const res = await mastersService.updateApplication(data);
+            if (res.status) { fetchApplications(); return true; }
+            return false;
+        } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
+    const deleteApplication = async (id: number) => {
+        setIsLoading(true);
+        try { await mastersService.deleteApplication(id); fetchApplications(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
+    // Expense Categories
+    const [expenseCategories, setExpenseCategories] = useState<any[]>([]);
+
+    const fetchExpenseCategories = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await mastersService.getAllExpenseCategories(getCompanyId());
+            if (res.status && res.expenseCategories) setExpenseCategories(res.expenseCategories);
+        } catch (e) { } finally { setIsLoading(false); }
+    }, []);
+
+    const createExpenseCategory = async (data: any) => {
+        setIsLoading(true);
+        try {
+            const model = new CreateExpenseCategoryModel(getUserId(), getCompanyId(), data.name, data.description, true, data.categoryType, data.budgetLimit);
+            const res = await mastersService.createExpenseCategory(model);
+            if (res.status) { fetchExpenseCategories(); return true; }
+            return false;
+        } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
+    const updateExpenseCategory = async (data: any) => {
+        setIsLoading(true);
+        try {
+            const res = await mastersService.updateExpenseCategory(data);
+            if (res.status) { fetchExpenseCategories(); return true; }
+            return false;
+        } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
+    const deleteExpenseCategory = async (id: number) => {
+        setIsLoading(true);
+        try { await mastersService.deleteExpenseCategory(id); fetchExpenseCategories(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
     return {
         departments, fetchDepartments, createDepartment, updateDepartment, deleteDepartment,
         assetTypes, fetchAssetTypes, createAssetType, updateAssetType, deleteAssetType,
-        brands, fetchBrands, createBrand, deleteBrand,
-        vendors, fetchVendors, createVendor, deleteVendor,
+        brands, fetchBrands, createBrand, updateBrand, deleteBrand,
+        vendors, fetchVendors, createVendor, updateVendor, deleteVendor,
         locations, fetchLocations, createLocation, deleteLocation,
-        ticketCategories, fetchTicketCategories, createTicketCategory, deleteTicketCategory,
+        ticketCategories, fetchTicketCategories, createTicketCategory, updateTicketCategory, deleteTicketCategory,
+        applications, fetchApplications, createApplication, updateApplication, deleteApplication,
+        expenseCategories, fetchExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory,
         isLoading
     };
 }

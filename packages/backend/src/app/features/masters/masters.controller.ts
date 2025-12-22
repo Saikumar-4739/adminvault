@@ -1,9 +1,11 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { MastersService } from './masters.service';
-import { CreateAssetTypeModel, CreateBrandModel, CreateDepartmentModel, CreateVendorModel, UpdateDepartmentModel, UpdateAssetTypeModel, 
-    GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, 
-    CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, 
-    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, 
+import {
+    CreateAssetTypeModel, CreateBrandModel, CreateDepartmentModel, CreateVendorModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel,
+    CreateApplicationModel, UpdateApplicationModel, CreateExpenseCategoryModel,
+    GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel,
+    CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel,
+    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel,
     IdRequestModel, CompanyIdRequestModel
 } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -105,6 +107,15 @@ export class MastersController {
         }
     }
 
+    @Post('updateBrand')
+    async updateBrand(@Body() data: UpdateBrandModel): Promise<UpdateBrandResponseModel> {
+        try {
+            return await this.mastersService.updateBrand(data);
+        } catch (error) {
+            return returnException(UpdateBrandResponseModel, error);
+        }
+    }
+
     @Post('deleteBrand')
     async deleteBrand(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {
@@ -133,6 +144,15 @@ export class MastersController {
         }
     }
 
+    @Post('updateVendor')
+    async updateVendor(@Body() data: UpdateVendorModel): Promise<UpdateVendorResponseModel> {
+        try {
+            return await this.mastersService.updateVendor(data);
+        } catch (error) {
+            return returnException(UpdateVendorResponseModel, error);
+        }
+    }
+
     @Post('deleteVendor')
     async deleteVendor(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {
@@ -142,4 +162,115 @@ export class MastersController {
         }
     }
 
+    // Applications
+    @Post('getAllApplications')
+    async getAllApplications(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllApplicationsResponseModel> {
+        try {
+            return await this.mastersService.getAllApplications(reqModel);
+        } catch (error) {
+            return returnException(GetAllApplicationsResponseModel, error);
+        }
+    }
+
+    @Post('applications')
+    async createApplication(@Body() data: CreateApplicationModel): Promise<CreateApplicationResponseModel> {
+        try {
+            return await this.mastersService.createApplication(data);
+        } catch (error) {
+            return returnException(CreateApplicationResponseModel, error);
+        }
+    }
+
+    @Post('updateApplication')
+    async updateApplication(@Body() data: UpdateApplicationModel): Promise<UpdateApplicationResponseModel> {
+        try {
+            return await this.mastersService.updateApplication(data);
+        } catch (error) {
+            return returnException(UpdateApplicationResponseModel, error);
+        }
+    }
+
+    @Post('deleteApplication')
+    async deleteApplication(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+        try {
+            return await this.mastersService.deleteApplication(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    // Ticket Categories
+    @Post('getAllTicketCategories')
+    async getAllTicketCategories(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllTicketCategoriesResponseModel> {
+        try {
+            return await this.mastersService.getAllTicketCategories(reqModel);
+        } catch (error) {
+            return returnException(GetAllTicketCategoriesResponseModel, error);
+        }
+    }
+
+    @Post('ticket-categories')
+    async createTicketCategory(@Body() data: CreateTicketCategoryModel): Promise<CreateTicketCategoryResponseModel> {
+        try {
+            return await this.mastersService.createTicketCategory(data);
+        } catch (error) {
+            return returnException(CreateTicketCategoryResponseModel, error);
+        }
+    }
+
+    @Post('updateTicketCategory')
+    async updateTicketCategory(@Body() data: UpdateTicketCategoryModel): Promise<UpdateTicketCategoryResponseModel> {
+        try {
+            return await this.mastersService.updateTicketCategory(data);
+        } catch (error) {
+            return returnException(UpdateTicketCategoryResponseModel, error);
+        }
+    }
+
+    @Post('deleteTicketCategory')
+    async deleteTicketCategory(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+        try {
+            return await this.mastersService.deleteTicketCategory(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    // Expense Categories
+    @Post('getAllExpenseCategories')
+    async getAllExpenseCategories(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllExpenseCategoriesResponseModel> {
+        try {
+            return await this.mastersService.getAllExpenseCategories(reqModel);
+        } catch (error) {
+            return returnException(GetAllExpenseCategoriesResponseModel, error);
+        }
+    }
+
+    @Post('expense-categories')
+    async createExpenseCategory(@Body() data: CreateExpenseCategoryModel): Promise<CreateExpenseCategoryResponseModel> {
+        try {
+            return await this.mastersService.createExpenseCategory(data);
+        } catch (error) {
+            return returnException(CreateExpenseCategoryResponseModel, error);
+        }
+    }
+
+    @Post('updateExpenseCategory')
+    async updateExpenseCategory(@Body() data: UpdateExpenseCategoryModel): Promise<UpdateExpenseCategoryResponseModel> {
+        try {
+            return await this.mastersService.updateExpenseCategory(data);
+        } catch (error) {
+            return returnException(UpdateExpenseCategoryResponseModel, error);
+        }
+    }
+
+    @Post('deleteExpenseCategory')
+    async deleteExpenseCategory(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+        try {
+            return await this.mastersService.deleteExpenseCategory(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
 }
+

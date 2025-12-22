@@ -19,6 +19,8 @@ import { BrandEntity } from '../app/entities/masters/brand.entity';
 import { VendorEntity } from '../app/entities/masters/vendor.entity';
 import { LocationEntity } from '../app/entities/masters/location.entity';
 import { TicketCategoryEntity } from '../app/entities/masters/ticket-category.entity';
+import { ApplicationEntity } from '../app/entities/masters/application.entity';
+import { ExpenseCategoryEntity } from '../app/entities/masters/expense-category.entity';
 import { UserLoginSessionEntity } from '../app/entities/user-login-sessions.entity';
 
 @Module({
@@ -52,7 +54,9 @@ import { UserLoginSessionEntity } from '../app/entities/user-login-sessions.enti
                     VendorEntity,
                     LocationEntity,
                     TicketCategoryEntity,
-                    UserLoginSessionEntity
+                    ApplicationEntity,
+                    ExpenseCategoryEntity,
+                    UserLoginSessionEntity,
                 ],
                 synchronize: true,
                 logging: configService.get<string>('NODE_ENV') !== 'production',
