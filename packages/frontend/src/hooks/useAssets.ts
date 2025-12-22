@@ -11,12 +11,19 @@ interface Asset {
     serialNumber?: string;
     companyId: number;
     deviceId?: number;
+    brandId?: number;
+    model?: string;
+    configuration?: string;
     status?: string;
     purchaseDate?: string;
     warrantyExpiry?: string;
     createdAt?: string;
     assignedTo?: string;
     assignedDate?: string;
+    userAssignedDate?: string;
+    lastReturnDate?: string;
+    assignedToEmployeeId?: number;
+    previousUserEmployeeId?: number;
 }
 
 interface AssetStatistics {
@@ -48,9 +55,16 @@ export function useAssets(companyId?: number) {
                     serialNumber: item.serialNumber,
                     companyId: item.companyId,
                     deviceId: item.deviceId,
+                    brandId: item.brandId,
+                    model: item.model,
+                    configuration: item.configuration,
                     status: item.assetStatusEnum || item.status,
                     purchaseDate: item.purchaseDate,
                     warrantyExpiry: item.warrantyExpiry,
+                    userAssignedDate: item.userAssignedDate,
+                    lastReturnDate: item.lastReturnDate,
+                    assignedToEmployeeId: item.assignedToEmployeeId,
+                    previousUserEmployeeId: item.previousUserEmployeeId,
                     createdAt: item.createdAt || item.created_at
                 }));
                 setAssets(mappedAssets);
@@ -81,12 +95,19 @@ export function useAssets(companyId?: number) {
                     serialNumber: item.serialNumber,
                     companyId: item.companyId,
                     deviceId: item.deviceId,
+                    brandId: item.brandId,
+                    model: item.model,
+                    configuration: item.configuration,
                     status: item.assetStatusEnum || item.status,
                     purchaseDate: item.purchaseDate,
                     warrantyExpiry: item.warrantyExpiry,
                     createdAt: item.createdAt || item.created_at,
                     assignedTo: item.assignedTo,
-                    assignedDate: item.assignedDate
+                    assignedDate: item.assignedDate,
+                    userAssignedDate: item.userAssignedDate,
+                    lastReturnDate: item.lastReturnDate,
+                    assignedToEmployeeId: item.assignedToEmployeeId,
+                    previousUserEmployeeId: item.previousUserEmployeeId
                 }));
                 setAssets(mappedAssets);
             }
@@ -127,10 +148,17 @@ export function useAssets(companyId?: number) {
                     serialNumber: item.serialNumber,
                     companyId: item.companyId,
                     deviceId: item.deviceId,
+                    brandId: item.brandId,
+                    model: item.model,
+                    configuration: item.configuration,
                     status: item.assetStatusEnum || item.status,
                     purchaseDate: item.purchaseDate,
                     warrantyExpiry: item.warrantyExpiry,
-                    createdAt: item.createdAt || item.created_at
+                    createdAt: item.createdAt || item.created_at,
+                    userAssignedDate: item.userAssignedDate,
+                    lastReturnDate: item.lastReturnDate,
+                    assignedToEmployeeId: item.assignedToEmployeeId,
+                    previousUserEmployeeId: item.previousUserEmployeeId
                 }));
                 setAssets(mappedAssets);
             }

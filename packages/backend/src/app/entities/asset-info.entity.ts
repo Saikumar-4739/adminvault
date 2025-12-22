@@ -33,4 +33,10 @@ export class AssetInfoEntity extends CommonBaseEntity {
 
     @Column('enum', { name: 'asset_status_enum', enum: AssetStatusEnum, default: AssetStatusEnum.AVAILABLE, nullable: false, comment: 'Current asset status' })
     assetStatusEnum: AssetStatusEnum;
+
+    @Column('date', { name: 'user_assigned_date', nullable: true, comment: 'Date when asset was assigned to current user' })
+    userAssignedDate: Date;
+
+    @Column('date', { name: 'last_return_date', nullable: true, comment: 'Date when asset was last returned' })
+    lastReturnDate: Date;
 }

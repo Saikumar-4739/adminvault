@@ -45,6 +45,15 @@ export class AssetInfoService {
             entity.deviceId = reqModel.deviceId;
             entity.serialNumber = reqModel.serialNumber;
             entity.assetStatusEnum = reqModel.assetStatusEnum;
+            if (reqModel.brandId !== undefined) entity.brandId = reqModel.brandId;
+            if (reqModel.model !== undefined) entity.model = reqModel.model;
+            if (reqModel.configuration !== undefined) entity.configuration = reqModel.configuration;
+            if (reqModel.assignedToEmployeeId !== undefined) entity.assignedToEmployeeId = reqModel.assignedToEmployeeId;
+            if (reqModel.previousUserEmployeeId !== undefined) entity.previousUserEmployeeId = reqModel.previousUserEmployeeId;
+            if (reqModel.purchaseDate) entity.purchaseDate = new Date(reqModel.purchaseDate);
+            if (reqModel.warrantyExpiry) entity.warrantyExpiry = new Date(reqModel.warrantyExpiry);
+            if (reqModel.userAssignedDate) entity.userAssignedDate = new Date(reqModel.userAssignedDate);
+            if (reqModel.lastReturnDate) entity.lastReturnDate = new Date(reqModel.lastReturnDate);
             await transManager.getRepository(AssetInfoEntity).save(entity);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Asset created successfully");
@@ -80,6 +89,15 @@ export class AssetInfoService {
             entity.deviceId = reqModel.deviceId;
             entity.serialNumber = reqModel.serialNumber;
             entity.assetStatusEnum = reqModel.assetStatusEnum;
+            if (reqModel.brandId !== undefined) entity.brandId = reqModel.brandId;
+            if (reqModel.model !== undefined) entity.model = reqModel.model;
+            if (reqModel.configuration !== undefined) entity.configuration = reqModel.configuration;
+            if (reqModel.assignedToEmployeeId !== undefined) entity.assignedToEmployeeId = reqModel.assignedToEmployeeId;
+            if (reqModel.previousUserEmployeeId !== undefined) entity.previousUserEmployeeId = reqModel.previousUserEmployeeId;
+            if (reqModel.purchaseDate) entity.purchaseDate = new Date(reqModel.purchaseDate);
+            if (reqModel.warrantyExpiry) entity.warrantyExpiry = new Date(reqModel.warrantyExpiry);
+            if (reqModel.userAssignedDate) entity.userAssignedDate = new Date(reqModel.userAssignedDate);
+            if (reqModel.lastReturnDate) entity.lastReturnDate = new Date(reqModel.lastReturnDate);
             await transManager.getRepository(AssetInfoEntity).update(reqModel.id, entity);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Asset updated successfully");
@@ -108,7 +126,7 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Asset not found");
             }
 
-            const response = new AssetResponseModel(asset.id,asset.companyId,asset.deviceId,asset.serialNumber,asset.assetStatusEnum,asset.createdAt,asset.updatedAt,asset.purchaseDate,asset.warrantyExpiry);
+            const response = new AssetResponseModel(asset.id, asset.companyId, asset.deviceId, asset.serialNumber, asset.assetStatusEnum, asset.createdAt, asset.updatedAt, asset.purchaseDate, asset.warrantyExpiry, asset.brandId, asset.model, asset.configuration, asset.assignedToEmployeeId, asset.previousUserEmployeeId, asset.userAssignedDate, asset.lastReturnDate);
             return new GetAssetByIdModel(true, 0, "Asset retrieved successfully", response);
         } catch (error) {
             throw error;
@@ -126,7 +144,7 @@ export class AssetInfoService {
     async getAllAssets(companyId?: number): Promise<GetAllAssetsModel> {
         try {
             const assets = companyId ? await this.assetInfoRepo.find({ where: { companyId } }) : await this.assetInfoRepo.find();
-            const responses = assets.map(a => new AssetResponseModel(a.id,a.companyId,a.deviceId,a.serialNumber,a.assetStatusEnum,a.createdAt,a.updatedAt,a.purchaseDate,a.warrantyExpiry));
+            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
         } catch (error) {
             throw error;
@@ -210,7 +228,7 @@ export class AssetInfoService {
             }
 
             const assets = await this.assetInfoRepo.searchAssets(reqModel.companyId, reqModel.searchQuery, reqModel.statusFilter);
-            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry));
+            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
         } catch (error) {
             throw error;

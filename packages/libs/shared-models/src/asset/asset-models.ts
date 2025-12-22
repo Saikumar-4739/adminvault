@@ -13,6 +13,8 @@ export class CreateAssetModel {
     purchaseDate?: string;
     warrantyExpiry?: string;
     assetStatusEnum: AssetStatusEnum;
+    userAssignedDate?: string;
+    lastReturnDate?: string;
 
     constructor(
         companyId: number,
@@ -25,7 +27,9 @@ export class CreateAssetModel {
         model?: string,
         configuration?: string,
         assignedToEmployeeId?: number,
-        previousUserEmployeeId?: number
+        previousUserEmployeeId?: number,
+        userAssignedDate?: string,
+        lastReturnDate?: string
     ) {
         this.companyId = companyId;
         this.deviceId = deviceId;
@@ -38,6 +42,8 @@ export class CreateAssetModel {
         this.purchaseDate = purchaseDate;
         this.assetStatusEnum = assetStatusEnum;
         this.warrantyExpiry = warrantyExpiry;
+        this.userAssignedDate = userAssignedDate;
+        this.lastReturnDate = lastReturnDate;
     }
 }
 
@@ -56,9 +62,11 @@ export class UpdateAssetModel extends CreateAssetModel {
         model?: string,
         configuration?: string,
         assignedToEmployeeId?: number,
-        previousUserEmployeeId?: number
+        previousUserEmployeeId?: number,
+        userAssignedDate?: string,
+        lastReturnDate?: string
     ) {
-        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, brandId, model, configuration, assignedToEmployeeId, previousUserEmployeeId);
+        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, brandId, model, configuration, assignedToEmployeeId, previousUserEmployeeId, userAssignedDate, lastReturnDate);
         this.id = id;
     }
 }
@@ -90,6 +98,8 @@ export class AssetResponseModel {
     purchaseDate?: Date;
     warrantyExpiry?: Date;
     assetStatusEnum: AssetStatusEnum;
+    userAssignedDate?: Date;
+    lastReturnDate?: Date;
     createdAt: Date;
     updatedAt: Date;
 
@@ -107,7 +117,9 @@ export class AssetResponseModel {
         model?: string,
         configuration?: string,
         assignedToEmployeeId?: number,
-        previousUserEmployeeId?: number
+        previousUserEmployeeId?: number,
+        userAssignedDate?: Date,
+        lastReturnDate?: Date
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -123,6 +135,8 @@ export class AssetResponseModel {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.warrantyExpiry = warrantyExpiry;
+        this.userAssignedDate = userAssignedDate;
+        this.lastReturnDate = lastReturnDate;
     }
 }
 
@@ -191,6 +205,8 @@ export class AssetWithAssignmentModel {
     purchaseDate?: Date;
     warrantyExpiry?: Date;
     assetStatusEnum: AssetStatusEnum;
+    userAssignedDate?: Date;
+    lastReturnDate?: Date;
     createdAt: Date;
     updatedAt: Date;
     // Assignment details
@@ -211,7 +227,9 @@ export class AssetWithAssignmentModel {
         deviceName?: string,
         assignedTo?: string,
         assignedDate?: Date,
-        assignedById?: number
+        assignedById?: number,
+        userAssignedDate?: Date,
+        lastReturnDate?: Date
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -226,6 +244,8 @@ export class AssetWithAssignmentModel {
         this.assignedTo = assignedTo;
         this.assignedDate = assignedDate;
         this.assignedById = assignedById;
+        this.userAssignedDate = userAssignedDate;
+        this.lastReturnDate = lastReturnDate;
     }
 }
 
