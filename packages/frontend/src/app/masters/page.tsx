@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Building2, Users, Package, Smartphone, Truck, MapPin, Tag, Receipt, Laptop, Store, AppWindow } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, Tag, Receipt, Store, AppWindow } from 'lucide-react';
 import CompaniesMasterView from './components/companies-master-view';
 import DepartmentsMasterView from './components/departments-master-view';
 import AssetTypesMasterView from './components/asset-types-master-view';
@@ -88,11 +88,19 @@ export default function MastersPage() {
 
     const selectedMasterData = masters.find(m => m.id === selectedMaster);
 
+    const handleSelectMaster = (masterId: string) => {
+        router.push(`/masters?view=${masterId}`);
+    };
+
+    const handleBack = () => {
+        router.push('/masters');
+    };
+
     if (selectedMaster && selectedMasterData) {
         const MasterComponent = selectedMasterData.component;
         return (
             <div className="p-6">
-                <MasterComponent onBack={() => setSelectedMaster(null)} />
+                <MasterComponent onBack={handleBack} />
             </div>
         );
     }
@@ -118,7 +126,7 @@ export default function MastersPage() {
                             <Card
                                 key={master.id}
                                 className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-slate-200 dark:border-slate-700"
-                                onClick={() => setSelectedMaster(master.id)}
+                                onClick={() => handleSelectMaster(master.id)}
                             >
                                 <div className="p-6 space-y-4">
                                     {/* Icon */}
@@ -142,7 +150,7 @@ export default function MastersPage() {
                                         className="w-full group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setSelectedMaster(master.id);
+                                            handleSelectMaster(master.id);
                                         }}
                                     >
                                         Manage {master.title}
