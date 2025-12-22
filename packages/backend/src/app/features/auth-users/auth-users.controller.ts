@@ -4,6 +4,7 @@ import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel } from '@adminvault/shared-models';
 import type { Request } from 'express';
+import { Public } from '../../decorators/public.decorator';
 
 @ApiTags('Auth Users')
 @Controller('auth-users')
@@ -13,6 +14,7 @@ export class AuthUsersController {
     ) { }
 
     @Post('registerUser')
+    @Public()
     async registerUser(@Body() reqModel: RegisterUserModel): Promise<GlobalResponse> {
         try {
             return await this.service.registerUser(reqModel);
@@ -22,6 +24,7 @@ export class AuthUsersController {
     }
 
     @Post('loginUser')
+    @Public()
     async loginUser(@Body() reqModel: LoginUserModel, @Req() req: Request): Promise<LoginResponseModel> {
         try {
             return await this.service.loginUser(reqModel, req);
@@ -67,6 +70,7 @@ export class AuthUsersController {
     }
 
     @Post('requestAccess')
+    @Public()
     async requestAccess(@Body() reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {
             return await this.service.requestAccess(reqModel);

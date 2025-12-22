@@ -7,7 +7,7 @@ import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, CreateLoginSessionModel } from '@adminvault/shared-models';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import * as bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
 import { LoginSessionService } from './login-session.service';
 import { MailService } from '../mail/mail.service';
 import { RequestAccessModel } from '@adminvault/shared-models';
@@ -22,56 +22,18 @@ export class AuthUsersService {
         private dataSource: DataSource,
         private authUsersRepo: AuthUsersRepository,
         private loginSessionService: LoginSessionService,
-        private mailService: MailService
+        private mailService: MailService,
+        private jwtService: JwtService
     ) { }
 
-    //Create User
-    async registerUser(reqModel: RegisterUserModel): Promise<GlobalResponse> {
-        const transManager = new GenericTransactionManager(this.dataSource)
-        try {
-            const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } })
-            if (!existingUser) {
-                throw new ErrorResponse(0, "Email already exists")
-            }
-
-            if (!reqModel.companyId) {
-                throw new ErrorResponse(0, "Company ID is required")
-            }
-
-            if (reqModel.password.length < 8) {
-                throw new ErrorResponse(0, "Password must be at least 8 characters long")
-            }
-
-            const passwordHash = await bcrypt.hash(reqModel.password, 10)
-
-            await transManager.startTransaction()
-            const newUser = new AuthUsersEntity()
-            newUser.email = reqModel.email
-            newUser.passwordHash = passwordHash
-            newUser.fullName = reqModel.fullName
-            newUser.phNumber = reqModel.phNumber
-            newUser.companyId = reqModel.companyId
-            newUser.userRole = UserRoleEnum.ADMIN
-            newUser.status = true
-            newUser.createdAt = new Date()
-            newUser.updatedAt = new Date()
-            const save = await transManager.getRepository(AuthUsersEntity).save(newUser)
-            await transManager.completeTransaction()
-            return new GlobalResponse(true, 0, "User Created Successfully")
-        } catch (err) {
-            await transManager.releaseTransaction()
-            throw err
-        }
+    //Helper
+    private generateAccessToken(payload: any): string {
+        return this.jwtService.sign(payload);
     }
 
     //Helper
-    private generateAccessToken(userId: string): string {
-        return jwt.sign({ userId }, SECRET_KEY, { expiresIn: '1h' });
-    }
-
-    //Helper
-    private generateRefreshToken(userId: string): string {
-        return jwt.sign({ userId }, REFRESH_SECRET_KEY, { expiresIn: '7d' });
+    private generateRefreshToken(payload: any): string {
+        return this.jwtService.sign(payload, { secret: REFRESH_SECRET_KEY, expiresIn: '7d' });
     }
 
     //login User As per Role Based
@@ -97,15 +59,35 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "Invalid password");
             }
 
-            const accessToken = this.generateAccessToken(user.email);
-            const refreshToken = this.generateRefreshToken(user.email);
+            const payload = {
+                username: user.email,
+                email: user.email, // Explicitly add email for JwtStrategy
+                sub: user.id,
+                companyId: user.companyId
+            };
+            const accessToken = this.generateAccessToken(payload);
+            const refreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
 
             if (req) {
                 try {
                     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || '127.0.0.1';
                     const userAgent = req.headers['user-agent'];
 
-                    await this.loginSessionService.createLoginSession(new CreateLoginSessionModel(user.id, user.companyId, ipAddress, userAgent, 'email_password', undefined, reqModel.latitude, reqModel.longitude));
+                    const loginSessionModel = new CreateLoginSessionModel();
+                    loginSessionModel.userId = user.id;
+                    loginSessionModel.companyId = user.companyId;
+                    loginSessionModel.ipAddress = ipAddress;
+                    loginSessionModel.userAgent = userAgent;
+                    loginSessionModel.loginMethod = 'email_password';
+                    loginSessionModel.sessionToken = accessToken; // Store JWT
+
+                    // Add location data
+                    if (reqModel.latitude && reqModel.longitude) {
+                        loginSessionModel.latitude = reqModel.latitude;
+                        loginSessionModel.longitude = reqModel.longitude;
+                    }
+
+                    await this.loginSessionService.createLoginSession(loginSessionModel);
                 } catch (sessionError) {
                     throw sessionError;
                 }

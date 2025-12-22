@@ -8,27 +8,27 @@ import { BrandRepository } from '../../repository/masters/brand.repository';
 import { VendorRepository } from '../../repository/masters/vendor.repository';
 import { LocationRepository } from '../../repository/masters/location.repository';
 import { TicketCategoryRepository } from '../../repository/masters/ticket-category.repository';
-import { DepartmentEntity } from '../../entities/masters/department.entity';
-import { AssetTypeEntity } from '../../entities/masters/asset-type.entity';
-import { BrandEntity } from '../../entities/masters/brand.entity';
-import { VendorEntity } from '../../entities/masters/vendor.entity';
-import { LocationEntity } from '../../entities/masters/location.entity';
-import { TicketCategoryEntity } from '../../entities/masters/ticket-category.entity';
-import { ApplicationEntity } from '../../entities/masters/application.entity';
-import { ExpenseCategoryEntity } from '../../entities/masters/expense-category.entity';
+import { DepartmentsMasterEntity } from '../../entities/masters/department.entity';
+import { AssetTypeMasterEntity } from '../../entities/masters/asset-type.entity';
+import { BrandsMasterEntity } from '../../entities/masters/brand.entity';
+import { VendorsMasterEntity } from '../../entities/masters/vendor.entity';
+import { LocationsMasterEntity } from '../../entities/masters/location.entity';
+import { TicketCategoriesMasterEntity } from '../../entities/masters/ticket-category.entity';
+import { ApplicationsMasterEntity } from '../../entities/masters/application.entity';
+import { ExpenseCategoriesMasterEntity } from '../../entities/masters/expense-category.entity';
 import { CompanyInfoRepository } from '../../repository';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([
-            DepartmentEntity,
-            AssetTypeEntity,
-            BrandEntity,
-            VendorEntity,
-            LocationEntity,
-            TicketCategoryEntity,
-            ApplicationEntity,
-            ExpenseCategoryEntity
+            DepartmentsMasterEntity,
+            AssetTypeMasterEntity,
+            BrandsMasterEntity,
+            VendorsMasterEntity,
+            LocationsMasterEntity,
+            TicketCategoriesMasterEntity,
+            ApplicationsMasterEntity,
+            ExpenseCategoriesMasterEntity
         ])
     ],
     controllers: [MastersController],

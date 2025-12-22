@@ -1,8 +1,9 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from './common-base.entity';
 import { CommentByEnum } from '@adminvault/shared-models';
 
 @Entity('ticket_comments')
+@Index('idx_comment_ticket', ['ticketId'])
 export class TicketCommentsEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'ticket_id', nullable: false, comment: 'Reference to tickets table' })
     ticketId: number;

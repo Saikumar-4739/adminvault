@@ -14,18 +14,36 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false);
 
     // Load theme from localStorage on mount
+    // Load theme from localStorage or system preference on mount
     useEffect(() => {
         setMounted(true);
         const storedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-        // Default to light mode unless explicitly set to dark
-        if (storedTheme === 'dark') {
+        if (storedTheme === 'dark' || (!storedTheme && systemPrefersDark)) {
             setIsDarkMode(true);
             document.documentElement.classList.add('dark');
         } else {
             setIsDarkMode(false);
             document.documentElement.classList.remove('dark');
         }
+
+        // Listen for system theme changes
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (e: MediaQueryListEvent) => {
+            if (!localStorage.getItem('theme')) {
+                if (e.matches) {
+                    setIsDarkMode(true);
+                    document.documentElement.classList.add('dark');
+                } else {
+                    setIsDarkMode(false);
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+        };
+
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
     }, []);
 
     const toggleDarkMode = () => {

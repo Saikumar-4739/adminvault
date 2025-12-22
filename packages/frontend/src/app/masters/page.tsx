@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Building2, Users, Package, Smartphone, Truck, MapPin, Tag, Receipt, Laptop, Store, AppWindow } from 'lucide-react';
@@ -14,7 +14,9 @@ import TicketCategoriesMasterView from './components/ticket-categories-master-vi
 import ExpenseCategoriesMasterView from './components/expense-categories-master-view';
 
 export default function MastersPage() {
-    const [selectedMaster, setSelectedMaster] = useState<string | null>(null);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const selectedMaster = searchParams.get('view');
 
     const masters = [
         {
@@ -98,7 +100,7 @@ export default function MastersPage() {
     return (
         <div className="h-screen flex flex-col overflow-hidden">
             {/* Fixed Page Header */}
-            <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">System Configuration</h1>
                     <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1">

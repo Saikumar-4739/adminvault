@@ -1,12 +1,15 @@
-import { Column, Entity, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { EmailTypeEnum, EmailStatusEnum } from '@adminvault/shared-models';
 import { CommonBaseEntity } from './common-base.entity';
 
 @Entity('email_accounts')
+@Index('idx_email_acc_employee', ['employeeId'])
+@Index('idx_email_acc_type', ['emailType'])
+@Index('idx_email_acc_status', ['status'])
 export class EmailAccountsEntity extends CommonBaseEntity {
 
-    @Column('bigint', { name: 'employee_id', nullable: false, comment: 'Reference to employees table' })
-    employeeId: number;
+    @Column('bigint', { name: 'employee_id', nullable: true, comment: 'Reference to employees table' })
+    employeeId: number | null;
 
     @Column('varchar', { name: 'email', length: 255, nullable: false, unique: true, comment: 'Email address' })
     email: string;

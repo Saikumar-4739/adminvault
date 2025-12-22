@@ -1,19 +1,26 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { TicketsService } from './tickets.service';
 import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel } from '@adminvault/shared-models';
+import { JwtAuthGuard } from '../../guards/jwt-auth.guard'; // Ensure correct path
 
 @ApiTags('Tickets')
 @Controller('tickets')
+@UseGuards(JwtAuthGuard) // Apply guard to ensure req.user is populated
 export class TicketsController {
     constructor(private service: TicketsService) { }
 
     @Post('createTicket')
     @ApiBody({ type: CreateTicketModel })
-    async createTicket(@Body() reqModel: CreateTicketModel): Promise<GlobalResponse> {
+    async createTicket(@Body() reqModel: CreateTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.createTicket(reqModel);
+            // req.user should be populated by JwtStrategy
+            const userEmail = req.user?.email;
+            if (!userEmail) {
+                throw new Error("User email not found in token");
+            }
+            return await this.service.createTicket(reqModel, userEmail);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

@@ -7,6 +7,17 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 export const metadata: Metadata = {
   title: 'AdminVault - Enterprise Management Platform',
   description: 'Modern enterprise management platform for companies, employees, assets, and more',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png', sizes: '512x512' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '512x512', type: 'image/png' },
+    ],
+  },
 };
 
 export default function RootLayout({

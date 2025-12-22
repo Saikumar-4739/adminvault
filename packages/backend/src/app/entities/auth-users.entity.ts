@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, Index } from 'typeorm';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
 @Entity('auth_users')
+@Index('idx_auth_email', ['email']) // Optimization: Frequent lookup by email during login
 export class AuthUsersEntity {
   @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for auth users' })
   id: number;

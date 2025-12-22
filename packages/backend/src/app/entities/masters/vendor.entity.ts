@@ -1,8 +1,9 @@
-import { Entity, Column } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from '../common-base.entity';
 
 @Entity('vendors')
-export class VendorEntity extends CommonBaseEntity {
+@Index('idx_vendor_name', ['name'])
+export class VendorsMasterEntity extends CommonBaseEntity {
     @Column({ nullable: false, type: 'varchar' })
     name: string;
 

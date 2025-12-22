@@ -29,10 +29,15 @@
   "dependencies": {
     "@adminvault/backend-utils": "*",
     "dotenv": "^17.2.3",
-    "nodemailer": "^6.9.13"
+    "nodemailer": "^6.9.13",
+    "@nestjs/passport": "^11.0.0",
+    "@nestjs/jwt": "^11.0.0",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1"
   },
   "devDependencies": {
     "@types/nodemailer": "^6.4.14",
+    "@types/passport-jwt": "^4.0.1",
     "@nestjs/testing": "^11.0.0",
     "nodemon": "^3.1.11"
   }

@@ -1,9 +1,10 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { CommonBaseEntity } from '../common-base.entity';
 import { CompanyInfoEntity } from '../company-info.entity';
 
 @Entity('departments')
-export class DepartmentEntity extends CommonBaseEntity {
+@Index('idx_dept_name', ['name'])
+export class DepartmentsMasterEntity extends CommonBaseEntity {
 
     @Column({ nullable: false, type: 'varchar' })
     name: string;

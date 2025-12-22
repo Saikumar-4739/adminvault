@@ -15,8 +15,8 @@ export default function HomePage() {
         // Redirect based on user role
         const userRole = user.role as UserRoleEnum;
         if (userRole === UserRoleEnum.USER || userRole === UserRoleEnum.VIEWER) {
-          // Regular users go to tickets page
-          router.push('/tickets');
+          // Regular users go directly to create ticket page
+          router.push('/create-ticket');
         } else {
           // Admins and managers go to dashboard
           router.push('/dashboard');

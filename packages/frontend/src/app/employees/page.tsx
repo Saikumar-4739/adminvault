@@ -5,6 +5,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useCompanies } from '@/hooks/useCompanies';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import StatCard from '@/components/ui/StatCard';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
 import {
@@ -212,44 +213,46 @@ export default function EmployeesPage() {
                 </div>
 
                 {/* Stats Dashboard */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400">
-                                <Users className="h-5 w-5" />
-                            </div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total</span>
-                        </div>
-                        <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.total}</div>
-                    </div>
-                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
-                                <UserCheck className="h-5 w-5" />
-                            </div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Active</span>
-                        </div>
-                        <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.active}</div>
-                    </div>
-                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400">
-                                <UserX className="h-5 w-5" />
-                            </div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Inactive</span>
-                        </div>
-                        <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.inactive}</div>
-                    </div>
-                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
-                                <Calendar className="h-5 w-5" />
-                            </div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">New (Mon)</span>
-                        </div>
-                        <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.newThisMonth}</div>
-                    </div>
+                {/* Stats Dashboard */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <StatCard
+                        title="Total"
+                        value={stats.total}
+                        icon={Users}
+                        gradient="from-indigo-500 to-violet-600"
+                        iconBg="bg-indigo-50 dark:bg-indigo-900/20"
+                        iconColor="text-indigo-600 dark:text-indigo-400"
+                        isLoading={isLoading}
+                    />
+                    <StatCard
+                        title="Active"
+                        value={stats.active}
+                        icon={UserCheck}
+                        gradient="from-emerald-500 to-teal-600"
+                        iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+                        iconColor="text-emerald-600 dark:text-emerald-400"
+                        isLoading={isLoading}
+                    />
+                    <StatCard
+                        title="Inactive"
+                        value={stats.inactive}
+                        icon={UserX}
+                        gradient="from-rose-500 to-red-600"
+                        iconBg="bg-rose-50 dark:bg-rose-900/20"
+                        iconColor="text-rose-600 dark:text-rose-400"
+                        isLoading={isLoading}
+                    />
+                    <StatCard
+                        title="New (Mon)"
+                        value={stats.newThisMonth}
+                        icon={Calendar}
+                        gradient="from-blue-500 to-cyan-600"
+                        iconBg="bg-blue-50 dark:bg-blue-900/20"
+                        iconColor="text-blue-600 dark:text-blue-400"
+                        isLoading={isLoading}
+                    />
                 </div>
+
 
                 {/* View Toggles & Content */}
                 <div className="space-y-6">
@@ -281,7 +284,7 @@ export default function EmployeesPage() {
                             <p className="text-slate-500 text-sm mt-1">Select an organization or adjust your filters.</p>
                         </div>
                     ) : viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {filteredEmployees.map((emp) => (
                                 <Card key={emp.id} className="group relative overflow-hidden border-slate-200 dark:border-slate-700 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 rounded-2xl bg-white dark:bg-slate-800">
                                     {/* Top Pattern Header */}
@@ -436,6 +439,6 @@ export default function EmployeesPage() {
                     </form>
                 </Modal>
             </div>
-        </RouteGuard>
+        </RouteGuard >
     );
 }

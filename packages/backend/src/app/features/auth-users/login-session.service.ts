@@ -3,7 +3,7 @@ import { DataSource } from 'typeorm';
 import axios from 'axios';
 import * as UAParser from 'ua-parser-js';
 import { UserLoginSessionRepository } from '../../repository/user-login-session.repository';
-import { UserLoginSessionEntity } from '../../entities/user-login-sessions.entity';
+import { UserLoginSessionsEntity } from '../../entities/user-login-sessions.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateLoginSessionModel, LoginSessionResponseModel, GetUserLoginHistoryModel, GetActiveSessionsModel, LogoutSessionModel } from '@adminvault/shared-models';
@@ -124,7 +124,7 @@ export class LoginSessionService {
 
             await transManager.startTransaction();
 
-            const session = new UserLoginSessionEntity();
+            const session = new UserLoginSessionsEntity();
             session.userId = reqModel.userId;
             session.companyId = reqModel.companyId;
             session.ipAddress = reqModel.ipAddress;
@@ -165,7 +165,7 @@ export class LoginSessionService {
             session.os = deviceInfo.os || '';
             session.deviceType = deviceInfo.deviceType || 'Desktop';
             session.isSuspicious = await this.detectSuspiciousActivity(reqModel.userId, reqModel.ipAddress, locationData?.country);
-            await transManager.getRepository(UserLoginSessionEntity).save(session);
+            await transManager.getRepository(UserLoginSessionsEntity).save(session);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Login session created successfully");
         } catch (error) {
@@ -211,7 +211,7 @@ export class LoginSessionService {
                 throw new ErrorResponse(0, "Session not found");
             }
             await transManager.startTransaction();
-            await transManager.getRepository(UserLoginSessionEntity).update(reqModel.sessionId, { isActive: false, logoutTimestamp: new Date() });
+            await transManager.getRepository(UserLoginSessionsEntity).update(reqModel.sessionId, { isActive: false, logoutTimestamp: new Date() });
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Session logged out successfully");
         } catch (error) {
@@ -286,7 +286,7 @@ export class LoginSessionService {
     /**
      * Map entity to response model
      */
-    private mapToResponseModel(session: UserLoginSessionEntity): LoginSessionResponseModel {
+    private mapToResponseModel(session: UserLoginSessionsEntity): LoginSessionResponseModel {
         return new LoginSessionResponseModel(session.id, session.userId, session.sessionToken, session.loginTimestamp, session.isActive, session.ipAddress, session.isSuspicious, session.logoutTimestamp, session.country, session.region, session.city, session.district ?? undefined, session.latitude ?? undefined, session.longitude ?? undefined, session.timezone, session.deviceType, session.browser, session.os, session.loginMethod);
     }
 
@@ -313,7 +313,7 @@ export class LoginSessionService {
 
             await transManager.startTransaction();
 
-            const session = new UserLoginSessionEntity();
+            const session = new UserLoginSessionsEntity();
             session.userId = data.userId;
             session.companyId = data.companyId;
             session.ipAddress = data.ipAddress;
@@ -356,7 +356,7 @@ export class LoginSessionService {
             session.os = deviceInfo.os || '';
             session.deviceType = deviceInfo.deviceType || 'Desktop';
             session.isSuspicious = await this.detectSuspiciousFailedAttempts(data.ipAddress);
-            await transManager.getRepository(UserLoginSessionEntity).save(session);
+            await transManager.getRepository(UserLoginSessionsEntity).save(session);
             await transManager.completeTransaction();
         } catch (error) {
             await transManager.releaseTransaction();

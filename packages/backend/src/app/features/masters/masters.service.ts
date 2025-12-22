@@ -9,14 +9,14 @@ import { TicketCategoryRepository } from '../../repository/masters/ticket-catego
 import { CompanyInfoRepository } from '../../repository/company-info.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateDepartmentModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel, CreateAssetTypeModel, CreateBrandModel, CreateApplicationModel, CreateExpenseCategoryModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel, UpdateLocationModel, UpdateTicketCategoryModel, UpdateApplicationModel, UpdateExpenseCategoryModel, GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateLocationResponseModel, CreateTicketCategoryResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateLocationResponseModel, UpdateTicketCategoryResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
-import { DepartmentEntity } from '../../entities/masters/department.entity';
-import { AssetTypeEntity } from '../../entities/masters/asset-type.entity';
-import { BrandEntity } from '../../entities/masters/brand.entity';
-import { VendorEntity } from '../../entities/masters/vendor.entity';
-import { LocationEntity } from '../../entities/masters/location.entity';
-import { TicketCategoryEntity } from '../../entities/masters/ticket-category.entity';
-import { ApplicationEntity } from '../../entities/masters/application.entity';
-import { ExpenseCategoryEntity } from '../../entities/masters/expense-category.entity';
+import { DepartmentsMasterEntity } from '../../entities/masters/department.entity';
+import { AssetTypeMasterEntity } from '../../entities/masters/asset-type.entity';
+import { BrandsMasterEntity } from '../../entities/masters/brand.entity';
+import { VendorsMasterEntity } from '../../entities/masters/vendor.entity';
+import { LocationsMasterEntity } from '../../entities/masters/location.entity';
+import { TicketCategoriesMasterEntity } from '../../entities/masters/ticket-category.entity';
+import { ApplicationsMasterEntity } from '../../entities/masters/application.entity';
+import { ExpenseCategoriesMasterEntity } from '../../entities/masters/expense-category.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 
 @Injectable()
@@ -61,7 +61,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(DepartmentEntity);
+            const repo = transManager.getRepository(DepartmentsMasterEntity);
             const newItem = repo.create(data);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
@@ -81,7 +81,7 @@ export class MastersService {
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(DepartmentEntity);
+            const repo = transManager.getRepository(DepartmentsMasterEntity);
             await repo.update(data.id, {
                 name: data.name,
                 description: data.description,
@@ -106,7 +106,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(DepartmentEntity);
+            const repo = transManager.getRepository(DepartmentsMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Department deleted successfully');
@@ -144,7 +144,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(AssetTypeEntity);
+            const repo = transManager.getRepository(AssetTypeMasterEntity);
             const newItem = repo.create(data);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
@@ -164,7 +164,7 @@ export class MastersService {
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(AssetTypeEntity);
+            const repo = transManager.getRepository(AssetTypeMasterEntity);
             await repo.update(data.id, { name: data.name, description: data.description, isActive: data.isActive });
             const updated = await repo.findOne({ where: { id: data.id } });
             if (!updated) {
@@ -182,7 +182,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(AssetTypeEntity);
+            const repo = transManager.getRepository(AssetTypeMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Asset Type deleted successfully');
@@ -206,7 +206,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(BrandEntity);
+            const repo = transManager.getRepository(BrandsMasterEntity);
             const newItem = repo.create(data);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
@@ -226,7 +226,7 @@ export class MastersService {
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(BrandEntity);
+            const repo = transManager.getRepository(BrandsMasterEntity);
             await repo.update(data.id, {
                 name: data.name,
                 description: data.description,
@@ -250,7 +250,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(BrandEntity);
+            const repo = transManager.getRepository(BrandsMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Brand deleted successfully');
@@ -274,7 +274,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(VendorEntity);
+            const repo = transManager.getRepository(VendorsMasterEntity);
             const newItem = repo.create(data);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
@@ -294,7 +294,7 @@ export class MastersService {
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(VendorEntity);
+            const repo = transManager.getRepository(VendorsMasterEntity);
             await repo.update(data.id, {
                 name: data.name,
                 description: data.description,
@@ -320,7 +320,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(VendorEntity);
+            const repo = transManager.getRepository(VendorsMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Vendor deleted successfully');
@@ -333,7 +333,7 @@ export class MastersService {
     // Applications
     async getAllApplications(reqModel: CompanyIdRequestModel): Promise<GetAllApplicationsResponseModel> {
         try {
-            const applications = await this.dataSource.getRepository(ApplicationEntity).find({ where: { companyId: reqModel.id } });
+            const applications = await this.dataSource.getRepository(ApplicationsMasterEntity).find({ where: { companyId: reqModel.id } });
             return new GetAllApplicationsResponseModel(true, 200, 'Applications retrieved successfully', applications);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Applications');
@@ -344,7 +344,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(ApplicationEntity);
+            const repo = transManager.getRepository(ApplicationsMasterEntity);
 
             // Format date to YYYY-MM-DD for MySQL DATE type
             const formattedDate = data.appReleaseDate
@@ -373,14 +373,14 @@ export class MastersService {
     async updateApplication(data: UpdateApplicationModel): Promise<UpdateApplicationResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const repo = this.dataSource.getRepository(ApplicationEntity);
+            const repo = this.dataSource.getRepository(ApplicationsMasterEntity);
             const existing = await repo.findOne({ where: { id: data.id } });
             if (!existing) {
                 throw new ErrorResponse(404, 'Application not found');
             }
 
             await transManager.startTransaction();
-            const transRepo = transManager.getRepository(ApplicationEntity);
+            const transRepo = transManager.getRepository(ApplicationsMasterEntity);
 
             // Format date to YYYY-MM-DD for MySQL DATE type
             const formattedDate = data.appReleaseDate
@@ -410,7 +410,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(ApplicationEntity);
+            const repo = transManager.getRepository(ApplicationsMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Application deleted successfully');
@@ -423,7 +423,7 @@ export class MastersService {
     // Ticket Categories
     async getAllTicketCategories(reqModel: CompanyIdRequestModel): Promise<GetAllTicketCategoriesResponseModel> {
         try {
-            const ticketCategories = await this.dataSource.getRepository(TicketCategoryEntity).find({ where: { companyId: reqModel.id } });
+            const ticketCategories = await this.dataSource.getRepository(TicketCategoriesMasterEntity).find({ where: { companyId: reqModel.id } });
             return new GetAllTicketCategoriesResponseModel(true, 200, 'Ticket Categories retrieved successfully', ticketCategories);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Ticket Categories');
@@ -434,7 +434,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(TicketCategoryEntity);
+            const repo = transManager.getRepository(TicketCategoriesMasterEntity);
             const newCategory = repo.create({
                 userId: data.userId,
                 companyId: data.companyId,
@@ -456,14 +456,14 @@ export class MastersService {
     async updateTicketCategory(data: UpdateTicketCategoryModel): Promise<UpdateTicketCategoryResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const repo = this.dataSource.getRepository(TicketCategoryEntity);
+            const repo = this.dataSource.getRepository(TicketCategoriesMasterEntity);
             const existing = await repo.findOne({ where: { id: data.id } });
             if (!existing) {
                 throw new ErrorResponse(404, 'Ticket Category not found');
             }
 
             await transManager.startTransaction();
-            const transRepo = transManager.getRepository(TicketCategoryEntity);
+            const transRepo = transManager.getRepository(TicketCategoriesMasterEntity);
             await transRepo.update(data.id, {
                 name: data.name,
                 description: data.description,
@@ -486,7 +486,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(TicketCategoryEntity);
+            const repo = transManager.getRepository(TicketCategoriesMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Ticket Category deleted successfully');
@@ -499,7 +499,7 @@ export class MastersService {
     // Expense Categories
     async getAllExpenseCategories(reqModel: CompanyIdRequestModel): Promise<GetAllExpenseCategoriesResponseModel> {
         try {
-            const expenseCategories = await this.dataSource.getRepository(ExpenseCategoryEntity).find({ where: { companyId: reqModel.id } });
+            const expenseCategories = await this.dataSource.getRepository(ExpenseCategoriesMasterEntity).find({ where: { companyId: reqModel.id } });
             return new GetAllExpenseCategoriesResponseModel(true, 200, 'Expense Categories retrieved successfully', expenseCategories as any);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Expense Categories');
@@ -510,7 +510,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(ExpenseCategoryEntity);
+            const repo = transManager.getRepository(ExpenseCategoriesMasterEntity);
             const newCategory = repo.create({
                 userId: data.userId,
                 companyId: data.companyId,
@@ -533,14 +533,14 @@ export class MastersService {
     async updateExpenseCategory(data: UpdateExpenseCategoryModel): Promise<UpdateExpenseCategoryResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const repo = this.dataSource.getRepository(ExpenseCategoryEntity);
+            const repo = this.dataSource.getRepository(ExpenseCategoriesMasterEntity);
             const existing = await repo.findOne({ where: { id: data.id } });
             if (!existing) {
                 throw new ErrorResponse(404, 'Expense Category not found');
             }
 
             await transManager.startTransaction();
-            const transRepo = transManager.getRepository(ExpenseCategoryEntity);
+            const transRepo = transManager.getRepository(ExpenseCategoriesMasterEntity);
             await transRepo.update(data.id, {
                 name: data.name,
                 description: data.description,
@@ -564,7 +564,7 @@ export class MastersService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(ExpenseCategoryEntity);
+            const repo = transManager.getRepository(ExpenseCategoriesMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Expense Category deleted successfully');

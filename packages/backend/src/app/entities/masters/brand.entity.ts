@@ -1,8 +1,9 @@
-import { Entity, Column } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from '../common-base.entity';
 
 @Entity('device_brands')
-export class BrandEntity extends CommonBaseEntity {
+@Index('idx_brand_name', ['name'])
+export class BrandsMasterEntity extends CommonBaseEntity {
 
     @Column({ nullable: false, type: 'varchar' })
     name: string;

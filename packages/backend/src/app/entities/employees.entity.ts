@@ -1,8 +1,10 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from './common-base.entity';
 import { EmployeeStatusEnum, DepartmentEnum } from '@adminvault/shared-models';
 
 @Entity('employees')
+@Index('idx_emp_email', ['email']) // Optimization: Uniqueness check and lookups
+@Index('idx_emp_dept', ['department']) // Optimization: Filtering by department
 export class EmployeesEntity extends CommonBaseEntity {
   @Column('varchar', { name: 'first_name', length: 100, nullable: false, comment: 'Employee first name' })
   firstName: string;

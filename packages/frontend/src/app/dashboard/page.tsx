@@ -1,372 +1,205 @@
 'use client';
 
-import { useCompanies } from '@/hooks/useCompanies';
-import { useEmployees } from '@/hooks/useEmployees';
-import { useAssets } from '@/hooks/useAssets';
-import { useTickets } from '@/hooks/useTickets';
+import { useDashboard } from '@/hooks/useDashboard';
 import Card from '@/components/ui/Card';
+import StatCard from '@/components/ui/StatCard';
 import Badge from '@/components/ui/Badge';
-import { Building2, Users, Package, Ticket, AlertCircle, ShieldAlert, AlertTriangle, Lock, Globe } from 'lucide-react';
+import { Users, Package, Ticket, AlertCircle, Lock, RefreshCcw, TrendingUp } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import Button from '@/components/ui/Button';
 
 export default function DashboardPage() {
-    const { companies, isLoading: loadingCompanies } = useCompanies();
-    const { employees, isLoading: loadingEmployees } = useEmployees();
-    const { assets, isLoading: loadingAssets } = useAssets();
-    const { tickets, isLoading: loadingTickets } = useTickets();
+    const { stats, isLoading, refresh } = useDashboard();
 
-    const stats = [
+    // Data Transformation for Charts
+    const assetData = stats?.assets.byStatus.map(item => ({
+        name: item.status,
+        value: parseInt(item.count)
+    })) || [];
+
+    const ticketPriorityData = stats?.tickets.byPriority.map(item => ({
+        name: item.priority,
+        value: parseInt(item.count)
+    })) || [];
+
+    const COLORS = ['#10B981', '#6366F1', '#F59E0B', '#64748B']; // Emerald, Indigo, Amber, Slate
+
+    const kpiCards = [
         {
-            title: 'Total Companies',
-            value: companies.length,
-            icon: Building2,
-            color: 'from-indigo-500 to-violet-600',
-            bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
-            iconColor: 'text-indigo-600 dark:text-indigo-400',
-            isLoading: loadingCompanies,
+            title: 'Total Assets',
+            value: stats?.assets.total || 0,
+            icon: Package,
+            gradient: 'from-emerald-500 to-teal-600',
+            bg: 'bg-emerald-50 dark:bg-emerald-900/10',
+            text: 'text-emerald-600 dark:text-emerald-400'
+        },
+        {
+            title: 'Active Tickets',
+            value: stats?.tickets.total || 0,
+            icon: Ticket,
+            gradient: 'from-amber-500 to-orange-600',
+            bg: 'bg-amber-50 dark:bg-amber-900/10',
+            text: 'text-amber-600 dark:text-amber-400'
         },
         {
             title: 'Total Employees',
-            value: employees.length,
+            value: stats?.employees.total || 0,
             icon: Users,
-            color: 'from-violet-500 to-fuchsia-600',
-            bgColor: 'bg-violet-50 dark:bg-violet-900/20',
-            iconColor: 'text-violet-600 dark:text-violet-400',
-            isLoading: loadingEmployees,
+            gradient: 'from-violet-500 to-fuchsia-600',
+            bg: 'bg-violet-50 dark:bg-violet-900/10',
+            text: 'text-violet-600 dark:text-violet-400'
         },
         {
-            title: 'Total Assets',
-            value: assets.length,
-            icon: Package,
-            color: 'from-emerald-500 to-teal-600',
-            bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
-            iconColor: 'text-emerald-600 dark:text-emerald-400',
-            isLoading: loadingAssets,
-        },
-        {
-            title: 'Open Tickets',
-            value: tickets.filter(t => t.ticketStatus === TicketStatusEnum.OPEN || t.ticketStatus === TicketStatusEnum.IN_PROGRESS).length,
-            icon: Ticket,
-            color: 'from-amber-500 to-orange-600',
-            bgColor: 'bg-amber-50 dark:bg-amber-900/20',
-            iconColor: 'text-amber-600 dark:text-amber-400',
-            isLoading: loadingTickets,
-        },
+            title: 'Active Licenses',
+            value: stats?.licenses.total || 0,
+            icon: Lock,
+            gradient: 'from-blue-500 to-cyan-600',
+            bg: 'bg-blue-50 dark:bg-blue-900/10',
+            text: 'text-blue-600 dark:text-blue-400'
+        }
     ];
-
-    const recentTickets = tickets.slice(0, 5);
-    const recentEmployees = employees.slice(0, 5);
-
-    const assetsByStatus = {
-        Available: assets.filter(a => a.status === 'Available').length,
-        Assigned: assets.filter(a => a.status === 'Assigned').length,
-        Maintenance: assets.filter(a => a.status === 'Maintenance').length,
-        Retired: assets.filter(a => a.status === 'Retired').length,
-    };
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+            <div className="p-6 space-y-8 min-h-screen bg-slate-50/50 dark:bg-slate-950">
                 {/* Header */}
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm md:text-base font-medium">
-                        Welcome to AdminVault - Your enterprise management platform
-                    </p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
+                        <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Real-time overview of system performance</p>
+                    </div>
+                    <Button variant="outline" onClick={refresh} disabled={isLoading} leftIcon={<RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />}>
+                        Refresh Data
+                    </Button>
                 </div>
 
-                {/* Stats Grid */}
+                {/* KPI Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {stats.map((stat) => {
-                        const Icon = stat.icon;
-                        return (
-                            <Card key={stat.title} className="group relative overflow-hidden p-6 hover:shadow-xl transition-all duration-300 border-none bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700">
-                                {stat.isLoading ? (
-                                    <div className="animate-pulse flex justify-between items-center relative z-10 w-full">
-                                        <div className="space-y-3">
-                                            <div className="h-4 bg-slate-100 dark:bg-slate-700 rounded w-20"></div>
-                                            <div className="h-8 bg-slate-100 dark:bg-slate-700 rounded w-12"></div>
-                                        </div>
-                                        <div className="h-16 w-16 bg-slate-100 dark:bg-slate-700 rounded-2xl"></div>
-                                    </div>
-                                ) : (
-                                    <div className="relative z-10 flex items-center justify-between w-full gap-4">
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 truncate">
-                                                {stat.title}
-                                            </p>
-                                            <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight truncate">
-                                                {formatNumber(stat.value)}
-                                            </h3>
-                                        </div>
-                                        <div className={`shrink-0 p-4 rounded-2xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
-                                            <Icon className={`h-8 w-8 ${stat.iconColor}`} />
-                                        </div>
-                                    </div>
-                                )}
-                            </Card>
-                        );
-                    })}
+                    {kpiCards.map((card, idx) => (
+                        <StatCard
+                            key={idx}
+                            title={card.title}
+                            value={formatNumber(card.value)}
+                            icon={card.icon}
+                            gradient={card.gradient}
+                            iconBg={card.bg}
+                            iconColor={card.text}
+                            isLoading={isLoading}
+                        />
+                    ))}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Asset Status */}
-                    <Card className="p-6 border-none shadow-lg shadow-slate-200/50 dark:shadow-none">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                            <Package className="h-5 w-5 text-primary-500" />
-                            Asset Status Overview
-                        </h2>
-                        <div className="space-y-5">
-                            {Object.entries(assetsByStatus).map(([status, count]) => {
-                                const total = assets.length || 1;
-                                const percentage = Math.round((count / total) * 100);
-                                const getColor = () => {
-                                    switch (status) {
-                                        case 'Available': return 'bg-emerald-500';
-                                        case 'Assigned': return 'bg-indigo-500';
-                                        case 'Maintenance': return 'bg-amber-500';
-                                        case 'Retired': return 'bg-slate-400';
-                                        default: return 'bg-slate-400';
-                                    }
-                                };
-
-                                return (
-                                    <div key={status} className="group">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary-600 transition-colors">
-                                                {status}
-                                            </span>
-                                            <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                                                {count} <span className="text-slate-400 font-normal">({percentage}%)</span>
-                                            </span>
-                                        </div>
-                                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full ${getColor()} transition-all duration-500 ease-out group-hover:opacity-90`}
-                                                style={{ width: `${percentage}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                {/* Charts Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Asset Distribution Chart */}
+                    <Card className="p-6 border-none shadow-lg shadow-slate-200/50 dark:shadow-none min-h-[400px]">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                            <Package className="h-5 w-5 text-emerald-500" />
+                            Asset Distribution
+                        </h3>
+                        {isLoading ? (
+                            <div className="h-64 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-xl"></div>
+                        ) : (
+                            <div className="h-80 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={assetData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={80}
+                                            outerRadius={110}
+                                            fill="#8884d8"
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {assetData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        />
+                                        <Legend verticalAlign="bottom" height={36} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
                     </Card>
 
-                    {/* Recent Tickets */}
-                    <Card className="p-6 border-none shadow-lg shadow-slate-200/50 dark:shadow-none">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                            <Ticket className="h-5 w-5 text-indigo-500" />
-                            Recent Tickets
-                        </h2>
-                        <div className="space-y-3">
-                            {loadingTickets ? (
-                                Array.from({ length: 3 }).map((_, i) => (
-                                    <div key={i} className="animate-pulse p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
-                                        <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
-                                    </div>
-                                ))
-                            ) : recentTickets.length === 0 ? (
-                                <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-                                    <div className="bg-slate-50 dark:bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                                        <Ticket className="h-8 w-8 text-slate-300" />
-                                    </div>
-                                    <p>No tickets yet</p>
-                                </div>
-                            ) : (
-                                recentTickets.map((ticket) => (
-                                    <div
-                                        key={ticket.id}
-                                        className="group p-4 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800 transition-all duration-200"
-                                    >
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary-700 transition-colors">
-                                                    {ticket.subject}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Badge
-                                                        variant={
-                                                            ticket.ticketStatus === TicketStatusEnum.OPEN ? 'primary' :
-                                                                ticket.ticketStatus === TicketStatusEnum.IN_PROGRESS ? 'warning' :
-                                                                    ticket.ticketStatus === TicketStatusEnum.RESOLVED ? 'success' : 'neutral'
-                                                        }
-                                                    >
-                                                        {ticket.ticketStatus.replace('_', ' ')}
-                                                    </Badge>
-                                                    {(ticket.priorityEnum === TicketPriorityEnum.HIGH || ticket.priorityEnum === TicketPriorityEnum.URGENT) && (
-                                                        <Badge variant="error" className="animate-pulse-slow">
-                                                            <AlertCircle className="h-3 w-3 mr-1" />
-                                                            High Priority
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </Card>
-                    {/* System Health */}
-                    <Card className="p-6 border-none shadow-lg shadow-slate-200/50 dark:shadow-none">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5 text-rose-500" />
-                            System Health
-                        </h2>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/50">
-                                <div className="flex items-center gap-3">
-                                    <span className="relative flex h-3 w-3">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                                    </span>
-                                    <div>
-                                        <p className="font-semibold text-emerald-900 dark:text-emerald-100">All Systems Operational</p>
-                                        <p className="text-xs text-emerald-700 dark:text-emerald-300">Database, API, and Storage services running normally</p>
-                                    </div>
-                                </div>
-                                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">99.9% Uptime</span>
+                    {/* Ticket Priority Chart */}
+                    <Card className="p-6 border-none shadow-lg shadow-slate-200/50 dark:shadow-none min-h-[400px]">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                            <AlertCircle className="h-5 w-5 text-amber-500" />
+                            Tickets by Priority
+                        </h3>
+                        {isLoading ? (
+                            <div className="h-64 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-xl"></div>
+                        ) : (
+                            <div className="h-80 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={ticketPriorityData}>
+                                        <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            cursor={{ fill: 'transparent' }}
+                                            contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        />
+                                        <Bar dataKey="value" fill="#6366F1" radius={[4, 4, 0, 0]} barSize={40} />
+                                    </BarChart>
+                                </ResponsiveContainer>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Server Load</p>
-                                    <div className="flex items-end gap-2">
-                                        <span className="text-2xl font-bold text-slate-900 dark:text-white">24%</span>
-                                        <span className="text-xs text-emerald-500 font-medium mb-1.5">↓ 2%</span>
-                                    </div>
-                                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mt-2">
-                                        <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: '24%' }}></div>
-                                    </div>
-                                </div>
-                                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Response Time</p>
-                                    <div className="flex items-end gap-2">
-                                        <span className="text-2xl font-bold text-slate-900 dark:text-white">124ms</span>
-                                        <span className="text-xs text-emerald-500 font-medium mb-1.5">~ Stable</span>
-                                    </div>
-                                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mt-2">
-                                        <div className="bg-violet-500 h-1.5 rounded-full" style={{ width: '45%' }}></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* Security Alerts */}
-                    <Card className="p-6 border-none shadow-lg shadow-slate-200/50 dark:shadow-none">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                            <ShieldAlert className="h-5 w-5 text-amber-500" />
-                            Security Alerts
-                        </h2>
-                        <div className="space-y-4">
-                            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/50 flex gap-4">
-                                <div className="shrink-0 pt-1">
-                                    <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500" />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Unusual Login Attempt</h4>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Detected from IP 192.168.1.105 (Singapore) - Blocked automatically.</p>
-                                    <span className="text-[10px] font-medium text-slate-400 mt-2 block">2 mins ago</span>
-                                </div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex gap-4 opacity-75 hover:opacity-100 transition-opacity">
-                                <div className="shrink-0 pt-1">
-                                    <Lock className="h-5 w-5 text-indigo-500" />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Policy Update Required</h4>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">3 new employees need to sign the updated IT security policy.</p>
-                                    <span className="text-[10px] font-medium text-slate-400 mt-2 block">4 hours ago</span>
-                                </div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex gap-4 opacity-75 hover:opacity-100 transition-opacity">
-                                <div className="shrink-0 pt-1">
-                                    <Globe className="h-5 w-5 text-emerald-500" />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Firewall Rules Updated</h4>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">New rules applied for regional offices in EMEA.</p>
-                                    <span className="text-[10px] font-medium text-slate-400 mt-2 block">Yesterday</span>
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </Card>
                 </div>
 
-                {/* Recent Employees */}
+                {/* Recent Activity Table */}
                 <Card className="p-6 border-none shadow-lg shadow-slate-200/50 dark:shadow-none">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                        <Users className="h-5 w-5 text-violet-500" />
-                        Recent Employees
-                    </h2>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-indigo-500" />
+                        Recent Tickets
+                    </h3>
                     <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="border-b border-slate-100 dark:border-slate-800">
-                                <tr>
-                                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        Name
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        Email
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        Position
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        Department
-                                    </th>
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-slate-200 dark:border-slate-800">
+                                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Subject</th>
+                                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Status</th>
+                                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Priority</th>
+                                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Created By</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {loadingEmployees ? (
+                            <tbody>
+                                {isLoading ? (
                                     Array.from({ length: 3 }).map((_, i) => (
                                         <tr key={i} className="animate-pulse">
-                                            <td className="px-4 py-4">
-                                                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32"></div>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-40"></div>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
-                                            </td>
+                                            <td className="p-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-32"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-20"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-20"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-24"></div></td>
                                         </tr>
                                     ))
-                                ) : recentEmployees.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={4} className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
-                                            No employees yet
-                                        </td>
-                                    </tr>
                                 ) : (
-                                    recentEmployees.map((employee) => (
-                                        <tr key={employee.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="px-4 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-600 flex items-center justify-center font-bold text-xs ring-2 ring-white">
-                                                        {(employee.firstName || '').charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div className="font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">
-                                                        {employee.firstName} {employee.lastName}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">
-                                                {employee.email}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                                                <Badge variant="neutral" className="bg-slate-100 text-slate-600">
-                                                    {employee.department || '-'}
+                                    stats?.tickets.recent.map((ticket: any) => (
+                                        <tr key={ticket.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td className="p-4 text-sm font-medium text-slate-700 dark:text-slate-300">{ticket.subject}</td>
+                                            <td className="p-4">
+                                                <Badge variant={ticket.ticketStatus === TicketStatusEnum.OPEN ? 'primary' : 'neutral'}>
+                                                    {ticket.ticketStatus}
                                                 </Badge>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`text-xs font-bold px-2 py-1 rounded ${ticket.priorityEnum === TicketPriorityEnum.HIGH ? 'text-rose-600 bg-rose-50 dark:bg-rose-900/20' :
+                                                    'text-slate-600 bg-slate-100 dark:bg-slate-800'
+                                                    }`}>
+                                                    {ticket.priorityEnum}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-sm text-slate-500 dark:text-slate-400">
+                                                {ticket.raisedByEmployee?.firstName} {ticket.raisedByEmployee?.lastName}
                                             </td>
                                         </tr>
                                     ))

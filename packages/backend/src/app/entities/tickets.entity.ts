@@ -1,14 +1,24 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { CommonBaseEntity } from './common-base.entity';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
+import { EmployeesEntity } from './employees.entity';
 
 @Entity('tickets')
+@Index('idx_ticket_emp', ['employeeId'])
+@Index('idx_ticket_status', ['ticketStatus'])
+@Index('idx_ticket_category', ['categoryEnum'])
+@Index('idx_ticket_priority', ['priorityEnum'])
+@Index('idx_ticket_assignee', ['assignAdminId'])
 export class TicketsEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'ticket_code', length: 50, nullable: false, unique: true, comment: 'Unique ticket code' })
     ticketCode: string;
 
     @Column('bigint', { name: 'employee_id', nullable: false, comment: 'Reference to employees table' })
     employeeId: number;
+
+    @ManyToOne(() => EmployeesEntity)
+    @JoinColumn({ name: 'employee_id' })
+    raisedByEmployee: EmployeesEntity;
 
     @Column('bigint', { name: 'assign_admin_id', nullable: true, comment: 'Reference to it_admin table' })
     assignAdminId: number;

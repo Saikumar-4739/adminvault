@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { TicketsRepository } from '../../repository/tickets.repository';
+import { TicketsRepository, EmployeesRepository } from '../../repository'; // Correct import path assumption
 import { TicketsEntity } from '../../entities/tickets.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
@@ -10,10 +10,11 @@ import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel
 export class TicketsService {
     constructor(
         private dataSource: DataSource,
-        private ticketsRepo: TicketsRepository
+        private ticketsRepo: TicketsRepository,
+        private employeesRepo: EmployeesRepository
     ) { }
 
-    async createTicket(reqModel: CreateTicketModel): Promise<GlobalResponse> {
+    async createTicket(reqModel: CreateTicketModel, userEmail: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
 
@@ -25,6 +26,18 @@ export class TicketsService {
             }
             if (!reqModel.subject) {
                 throw new ErrorResponse(0, "Subject is required");
+            }
+
+            // Look up the employee associated with the logged-in user's email
+            // Assuming AuthUser email matches Employee email
+            const employee = await this.employeesRepo.findOne({ where: { email: userEmail } });
+
+            if (!employee) {
+                // Determine if we should fail or allow unlinked tickets? 
+                // Given the DB constraint, we MUST have an employee_id.
+                // If it's an admin creating it, maybe they are also an employee?
+                // For now, fail if no profile found, as standard users need an employee profile.
+                throw new ErrorResponse(0, "No Employee profile found for this user. Please contact HR.");
             }
 
             if (!reqModel.ticketCode) {
@@ -39,12 +52,10 @@ export class TicketsService {
 
             await transManager.startTransaction();
 
-            // Set employeeId from userId (authenticated user)
-            // TODO: Get userId from JWT token in request context
             const entity = this.ticketsRepo.create({
                 ...reqModel,
-                employeeId: reqModel.employeeId || 1, // Use provided employeeId or default
-                // userId will be set by CommonBaseEntity from request context
+                employeeId: employee.id, // Use the resolved employee ID
+                // userId will be set by CommonBaseEntity from request context if middleware sets it
             });
 
             await transManager.getRepository(TicketsEntity).save(entity);

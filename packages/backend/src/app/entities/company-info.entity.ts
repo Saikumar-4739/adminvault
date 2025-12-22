@@ -1,10 +1,9 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
+import { CommonBaseEntity } from './common-base.entity';
 
 @Entity('company_info')
-export class CompanyInfoEntity {
-
-  @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for company info' })
-  id: number;
+@Index('idx_company_name', ['companyName'])
+export class CompanyInfoEntity extends CommonBaseEntity {
 
   @Column('varchar', { name: 'company_name', length: 255, nullable: false, comment: 'Name of the company' })
   companyName: string;
@@ -20,10 +19,4 @@ export class CompanyInfoEntity {
 
   @Column('varchar', { name: 'phone', length: 50, nullable: true, comment: 'Company phone number' })
   phone: string | null;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', comment: 'Record creation timestamp' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', comment: 'Record last update timestamp' })
-  updatedAt: Date;
 }

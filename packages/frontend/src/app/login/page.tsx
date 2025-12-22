@@ -54,7 +54,7 @@ export default function LoginPage() {
             }
 
             await login({ email, password });
-            router.push('/dashboard');
+            router.push('/'); // Redirect to root to let page.tsx handle role-based routing
         } catch (err: any) {
             toastError('Login Failed', err.message || 'Invalid credentials');
         }
@@ -97,7 +97,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex bg-white font-sans text-slate-900">
+        <div className="min-h-screen flex bg-white dark:bg-slate-900 font-sans text-slate-900 dark:text-white">
             {/* Left Side - App Info (70%) */}
             <div className="hidden lg:flex w-[70%] bg-slate-900 relative overflow-hidden items-center justify-center p-12">
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.1]"></div>
@@ -161,15 +161,15 @@ export default function LoginPage() {
             </div>
 
             {/* Right Side - Login Form (30%) */}
-            <div className="w-full lg:w-[30%] flex flex-col justify-center px-8 sm:px-12 bg-white relative z-20 shadow-2xl">
+            <div className="w-full lg:w-[30%] flex flex-col justify-center px-8 sm:px-12 bg-white dark:bg-slate-900 relative z-20 shadow-2xl dark:shadow-none border-l dark:border-slate-800">
                 <div className="w-full max-w-sm mx-auto space-y-10">
                     {/* Header */}
                     <div className="space-y-2">
-                        <div className="mb-8 p-3 bg-primary-50 w-fit rounded-xl border border-primary-100">
-                            <Building2 className="w-8 h-8 text-primary-600" />
+                        <div className="mb-8 p-3 bg-primary-50 dark:bg-indigo-900/20 w-fit rounded-xl border border-primary-100 dark:border-indigo-900/30">
+                            <Building2 className="w-8 h-8 text-primary-600 dark:text-indigo-400" />
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
-                        <p className="text-slate-500">Please enter your credentials to access the vault.</p>
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Welcome back</h2>
+                        <p className="text-slate-500 dark:text-slate-400">Please enter your credentials to access the vault.</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -180,7 +180,7 @@ export default function LoginPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="bg-transparent border-slate-200 focus:border-primary-500 focus:ring-primary-500/10 rounded-lg h-12 transition-all"
+                                className="bg-transparent border-slate-200 dark:border-slate-700/50 focus:border-primary-500 focus:ring-primary-500/10 rounded-lg h-12 transition-all dark:text-white"
                             />
                             <Input
                                 label="Password"
@@ -188,7 +188,7 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="bg-transparent border-slate-200 focus:border-primary-500 focus:ring-primary-500/10 rounded-lg h-12 transition-all"
+                                className="bg-transparent border-slate-200 dark:border-slate-700/50 focus:border-primary-500 focus:ring-primary-500/10 rounded-lg h-12 transition-all dark:text-white"
                             />
                         </div>
 
@@ -217,17 +217,17 @@ export default function LoginPage() {
             {/* Request Access Modal */}
             {showRequestModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-slate-900 dark:border dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden animate-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setShowRequestModal(false)}
-                            className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                            className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
                         <div className="mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">Request Access</h3>
-                            <p className="text-sm text-slate-500 mt-1">Submit your details to request an admin account.</p>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Request Access</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Submit your details to request an admin account.</p>
                         </div>
 
                         <form onSubmit={handleRequestAccess} className="space-y-4">
@@ -264,17 +264,17 @@ export default function LoginPage() {
             {/* Forgot Password Modal */}
             {showForgotModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-slate-900 dark:border dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden animate-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setShowForgotModal(false)}
-                            className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                            className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
                         <div className="mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">Reset Password</h3>
-                            <p className="text-sm text-slate-500 mt-1">Enter your email to receive reset instructions.</p>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Reset Password</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Enter your email to receive reset instructions.</p>
                         </div>
 
                         <form onSubmit={handleForgotPassword} className="space-y-4">

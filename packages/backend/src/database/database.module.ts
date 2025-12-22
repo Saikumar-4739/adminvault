@@ -13,15 +13,16 @@ import { AssetAssignEntity } from '../app/entities/asset-assign.entity';
 import { TicketCommentsEntity } from '../app/entities/ticket-comments.entity';
 import { TicketStatusLogsEntity } from '../app/entities/ticket-status-logs.entity';
 import { EmailAccountsEntity } from '../app/entities/email-accounts.entity';
-import { DepartmentEntity } from '../app/entities/masters/department.entity';
-import { AssetTypeEntity } from '../app/entities/masters/asset-type.entity';
-import { BrandEntity } from '../app/entities/masters/brand.entity';
-import { VendorEntity } from '../app/entities/masters/vendor.entity';
-import { LocationEntity } from '../app/entities/masters/location.entity';
-import { TicketCategoryEntity } from '../app/entities/masters/ticket-category.entity';
-import { ApplicationEntity } from '../app/entities/masters/application.entity';
-import { ExpenseCategoryEntity } from '../app/entities/masters/expense-category.entity';
-import { UserLoginSessionEntity } from '../app/entities/user-login-sessions.entity';
+import { DepartmentsMasterEntity } from '../app/entities/masters/department.entity';
+import { AssetTypeMasterEntity } from '../app/entities/masters/asset-type.entity';
+import { BrandsMasterEntity } from '../app/entities/masters/brand.entity';
+import { VendorsMasterEntity } from '../app/entities/masters/vendor.entity';
+import { LocationsMasterEntity } from '../app/entities/masters/location.entity';
+import { TicketCategoriesMasterEntity } from '../app/entities/masters/ticket-category.entity';
+import { ApplicationsMasterEntity } from '../app/entities/masters/application.entity';
+import { ExpenseCategoriesMasterEntity } from '../app/entities/masters/expense-category.entity';
+import { UserLoginSessionsEntity } from '../app/entities/user-login-sessions.entity';
+import { CompanyLicenseEntity } from '../app/entities/company-license.entity';
 
 @Module({
     imports: [
@@ -48,17 +49,18 @@ import { UserLoginSessionEntity } from '../app/entities/user-login-sessions.enti
                     TicketCommentsEntity,
                     TicketStatusLogsEntity,
                     EmailAccountsEntity,
-                    DepartmentEntity,
-                    AssetTypeEntity,
-                    BrandEntity,
-                    VendorEntity,
-                    LocationEntity,
-                    TicketCategoryEntity,
-                    ApplicationEntity,
-                    ExpenseCategoryEntity,
-                    UserLoginSessionEntity,
+                    DepartmentsMasterEntity,
+                    AssetTypeMasterEntity,
+                    BrandsMasterEntity,
+                    VendorsMasterEntity,
+                    LocationsMasterEntity,
+                    TicketCategoriesMasterEntity,
+                    ApplicationsMasterEntity,
+                    ExpenseCategoriesMasterEntity,
+                    UserLoginSessionsEntity,
+                    CompanyLicenseEntity,
                 ],
-                synchronize: true,
+                synchronize: false,
                 logging: configService.get<string>('NODE_ENV') !== 'production',
                 ssl: configService.get<string>('DB_HOST')?.includes('aivencloud.com')
                     ? { rejectUnauthorized: false }

@@ -3,10 +3,15 @@
 import { useState } from 'react';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { FileText, Download, Filter, Calendar, TrendingUp, Users, Package, Ticket } from 'lucide-react';
+import { FileText, Download, Users, Package, Ticket } from 'lucide-react';
+import { reportsService } from '@/lib/api/services';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function ReportsPage() {
     const [selectedReport, setSelectedReport] = useState<string | null>(null);
+    const [reportData, setReportData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const toast = useToast();
 
     const reportCategories = [
         {
@@ -18,7 +23,6 @@ export default function ReportsPage() {
             reports: [
                 { name: 'Asset Inventory Report', description: 'Complete asset inventory with status' },
                 { name: 'Asset Allocation Report', description: 'Assets assigned to employees' },
-                { name: 'Asset Depreciation Report', description: 'Asset value depreciation analysis' },
             ]
         },
         {
@@ -29,8 +33,6 @@ export default function ReportsPage() {
             color: 'from-blue-500 to-blue-600',
             reports: [
                 { name: 'Employee Directory', description: 'Complete employee listing' },
-                { name: 'Department Wise Report', description: 'Employees grouped by department' },
-                { name: 'Asset Assignment Report', description: 'Assets assigned to each employee' },
             ]
         },
         {
@@ -41,23 +43,72 @@ export default function ReportsPage() {
             color: 'from-purple-500 to-purple-600',
             reports: [
                 { name: 'Ticket Summary Report', description: 'Overview of all tickets' },
-                { name: 'Category Wise Report', description: 'Tickets grouped by category' },
-                { name: 'Resolution Time Report', description: 'Average ticket resolution times' },
             ]
-        },
-        {
-            id: 'analytics',
-            title: 'Analytics Reports',
-            description: 'Business intelligence and trends',
-            icon: TrendingUp,
-            color: 'from-orange-500 to-orange-600',
-            reports: [
-                { name: 'Usage Analytics', description: 'System usage statistics' },
-                { name: 'Performance Metrics', description: 'Key performance indicators' },
-                { name: 'Trend Analysis', description: 'Historical data trends' },
-            ]
-        },
+        }
     ];
+
+    const [isExporting, setIsExporting] = useState(false);
+
+    const generateReport = async () => {
+        if (!selectedReport) return;
+        setIsLoading(true);
+        try {
+            // Default summary fetch
+            const response = await reportsService.generateReport(selectedReport, { format: 'summary' });
+            setReportData(response);
+            toast.success('Report generated successfully');
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to generate report');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const downloadFullReport = async (format: 'csv' | 'json') => {
+        if (!selectedReport) return;
+        setIsExporting(true);
+        try {
+            const response = await reportsService.generateReport(selectedReport, { format: 'detailed' });
+            // response should be an array of objects
+
+            if (format === 'json') {
+                const blob = new Blob([JSON.stringify(response, null, 2)], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${selectedReport.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+            } else if (format === 'csv') {
+                // Simple CSV conversion
+                if (Array.isArray(response) && response.length > 0) {
+                    const headers = Object.keys(response[0]);
+                    const csvContent = [
+                        headers.join(','),
+                        ...response.map((row: any) => headers.map(header => {
+                            const val = row[header];
+                            return typeof val === 'object' ? JSON.stringify(val).replace(/,/g, ';') : val;
+                        }).join(','))
+                    ].join('\n');
+
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${selectedReport.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+                    a.click();
+                    toast.success('CSV downloaded');
+                } else {
+                    toast.error('No detailed data available to export');
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to download full report');
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     if (selectedReport) {
         return (
@@ -70,7 +121,7 @@ export default function ReportsPage() {
                                 Generate and download reports
                             </p>
                         </div>
-                        <Button variant="outline" onClick={() => setSelectedReport(null)}>
+                        <Button variant="outline" onClick={() => { setSelectedReport(null); setReportData(null); }}>
                             ← Back to Reports
                         </Button>
                     </div>
@@ -79,28 +130,38 @@ export default function ReportsPage() {
                 <div className="flex-1 overflow-y-auto p-6">
                     <Card>
                         <CardContent className="p-6">
-                            <div className="text-center py-12">
+                            <div className="text-center py-6">
                                 <FileText className="h-16 w-16 mx-auto text-slate-400 mb-4" />
                                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                                     {selectedReport}
                                 </h3>
-                                <p className="text-slate-600 dark:text-slate-400 mb-6">
-                                    Report generation feature coming soon
-                                </p>
-                                <div className="flex gap-3 justify-center">
-                                    <Button variant="outline">
-                                        <Filter className="h-4 w-4 mr-2" />
-                                        Filter Options
-                                    </Button>
-                                    <Button variant="outline">
-                                        <Calendar className="h-4 w-4 mr-2" />
-                                        Date Range
-                                    </Button>
-                                    <Button variant="primary">
-                                        <Download className="h-4 w-4 mr-2" />
-                                        Generate Report
-                                    </Button>
-                                </div>
+
+                                {!reportData ? (
+                                    <div className="space-y-4">
+                                        <p className="text-slate-600 dark:text-slate-400 mb-6">
+                                            Click below to generate the report based on current data.
+                                        </p>
+                                        <Button variant="primary" onClick={generateReport} disabled={isLoading}>
+                                            {isLoading ? 'Generating...' : 'Generate Report'}
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="mt-6 text-left w-full max-w-4xl mx-auto space-y-4">
+                                        <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 max-h-[500px] overflow-auto font-mono text-sm">
+                                            <pre>{JSON.stringify(reportData, null, 2)}</pre>
+                                        </div>
+                                        <div className="flex justify-center pt-4 gap-3">
+                                            <Button variant="outline" onClick={() => downloadFullReport('json')} disabled={isExporting}>
+                                                <Download className="h-4 w-4 mr-2" />
+                                                {isExporting ? 'Downloading...' : 'Download JSON'}
+                                            </Button>
+                                            <Button variant="outline" onClick={() => downloadFullReport('csv')} disabled={isExporting}>
+                                                <FileText className="h-4 w-4 mr-2" />
+                                                {isExporting ? 'Downloading...' : 'Download CSV (Excel)'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -112,7 +173,7 @@ export default function ReportsPage() {
     return (
         <div className="h-screen flex flex-col overflow-hidden">
             {/* Fixed Header */}
-            <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4 ">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Reports</h1>
                     <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1">

@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
+import StatCard from '@/components/ui/StatCard';
 import { Search, Plus, Package, Building2, TrendingUp, CheckCircle2, AlertCircle, Laptop, Monitor, Smartphone, Tablet, HardDrive, Pencil, Trash2, User, Calendar, Printer } from 'lucide-react';
 import { AssetStatusEnum } from '@adminvault/shared-models';
 
@@ -63,6 +64,11 @@ export default function AssetsPage() {
         const status = statusFilter ? (statusFilter as AssetStatusEnum) : undefined;
         searchAssets(searchQuery || undefined, status);
     };
+
+    // Auto-search when filter changes
+    useEffect(() => {
+        handleSearch();
+    }, [statusFilter]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -285,65 +291,63 @@ export default function AssetsPage() {
             {/* Statistics Dashboard */}
             {selectedOrg && statistics && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <Card className="p-5 border-l-4 border-indigo-500 bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-slate-900">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Total Assets</p>
-                                <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{statistics.total}</p>
-                            </div>
-                            <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-xl">
-                                <Package className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-5 border-l-4 border-emerald-500 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-slate-900">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Available</p>
-                                <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{statistics.available}</p>
-                            </div>
-                            <div className="bg-emerald-100 dark:bg-emerald-900/30 p-3 rounded-xl">
-                                <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-5 border-l-4 border-blue-500 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-slate-900">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">In Use</p>
-                                <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{statistics.inUse}</p>
-                            </div>
-                            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl">
-                                <TrendingUp className="h-7 w-7 text-blue-600 dark:text-blue-400" />
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-5 border-l-4 border-amber-500 bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-slate-900">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Maintenance</p>
-                                <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{statistics.maintenance}</p>
-                            </div>
-                            <div className="bg-amber-100 dark:bg-amber-900/30 p-3 rounded-xl">
-                                <AlertCircle className="h-7 w-7 text-amber-600 dark:text-amber-400" />
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-5 border-l-4 border-slate-500 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/20 dark:to-slate-900">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Retired</p>
-                                <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{statistics.retired}</p>
-                            </div>
-                            <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl">
-                                <Package className="h-7 w-7 text-slate-600 dark:text-slate-400" />
-                            </div>
-                        </div>
-                    </Card>
+                    <StatCard
+                        title="Total Assets"
+                        value={statistics.total}
+                        icon={Package}
+                        gradient="from-indigo-500 to-violet-600"
+                        iconBg="bg-indigo-50 dark:bg-indigo-900/20"
+                        iconColor="text-indigo-600 dark:text-indigo-400"
+                        isLoading={isLoading}
+                    />
+                    <StatCard
+                        title="Available"
+                        value={statistics.available}
+                        icon={CheckCircle2}
+                        gradient="from-emerald-500 to-teal-600"
+                        iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+                        iconColor="text-emerald-600 dark:text-emerald-400"
+                        isActive={statusFilter === 'AVAILABLE'}
+                        onClick={() => setStatusFilter(statusFilter === 'AVAILABLE' ? '' : 'AVAILABLE')}
+                        className="cursor-pointer"
+                        isLoading={isLoading}
+                    />
+                    <StatCard
+                        title="In Use"
+                        value={statistics.inUse}
+                        icon={TrendingUp}
+                        gradient="from-blue-500 to-cyan-600"
+                        iconBg="bg-blue-50 dark:bg-blue-900/20"
+                        iconColor="text-blue-600 dark:text-blue-400"
+                        isActive={statusFilter === 'IN_USE'}
+                        onClick={() => setStatusFilter(statusFilter === 'IN_USE' ? '' : 'IN_USE')}
+                        className="cursor-pointer"
+                        isLoading={isLoading}
+                    />
+                    <StatCard
+                        title="Maintenance"
+                        value={statistics.maintenance}
+                        icon={AlertCircle}
+                        gradient="from-amber-500 to-orange-600"
+                        iconBg="bg-amber-50 dark:bg-amber-900/20"
+                        iconColor="text-amber-600 dark:text-amber-400"
+                        isActive={statusFilter === 'MAINTENANCE'}
+                        onClick={() => setStatusFilter(statusFilter === 'MAINTENANCE' ? '' : 'MAINTENANCE')}
+                        className="cursor-pointer"
+                        isLoading={isLoading}
+                    />
+                    <StatCard
+                        title="Retired"
+                        value={statistics.retired}
+                        icon={Package}
+                        gradient="from-slate-500 to-gray-600"
+                        iconBg="bg-slate-50 dark:bg-slate-800"
+                        iconColor="text-slate-600 dark:text-slate-400"
+                        isActive={statusFilter === 'RETIRED'}
+                        onClick={() => setStatusFilter(statusFilter === 'RETIRED' ? '' : 'RETIRED')}
+                        className="cursor-pointer"
+                        isLoading={isLoading}
+                    />
                 </div>
             )}
 

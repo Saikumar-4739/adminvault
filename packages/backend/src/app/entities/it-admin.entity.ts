@@ -1,8 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, Index } from 'typeorm';
 import { AdminRoleEnum, AdminStatusEnum } from '@adminvault/shared-models';
 import { CommonBaseEntity } from './common-base.entity';
 
 @Entity('it_admin')
+@Index('idx_admin_role', ['roleEnum'])
+@Index('idx_admin_status', ['status'])
 export class ItAdminEntity extends CommonBaseEntity {
 
     @Column('varchar', { name: 'admin_code', length: 50, nullable: false, unique: true, comment: 'Unique admin code' })

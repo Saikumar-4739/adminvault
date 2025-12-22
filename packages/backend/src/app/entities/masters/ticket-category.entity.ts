@@ -1,16 +1,9 @@
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { CommonBaseEntity } from '../common-base.entity';
 
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-
-@Entity("ticket_categories")
-export class TicketCategoryEntity {
-    @PrimaryGeneratedColumn({ type: 'bigint' })
-    id: number;
-
-    @Column({ type: 'bigint', nullable: true, name: 'user_id' })
-    userId: number;
-
-    @Column({ type: 'bigint', nullable: true, name: 'company_id' })
-    companyId: number;
+@Entity('ticket_categories')
+@Index('idx_ticket_cat_name', ['name'])
+export class TicketCategoriesMasterEntity extends CommonBaseEntity {
 
     @Column({ type: 'varchar', length: 255 })
     name: string;
@@ -26,10 +19,4 @@ export class TicketCategoryEntity {
 
     @Column({ type: 'varchar', length: 255, nullable: true })
     defaultPriority: string;
-
-    @CreateDateColumn({ name: 'created_at' })
-    createdAt: Date;
-
-    @UpdateDateColumn({ name: 'updated_at' })
-    updatedAt: Date;
 }

@@ -6,14 +6,16 @@ import { useTickets } from '@/hooks/useTickets';
 import { useCompanies } from '@/hooks/useCompanies';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import StatCard from '@/components/ui/StatCard';
 import { Modal } from '@/components/ui/modal';
 import { PageLoader } from '@/components/ui/Spinner';
 import {
     Search, Edit, Trash2, Ticket, Clock, MessageSquare,
     Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, FileText,
-    AlertTriangle, Building
+    AlertTriangle, CheckCircle, Plus
 } from 'lucide-react';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
+import Input from '@/components/ui/Input';
 
 const CategoryConfig: Record<string, { icon: any, color: string, bg: string }> = {
     [TicketCategoryEnum.HARDWARE]: { icon: Monitor, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
@@ -24,15 +26,26 @@ const CategoryConfig: Record<string, { icon: any, color: string, bg: string }> =
     [TicketCategoryEnum.OTHER]: { icon: HelpCircle, color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-50 dark:bg-slate-800' },
 };
 
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRoleEnum } from '@adminvault/shared-models';
+
 export default function TicketsPage() {
     const router = useRouter();
-    const { tickets, isLoading, updateTicket, deleteTicket } = useTickets();
-    const { companies } = useCompanies();
+    const { user } = useAuth();
+
+    // Redirect standard users to create-ticket page if they try to access this list view
+    if (user && (user.role === UserRoleEnum.USER || user.role === UserRoleEnum.VIEWER)) {
+        router.push('/create-ticket');
+        return null; // Prevent rendering
+    }
+
+    const { tickets, isLoading, createTicket, updateTicket, deleteTicket } = useTickets();
+    // const { companies } = useCompanies(); // Unused for now
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTicket, setEditingTicket] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [selectedCompanyId, setSelectedCompanyId] = useState<string>('all');
+    // const [selectedCompanyId, setSelectedCompanyId] = useState<string>('all'); // Unused
     const [formData, setFormData] = useState({
         subject: '',
         categoryEnum: TicketCategoryEnum.OTHER,
@@ -55,11 +68,30 @@ export default function TicketsPage() {
         try {
             if (editingTicket) {
                 await updateTicket({ ...formData, id: editingTicket.id } as any);
-                handleCloseModal();
+            } else {
+                await createTicket({
+                    subject: formData.subject,
+                    categoryEnum: formData.categoryEnum,
+                    priorityEnum: formData.priorityEnum,
+                    ticketStatus: TicketStatusEnum.OPEN, // Always start as Open
+                } as any);
             }
+            handleCloseModal();
         } catch (error) {
             // Error handled by hook
         }
+    };
+
+    const handleCreate = () => {
+        setEditingTicket(null);
+        setFormData({
+            subject: '',
+            categoryEnum: TicketCategoryEnum.OTHER,
+            priorityEnum: TicketPriorityEnum.MEDIUM,
+            ticketStatus: TicketStatusEnum.OPEN,
+            ticketCode: '',
+        });
+        setIsModalOpen(true);
     };
 
     const handleEdit = (ticket: any) => {
@@ -120,54 +152,78 @@ export default function TicketsPage() {
                         />
                     </div>
 
-                    {/* Organization Dropdown */}
-                    <div className="relative min-w-[240px]">
-                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                        <select
-                            value={selectedCompanyId}
-                            onChange={(e) => setSelectedCompanyId(e.target.value)}
-                            className="w-full appearance-none pl-10 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                        >
-                            <option value="all">All Organizations</option>
-                            {companies.map((company) => (
-                                <option key={company.id} value={company.id}>
-                                    {company.companyName}
-                                </option>
-                            ))}
-                        </select>
-                        {/* Custom Dropdown Arrow */}
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </div>
-                    </div>
+                    {/* Organization Dropdown (Only show if filtering logic implemented properly or needed) */}
+                    {/* <div className="relative min-w-[240px]"> ... </div> */}
+
+                    <Button onClick={handleCreate} leftIcon={<Plus className="h-4 w-4" />}>
+                        Create Ticket
+                    </Button>
                 </div>
             </div>
 
             {/* Stats Dashboard */}
+            {/* Stats Dashboard */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                {Object.entries(statusCounts).map(([status, count]) => (
-                    <button
-                        key={status}
-                        onClick={() => setStatusFilter(status.toLowerCase())}
-                        className={`p-4 rounded-2xl border transition-all duration-200 text-left relative overflow-hidden group ${statusFilter === status.toLowerCase()
-                            ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-700'
-                            }`}
-                    >
-                        <div className="text-sm font-medium opacity-80 uppercase tracking-wider mb-1">
-                            {status.replace('_', ' ')}
-                        </div>
-                        <div className="text-3xl font-bold tracking-tight">
-                            {count}
-                        </div>
-                        {/* Decorative Icon */}
-                        <div className={`absolute -right-4 -bottom-4 opacity-10 transform rotate-12 group-hover:scale-110 transition-transform ${statusFilter === status.toLowerCase() ? 'text-white' : 'text-indigo-600'}`}>
-                            <Ticket className="h-24 w-24" />
-                        </div>
-                    </button>
-                ))}
+                <StatCard
+                    title="All Tickets"
+                    value={statusCounts.all}
+                    icon={Ticket}
+                    gradient="from-indigo-500 to-violet-600"
+                    iconBg="bg-indigo-50 dark:bg-indigo-900/20"
+                    iconColor="text-indigo-600 dark:text-indigo-400"
+                    isActive={statusFilter === 'all'}
+                    onClick={() => setStatusFilter('all')}
+                    className="cursor-pointer"
+                    isLoading={isLoading}
+                />
+                <StatCard
+                    title="Open"
+                    value={statusCounts.open}
+                    icon={AlertTriangle}
+                    gradient="from-blue-500 to-cyan-600"
+                    iconBg="bg-blue-50 dark:bg-blue-900/20"
+                    iconColor="text-blue-600 dark:text-blue-400"
+                    isActive={statusFilter === 'open'}
+                    onClick={() => setStatusFilter('open')}
+                    className="cursor-pointer"
+                    isLoading={isLoading}
+                />
+                <StatCard
+                    title="In Progress"
+                    value={statusCounts.in_progress}
+                    icon={Clock}
+                    gradient="from-amber-500 to-orange-600"
+                    iconBg="bg-amber-50 dark:bg-amber-900/20"
+                    iconColor="text-amber-600 dark:text-amber-400"
+                    isActive={statusFilter === 'in_progress'}
+                    onClick={() => setStatusFilter('in_progress')}
+                    className="cursor-pointer"
+                    isLoading={isLoading}
+                />
+                <StatCard
+                    title="Resolved"
+                    value={statusCounts.resolved}
+                    icon={CheckCircle}
+                    gradient="from-emerald-500 to-teal-600"
+                    iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+                    iconColor="text-emerald-600 dark:text-emerald-400"
+                    isActive={statusFilter === 'resolved'}
+                    onClick={() => setStatusFilter('resolved')}
+                    className="cursor-pointer"
+                    isLoading={isLoading}
+                />
+                <StatCard
+                    title="Closed"
+                    value={statusCounts.closed}
+                    icon={Lock}
+                    gradient="from-slate-500 to-gray-600"
+                    iconBg="bg-slate-50 dark:bg-slate-800"
+                    iconColor="text-slate-600 dark:text-slate-400"
+                    isActive={statusFilter === 'closed'}
+                    onClick={() => setStatusFilter('closed')}
+                    className="cursor-pointer"
+                    isLoading={isLoading}
+                />
             </div>
 
 
@@ -278,11 +334,11 @@ export default function TicketsPage() {
                 )}
             </div>
 
-            {/* Edit Modal (Creation removed) */}
+            {/* Edit Modal / Create Modal */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
-                title="Manage Ticket"
+                title={editingTicket ? "Manage Ticket Status" : "Create New Ticket"}
                 size="lg"
                 footer={
                     <>
@@ -290,50 +346,96 @@ export default function TicketsPage() {
                             Cancel
                         </Button>
                         <Button variant="primary" onClick={handleSubmit} isLoading={isLoading}>
-                            Update Status
+                            {editingTicket ? 'Update Status' : 'Create Ticket'}
                         </Button>
                     </>
                 }
             >
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Read-only Information */}
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl space-y-3">
-                        <div>
-                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Subject</label>
-                            <div className="text-slate-900 dark:text-white font-medium">{formData.subject}</div>
-                        </div>
-                        <div className="flex gap-4">
-                            <div>
-                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</label>
-                                <div className="text-slate-900 dark:text-white font-medium">{formData.categoryEnum}</div>
+                    {editingTicket ? (
+                        <>
+                            {/* Read-only Information for Editing */}
+                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl space-y-3">
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Subject</label>
+                                    <div className="text-slate-900 dark:text-white font-medium">{formData.subject}</div>
+                                </div>
+                                <div className="flex gap-4">
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</label>
+                                        <div className="text-slate-900 dark:text-white font-medium">{formData.categoryEnum}</div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Priority</label>
+                                        <div className="text-slate-900 dark:text-white font-medium">{formData.priorityEnum}</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Priority</label>
-                                <div className="text-slate-900 dark:text-white font-medium">{formData.priorityEnum}</div>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Editable Status */}
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                            Update Status
-                        </label>
-                        <select
-                            value={formData.ticketStatus}
-                            onChange={(e) => setFormData({ ...formData, ticketStatus: e.target.value as TicketStatusEnum })}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
-                        >
-                            <option value={TicketStatusEnum.OPEN}>Open</option>
-                            <option value={TicketStatusEnum.IN_PROGRESS}>In Progress</option>
-                            <option value={TicketStatusEnum.PENDING}>Pending</option>
-                            <option value={TicketStatusEnum.RESOLVED}>Resolved</option>
-                            <option value={TicketStatusEnum.CLOSED}>Closed</option>
-                        </select>
-                        <p className="mt-2 text-xs text-slate-500">
-                            Changing status to <strong>Resolved</strong> or <strong>Closed</strong> will notify the user.
-                        </p>
-                    </div>
+                            {/* Editable Status */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                    Update Status
+                                </label>
+                                <select
+                                    value={formData.ticketStatus}
+                                    onChange={(e) => setFormData({ ...formData, ticketStatus: e.target.value as TicketStatusEnum })}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                                >
+                                    <option value={TicketStatusEnum.OPEN}>Open</option>
+                                    <option value={TicketStatusEnum.IN_PROGRESS}>In Progress</option>
+                                    <option value={TicketStatusEnum.PENDING}>Pending</option>
+                                    <option value={TicketStatusEnum.RESOLVED}>Resolved</option>
+                                    <option value={TicketStatusEnum.CLOSED}>Closed</option>
+                                </select>
+                                <p className="mt-2 text-xs text-slate-500">
+                                    Changing status to <strong>Resolved</strong> or <strong>Closed</strong> will notify the user.
+                                </p>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {/* Create Mode Inputs */}
+                            <Input
+                                label="Subject"
+                                value={formData.subject}
+                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                placeholder="Brief summary of the issue"
+                                required
+                            />
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                        Category
+                                    </label>
+                                    <select
+                                        value={formData.categoryEnum}
+                                        onChange={(e) => setFormData({ ...formData, categoryEnum: e.target.value as TicketCategoryEnum })}
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                                    >
+                                        {Object.values(TicketCategoryEnum).map((cat) => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                        Priority
+                                    </label>
+                                    <select
+                                        value={formData.priorityEnum}
+                                        onChange={(e) => setFormData({ ...formData, priorityEnum: e.target.value as TicketPriorityEnum })}
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                                    >
+                                        {Object.values(TicketPriorityEnum).map((prio) => (
+                                            <option key={prio} value={prio}>{prio}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </form>
             </Modal>
         </div>

@@ -1,14 +1,14 @@
 import { DataSource, Repository } from "typeorm";
 import { Injectable } from "@nestjs/common";
-import { UserLoginSessionEntity } from "../entities/user-login-sessions.entity";
+import { UserLoginSessionsEntity } from "../entities/user-login-sessions.entity";
 
 /**
  * Repository for user login session operations
  */
 @Injectable()
-export class UserLoginSessionRepository extends Repository<UserLoginSessionEntity> {
+export class UserLoginSessionRepository extends Repository<UserLoginSessionsEntity> {
     constructor(private dataSource: DataSource) {
-        super(UserLoginSessionEntity, dataSource.createEntityManager());
+        super(UserLoginSessionsEntity, dataSource.createEntityManager());
     }
 
     /**

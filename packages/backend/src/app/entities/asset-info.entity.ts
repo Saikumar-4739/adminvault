@@ -1,8 +1,9 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from './common-base.entity';
 import { AssetStatusEnum } from '@adminvault/shared-models';
 
 @Entity('asset_info')
+@Index('idx_asset_serial', ['serialNumber']) // Optimization: Search by serial number
 export class AssetInfoEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'device_id', nullable: false, comment: 'Reference to device_info table' })
     deviceId: number;
