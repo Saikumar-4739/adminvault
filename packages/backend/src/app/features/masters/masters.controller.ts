@@ -2,10 +2,10 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { MastersService } from './masters.service';
 import {
     CreateAssetTypeModel, CreateBrandModel, CreateDepartmentModel, CreateVendorModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel,
-    CreateApplicationModel, UpdateApplicationModel, CreateExpenseCategoryModel,
-    GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel,
-    CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel,
-    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel,
+    CreateApplicationModel, UpdateApplicationModel, CreateExpenseCategoryModel, CreatePasswordVaultModel, UpdatePasswordVaultModel, CreateTicketCategoryModel, UpdateTicketCategoryModel,
+    GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, GetAllTicketCategoriesResponseModel,
+    CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultResponseModel, CreateTicketCategoryResponseModel,
+    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultResponseModel, UpdateTicketCategoryResponseModel,
     IdRequestModel, CompanyIdRequestModel
 } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -268,6 +268,43 @@ export class MastersController {
     async deleteExpenseCategory(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {
             return await this.mastersService.deleteExpenseCategory(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    // Password Vaults
+    @Post('getAllPasswordVaults')
+    async getAllPasswordVaults(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllPasswordVaultsResponseModel> {
+        try {
+            return await this.mastersService.getAllPasswordVaults(reqModel);
+        } catch (error) {
+            return returnException(GetAllPasswordVaultsResponseModel, error);
+        }
+    }
+
+    @Post('password-vaults')
+    async createPasswordVault(@Body() data: CreatePasswordVaultModel): Promise<CreatePasswordVaultResponseModel> {
+        try {
+            return await this.mastersService.createPasswordVault(data);
+        } catch (error) {
+            return returnException(CreatePasswordVaultResponseModel, error);
+        }
+    }
+
+    @Post('updatePasswordVault')
+    async updatePasswordVault(@Body() data: UpdatePasswordVaultModel): Promise<UpdatePasswordVaultResponseModel> {
+        try {
+            return await this.mastersService.updatePasswordVault(data);
+        } catch (error) {
+            return returnException(UpdatePasswordVaultResponseModel, error);
+        }
+    }
+
+    @Post('deletePasswordVault')
+    async deletePasswordVault(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+        try {
+            return await this.mastersService.deletePasswordVault(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

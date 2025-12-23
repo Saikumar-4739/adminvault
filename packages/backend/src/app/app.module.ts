@@ -17,6 +17,8 @@ import { DatabaseModule } from '../database/database.module';
 import { EmailAccountsModule } from './features/email-accounts/email-accounts.module';
 import { ReportsModule } from './features/reports/reports.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
+import { SlackUsersModule } from './features/slack-users/slack-users.module';
+import { DocumentsModule } from './features/documents/documents.module';
 
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -42,6 +44,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     EmailAccountsModule,
     ReportsModule,
     DashboardModule,
+    SlackUsersModule,
+    DocumentsModule,
   ],
   controllers: [AppController],
   providers: [

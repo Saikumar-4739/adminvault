@@ -2,12 +2,25 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AssetInfoService } from './asset-info.service';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel } from '@adminvault/shared-models';
+import { AssetTabsService } from './asset-tabs.service';
+import {
+    CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel,
+    AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel,
+    GetStoreAssetsRequestModel, GetStoreAssetsResponseModel,
+    GetReturnAssetsRequestModel, GetReturnAssetsResponseModel,
+    ProcessReturnRequestModel, ProcessReturnResponseModel,
+    GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel,
+    CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel,
+    AssignFromQueueRequestModel, AssignFromQueueResponseModel
+} from '@adminvault/shared-models';
 
 @ApiTags('Asset Info')
 @Controller('asset-info')
 export class AssetInfoController {
-    constructor(private service: AssetInfoService) { }
+    constructor(
+        private service: AssetInfoService,
+        private assetTabsService: AssetTabsService
+    ) { }
 
     @Post('createAsset')
     @ApiBody({ type: CreateAssetModel })
@@ -86,6 +99,64 @@ export class AssetInfoController {
             return await this.service.getAssetsWithAssignments(companyId);
         } catch (error) {
             return returnException(GetAssetsWithAssignmentsResponseModel, error);
+        }
+    }
+
+    // ============================================
+    // ASSET TABS ENDPOINTS
+    // ============================================
+
+    @Post('store-assets')
+    async getStoreAssets(@Body() reqModel: GetStoreAssetsRequestModel): Promise<GetStoreAssetsResponseModel> {
+        try {
+            return await this.assetTabsService.getStoreAssets(reqModel);
+        } catch (error) {
+            return returnException(GetStoreAssetsResponseModel, error);
+        }
+    }
+
+    @Post('return-assets')
+    async getReturnAssets(@Body() reqModel: GetReturnAssetsRequestModel): Promise<GetReturnAssetsResponseModel> {
+        try {
+            return await this.assetTabsService.getReturnAssets(reqModel);
+        } catch (error) {
+            return returnException(GetReturnAssetsResponseModel, error);
+        }
+    }
+
+    @Post('process-return')
+    async processReturn(@Body() reqModel: ProcessReturnRequestModel): Promise<ProcessReturnResponseModel> {
+        try {
+            return await this.assetTabsService.processReturn(reqModel);
+        } catch (error) {
+            return returnException(ProcessReturnResponseModel, error);
+        }
+    }
+
+    @Post('next-assignments')
+    async getNextAssignments(@Body() reqModel: GetNextAssignmentsRequestModel): Promise<GetNextAssignmentsResponseModel> {
+        try {
+            return await this.assetTabsService.getNextAssignments(reqModel);
+        } catch (error) {
+            return returnException(GetNextAssignmentsResponseModel, error);
+        }
+    }
+
+    @Post('create-next-assignment')
+    async createNextAssignment(@Body() reqModel: CreateNextAssignmentRequestModel): Promise<CreateNextAssignmentResponseModel> {
+        try {
+            return await this.assetTabsService.createNextAssignment(reqModel);
+        } catch (error) {
+            return returnException(CreateNextAssignmentResponseModel, error);
+        }
+    }
+
+    @Post('assign-from-queue')
+    async assignFromQueue(@Body() reqModel: AssignFromQueueRequestModel): Promise<AssignFromQueueResponseModel> {
+        try {
+            return await this.assetTabsService.assignFromQueue(reqModel);
+        } catch (error) {
+            return returnException(AssignFromQueueResponseModel, error);
         }
     }
 }

@@ -36,7 +36,7 @@ export function ConfirmDialog({
         },
         warning: {
             icon: 'text-yellow-500',
-            button: 'warning' as const,
+            button: 'primary' as const,
         },
         info: {
             icon: 'text-blue-500',

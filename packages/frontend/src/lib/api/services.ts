@@ -3,6 +3,7 @@ import {
     CompanyInfoService,
     EmployeesService,
     AssetInfoService,
+    AssetTabsService,
     DeviceInfoService,
     EmailInfoService,
     TicketsService,
@@ -13,7 +14,9 @@ import {
     LicensesService,
     EmailAccountsService,
     ReportsService,
-    DashboardService
+    DashboardService,
+    SlackUsersService,
+    DocumentsService
 } from '@adminvault/shared-services';
 
 // Create singleton instances
@@ -21,6 +24,7 @@ export const authService = new AuthUserHelperService();
 export const companyService = new CompanyInfoService();
 export const employeeService = new EmployeesService();
 export const assetService = new AssetInfoService();
+export const assetTabsService = new AssetTabsService();
 export const deviceService = new DeviceInfoService();
 export const emailService = new EmailInfoService();
 export const ticketService = new TicketsService();
@@ -32,12 +36,15 @@ export const ticketCategoryService = new TicketCategoryService();
 export const licensesService = new LicensesService();
 export const emailAccountsService = new EmailAccountsService();
 export const reportsService = new ReportsService();
+export const slackUsersService = new SlackUsersService();
+export const documentsService = new DocumentsService();
 
 export const services = {
     auth: authService,
     company: companyService,
     employee: employeeService,
     asset: assetService,
+    assetTabs: assetTabsService,
     device: deviceService,
     email: emailService,
     ticket: ticketService,
@@ -47,5 +54,7 @@ export const services = {
     ticketCategory: ticketCategoryService,
     licenses: licensesService,
     emailAccounts: emailAccountsService,
-    reports: reportsService
+    reports: reportsService,
+    slackUsers: slackUsersService,
+    documents: documentsService
 };

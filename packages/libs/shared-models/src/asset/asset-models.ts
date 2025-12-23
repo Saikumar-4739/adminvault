@@ -7,6 +7,8 @@ export class CreateAssetModel {
     brandId?: number;
     model?: string;
     serialNumber: string;
+    expressCode?: string;
+    boxNo?: string;
     configuration?: string;
     assignedToEmployeeId?: number;
     previousUserEmployeeId?: number;
@@ -29,13 +31,17 @@ export class CreateAssetModel {
         assignedToEmployeeId?: number,
         previousUserEmployeeId?: number,
         userAssignedDate?: string,
-        lastReturnDate?: string
+        lastReturnDate?: string,
+        expressCode?: string,
+        boxNo?: string
     ) {
         this.companyId = companyId;
         this.deviceId = deviceId;
         this.brandId = brandId;
         this.model = model;
         this.serialNumber = serialNumber;
+        this.expressCode = expressCode;
+        this.boxNo = boxNo;
         this.configuration = configuration;
         this.assignedToEmployeeId = assignedToEmployeeId;
         this.previousUserEmployeeId = previousUserEmployeeId;
@@ -64,9 +70,11 @@ export class UpdateAssetModel extends CreateAssetModel {
         assignedToEmployeeId?: number,
         previousUserEmployeeId?: number,
         userAssignedDate?: string,
-        lastReturnDate?: string
+        lastReturnDate?: string,
+        expressCode?: string,
+        boxNo?: string
     ) {
-        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, brandId, model, configuration, assignedToEmployeeId, previousUserEmployeeId, userAssignedDate, lastReturnDate);
+        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, brandId, model, configuration, assignedToEmployeeId, previousUserEmployeeId, userAssignedDate, lastReturnDate, expressCode, boxNo);
         this.id = id;
     }
 }
@@ -92,6 +100,8 @@ export class AssetResponseModel {
     brandId?: number;
     model?: string;
     serialNumber: string;
+    expressCode?: string;
+    boxNo?: string;
     configuration?: string;
     assignedToEmployeeId?: number;
     previousUserEmployeeId?: number;
@@ -119,7 +129,9 @@ export class AssetResponseModel {
         assignedToEmployeeId?: number,
         previousUserEmployeeId?: number,
         userAssignedDate?: Date,
-        lastReturnDate?: Date
+        lastReturnDate?: Date,
+        expressCode?: string,
+        boxNo?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -127,6 +139,8 @@ export class AssetResponseModel {
         this.brandId = brandId;
         this.model = model;
         this.serialNumber = serialNumber;
+        this.expressCode = expressCode;
+        this.boxNo = boxNo;
         this.configuration = configuration;
         this.assignedToEmployeeId = assignedToEmployeeId;
         this.previousUserEmployeeId = previousUserEmployeeId;

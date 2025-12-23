@@ -7,8 +7,9 @@ import { VendorRepository } from '../../repository/masters/vendor.repository';
 import { LocationRepository } from '../../repository/masters/location.repository';
 import { TicketCategoryRepository } from '../../repository/masters/ticket-category.repository';
 import { CompanyInfoRepository } from '../../repository/company-info.repository';
+import { PasswordVaultRepository } from '../../repository/masters/password-vault.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
-import { CreateDepartmentModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel, CreateAssetTypeModel, CreateBrandModel, CreateApplicationModel, CreateExpenseCategoryModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel, UpdateLocationModel, UpdateTicketCategoryModel, UpdateApplicationModel, UpdateExpenseCategoryModel, GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateLocationResponseModel, CreateTicketCategoryResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateLocationResponseModel, UpdateTicketCategoryResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateDepartmentModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel, CreateAssetTypeModel, CreateBrandModel, CreateApplicationModel, CreateExpenseCategoryModel, CreatePasswordVaultModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel, UpdateLocationModel, UpdateTicketCategoryModel, UpdateApplicationModel, UpdateExpenseCategoryModel, UpdatePasswordVaultModel, GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateLocationResponseModel, CreateTicketCategoryResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultResponseModel, UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateLocationResponseModel, UpdateTicketCategoryResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { DepartmentsMasterEntity } from '../../entities/masters/department.entity';
 import { AssetTypeMasterEntity } from '../../entities/masters/asset-type.entity';
 import { BrandsMasterEntity } from '../../entities/masters/brand.entity';
@@ -17,6 +18,7 @@ import { LocationsMasterEntity } from '../../entities/masters/location.entity';
 import { TicketCategoriesMasterEntity } from '../../entities/masters/ticket-category.entity';
 import { ApplicationsMasterEntity } from '../../entities/masters/application.entity';
 import { ExpenseCategoriesMasterEntity } from '../../entities/masters/expense-category.entity';
+import { PasswordVaultMasterEntity } from '../../entities/masters/password-vault.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 
 @Injectable()
@@ -30,6 +32,7 @@ export class MastersService {
         private locationRepo: LocationRepository,
         private ticketCatRepo: TicketCategoryRepository,
         private companyRepo: CompanyInfoRepository,
+        private passwordVaultRepo: PasswordVaultRepository,
     ) { }
 
     // Departments
@@ -571,6 +574,76 @@ export class MastersService {
         } catch (error) {
             await transManager.releaseTransaction();
             throw new ErrorResponse(500, 'Failed to delete Expense Category');
+        }
+    }
+
+    // Password Vaults
+    async getAllPasswordVaults(reqModel: CompanyIdRequestModel): Promise<GetAllPasswordVaultsResponseModel> {
+        try {
+            const passwordVaults = await this.passwordVaultRepo.find({ where: { companyId: reqModel.id } });
+            return new GetAllPasswordVaultsResponseModel(true, 200, 'Password Vaults retrieved successfully', passwordVaults);
+        } catch (error) {
+            throw new ErrorResponse(500, 'Failed to fetch Password Vaults');
+        }
+    }
+
+    async createPasswordVault(data: CreatePasswordVaultModel): Promise<CreatePasswordVaultResponseModel> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(PasswordVaultMasterEntity);
+            const newItem = repo.create(data);
+            const savedItem = await repo.save(newItem);
+            await transManager.completeTransaction();
+            return new CreatePasswordVaultResponseModel(true, 201, 'Password Vault created successfully', savedItem);
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw new ErrorResponse(500, 'Failed to create Password Vault');
+        }
+    }
+
+    async updatePasswordVault(data: UpdatePasswordVaultModel): Promise<UpdatePasswordVaultResponseModel> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            const existing = await this.passwordVaultRepo.findOne({ where: { id: data.id } });
+            if (!existing) {
+                throw new ErrorResponse(404, 'Password Vault not found');
+            }
+
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(PasswordVaultMasterEntity);
+            await repo.update(data.id, {
+                name: data.name,
+                password: data.password,
+                description: data.description,
+                isActive: data.isActive,
+                username: data.username,
+                url: data.url,
+                notes: data.notes
+            });
+            const updated = await repo.findOne({ where: { id: data.id } });
+            if (!updated) {
+                throw new ErrorResponse(500, 'Failed to retrieve updated password vault');
+            }
+            await transManager.completeTransaction();
+            return new UpdatePasswordVaultResponseModel(true, 200, 'Password Vault updated successfully', updated);
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update Password Vault');
+        }
+    }
+
+    async deletePasswordVault(reqModel: IdRequestModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(PasswordVaultMasterEntity);
+            await repo.delete(reqModel.id);
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 200, 'Password Vault deleted successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw new ErrorResponse(500, 'Failed to delete Password Vault');
         }
     }
 

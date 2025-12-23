@@ -23,6 +23,11 @@ import { ApplicationsMasterEntity } from '../app/entities/masters/application.en
 import { ExpenseCategoriesMasterEntity } from '../app/entities/masters/expense-category.entity';
 import { UserLoginSessionsEntity } from '../app/entities/user-login-sessions.entity';
 import { CompanyLicenseEntity } from '../app/entities/company-license.entity';
+import { SlackUserEntity } from '../app/entities/slack-user.entity';
+import { DocumentEntity } from '../app/entities/document.entity';
+import { PasswordVaultMasterEntity } from '../app/entities/masters/password-vault.entity';
+import { AssetNextAssignmentEntity } from '../app/entities/asset-next-assignment.entity';
+import { AssetReturnHistoryEntity } from '../app/entities/asset-return-history.entity';
 
 @Module({
     imports: [
@@ -59,6 +64,11 @@ import { CompanyLicenseEntity } from '../app/entities/company-license.entity';
                     ExpenseCategoriesMasterEntity,
                     UserLoginSessionsEntity,
                     CompanyLicenseEntity,
+                    SlackUserEntity,
+                    DocumentEntity,
+                    PasswordVaultMasterEntity,
+                    AssetNextAssignmentEntity,
+                    AssetReturnHistoryEntity,
                 ],
                 synchronize: false,
                 logging: configService.get<string>('NODE_ENV') !== 'production',

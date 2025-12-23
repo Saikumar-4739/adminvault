@@ -4,7 +4,7 @@
   "include": [],
   "compilerOptions": {
     "module": "nodenext",
-    "moduleResolution": "node"
+    "moduleResolution": "nodenext"
   },
   "references": [
     {

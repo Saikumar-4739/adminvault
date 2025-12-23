@@ -1,7 +1,7 @@
 import {
-    CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, CreateApplicationModel, CreateApplicationResponseModel, CreateExpenseCategoryModel, CreateExpenseCategoryResponseModel,
-    GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel,
-    GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateBrandModel, UpdateBrandResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, UpdateTicketCategoryModel, UpdateTicketCategoryResponseModel, UpdateVendorModel, UpdateVendorResponseModel, UpdateApplicationModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel
+    CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, CreateApplicationModel, CreateApplicationResponseModel, CreateExpenseCategoryModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultModel, CreatePasswordVaultResponseModel,
+    GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel,
+    GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateBrandModel, UpdateBrandResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, UpdateTicketCategoryModel, UpdateTicketCategoryResponseModel, UpdateVendorModel, UpdateVendorResponseModel, UpdateApplicationModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultModel, UpdatePasswordVaultResponseModel
 } from '@adminvault/shared-models';
 import { CommonAxiosService } from '../common-axios-service';
 
@@ -193,6 +193,31 @@ export class MastersService extends CommonAxiosService {
     async deleteExpenseCategory(id: number): Promise<GlobalResponse> {
         return await this.axiosPostCall(
             `${this.BASE_PATH}/deleteExpenseCategory`,
+            new IdRequestModel(id)
+        );
+    }
+
+    // ============================================
+    // PASSWORD VAULTS
+    // ============================================
+    async getAllPasswordVaults(companyId: number): Promise<GetAllPasswordVaultsResponseModel> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/getAllPasswordVaults`,
+            new CompanyIdRequestModel(companyId)
+        );
+    }
+
+    async createPasswordVault(data: CreatePasswordVaultModel): Promise<CreatePasswordVaultResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/password-vaults`, data);
+    }
+
+    async updatePasswordVault(data: UpdatePasswordVaultModel): Promise<UpdatePasswordVaultResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/updatePasswordVault`, data);
+    }
+
+    async deletePasswordVault(id: number): Promise<GlobalResponse> {
+        return await this.axiosPostCall(
+            `${this.BASE_PATH}/deletePasswordVault`,
             new IdRequestModel(id)
         );
     }

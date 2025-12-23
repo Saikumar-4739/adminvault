@@ -7,8 +7,11 @@ export * from './device';
 export * from './masters/master-models';
 export * from './email';
 export * from './asset';
+export * from './asset/asset-tabs-models';
 export * from './asset-assign';
 export * from './it-admin';
+export * from './slack-user/slack-user-models';
+export * from './document/document-models';
 export * from './ticket';
 
 // Re-export commonly used types from backend-utils

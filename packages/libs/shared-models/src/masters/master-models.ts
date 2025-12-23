@@ -62,6 +62,13 @@ export interface ExpenseCategory extends MasterBase {
     budgetLimit?: number;
 }
 
+export interface PasswordVault extends MasterBase {
+    password: string;
+    username?: string;
+    url?: string;
+    notes?: string;
+}
+
 // ============================================
 // REQUEST MODELS - CREATE
 // ============================================
@@ -178,6 +185,21 @@ export class CreateExpenseCategoryModel extends CreateMasterModel {
         super(userId, companyId, name, description, isActive, id);
         this.categoryType = categoryType;
         this.budgetLimit = budgetLimit;
+    }
+}
+
+export class CreatePasswordVaultModel extends CreateMasterModel {
+    password: string;
+    username?: string;
+    url?: string;
+    notes?: string;
+
+    constructor(userId: number, companyId: number, name: string, password: string, description?: string, isActive?: boolean, username?: string, url?: string, notes?: string, id?: number) {
+        super(userId, companyId, name, description, isActive, id);
+        this.password = password;
+        this.username = username;
+        this.url = url;
+        this.notes = notes;
     }
 }
 
@@ -330,6 +352,28 @@ export class UpdateExpenseCategoryModel {
     }
 }
 
+export class UpdatePasswordVaultModel {
+    id: number;
+    name: string;
+    password: string;
+    description?: string;
+    isActive: boolean;
+    username?: string;
+    url?: string;
+    notes?: string;
+
+    constructor(id: number, name: string, password: string, description?: string, isActive: boolean = true, username?: string, url?: string, notes?: string) {
+        this.id = id;
+        this.name = name;
+        this.password = password;
+        this.description = description;
+        this.isActive = isActive;
+        this.username = username;
+        this.url = url;
+        this.notes = notes;
+    }
+}
+
 // ============================================
 // RESPONSE MODELS - GET ALL
 // ============================================
@@ -411,6 +455,15 @@ export class GetAllExpenseCategoriesResponseModel extends GlobalResponse {
     constructor(status: boolean, code: number, message: string, expenseCategories: ExpenseCategory[]) {
         super(status, code, message);
         this.expenseCategories = expenseCategories;
+    }
+}
+
+export class GetAllPasswordVaultsResponseModel extends GlobalResponse {
+    passwordVaults: PasswordVault[];
+
+    constructor(status: boolean, code: number, message: string, passwordVaults: PasswordVault[]) {
+        super(status, code, message);
+        this.passwordVaults = passwordVaults;
     }
 }
 
@@ -498,6 +551,15 @@ export class CreateExpenseCategoryResponseModel extends GlobalResponse {
     }
 }
 
+export class CreatePasswordVaultResponseModel extends GlobalResponse {
+    passwordVault: PasswordVault;
+
+    constructor(status: boolean, code: number, message: string, passwordVault: PasswordVault) {
+        super(status, code, message);
+        this.passwordVault = passwordVault;
+    }
+}
+
 // ============================================
 // RESPONSE MODELS - UPDATE (Single Item)
 // ============================================
@@ -570,6 +632,15 @@ export class UpdateExpenseCategoryResponseModel extends GlobalResponse {
     constructor(status: boolean, code: number, message: string, expenseCategory: ExpenseCategory) {
         super(status, code, message);
         this.expenseCategory = expenseCategory;
+    }
+}
+
+export class UpdatePasswordVaultResponseModel extends GlobalResponse {
+    passwordVault: PasswordVault;
+
+    constructor(status: boolean, code: number, message: string, passwordVault: PasswordVault) {
+        super(status, code, message);
+        this.passwordVault = passwordVault;
     }
 }
 

@@ -30,17 +30,9 @@ export default function LicensesPage() {
     // Fetch applications from masters
     const { applications, fetchApplications } = useMasters();
 
-    const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+    const [selectedCompanyId, setSelectedCompanyId] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({
-        applicationId: '',
-        companyId: '',
-        expiryDate: '',
-        assignedDate: '',
-        remarks: '',
-        assignedEmployeeId: ''
-    });
 
     useEffect(() => {
         fetchApplications();
@@ -49,23 +41,7 @@ export default function LicensesPage() {
 
 
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        await createLicense({
-            ...formData,
-            companyId: Number(formData.companyId || selectedCompanyId),
-            applicationId: Number(formData.applicationId),
-            assignedDate: formData.assignedDate,
-            expiryDate: formData.expiryDate,
-            remarks: formData.remarks,
-            assignedEmployeeId: formData.assignedEmployeeId ? Number(formData.assignedEmployeeId) : null
-        });
-        setIsModalOpen(false);
-        setFormData({
-            applicationId: '', companyId: '',
-            expiryDate: '', assignedDate: '', remarks: '', assignedEmployeeId: ''
-        });
-    };
+
 
     const filteredLicenses = licenses.filter(l =>
         (selectedCompanyId ? l.companyId === Number(selectedCompanyId) : true) &&

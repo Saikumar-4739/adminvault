@@ -16,6 +16,8 @@ import { LocationsMasterEntity } from '../../entities/masters/location.entity';
 import { TicketCategoriesMasterEntity } from '../../entities/masters/ticket-category.entity';
 import { ApplicationsMasterEntity } from '../../entities/masters/application.entity';
 import { ExpenseCategoriesMasterEntity } from '../../entities/masters/expense-category.entity';
+import { PasswordVaultMasterEntity } from '../../entities/masters/password-vault.entity';
+import { PasswordVaultRepository } from '../../repository/masters/password-vault.repository';
 import { CompanyInfoRepository } from '../../repository';
 
 @Module({
@@ -28,7 +30,8 @@ import { CompanyInfoRepository } from '../../repository';
             LocationsMasterEntity,
             TicketCategoriesMasterEntity,
             ApplicationsMasterEntity,
-            ExpenseCategoriesMasterEntity
+            ExpenseCategoriesMasterEntity,
+            PasswordVaultMasterEntity
         ])
     ],
     controllers: [MastersController],
@@ -40,7 +43,8 @@ import { CompanyInfoRepository } from '../../repository';
         VendorRepository,
         LocationRepository,
         TicketCategoryRepository,
-        CompanyInfoRepository
+        CompanyInfoRepository,
+        PasswordVaultRepository
     ],
     exports: [MastersService]
 })

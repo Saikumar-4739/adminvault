@@ -17,6 +17,12 @@ export class AssetInfoEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'serial_number', length: 255, nullable: false, unique: true, comment: 'Asset serial number / Service Tag' })
     serialNumber: string;
 
+    @Column('varchar', { name: 'express_code', length: 255, nullable: true, comment: 'Dell Express Service Code' })
+    expressCode: string;
+
+    @Column('varchar', { name: 'box_no', length: 100, nullable: true, comment: 'Physical box/storage location number' })
+    boxNo: string;
+
     @Column('text', { name: 'configuration', nullable: true, comment: 'Asset configuration details' })
     configuration: string;
 

@@ -3,8 +3,8 @@
 import { useState, useCallback } from 'react';
 import { mastersService } from '@/lib/api/services';
 import {
-    Department, AssetType, DeviceBrand, Vendor, Location, TicketCategory, Application,
-    CreateDepartmentModel, CreateMasterModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel, CreateBrandModel, CreateApplicationModel, CreateExpenseCategoryModel
+    Department, AssetType, DeviceBrand, Vendor, Location, TicketCategory, Application, PasswordVault,
+    CreateDepartmentModel, CreateMasterModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel, CreateBrandModel, CreateApplicationModel, CreateExpenseCategoryModel, CreatePasswordVaultModel
 } from '@adminvault/shared-models';
 
 export function useMasters() {
@@ -15,6 +15,7 @@ export function useMasters() {
     const [locations, setLocations] = useState<Location[]>([]);
     const [ticketCategories, setTicketCategories] = useState<TicketCategory[]>([]);
     const [applications, setApplications] = useState<Application[]>([]);
+    const [passwordVaults, setPasswordVaults] = useState<PasswordVault[]>([]);
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -444,6 +445,39 @@ export function useMasters() {
         try { await mastersService.deleteExpenseCategory(id); fetchExpenseCategories(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
     };
 
+    // Password Vaults
+    const fetchPasswordVaults = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await mastersService.getAllPasswordVaults(getCompanyId());
+            if (res.status && res.passwordVaults) setPasswordVaults(res.passwordVaults);
+        } catch (e) { } finally { setIsLoading(false); }
+    }, []);
+
+    const createPasswordVault = async (data: any) => {
+        setIsLoading(true);
+        try {
+            const model = new CreatePasswordVaultModel(getUserId(), getCompanyId(), data.name, data.password, data.description, true, data.username, data.url, data.notes);
+            const res = await mastersService.createPasswordVault(model);
+            if (res.status) { fetchPasswordVaults(); return true; }
+            return false;
+        } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
+    const updatePasswordVault = async (data: any) => {
+        setIsLoading(true);
+        try {
+            const res = await mastersService.updatePasswordVault(data);
+            if (res.status) { fetchPasswordVaults(); return true; }
+            return false;
+        } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
+    const deletePasswordVault = async (id: number) => {
+        setIsLoading(true);
+        try { await mastersService.deletePasswordVault(id); fetchPasswordVaults(); return true; } catch (e) { return false; } finally { setIsLoading(false); }
+    };
+
     return {
         departments, fetchDepartments, createDepartment, updateDepartment, deleteDepartment,
         assetTypes, fetchAssetTypes, createAssetType, updateAssetType, deleteAssetType,
@@ -453,6 +487,7 @@ export function useMasters() {
         ticketCategories, fetchTicketCategories, createTicketCategory, updateTicketCategory, deleteTicketCategory,
         applications, fetchApplications, createApplication, updateApplication, deleteApplication,
         expenseCategories, fetchExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory,
+        passwordVaults, fetchPasswordVaults, createPasswordVault, updatePasswordVault, deletePasswordVault,
         isLoading
     };
 }

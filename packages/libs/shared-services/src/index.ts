@@ -6,6 +6,7 @@ export * from './auth/auth-helper-service';
 export * from './company/company-info-service';
 export * from './employees/employees-service';
 export * from './assets/asset-info-service';
+export * from './assets/asset-tabs-service';
 export * from './devices/device-info-service';
 export * from './email/email-info-service';
 export * from './tickets/tickets-service';
@@ -19,4 +20,6 @@ export * from './types/geolocation.types';
 export * from './email-accounts/email-accounts.service';
 export * from './reports/reports.service';
 export * from './dashboard/dashboard.service';
+export * from './slack-users/slack-users-service';
+export * from './documents/documents-service';
 
