@@ -5,21 +5,21 @@ import { CommonBaseEntity } from '../common-base.entity';
 @Index('idx_location_name', ['name'])
 export class LocationsMasterEntity extends CommonBaseEntity {
 
-    @Column({ nullable: false, type: 'varchar' })
+    @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Location name' })
     name: string;
 
-    @Column({ nullable: true, type: 'text' })
+    @Column('text', { name: 'description', nullable: true, comment: 'Location description' })
     description: string;
 
-    @Column({ nullable: false, type: 'boolean', default: true })
+    @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether location is active' })
     isActive: boolean;
 
-    @Column({ nullable: true })
+    @Column('text', { name: 'address', nullable: true, comment: 'Location address' })
     address: string;
 
-    @Column({ nullable: true })
+    @Column('varchar', { name: 'city', length: 100, nullable: true, comment: 'Location city' })
     city: string;
 
-    @Column({ nullable: true })
+    @Column('varchar', { name: 'country', length: 100, nullable: true, comment: 'Location country' })
     country: string;
 }

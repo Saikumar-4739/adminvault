@@ -5,7 +5,7 @@ import { AssetReturnHistoryRepository } from '../../repository/asset-return-hist
 import { AssetNextAssignmentRepository } from '../../repository/asset-next-assignment.repository';
 import { AssetInfoEntity } from '../../entities/asset-info.entity';
 import { AssetReturnHistoryEntity } from '../../entities/asset-return-history.entity';
-import { AssetNextAssignmentEntity, NextAssignmentStatusEnum, AssignmentPriorityEnum } from '../../entities/asset-next-assignment.entity';
+import { AssetNextAssignmentEntity } from '../../entities/asset-next-assignment.entity';
 import { ErrorResponse } from '@adminvault/backend-utils';
 import {
     GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, StoreAssetModel,
@@ -14,7 +14,8 @@ import {
     GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, NextAssignmentModel,
     CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel,
     AssignFromQueueRequestModel, AssignFromQueueResponseModel,
-    AssetStatusEnum, NextAssignmentStatus, AssignmentPriority
+    AssetStatusEnum, NextAssignmentStatus, AssignmentPriority,
+    NextAssignmentStatusEnum, AssignmentPriorityEnum
 } from '@adminvault/shared-models';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 
@@ -156,7 +157,6 @@ export class AssetTabsService {
             returnHistory.assetCondition = reqModel.assetCondition || '';
             returnHistory.remarks = reqModel.remarks || '';
             returnHistory.userId = reqModel.userId;
-            returnHistory.companyId = reqModel.companyId;
 
             // Get asset allocation date
             const asset = await this.assetInfoRepo.findOne({ where: { id: reqModel.assetId } });
@@ -259,7 +259,6 @@ export class AssetTabsService {
             assignment.remarks = reqModel.remarks || '';
             assignment.status = NextAssignmentStatusEnum.PENDING;
             assignment.userId = reqModel.userId;
-            assignment.companyId = reqModel.companyId;
             assignment.requestedById = reqModel.userId;
 
             const saved = await transManager.getRepository(AssetNextAssignmentEntity).save(assignment);

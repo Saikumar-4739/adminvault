@@ -8,7 +8,8 @@
         "cacheableOperations": [
           "build",
           "typecheck"
-        ]
+        ],
+        "outputStyle": "stream"
       }
     }
   },
@@ -68,7 +69,8 @@
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps",
         "serveStaticTargetName": "serve-static"
-      }
+      },
+      "console": "inlineOutputOnly"
     },
     {
       "plugin": "@nx/js/typescript",

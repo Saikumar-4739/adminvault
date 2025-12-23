@@ -28,6 +28,9 @@
       ],
       "@adminvault/backend-utils": [
         "./packages/libs/backend-utils/src/index.ts"
+      ],
+      "@adminvault/shared-services": [
+        "./packages/libs/shared-services/src/index.ts"
       ]
     }
   }

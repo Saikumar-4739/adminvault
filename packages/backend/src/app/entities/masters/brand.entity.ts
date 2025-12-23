@@ -5,27 +5,27 @@ import { CommonBaseEntity } from '../common-base.entity';
 @Index('idx_brand_name', ['name'])
 export class BrandsMasterEntity extends CommonBaseEntity {
 
-    @Column({ nullable: false, type: 'varchar' })
+    @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Brand name' })
     name: string;
 
-    @Column({ nullable: true, type: 'text' })
+    @Column('text', { name: 'description', nullable: true, comment: 'Brand description' })
     description: string;
 
-    @Column({ nullable: false, type: 'boolean', default: true })
+    @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether brand is active' })
     isActive: boolean;
 
-    @Column({ nullable: true, type: 'varchar' })
+    @Column('varchar', { name: 'status', length: 100, nullable: true, comment: 'Brand status' })
     status: string;
 
-    @Column({ nullable: true })
+    @Column('varchar', { name: 'logo', length: 500, nullable: true, comment: 'Brand logo URL' })
     logo: string;
 
-    @Column({ nullable: true })
+    @Column('varchar', { name: 'code', length: 50, nullable: true, comment: 'Brand code' })
     code: string;
 
-    @Column({ nullable: true })
+    @Column('varchar', { name: 'website', length: 500, nullable: true, comment: 'Brand website URL' })
     website: string;
 
-    @Column({ nullable: true, type: 'decimal', precision: 3, scale: 2 })
+    @Column('decimal', { name: 'rating', precision: 3, scale: 2, nullable: true, comment: 'Brand rating (0-5)' })
     rating: number;
 }

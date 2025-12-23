@@ -38,7 +38,7 @@ NODE_ENV=development
 **Important:** The backend depends on shared libraries that must be built first.
 
 ```bash
-npm run serve:backend
+npm run dev:backend
 ```
 
 This command will:

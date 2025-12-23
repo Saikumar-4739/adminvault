@@ -4,20 +4,14 @@ import { CompanyInfoEntity } from './company-info.entity';
 import { ApplicationsMasterEntity } from './masters/application.entity';
 import { EmployeesEntity } from './employees.entity';
 
-@Entity('company_licenses')
+@Entity('licenses')
 @Index('idx_license_app', ['applicationId'])
 @Index('idx_license_employee', ['assignedEmployeeId'])
 @Index('idx_license_expiry', ['expiryDate'])
 export class CompanyLicenseEntity extends CommonBaseEntity {
-    @Column({ name: 'company_id', nullable: false })
-    override companyId: number;
 
     @Column({ name: 'application_id', nullable: false })
     applicationId: number;
-
-
-
-    // Previous licenseKey removed as per user request
 
     @Column({ name: 'assigned_date', type: 'date', nullable: true })
     assignedDate: Date;

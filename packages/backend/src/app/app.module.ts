@@ -19,6 +19,7 @@ import { ReportsModule } from './features/reports/reports.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { SlackUsersModule } from './features/slack-users/slack-users.module';
 import { DocumentsModule } from './features/documents/documents.module';
+import configuration from '../config/configuration';
 
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -28,6 +29,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      load: [configuration],
     }),
     DatabaseModule,
     CompanyInfoModule,

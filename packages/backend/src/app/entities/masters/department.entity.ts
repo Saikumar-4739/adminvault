@@ -6,25 +6,21 @@ import { CompanyInfoEntity } from '../company-info.entity';
 @Index('idx_dept_name', ['name'])
 export class DepartmentsMasterEntity extends CommonBaseEntity {
 
-    @Column({ nullable: false, type: 'varchar' })
+    @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Department name' })
     name: string;
 
-    @Column({ nullable: true, type: 'text' })
+    @Column('text', { name: 'description', nullable: true, comment: 'Department description' })
     description: string;
 
-    @Column({ nullable: false, type: 'boolean', default: true })
+    @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether department is active' })
     isActive: boolean;
 
-    @Column({ nullable: true, type: 'varchar' })
+    @Column('varchar', { name: 'status', length: 100, nullable: true, comment: 'Department status' })
     status: string;
 
-    @Column({ nullable: true, type: 'varchar' })
+    @Column('varchar', { name: 'level', length: 100, nullable: true, comment: 'Department level in hierarchy' })
     level: string;
 
-    @Column({ nullable: true, type: 'varchar' })
+    @Column('varchar', { name: 'code', length: 50, nullable: true, comment: 'Department code' })
     code: string;
-
-    @ManyToOne(() => CompanyInfoEntity)
-    @JoinColumn({ name: 'companyId' })
-    company: CompanyInfoEntity;
 }

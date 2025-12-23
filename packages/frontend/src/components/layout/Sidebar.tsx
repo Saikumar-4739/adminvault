@@ -16,15 +16,15 @@ interface NavigationItem {
 
 const allNavigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'System Config', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
-    { name: 'Inventory', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Configuration', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
+    { name: 'Assets', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Licenses', href: '/licenses', icon: KeySquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Password Vault', href: '/password-vault', icon: Lock, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Support Tickets', href: '/tickets', icon: Ticket },
-    { name: 'Email Setup', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
+    { name: 'Vault', href: '/password-vault', icon: Lock, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Tickets', href: '/tickets', icon: Ticket },
+    { name: 'Email Info', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
     { name: 'Slack Users', href: '/slack-users', icon: MessageSquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Documents', href: '/documents', icon: FileText, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'User Directory', href: '/employees', icon: Users, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Employees', href: '/employees', icon: Users, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'All Reports', href: '/reports', icon: PieChart, roles: [UserRoleEnum.ADMIN] },
 ];
 

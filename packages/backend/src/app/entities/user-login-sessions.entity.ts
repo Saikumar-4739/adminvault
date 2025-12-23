@@ -5,7 +5,6 @@ import { CommonBaseEntity } from './common-base.entity';
 @Index('idx_session_user', ['userId'])
 @Index('idx_session_ip', ['ipAddress'])
 @Index('idx_session_time', ['loginTimestamp'])
-@Index('idx_session_company', ['companyId'])
 export class UserLoginSessionsEntity extends CommonBaseEntity {
     @Column('text', { name: 'session_token', nullable: true, comment: 'Unique session identifier / JWT' })
     sessionToken: string;

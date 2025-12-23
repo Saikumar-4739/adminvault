@@ -2,7 +2,6 @@ import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from './common-base.entity';
 
 @Entity('slack_users')
-@Index('idx_slack_user_company', ['companyId'])
 @Index('idx_slack_user_email', ['email'])
 @Index('idx_slack_user_slack_id', ['slackUserId'])
 export class SlackUserEntity extends CommonBaseEntity {

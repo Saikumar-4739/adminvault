@@ -5,18 +5,18 @@ import { CommonBaseEntity } from '../common-base.entity';
 @Index('idx_ticket_cat_name', ['name'])
 export class TicketCategoriesMasterEntity extends CommonBaseEntity {
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Ticket category name' })
     name: string;
 
-    @Column({ type: 'text', nullable: true })
+    @Column('text', { name: 'description', nullable: true, comment: 'Ticket category description' })
     description: string;
 
-    @Column({ type: 'tinyint', default: 1 })
+    @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether ticket category is active' })
     isActive: boolean;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
+    @Column('varchar', { name: 'status', length: 255, nullable: true, comment: 'Ticket category status' })
     status: string;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
+    @Column('varchar', { name: 'default_priority', length: 255, nullable: true, comment: 'Default priority for this category' })
     defaultPriority: string;
 }

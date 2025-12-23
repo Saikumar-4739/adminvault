@@ -4,24 +4,24 @@ import { CommonBaseEntity } from '../common-base.entity';
 @Entity('vendors')
 @Index('idx_vendor_name', ['name'])
 export class VendorsMasterEntity extends CommonBaseEntity {
-    @Column({ nullable: false, type: 'varchar' })
+    @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Vendor name' })
     name: string;
 
-    @Column({ nullable: true, type: 'text' })
+    @Column('text', { name: 'description', nullable: true, comment: 'Vendor description' })
     description: string;
 
-    @Column({ nullable: false, type: 'boolean', default: true })
+    @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether vendor is active' })
     isActive: boolean;
 
-    @Column({ nullable: true, type: 'varchar' })
+    @Column('varchar', { name: 'contact_person', length: 255, nullable: true, comment: 'Contact person name' })
     contactPerson: string;
 
-    @Column({ nullable: true })
+    @Column('varchar', { name: 'email', length: 255, nullable: true, comment: 'Vendor email address' })
     email: string;
 
-    @Column({ nullable: true })
+    @Column('varchar', { name: 'phone', length: 20, nullable: true, comment: 'Vendor phone number' })
     phone: string;
 
-    @Column({ nullable: true })
+    @Column('text', { name: 'address', nullable: true, comment: 'Vendor address' })
     address: string;
 }

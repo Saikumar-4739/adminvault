@@ -1,17 +1,6 @@
 import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from './common-base.entity';
-
-export enum NextAssignmentStatusEnum {
-    PENDING = 'Pending',
-    ASSIGNED = 'Assigned',
-    CANCELLED = 'Cancelled'
-}
-
-export enum AssignmentPriorityEnum {
-    LOW = 'Low',
-    MEDIUM = 'Medium',
-    HIGH = 'High'
-}
+import { AssignmentPriorityEnum, NextAssignmentStatusEnum } from '@adminvault/shared-models';
 
 @Entity('asset_next_assignment')
 @Index('idx_next_assign_employee', ['employeeId'])
