@@ -36,7 +36,7 @@ export function useMasters() {
     const fetchDepartments = useCallback(async () => {
         try {
             setIsLoading(true);
-            const response = await mastersService.getAllDepartments(getCompanyId());
+            const response = await mastersService.getAllDepartments();
             if (response.status) {
                 setDepartments(response.departments || []);
             }
@@ -133,7 +133,9 @@ export function useMasters() {
                 user.companyId,
                 data.name,
                 data.description,
-                true
+                true,
+                data.code,
+                data.status
             );
             const res = await mastersService.createDepartment(model);
             if (res.status) {
@@ -189,7 +191,7 @@ export function useMasters() {
 
             const model = new CreateMasterModel(
                 user.id,
-                parseInt(data.companyId) || user.companyId,
+                user.companyId,
                 data.name,
                 data.description,
                 data.isActive ?? true

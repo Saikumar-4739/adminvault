@@ -4,6 +4,9 @@ import { CommonBaseEntity } from './common-base.entity';
 @Entity('documents')
 @Index('idx_document_category', ['category'])
 export class DocumentEntity extends CommonBaseEntity {
+    @Column('bigint', { name: 'company_id', nullable: false, comment: 'Company ID' })
+    companyId: number;
+
     @Column('varchar', { name: 'file_name', length: 255, nullable: false, comment: 'Stored file name' })
     fileName: string;
 

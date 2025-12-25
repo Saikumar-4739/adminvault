@@ -13,6 +13,14 @@ export class EmailInfoService {
         private emailInfoRepo: EmailInfoRepository
     ) { }
 
+    /**
+     * Create a new email info record
+     * Validates required fields and checks for duplicate email addresses
+     * 
+     * @param reqModel - Email info creation data including company ID, email type, department, and email
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if required fields are missing or email already exists
+     */
     async createEmailInfo(reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -51,6 +59,14 @@ export class EmailInfoService {
         }
     }
 
+    /**
+     * Update existing email info record
+     * Modifies email information including type, department, and employee assignment
+     * 
+     * @param reqModel - Email info update data with ID and fields to update
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if email info ID is missing or record not found
+     */
     async updateEmailInfo(reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -79,6 +95,14 @@ export class EmailInfoService {
         }
     }
 
+    /**
+     * Retrieve a specific email info record by ID
+     * Fetches detailed information for a single email info entry
+     * 
+     * @param reqModel - Request containing email info ID
+     * @returns GetEmailInfoByIdModel with email info details
+     * @throws ErrorResponse if email info ID is missing or record not found
+     */
     async getEmailInfo(reqModel: GetEmailInfoModel): Promise<GetEmailInfoByIdModel> {
         try {
             if (!reqModel.id) {
@@ -97,6 +121,14 @@ export class EmailInfoService {
         }
     }
 
+    /**
+     * Retrieve all email info records, optionally filtered by company
+     * Fetches list of all email info entries or entries for a specific company
+     * 
+     * @param companyId - Optional company ID to filter email info records
+     * @returns GetAllEmailInfoModel with list of email info records
+     * @throws Error if database query fails
+     */
     async getAllEmailInfo(companyId?: number): Promise<GetAllEmailInfoModel> {
         try {
             let emailInfoList: EmailInfoEntity[];
@@ -114,6 +146,14 @@ export class EmailInfoService {
         }
     }
 
+    /**
+     * Delete an email info record (hard delete)
+     * Permanently removes email info record from database
+     * 
+     * @param reqModel - Request containing email info ID to delete
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if email info ID is missing or record not found
+     */
     async deleteEmailInfo(reqModel: DeleteEmailInfoModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {

@@ -4,13 +4,13 @@ export class LicensesService extends CommonAxiosService {
     private readonly BASE_PATH = '/licenses';
 
     async getAll(companyId?: number) {
-        const config = companyId ? { params: { companyId } } : {};
-        return await this.axiosGetCall(this.BASE_PATH, config);
+        const data = companyId ? { id: companyId } : {};
+        return await this.axiosPostCall(`${this.BASE_PATH}/findAll`, data);
     }
 
     async getStats(companyId?: number) {
-        const config = companyId ? { params: { companyId } } : {};
-        return await this.axiosGetCall(`${this.BASE_PATH}/stats`, config);
+        const data = companyId ? { id: companyId } : {};
+        return await this.axiosPostCall(`${this.BASE_PATH}/stats`, data);
     }
 
     async create(data: any) {

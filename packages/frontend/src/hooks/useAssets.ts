@@ -132,11 +132,20 @@ export function useAssets(companyId?: number) {
         }
     }, [companyId]);
 
-    const searchAssets = useCallback(async (searchQuery?: string, statusFilter?: AssetStatusEnum) => {
+    const searchAssets = useCallback(async (filters: Partial<AssetSearchRequestModel>) => {
         if (!companyId) return;
         try {
             setIsLoading(true);
-            const request = new AssetSearchRequestModel(companyId, searchQuery, statusFilter);
+            const request = new AssetSearchRequestModel(
+                companyId,
+                filters.searchQuery,
+                filters.statusFilter as any, // Cast if needed due to single vs array
+                filters.brandIds,
+                filters.assetTypeIds,
+                filters.employeeId,
+                filters.purchaseDateFrom,
+                filters.purchaseDateTo
+            );
             const response = await assetService.searchAssets(request);
 
             if (response.status) {

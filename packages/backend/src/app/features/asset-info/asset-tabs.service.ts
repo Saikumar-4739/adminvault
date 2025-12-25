@@ -37,7 +37,7 @@ export class AssetTabsService {
             const query = this.dataSource
                 .createQueryBuilder(AssetInfoEntity, 'asset')
                 .leftJoinAndSelect('device_info', 'device', 'asset.deviceId = device.id')
-                .leftJoinAndSelect('brands_master', 'brand', 'asset.brandId = brand.id')
+                .leftJoinAndSelect('device_brands', 'brand', 'asset.brandId = brand.id')
                 .leftJoinAndSelect('employees', 'pastUser', 'asset.previousUserEmployeeId = pastUser.id')
                 .leftJoinAndSelect('employees', 'presentUser', 'asset.assignedToEmployeeId = presentUser.id')
                 .where('asset.companyId = :companyId', { companyId: reqModel.companyId })

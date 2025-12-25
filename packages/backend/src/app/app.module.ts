@@ -7,7 +7,6 @@ import { AuthUsersModule } from './features/auth-users/auth-users.module';
 import { EmployeesModule } from './features/employees/employees.module';
 import { EmailInfoModule } from './features/email-info/email-info.module';
 import { DeviceInfoModule } from './features/masters/device-info/device-info.module';
-import { ItAdminModule } from './features/masters/it-admin/it-admin.module';
 import { TicketsModule } from './features/tickets/tickets.module';
 import { AssetInfoModule } from './features/asset-info/asset-info.module';
 import { AssetAssignModule } from './features/asset-assign/asset-assign.module';
@@ -37,7 +36,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     EmployeesModule,
     EmailInfoModule,
     DeviceInfoModule,
-    ItAdminModule,
     TicketsModule,
     AssetInfoModule,
     AssetAssignModule,

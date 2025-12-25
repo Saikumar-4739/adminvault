@@ -1,21 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAssets } from '@/hooks/useAssets';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useMasters } from '@/hooks/useMasters';
+import { useToast } from '@/contexts/ToastContext';
 import { PageLoader } from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
 import StatCard from '@/components/ui/StatCard';
-import { Search, Plus, Package, Building2, TrendingUp, CheckCircle2, AlertCircle, Laptop, Monitor, Smartphone, Tablet, HardDrive, Pencil, Trash2, User, Calendar, Printer } from 'lucide-react';
+import { Search, Plus, Package, Building2, TrendingUp, CheckCircle2, AlertCircle, Laptop, Monitor, Smartphone, Tablet, HardDrive, Pencil, Trash2, User, Calendar, Printer, Upload, QrCode, History, Filter, X } from 'lucide-react';
 import { AssetStatusEnum } from '@adminvault/shared-models';
 import StoreAssetsTab from './components/StoreAssetsTab';
 import ReturnAssetsTab from './components/ReturnAssetsTab';
 import NextAssignAssetsTab from './components/NextAssignAssetsTab';
+import BulkImportModal from './components/BulkImportModal';
+import AssetQRModal from './components/AssetQRModal';
+import AssetTimelineModal from './components/AssetTimelineModal';
+import AdvancedFilterModal from './components/AdvancedFilterModal';
 
 const getAssetIcon = (name: string) => {
     const lowerName = name.toLowerCase();
@@ -42,15 +47,23 @@ const isWarrantyExpired = (warrantyDate?: string) => {
 export default function AssetsPage() {
     const { companies } = useCompanies();
     const [selectedOrg, setSelectedOrg] = useState<string>('');
-    const { assets, statistics, isLoading, createAsset, updateAsset, deleteAsset, searchAssets } = useAssets(selectedOrg ? Number(selectedOrg) : undefined);
+    const { assets, statistics, isLoading, createAsset, updateAsset, deleteAsset, searchAssets, fetchAssetsWithAssignments } = useAssets(selectedOrg ? Number(selectedOrg) : undefined);
     const { employees } = useEmployees(selectedOrg ? Number(selectedOrg) : undefined);
-    const { brands, fetchBrands } = useMasters();
+    const { brands, fetchBrands, assetTypes, fetchAssetTypes } = useMasters();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+    const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [editingAsset, setEditingAsset] = useState<any>(null);
+    const [qrAsset, setQrAsset] = useState<any>(null); // Asset to Generate QR for
+    const [timelineAsset, setTimelineAsset] = useState<any>(null); // Asset for Timeline
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('');
-    const [formData, setFormData] = useState({ brandId: '', model: '', serviceTag: '', configuration: '', assignedToEmployeeId: '', previousUserEmployeeId: '', purchaseDate: '', warrantyExpiry: '', userAssignedDate: '', lastReturnDate: '', status: 'available' });
+    const [activeFilters, setActiveFilters] = useState<any>({});
+
+    const [formData, setFormData] = useState<{ assetTypeId: string; brandId: string; model: string; serviceTag: string; configuration: string; assignedToEmployeeId: string; previousUserEmployeeId: string; purchaseDate: string; warrantyExpiry: string; userAssignedDate: string; lastReturnDate: string; status: AssetStatusEnum | string }>({ assetTypeId: '', brandId: '', model: '', serviceTag: '', configuration: '', assignedToEmployeeId: '', previousUserEmployeeId: '', purchaseDate: '', warrantyExpiry: '', userAssignedDate: '', lastReturnDate: '', status: AssetStatusEnum.AVAILABLE });
     const [activeTab, setActiveTab] = useState<'all' | 'store' | 'return' | 'next'>('all');
+    const { success, error: showError } = useToast();
 
     useEffect(() => {
         if (companies.length > 0 && !selectedOrg) {
@@ -61,24 +74,47 @@ export default function AssetsPage() {
     useEffect(() => {
         if (selectedOrg) {
             fetchBrands();
+            fetchAssetTypes();
         }
-    }, [selectedOrg, fetchBrands]);
+    }, [selectedOrg, fetchBrands, fetchAssetTypes]);
 
-    const handleSearch = () => {
-        const status = statusFilter ? (statusFilter as AssetStatusEnum) : undefined;
-        searchAssets(searchQuery || undefined, status);
+    const handleSearch = useCallback(() => {
+        searchAssets({
+            searchQuery,
+            ...activeFilters
+        });
+    }, [searchQuery, activeFilters, searchAssets]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            handleSearch();
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery, activeFilters, handleSearch]);
+
+    const handleFilterApply = (filters: any) => {
+        setActiveFilters(filters);
+        setIsFilterModalOpen(false);
     };
 
-    // Auto-search when filter changes
-    useEffect(() => {
-        handleSearch();
-    }, [statusFilter]);
+    const removeFilter = (key: string, value?: any) => {
+        const newFilters = { ...activeFilters };
+
+        if (Array.isArray(newFilters[key]) && value !== undefined) {
+            newFilters[key] = newFilters[key].filter((item: any) => item !== value);
+            if (newFilters[key].length === 0) delete newFilters[key];
+        } else {
+            delete newFilters[key]; // For simple fields (dates, single values)
+        }
+
+        setActiveFilters(newFilters);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const companyId = Number(selectedOrg);
         if (!companyId) {
-            alert('Please select an organization first');
+            showError('Please select an organization first');
             return;
         }
         const userData = localStorage.getItem('user');
@@ -86,7 +122,7 @@ export default function AssetsPage() {
         // For now, using serviceTag as serialNumber and creating a mock deviceId
         const payload = {
             companyId,
-            deviceId: 1,
+            deviceId: Number(formData.assetTypeId),
             serialNumber: formData.serviceTag,
             purchaseDate: new Date(formData.purchaseDate),
             assetStatusEnum: formData.status as any,
@@ -96,20 +132,38 @@ export default function AssetsPage() {
             assignedToEmployeeId: formData.assignedToEmployeeId ? Number(formData.assignedToEmployeeId) : undefined,
             previousUserEmployeeId: formData.previousUserEmployeeId ? Number(formData.previousUserEmployeeId) : undefined,
             brandId: formData.brandId ? Number(formData.brandId) : undefined,
+            model: formData.model,
+            configuration: formData.configuration,
             userId
         };
 
-        if (editingAsset) {
-            await updateAsset({ id: editingAsset.id, ...payload } as any);
-        } else {
-            await createAsset(payload as any);
+        try {
+            if (editingAsset) {
+                const result = await updateAsset({ id: editingAsset.id, ...payload } as any);
+                if (result) {
+                    success('Asset Updated', 'Asset has been updated successfully');
+                    handleCloseModal();
+                } else {
+                    showError('Update Failed', 'Failed to update asset. Please try again.');
+                }
+            } else {
+                const result = await createAsset(payload as any);
+                if (result) {
+                    success('Asset Created', 'New asset has been created successfully');
+                    handleCloseModal();
+                } else {
+                    showError('Creation Failed', 'Failed to create asset. Please try again.');
+                }
+            }
+        } catch (err) {
+            showError('Error', 'An unexpected error occurred');
         }
-        handleCloseModal();
     };
 
     const handleEdit = (asset: any) => {
         setEditingAsset(asset);
         setFormData({
+            assetTypeId: asset.assetTypeId ? String(asset.assetTypeId) : '',
             brandId: asset.brandId ? String(asset.brandId) : '',
             model: asset.model || '',
             serviceTag: asset.serviceTag || asset.serialNumber || '',
@@ -120,14 +174,19 @@ export default function AssetsPage() {
             warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
             userAssignedDate: asset.userAssignedDate ? new Date(asset.userAssignedDate).toISOString().split('T')[0] : '',
             lastReturnDate: asset.lastReturnDate ? new Date(asset.lastReturnDate).toISOString().split('T')[0] : '',
-            status: asset.status || 'Available'
+            status: asset.status || AssetStatusEnum.AVAILABLE
         });
         setIsModalOpen(true);
     };
 
     const handleDelete = async (asset: any) => {
         if (confirm(`Are you sure you want to delete asset ${asset.assetName}?`)) {
-            await deleteAsset({ id: asset.id });
+            const result = await deleteAsset({ id: asset.id });
+            if (result) {
+                success('Asset Deleted', 'Asset has been deleted successfully');
+            } else {
+                showError('Delete Failed', 'Failed to delete asset. Please try again.');
+            }
         }
     };
 
@@ -250,7 +309,7 @@ export default function AssetsPage() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingAsset(null);
-        setFormData({ brandId: '', model: '', serviceTag: '', configuration: '', assignedToEmployeeId: '', previousUserEmployeeId: '', purchaseDate: '', warrantyExpiry: '', userAssignedDate: '', lastReturnDate: '', status: 'available' });
+        setFormData({ assetTypeId: '', brandId: '', model: '', serviceTag: '', configuration: '', assignedToEmployeeId: '', previousUserEmployeeId: '', purchaseDate: '', warrantyExpiry: '', userAssignedDate: '', lastReturnDate: '', status: AssetStatusEnum.AVAILABLE });
     };
 
     return (
@@ -289,6 +348,16 @@ export default function AssetsPage() {
                     >
                         Add Asset
                     </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        className="shadow-md shadow-slate-500/20 hover:shadow-slate-500/30 transition-all duration-300"
+                        leftIcon={<Upload className="h-4 w-4" />}
+                        onClick={() => setIsImportModalOpen(true)}
+                        disabled={!selectedOrg}
+                    >
+                        Import
+                    </Button>
                 </div>
             </div>
 
@@ -311,8 +380,8 @@ export default function AssetsPage() {
                         gradient="from-emerald-500 to-teal-600"
                         iconBg="bg-emerald-50 dark:bg-emerald-900/20"
                         iconColor="text-emerald-600 dark:text-emerald-400"
-                        isActive={statusFilter === 'AVAILABLE'}
-                        onClick={() => setStatusFilter(statusFilter === 'AVAILABLE' ? '' : 'AVAILABLE')}
+                        isActive={activeFilters.status === 'AVAILABLE'}
+                        onClick={() => setActiveFilters(prev => ({ ...prev, status: prev.status === 'AVAILABLE' ? undefined : 'AVAILABLE' }))}
                         className="cursor-pointer"
                         isLoading={isLoading}
                     />
@@ -323,8 +392,8 @@ export default function AssetsPage() {
                         gradient="from-blue-500 to-cyan-600"
                         iconBg="bg-blue-50 dark:bg-blue-900/20"
                         iconColor="text-blue-600 dark:text-blue-400"
-                        isActive={statusFilter === 'IN_USE'}
-                        onClick={() => setStatusFilter(statusFilter === 'IN_USE' ? '' : 'IN_USE')}
+                        isActive={activeFilters.status === 'IN_USE'}
+                        onClick={() => setActiveFilters(prev => ({ ...prev, status: prev.status === 'IN_USE' ? undefined : 'IN_USE' }))}
                         className="cursor-pointer"
                         isLoading={isLoading}
                     />
@@ -335,8 +404,8 @@ export default function AssetsPage() {
                         gradient="from-amber-500 to-orange-600"
                         iconBg="bg-amber-50 dark:bg-amber-900/20"
                         iconColor="text-amber-600 dark:text-amber-400"
-                        isActive={statusFilter === 'MAINTENANCE'}
-                        onClick={() => setStatusFilter(statusFilter === 'MAINTENANCE' ? '' : 'MAINTENANCE')}
+                        isActive={activeFilters.status === 'MAINTENANCE'}
+                        onClick={() => setActiveFilters(prev => ({ ...prev, status: prev.status === 'MAINTENANCE' ? undefined : 'MAINTENANCE' }))}
                         className="cursor-pointer"
                         isLoading={isLoading}
                     />
@@ -347,8 +416,8 @@ export default function AssetsPage() {
                         gradient="from-slate-500 to-gray-600"
                         iconBg="bg-slate-50 dark:bg-slate-800"
                         iconColor="text-slate-600 dark:text-slate-400"
-                        isActive={statusFilter === 'RETIRED'}
-                        onClick={() => setStatusFilter(statusFilter === 'RETIRED' ? '' : 'RETIRED')}
+                        isActive={activeFilters.status === 'RETIRED'}
+                        onClick={() => setActiveFilters(prev => ({ ...prev, status: prev.status === 'RETIRED' ? undefined : 'RETIRED' }))}
                         className="cursor-pointer"
                         isLoading={isLoading}
                     />
@@ -405,32 +474,65 @@ export default function AssetsPage() {
                         {activeTab === 'all' && (
                             <>
                                 {/* Search and Filters - Only show on All Assets tab */}
+                                {/* Search and Filters - Only show on All Assets tab */}
                                 <Card className="p-4 mb-6">
-                                    <div className="flex flex-col md:flex-row gap-3">
-                                        <div className="flex-1 relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                            <input
-                                                type="text"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                placeholder="Search by serial number..."
-                                                className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
-                                            />
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                                <Input
+                                                    placeholder="Search assets..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="pl-9 w-full sm:w-64 bg-white dark:bg-slate-800"
+                                                />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    leftIcon={<Filter className="h-4 w-4" />}
+                                                    onClick={() => setIsFilterModalOpen(true)}
+                                                    className={Object.keys(activeFilters).length > 0 ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : ''}
+                                                >
+                                                    Filters
+                                                </Button>
+                                                <Button variant="primary" size="sm" onClick={handleSearch}>
+                                                    Search
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <select
-                                            value={statusFilter}
-                                            onChange={(e) => setStatusFilter(e.target.value)}
-                                            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
-                                        >
-                                            <option value="">All Status</option>
-                                            <option value="AVAILABLE">Available</option>
-                                            <option value="IN_USE">In Use</option>
-                                            <option value="MAINTENANCE">Maintenance</option>
-                                            <option value="RETIRED">Retired</option>
-                                        </select>
-                                        <Button variant="primary" size="sm" onClick={handleSearch}>
-                                            Search
-                                        </Button>
+
+                                        {/* Active Filters Chips */}
+                                        {Object.keys(activeFilters).length > 0 && (
+                                            <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                                {Object.entries(activeFilters).map(([key, value]) => {
+                                                    if (!value || (Array.isArray(value) && value.length === 0)) return null;
+
+                                                    const renderChip = (val: any, k: string, arrayVal?: any) => (
+                                                        <span key={`${k}-${val}`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-medium border border-indigo-100 dark:border-indigo-800">
+                                                            {k === 'status' ? String(val).replace('_', ' ') : val}
+                                                            <button
+                                                                onClick={() => removeFilter(k, arrayVal)}
+                                                                className="hover:bg-indigo-200 dark:hover:bg-indigo-800 rounded-full p-0.5 transition-colors"
+                                                            >
+                                                                <X className="h-3 w-3" />
+                                                            </button>
+                                                        </span>
+                                                    );
+
+                                                    if (Array.isArray(value)) {
+                                                        return value.map((v: any) => renderChip(v, key, v));
+                                                    }
+                                                    return renderChip(value, key);
+                                                })}
+                                                <button
+                                                    onClick={() => setActiveFilters({})}
+                                                    className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline ml-2"
+                                                >
+                                                    Clear All
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </Card>
 
@@ -529,7 +631,29 @@ export default function AssetsPage() {
                                                     )}
 
                                                     {/* Actions */}
-                                                    <div className="grid grid-cols-3 gap-2">
+                                                    <div className="grid grid-cols-5 gap-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                setTimelineAsset(asset);
+                                                                setIsTimelineModalOpen(true);
+                                                            }}
+                                                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-xs font-semibold"
+                                                            title="History"
+                                                        >
+                                                            <History className="h-3.5 w-3.5" />
+                                                            Hist
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setQrAsset(asset);
+                                                                setIsQRModalOpen(true);
+                                                            }}
+                                                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-xs font-semibold"
+                                                            title="QR Label"
+                                                        >
+                                                            <QrCode className="h-3.5 w-3.5" />
+                                                            QR
+                                                        </button>
                                                         <button
                                                             onClick={() => handleEdit(asset)}
                                                             className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-xs font-semibold"
@@ -577,6 +701,22 @@ export default function AssetsPage() {
                                     <form onSubmit={handleSubmit} className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Asset Type</label>
+                                                <select
+                                                    value={formData.assetTypeId}
+                                                    onChange={(e) => setFormData({ ...formData, assetTypeId: e.target.value })}
+                                                    className="w-full h-12 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                                    required
+                                                >
+                                                    <option value="">Select Asset Type</option>
+                                                    {assetTypes.map(type => (
+                                                        <option key={type.id} value={type.id}>
+                                                            {type.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
                                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Brand</label>
                                                 <select
                                                     value={formData.brandId}
@@ -592,20 +732,22 @@ export default function AssetsPage() {
                                                     ))}
                                                 </select>
                                             </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
                                             <Input
                                                 label="Model"
                                                 value={formData.model}
                                                 onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                                                 required
                                             />
+                                            <Input
+                                                label="Service Tag / Serial Number"
+                                                value={formData.serviceTag}
+                                                onChange={(e) => setFormData({ ...formData, serviceTag: e.target.value })}
+                                                required
+                                            />
                                         </div>
-
-                                        <Input
-                                            label="Service Tag"
-                                            value={formData.serviceTag}
-                                            onChange={(e) => setFormData({ ...formData, serviceTag: e.target.value })}
-                                            required
-                                        />
 
                                         <Input
                                             label="Configuration"
@@ -688,19 +830,58 @@ export default function AssetsPage() {
                                                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                                                 className="w-full h-12 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                                             >
-                                                <option value="available">Available</option>
-                                                <option value="in_use">In Use</option>
-                                                <option value="maintenance">Maintenance</option>
-                                                <option value="retired">Retired</option>
+                                                <option value={AssetStatusEnum.AVAILABLE}>Available</option>
+                                                <option value={AssetStatusEnum.IN_USE}>In Use</option>
+                                                <option value={AssetStatusEnum.MAINTENANCE}>Maintenance</option>
+                                                <option value={AssetStatusEnum.RETIRED}>Retired</option>
                                             </select>
                                         </div>
                                     </form>
                                 </Modal>
                             </>
-                        )}
-                    </div>
-                </Card>
+                        )
+                        }
+                    </div >
+                </Card >
             )}
-        </div>
+            {/* Bulk Import Modal */}
+            <BulkImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                companyId={Number(selectedOrg)}
+                onSuccess={() => {
+                    if (activeTab === 'all') {
+                        // Trigger a refresh somehow, or relying on auto-refresh if valid. 
+                        // useAssets hook doesn't expose a manual refresh easily without query change.
+                        // We can toggle status filter briefly or rely on live data if set up.
+                        // Refresh the list
+                        fetchAssetsWithAssignments();
+                    }
+                }}
+            />
+
+            {/* QR Code Modal */}
+            <AssetQRModal
+                isOpen={isQRModalOpen}
+                onClose={() => setIsQRModalOpen(false)}
+                asset={qrAsset}
+            />
+
+            {/* Timeline Modal */}
+            <AssetTimelineModal
+                isOpen={isTimelineModalOpen}
+                onClose={() => setIsTimelineModalOpen(false)}
+                asset={timelineAsset}
+                companyId={Number(selectedOrg)}
+            />
+
+            {/* Filter Modal */}
+            <AdvancedFilterModal
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+                onApply={handleFilterApply}
+                initialFilters={activeFilters}
+            />
+        </div >
     );
 }

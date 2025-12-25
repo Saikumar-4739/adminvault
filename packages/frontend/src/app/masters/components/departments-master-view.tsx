@@ -21,7 +21,7 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
         description: '',
         code: '',
         companyId: '',
-        level: '',
+        status: '',
         isActive: true
     });
 
@@ -39,8 +39,7 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                 name: formData.name,
                 description: formData.description,
                 code: formData.code,
-                status: formData.level,
-                level: formData.level,
+                status: formData.status,
                 isActive: formData.isActive
             });
         } else {
@@ -48,8 +47,7 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                 name: formData.name,
                 description: formData.description,
                 code: formData.code,
-                status: formData.level,
-                level: formData.level
+                status: formData.status
             });
         }
 
@@ -66,7 +64,7 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
             description: dept.description || '',
             code: dept.code || '',
             companyId: dept.companyId || '',
-            level: dept.level || '',
+            status: dept.status || 'Active', // Default status
             isActive: dept.isActive ?? true
         });
         setIsModalOpen(true);
@@ -89,7 +87,7 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingDepartmentId(null);
-        setFormData({ name: '', description: '', code: '', companyId: '', level: '', isActive: true });
+        setFormData({ name: '', description: '', code: '', companyId: '', status: '', isActive: true });
     };
 
     return (
@@ -116,10 +114,8 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                             <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
                                 <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                     <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Name</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Code</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Level</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                     </tr>
@@ -130,14 +126,8 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                                     ) : (
                                         departments?.map((d: any, index: number) => (
                                             <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{d.companyName || 'N/A'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{d.name}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{d.code || '-'}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
-                                                        {d.level || '-'}
-                                                    </span>
-                                                </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${d.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
                                                         {d.isActive ? 'Active' : 'Inactive'}
@@ -168,7 +158,6 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                     <Input label="Department Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
                     <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
                     <Input label="Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
-                    <Input label="Level" value={formData.level} onChange={(e) => setFormData({ ...formData, level: e.target.value })} />
 
                     <div className="flex items-center gap-2">
                         <input

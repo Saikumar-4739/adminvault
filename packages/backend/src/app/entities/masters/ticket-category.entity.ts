@@ -18,5 +18,5 @@ export class TicketCategoriesMasterEntity extends CommonBaseEntity {
     status: string;
 
     @Column('varchar', { name: 'default_priority', length: 255, nullable: true, comment: 'Default priority for this category' })
-    defaultPriority: string;
+    defaultPriority: 'Low' | 'Medium' | 'High' | null;
 }

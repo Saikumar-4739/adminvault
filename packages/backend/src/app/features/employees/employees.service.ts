@@ -13,6 +13,14 @@ export class EmployeesService {
         private employeesRepo: EmployeesRepository
     ) { }
 
+    /**
+     * Create a new employee record
+     * Validates required fields and checks for duplicate email addresses
+     * 
+     * @param reqModel - Employee creation data including company ID, name, email, and department
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if company ID, email, or department is missing, or if email already exists
+     */
     async createEmployee(reqModel: CreateEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -27,7 +35,7 @@ export class EmployeesService {
                 throw new ErrorResponse(0, "Department is required");
             }
 
-            const existingEmployee = await this.employeesRepo.findOne({where: { email: reqModel.email }});
+            const existingEmployee = await this.employeesRepo.findOne({ where: { email: reqModel.email } });
             if (existingEmployee) {
                 throw new ErrorResponse(0, "Employee with this email already exists");
             }
@@ -49,6 +57,14 @@ export class EmployeesService {
         }
     }
 
+    /**
+     * Update existing employee information
+     * Updates employee details including name, contact info, status, and billing amount
+     * 
+     * @param reqModel - Employee update data with employee ID and fields to update
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if employee ID is missing or employee not found
+     */
     async updateEmployee(reqModel: UpdateEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -80,6 +96,14 @@ export class EmployeesService {
         }
     }
 
+    /**
+     * Retrieve a specific employee by ID
+     * Fetches detailed information for a single employee
+     * 
+     * @param reqModel - Request containing employee ID
+     * @returns GetEmployeeByIdModel with employee details
+     * @throws ErrorResponse if employee ID is missing or employee not found
+     */
     async getEmployee(reqModel: GetEmployeeModel): Promise<GetEmployeeByIdModel> {
         try {
             if (!reqModel.id) {
@@ -98,6 +122,14 @@ export class EmployeesService {
         }
     }
 
+    /**
+     * Retrieve all employees, optionally filtered by company
+     * Fetches list of all employees or employees for a specific company
+     * 
+     * @param companyId - Optional company ID to filter employees
+     * @returns GetAllEmployeesModel with list of employees
+     * @throws Error if database query fails
+     */
     async getAllEmployees(companyId?: number): Promise<GetAllEmployeesModel> {
         try {
             let employees: EmployeesEntity[];
@@ -115,6 +147,14 @@ export class EmployeesService {
         }
     }
 
+    /**
+     * Delete an employee record (soft delete)
+     * Marks employee as deleted without removing from database
+     * 
+     * @param reqModel - Request containing employee ID to delete
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if employee ID is missing or employee not found
+     */
     async deleteEmployee(reqModel: DeleteEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {

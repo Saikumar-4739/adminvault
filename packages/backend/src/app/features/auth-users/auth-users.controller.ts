@@ -13,6 +13,12 @@ export class AuthUsersController {
         private service: AuthUsersService
     ) { }
 
+    /**
+     * Register a new user account
+     * Public endpoint - no authentication required
+     * @param reqModel - User registration data
+     * @returns GlobalResponse indicating registration success or failure
+     */
     @Post('registerUser')
     @Public()
     async registerUser(@Body() reqModel: RegisterUserModel): Promise<GlobalResponse> {
@@ -23,6 +29,13 @@ export class AuthUsersController {
         }
     }
 
+    /**
+     * Authenticate user and create session
+     * Public endpoint - no authentication required
+     * @param reqModel - Login credentials
+     * @param req - Express request object for session tracking
+     * @returns LoginResponseModel with tokens and user info
+     */
     @Post('loginUser')
     @Public()
     async loginUser(@Body() reqModel: LoginUserModel, @Req() req: Request): Promise<LoginResponseModel> {
@@ -33,6 +46,11 @@ export class AuthUsersController {
         }
     }
 
+    /**
+     * Log out user and update session
+     * @param reqModel - Logout request with user email
+     * @returns GlobalResponse indicating logout success
+     */
     @Post('logOutUser')
     async logOutUser(@Body() reqModel: LogoutUserModel): Promise<GlobalResponse> {
         try {
@@ -42,6 +60,11 @@ export class AuthUsersController {
         }
     }
 
+    /**
+     * Update user profile information
+     * @param reqModel - User update data
+     * @returns GlobalResponse indicating update success
+     */
     @Post('updateUser')
     async updateUser(@Body() reqModel: UpdateUserModel): Promise<GlobalResponse> {
         try {
@@ -51,6 +74,11 @@ export class AuthUsersController {
         }
     }
 
+    /**
+     * Delete user account
+     * @param reqModel - Delete request with user email
+     * @returns GlobalResponse indicating deletion success
+     */
     @Post('deleteUser')
     async deleteUser(@Body() reqModel: DeleteUserModel): Promise<GlobalResponse> {
         try {
@@ -60,6 +88,11 @@ export class AuthUsersController {
         }
     }
 
+    /**
+     * Retrieve all users for a company
+     * @param reqModel - Request with company ID
+     * @returns GetAllUsersModel with list of users
+     */
     @Post('getAllUsers')
     async getAllUsers(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllUsersModel> {
         try {
@@ -69,6 +102,12 @@ export class AuthUsersController {
         }
     }
 
+    /**
+     * Send access request email to administrators
+     * Public endpoint - no authentication required
+     * @param reqModel - Access request details
+     * @returns GlobalResponse indicating email sent successfully
+     */
     @Post('requestAccess')
     @Public()
     async requestAccess(@Body() reqModel: RequestAccessModel): Promise<GlobalResponse> {

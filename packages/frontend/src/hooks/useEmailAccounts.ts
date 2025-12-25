@@ -2,8 +2,10 @@ import { useState, useCallback, useEffect } from 'react';
 import { emailAccountsService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 
+import { EmailAccountResponseModel } from '@adminvault/shared-models';
+
 export function useEmailAccounts(companyId?: number) {
-    const [emailAccounts, setEmailAccounts] = useState<any[]>([]);
+    const [emailAccounts, setEmailAccounts] = useState<EmailAccountResponseModel[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const toast = useToast();

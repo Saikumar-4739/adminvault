@@ -4,13 +4,13 @@ import { AssetInfoEntity } from '../../entities/asset-info.entity';
 import { EmployeesEntity } from '../../entities/employees.entity';
 import { TicketsEntity } from '../../entities/tickets.entity';
 import { CompanyLicenseEntity } from '../../entities/company-license.entity';
-import { AssetStatusEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
+import { AssetStatusEnum, TicketStatusEnum, TicketPriorityEnum, DashboardStatsResponseModel, DashboardStats } from '@adminvault/shared-models';
 
 @Injectable()
 export class DashboardService {
     constructor(private readonly dataSource: DataSource) { }
 
-    async getDashboardStats() {
+    async getDashboardStats(): Promise<DashboardStatsResponseModel> {
         const assetRepo = this.dataSource.getRepository(AssetInfoEntity);
         const ticketRepo = this.dataSource.getRepository(TicketsEntity);
         const empRepo = this.dataSource.getRepository(EmployeesEntity);
@@ -66,7 +66,7 @@ export class DashboardService {
             })
         ]);
 
-        return {
+        const stats: DashboardStats = {
             assets: {
                 total: totalAssets,
                 byStatus: assetsByStatus
@@ -86,5 +86,7 @@ export class DashboardService {
                 // expiringSoon: expiringLicenses // Placeholder logic
             }
         };
+
+        return new DashboardStatsResponseModel(true, 200, 'Dashboard stats retrieved successfully', stats);
     }
 }

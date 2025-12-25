@@ -16,9 +16,9 @@ export class MastersController {
 
     // Departments
     @Post('getAllDepartments')
-    async getAllDepartments(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllDepartmentsResponseModel> {
+    async getAllDepartments(): Promise<GetAllDepartmentsResponseModel> {
         try {
-            return await this.mastersService.getAllDepartments(reqModel);
+            return await this.mastersService.getAllDepartments();
         } catch (error) {
             return returnException(GetAllDepartmentsResponseModel, error);
         }

@@ -10,6 +10,9 @@ import { EmployeesEntity } from './employees.entity';
 @Index('idx_license_expiry', ['expiryDate'])
 export class CompanyLicenseEntity extends CommonBaseEntity {
 
+    @Column({ name: 'company_id', type: 'bigint', nullable: false })
+    companyId: number;
+
     @Column({ name: 'application_id', nullable: false })
     applicationId: number;
 

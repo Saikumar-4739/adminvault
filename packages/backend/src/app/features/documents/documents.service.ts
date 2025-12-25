@@ -19,6 +19,15 @@ export class DocumentsService {
         }
     }
 
+    /**
+     * Upload a new document to the system
+     * Saves file to disk and creates database record with metadata
+     * 
+     * @param reqModel - Document metadata including category, description, tags, and company ID
+     * @param file - Multer file object containing uploaded file buffer and metadata
+     * @returns UploadDocumentResponseModel with saved document details
+     * @throws ErrorResponse if file save or database operation fails
+     */
     async uploadDocument(reqModel: UploadDocumentModel, file: Express.Multer.File): Promise<UploadDocumentResponseModel> {
         try {
             const fileName = `${Date.now()}-${file.originalname}`;
@@ -48,6 +57,14 @@ export class DocumentsService {
         }
     }
 
+    /**
+     * Delete a document from the system
+     * Removes both the database record and physical file from disk
+     * 
+     * @param reqModel - Request containing document ID to delete
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if document not found or deletion fails
+     */
     async deleteDocument(reqModel: DeleteDocumentModel): Promise<GlobalResponse> {
         try {
             const document = await this.documentRepo.findOne({ where: { id: reqModel.id } });
@@ -67,6 +84,14 @@ export class DocumentsService {
         }
     }
 
+    /**
+     * Retrieve a specific document by ID
+     * Fetches document metadata without the file content
+     * 
+     * @param reqModel - Request containing document ID
+     * @returns GetDocumentByIdModel with document metadata
+     * @throws ErrorResponse if document not found
+     */
     async getDocument(reqModel: GetDocumentModel): Promise<GetDocumentByIdModel> {
         try {
             const document = await this.documentRepo.findOne({ where: { id: reqModel.id } });
@@ -79,6 +104,15 @@ export class DocumentsService {
         }
     }
 
+    /**
+     * Retrieve all documents with optional filtering
+     * Fetches documents filtered by company ID and/or category, ordered by creation date
+     * 
+     * @param companyId - Optional company ID to filter documents
+     * @param category - Optional category to filter documents
+     * @returns GetAllDocumentsModel with list of documents
+     * @throws ErrorResponse if database query fails
+     */
     async getAllDocuments(companyId?: number, category?: string): Promise<GetAllDocumentsModel> {
         try {
             const where: any = {};
@@ -92,6 +126,14 @@ export class DocumentsService {
         }
     }
 
+    /**
+     * Prepare document for download
+     * Retrieves file path and original filename for document download
+     * 
+     * @param id - Document ID to download
+     * @returns Object containing file path and original filename
+     * @throws ErrorResponse if document or file not found
+     */
     async downloadDocument(id: number): Promise<{ filePath: string; originalName: string }> {
         try {
             const document = await this.documentRepo.findOne({ where: { id } });

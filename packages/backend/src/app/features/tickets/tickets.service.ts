@@ -14,6 +14,15 @@ export class TicketsService {
         private employeesRepo: EmployeesRepository
     ) { }
 
+    /**
+     * Create a new support ticket
+     * Generates unique ticket code, validates required fields, and links ticket to employee profile
+     * 
+     * @param reqModel - Ticket creation data including category, priority, and subject
+     * @param userEmail - Email of the logged-in user creating the ticket
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if required fields are missing, employee profile not found, or ticket code already exists
+     */
     async createTicket(reqModel: CreateTicketModel, userEmail: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -67,6 +76,12 @@ export class TicketsService {
         }
     }
 
+    /**
+     * Generate unique ticket code with date-based format
+     * Format: TKT-YYYYMMDD-XXXX where XXXX is auto-incremented sequence number
+     * 
+     * @returns Unique ticket code string
+     */
     private async generateTicketCode(): Promise<string> {
         const today = new Date();
         const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
@@ -91,6 +106,14 @@ export class TicketsService {
         return `TKT-${dateStr}-${sequence.toString().padStart(4, '0')}`;
     }
 
+    /**
+     * Update existing ticket information
+     * Modifies ticket details such as status, priority, or assignment
+     * 
+     * @param reqModel - Ticket update data with ticket ID and fields to update
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if ticket ID is missing or ticket not found
+     */
     async updateTicket(reqModel: UpdateTicketModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -112,6 +135,14 @@ export class TicketsService {
         }
     }
 
+    /**
+     * Retrieve a specific ticket by ID
+     * Fetches detailed information for a single ticket
+     * 
+     * @param reqModel - Request containing ticket ID
+     * @returns GetTicketByIdModel with ticket details
+     * @throws ErrorResponse if ticket ID is missing or ticket not found
+     */
     async getTicket(reqModel: GetTicketModel): Promise<GetTicketByIdModel> {
         try {
             if (!reqModel.id) {
@@ -129,6 +160,13 @@ export class TicketsService {
         }
     }
 
+    /**
+     * Retrieve all tickets in the system
+     * Fetches complete list of all support tickets
+     * 
+     * @returns GetAllTicketsModel with list of all tickets
+     * @throws Error if database query fails
+     */
     async getAllTickets(): Promise<GetAllTicketsModel> {
         try {
             const tickets = await this.ticketsRepo.find();
@@ -139,6 +177,14 @@ export class TicketsService {
         }
     }
 
+    /**
+     * Delete a ticket (soft delete)
+     * Marks ticket as deleted without removing from database
+     * 
+     * @param reqModel - Request containing ticket ID to delete
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if ticket ID is missing or ticket not found
+     */
     async deleteTicket(reqModel: DeleteTicketModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {

@@ -26,17 +26,84 @@ export class AuthUsersService {
         private jwtService: JwtService
     ) { }
 
-    //Helper
+
+    /**
+     * Register a new user in the system
+     * Creates a new user account with hashed password and default ADMIN role
+     * 
+     * @param reqModel - User registration data including email, password, full name, phone number, and company ID
+     * @returns GlobalResponse indicating success or failure of user creation
+     * @throws ErrorResponse if email already exists, company ID is missing, or password is less than 8 characters
+     */
+    async registerUser(reqModel: RegisterUserModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource)
+        try {
+            const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } })
+            if (existingUser) {
+                throw new ErrorResponse(0, "Email already exists")
+            }
+
+            if (!reqModel.companyId) {
+                throw new ErrorResponse(0, "Company ID is required")
+            }
+
+            if (reqModel.password.length < 8) {
+                throw new ErrorResponse(0, "Password must be at least 8 characters long")
+            }
+
+            const passwordHash = await bcrypt.hash(reqModel.password, 10)
+
+            await transManager.startTransaction()
+            const newUser = new AuthUsersEntity()
+            newUser.email = reqModel.email
+            newUser.passwordHash = passwordHash
+            newUser.fullName = reqModel.fullName
+            newUser.phNumber = reqModel.phNumber
+            newUser.companyId = reqModel.companyId
+            newUser.userRole = UserRoleEnum.ADMIN
+            newUser.status = true
+            newUser.createdAt = new Date()
+            newUser.updatedAt = new Date()
+            const save = await transManager.getRepository(AuthUsersEntity).save(newUser)
+            await transManager.completeTransaction()
+            return new GlobalResponse(true, 0, "User Created Successfully")
+        } catch (err) {
+            await transManager.releaseTransaction()
+            throw err
+        }
+    }
+
+    /**
+     * Generate JWT access token for authenticated user
+     * Token contains user email, ID, and company ID
+     * 
+     * @param payload - Token payload containing user information
+     * @returns Signed JWT access token
+     */
     private generateAccessToken(payload: any): string {
         return this.jwtService.sign(payload);
     }
 
-    //Helper
+    /**
+     * Generate JWT refresh token for authenticated user
+     * Refresh token expires in 7 days and uses separate secret key
+     * 
+     * @param payload - Token payload containing user information
+     * @returns Signed JWT refresh token with 7-day expiration
+     */
     private generateRefreshToken(payload: any): string {
         return this.jwtService.sign(payload, { secret: REFRESH_SECRET_KEY, expiresIn: '7d' });
     }
 
-    //login User As per Role Based
+    /**
+     * Authenticate user and create login session
+     * Validates credentials, generates JWT tokens, and tracks login session with IP, location, and device info
+     * 
+     * @param reqModel - Login credentials including email, password, and optional GPS coordinates
+     * @param req - Optional Express request object for extracting IP address and user agent
+     * @returns LoginResponseModel with user info, access token, and refresh token
+     * @throws ErrorResponse if email doesn't exist or password is invalid (also tracks failed login attempts)
+     */
     async loginUser(reqModel: LoginUserModel, req?: any): Promise<LoginResponseModel> {
         try {
             if (reqModel.latitude && reqModel.longitude) {
@@ -61,7 +128,7 @@ export class AuthUsersService {
 
             const payload = {
                 username: user.email,
-                email: user.email, // Explicitly add email for JwtStrategy
+                email: user.email,
                 sub: user.id,
                 companyId: user.companyId
             };
@@ -72,21 +139,7 @@ export class AuthUsersService {
                 try {
                     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || '127.0.0.1';
                     const userAgent = req.headers['user-agent'];
-
-                    const loginSessionModel = new CreateLoginSessionModel();
-                    loginSessionModel.userId = user.id;
-                    loginSessionModel.companyId = user.companyId;
-                    loginSessionModel.ipAddress = ipAddress;
-                    loginSessionModel.userAgent = userAgent;
-                    loginSessionModel.loginMethod = 'email_password';
-                    loginSessionModel.sessionToken = accessToken; // Store JWT
-
-                    // Add location data
-                    if (reqModel.latitude && reqModel.longitude) {
-                        loginSessionModel.latitude = reqModel.latitude;
-                        loginSessionModel.longitude = reqModel.longitude;
-                    }
-
+                    const loginSessionModel = new CreateLoginSessionModel(user.id, user.companyId, ipAddress, userAgent, 'email_password', accessToken, reqModel.latitude, reqModel.longitude);
                     await this.loginSessionService.createLoginSession(loginSessionModel);
                 } catch (sessionError) {
                     throw sessionError;
@@ -99,6 +152,14 @@ export class AuthUsersService {
         }
     }
 
+    /**
+     * Send access request email to administrators
+     * Allows users to request access to the system via email notification
+     * 
+     * @param reqModel - Access request details to be sent via email
+     * @returns GlobalResponse indicating success or failure of email sending
+     * @throws Error if email service fails
+     */
     async requestAccess(reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {
             await this.mailService.sendAccessRequestEmail(reqModel);
@@ -110,6 +171,16 @@ export class AuthUsersService {
 
     /**
      * Track failed login attempts for security monitoring
+     * Records IP address, user agent, location, and failure reason for security analysis
+     * 
+     * @param req - Express request object for extracting IP and user agent
+     * @param email - Email address used in failed login attempt
+     * @param reason - Reason for login failure (e.g., 'email_not_found', 'invalid_password')
+     * @param userId - Optional user ID if user exists
+     * @param companyId - Optional company ID if user exists
+     * @param latitude - Optional GPS latitude coordinate
+     * @param longitude - Optional GPS longitude coordinate
+     * @throws Error if session service fails to record attempt
      */
     private async trackFailedLogin(req: any, email: string, reason: string, userId?: number, companyId?: number, latitude?: number, longitude?: number): Promise<void> {
         try {
@@ -122,7 +193,14 @@ export class AuthUsersService {
         }
     }
 
-    //logOut User
+    /**
+     * Log out user and update last login timestamp
+     * Updates the user's last login time to current timestamp
+     * 
+     * @param reqModel - Logout request containing user email
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if user email doesn't exist
+     */
     async logOutUser(reqModel: LogoutUserModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -140,7 +218,14 @@ export class AuthUsersService {
         }
     }
 
-    //update user
+    /**
+     * Update user profile information
+     * Updates user's full name and phone number
+     * 
+     * @param reqModel - Update request containing email, full name, and phone number
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if user email doesn't exist
+     */
     async updateUser(reqModel: UpdateUserModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -158,7 +243,14 @@ export class AuthUsersService {
         }
     }
 
-    //delete user
+    /**
+     * Delete user account from the system
+     * Permanently removes user record from database
+     * 
+     * @param reqModel - Delete request containing user email
+     * @returns GlobalResponse indicating success or failure
+     * @throws ErrorResponse if user email doesn't exist
+     */
     async deleteUser(reqModel: DeleteUserModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -176,7 +268,14 @@ export class AuthUsersService {
         }
     }
 
-    //get all users
+    /**
+     * Retrieve all users for a specific company
+     * Fetches list of all users belonging to the specified company
+     * 
+     * @param reqModel - Request containing company ID
+     * @returns GetAllUsersModel with list of users for the company
+     * @throws ErrorResponse if no users found for the company
+     */
     async getAllUsers(reqModel: CompanyIdRequestModel): Promise<GetAllUsersModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useMasters } from '@/hooks/useMasters';
-import { useCompanies } from '@/hooks/useCompanies';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -14,12 +13,11 @@ import { useToast } from '@/contexts/ToastContext';
 
 export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }) {
     const { assetTypes, isLoading, createAssetType, updateAssetType, deleteAssetType, fetchAssetTypes } = useMasters();
-    const { companies } = useCompanies();
     const { success, error } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ companyId: '', name: '', description: '', isActive: true });
+    const [formData, setFormData] = useState({ name: '', description: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -56,7 +54,6 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
         setIsEditMode(true);
         setEditingId(item.id);
         setFormData({
-            companyId: item.companyId?.toString() || '',
             name: item.name,
             description: item.description || '',
             isActive: item.isActive ?? true
@@ -85,7 +82,7 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ companyId: '', name: '', description: '', isActive: true });
+        setFormData({ name: '', description: '', isActive: true });
     };
 
     return (
@@ -112,7 +109,7 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                             <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
                                 <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                     <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company Name</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Asset Type</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
@@ -124,7 +121,11 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                                     ) : (
                                         assetTypes?.map((item: any, index: number) => (
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.companyName || 'N/A'}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                                                        {item.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.description || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
@@ -151,21 +152,20 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Company Name <span className="text-red-500">*</span>
+                            Status
                         </label>
-                        <select
-                            value={formData.companyId}
-                            onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                            required
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        >
-                            <option value="">Select Company</option>
-                            {companies?.map((company) => (
-                                <option key={company.id} value={company.id}>
-                                    {company.companyName}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="isActive"
+                                checked={formData.isActive}
+                                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                            />
+                            <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {formData.isActive ? 'Active' : 'Inactive'}
+                            </label>
+                        </div>
                     </div>
 
                     <Input
@@ -186,17 +186,6 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
                             placeholder="Enter asset type description..."
                         />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="isActive"
-                            checked={formData.isActive}
-                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                        />
-                        <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</label>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4">

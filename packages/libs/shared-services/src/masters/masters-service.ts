@@ -8,9 +8,8 @@ import { CommonAxiosService } from '../common-axios-service';
 export class MastersService extends CommonAxiosService {
     private readonly BASE_PATH = '/masters';
 
-    async getAllDepartments(companyId: number): Promise<GetAllDepartmentsResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/getAllDepartments`, new CompanyIdRequestModel(companyId)
-        );
+    async getAllDepartments(): Promise<GetAllDepartmentsResponseModel> {
+        return await this.axiosPostCall(`${this.BASE_PATH}/getAllDepartments`, {});
     }
 
     async createDepartment(data: CreateDepartmentModel): Promise<CreateDepartmentResponseModel> {

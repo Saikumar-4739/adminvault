@@ -12,7 +12,17 @@
     "react-dom": "^19.0.0",
     "recharts": "^3.6.0",
     "tailwind-merge": "^3.4.0",
+    "qrcode.react": "^4.0.1",
+    "react-to-print": "^3.0.1",
+    "xlsx": "^0.18.5",
     "@adminvault/shared-services": "*",
     "@adminvault/shared-models": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/qrcode.react": "^1.1.2",
+    "@types/react-to-print": "^3.0.0"
   }
 }

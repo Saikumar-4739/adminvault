@@ -227,7 +227,7 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Company ID is required");
             }
 
-            const assets = await this.assetInfoRepo.searchAssets(reqModel.companyId, reqModel.searchQuery, reqModel.statusFilter);
+            const assets = await this.assetInfoRepo.searchAssets(reqModel);
             const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
         } catch (error) {

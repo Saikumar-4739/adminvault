@@ -1,8 +1,11 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiTags, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AssetInfoService } from './asset-info.service';
 import { AssetTabsService } from './asset-tabs.service';
+import { AssetBulkService } from './asset-bulk.service';
+import { AssetHistoryService } from './asset-history.service';
 import {
     CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel,
     AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel,
@@ -11,7 +14,8 @@ import {
     ProcessReturnRequestModel, ProcessReturnResponseModel,
     GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel,
     CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel,
-    AssignFromQueueRequestModel, AssignFromQueueResponseModel
+    AssignFromQueueRequestModel, AssignFromQueueResponseModel,
+    BulkImportResponseModel, AssetTimelineResponseModel
 } from '@adminvault/shared-models';
 
 @ApiTags('Asset Info')
@@ -19,8 +23,50 @@ import {
 export class AssetInfoController {
     constructor(
         private service: AssetInfoService,
-        private assetTabsService: AssetTabsService
+        private assetTabsService: AssetTabsService,
+        private assetBulkService: AssetBulkService,
+        private assetHistoryService: AssetHistoryService
     ) { }
+
+    @Get(':id/timeline')
+    async getTimeline(@Param('id') id: number, @Query('companyId') companyId: number): Promise<AssetTimelineResponseModel> {
+        try {
+            return await this.assetHistoryService.getAssetTimeline(Number(id), Number(companyId));
+        } catch (error) {
+            return returnException(AssetTimelineResponseModel, error);
+        }
+    }
+
+    @Post('bulk-import')
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                },
+                companyId: { type: 'number' },
+                userId: { type: 'number' }
+            },
+        },
+    })
+    @UseInterceptors(FileInterceptor('file'))
+    async bulkImport(
+        @UploadedFile() file: any,
+        @Body('companyId') companyId: number,
+        @Body('userId') userId: number
+    ): Promise<BulkImportResponseModel> {
+        try {
+            if (!file) {
+                return new BulkImportResponseModel(false, 400, 'No file provided', 0, 0, []);
+            }
+            return await this.assetBulkService.processBulkImport(file.buffer, Number(companyId), Number(userId));
+        } catch (error) {
+            return returnException(BulkImportResponseModel, error);
+        }
+    }
 
     @Post('createAsset')
     @ApiBody({ type: CreateAssetModel })

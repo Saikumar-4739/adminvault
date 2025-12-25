@@ -104,15 +104,23 @@ export default function LoginPage() {
 
                 {/* Main Content */}
                 <div className="relative z-10 max-w-2xl space-y-8">
-                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm animate-fade-in shadow-xl">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.5)]"></span>
-                        <span className="text-xs font-medium text-indigo-100 tracking-wide uppercase">AdminVault System</span>
+                    {/* Large Prominent App Name */}
+                    <div className="space-y-6">
+                        <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md shadow-2xl shadow-indigo-500/20">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.8)] animate-pulse"></span>
+                            <span className="text-xs font-semibold text-white tracking-widest uppercase">Enterprise Platform</span>
+                        </div>
+
+                        <h1 className="text-6xl lg:text-8xl font-black tracking-tight leading-none">
+                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-gradient-x drop-shadow-2xl">
+                                AdminVault
+                            </span>
+                        </h1>
                     </div>
 
-                    <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight drop-shadow-sm">
-                        IT Admin <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 animate-gradient-x">Management.</span>
-                    </h1>
+                    <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight">
+                        Secure. Scalable. <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">Managed</span>
+                    </h2>
 
                     <p className="text-lg text-indigo-200 max-w-lg leading-relaxed font-light mt-4">
                         AdminVault is an enterprise IT management platform for inventory control, employee requests, and system administration.
@@ -120,40 +128,40 @@ export default function LoginPage() {
 
                     {/* Features Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-white/10">
-                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors group cursor-default w-full h-auto md:h-32">
-                            <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-200 group-hover:text-white group-hover:bg-indigo-500 transition-all">
-                                <ShieldCheck className="w-6 h-6" />
+                        <div className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 backdrop-blur-sm border border-indigo-400/20 hover:border-indigo-400/40 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300 group cursor-default w-full h-auto md:h-32">
+                            <div className="p-3.5 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/50 group-hover:shadow-indigo-500/70 group-hover:scale-110 transition-all duration-300">
+                                <ShieldCheck className="w-7 h-7" />
                             </div>
                             <div>
-                                <h3 className="text-white font-semibold mb-1">Enterprise Security</h3>
+                                <h3 className="text-white font-bold mb-1 text-lg">Enterprise Security</h3>
                                 <p className="text-indigo-200 text-sm leading-snug">Bank-grade encryption & compliance</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors group cursor-default w-full h-auto md:h-32">
-                            <div className="p-3 rounded-xl bg-violet-500/20 text-violet-200 group-hover:text-white group-hover:bg-violet-500 transition-all">
-                                <BarChart3 className="w-6 h-6" />
+                        <div className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-violet-500/10 to-violet-600/5 backdrop-blur-sm border border-violet-400/20 hover:border-violet-400/40 hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 group cursor-default w-full h-auto md:h-32">
+                            <div className="p-3.5 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/50 group-hover:shadow-violet-500/70 group-hover:scale-110 transition-all duration-300">
+                                <BarChart3 className="w-7 h-7" />
                             </div>
                             <div>
-                                <h3 className="text-white font-semibold mb-1">Real-time Analytics</h3>
-                                <p className="text-indigo-200 text-sm leading-snug">Data-driven decision making</p>
+                                <h3 className="text-white font-bold mb-1 text-lg">Real-time Analytics</h3>
+                                <p className="text-violet-200 text-sm leading-snug">Data-driven decision making</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors group cursor-default w-full h-auto md:h-32">
-                            <div className="p-3 rounded-xl bg-fuchsia-500/20 text-fuchsia-200 group-hover:text-white group-hover:bg-fuchsia-500 transition-all">
-                                <Users className="w-6 h-6" />
+                        <div className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-fuchsia-500/10 to-fuchsia-600/5 backdrop-blur-sm border border-fuchsia-400/20 hover:border-fuchsia-400/40 hover:shadow-lg hover:shadow-fuchsia-500/20 transition-all duration-300 group cursor-default w-full h-auto md:h-32">
+                            <div className="p-3.5 rounded-xl bg-gradient-to-br from-fuchsia-500 to-fuchsia-600 text-white shadow-lg shadow-fuchsia-500/50 group-hover:shadow-fuchsia-500/70 group-hover:scale-110 transition-all duration-300">
+                                <Users className="w-7 h-7" />
                             </div>
                             <div>
-                                <h3 className="text-white font-semibold mb-1">Global Teams</h3>
-                                <p className="text-indigo-200 text-sm leading-snug">Seamless collaboration tools</p>
+                                <h3 className="text-white font-bold mb-1 text-lg">Global Teams</h3>
+                                <p className="text-fuchsia-200 text-sm leading-snug">Seamless collaboration tools</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors group cursor-default w-full h-auto md:h-32">
-                            <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-200 group-hover:text-white group-hover:bg-emerald-500 transition-all">
-                                <Zap className="w-6 h-6" />
+                        <div className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 backdrop-blur-sm border border-emerald-400/20 hover:border-emerald-400/40 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 group cursor-default w-full h-auto md:h-32">
+                            <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/50 group-hover:shadow-emerald-500/70 group-hover:scale-110 transition-all duration-300">
+                                <Zap className="w-7 h-7" />
                             </div>
                             <div>
-                                <h3 className="text-white font-semibold mb-1">High Performance</h3>
-                                <p className="text-indigo-200 text-sm leading-snug">Optimized for speed & scale</p>
+                                <h3 className="text-white font-bold mb-1 text-lg">High Performance</h3>
+                                <p className="text-emerald-200 text-sm leading-snug">Optimized for speed & scale</p>
                             </div>
                         </div>
                     </div>
@@ -161,26 +169,28 @@ export default function LoginPage() {
             </div>
 
             {/* Right Side - Login Form (30%) */}
-            <div className="w-full lg:w-[30%] flex flex-col justify-center px-8 sm:px-12 bg-white dark:bg-slate-900 relative z-20 shadow-2xl dark:shadow-none border-l dark:border-slate-800">
+            <div className="w-full lg:w-[30%] flex flex-col justify-center px-8 sm:px-12 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 relative z-20 shadow-2xl border-l border-slate-200/50 dark:border-slate-800">
                 <div className="w-full max-w-sm mx-auto space-y-10">
                     {/* Header */}
-                    <div className="space-y-2">
-                        <div className="mb-8 p-3 bg-primary-50 dark:bg-indigo-900/20 w-fit rounded-xl border border-primary-100 dark:border-indigo-900/30">
-                            <Building2 className="w-8 h-8 text-primary-600 dark:text-indigo-400" />
+                    <div className="space-y-4">
+                        <div className="mb-6 p-4 bg-gradient-to-br from-indigo-600 to-purple-600 w-fit rounded-2xl shadow-xl shadow-indigo-500/30 ring-1 ring-white/10">
+                            <Building2 className="w-9 h-9 text-white" />
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Welcome back</h2>
-                        <p className="text-slate-500 dark:text-slate-400">Please enter your credentials to access the vault.</p>
+                        <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                            Welcome <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">back</span>
+                        </h2>
+                        <p className="text-slate-600 dark:text-slate-300 text-base font-medium">Enter your credentials to access the vault</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <Input
                                 label="Email address"
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="bg-transparent border-slate-200 dark:border-slate-700/50 focus:border-primary-500 focus:ring-primary-500/10 rounded-lg h-12 transition-all dark:text-white"
+                                className="bg-white/80 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700/50 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/20 rounded-xl h-14 transition-all dark:text-white font-medium shadow-sm hover:shadow-md"
                             />
                             <Input
                                 label="Password"
@@ -188,27 +198,36 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="bg-transparent border-slate-200 dark:border-slate-700/50 focus:border-primary-500 focus:ring-primary-500/10 rounded-lg h-12 transition-all dark:text-white"
+                                className="bg-white/80 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700/50 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/20 rounded-xl h-14 transition-all dark:text-white font-medium shadow-sm hover:shadow-md"
                             />
                         </div>
 
                         <Button
                             type="submit"
-                            className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-all shadow-lg shadow-primary-500/20"
+                            className="w-full h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all shadow-xl shadow-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] text-base"
                             isLoading={isLoading}
                         >
                             Sign In
                         </Button>
                     </form>
 
-                    <p className="text-center text-sm text-slate-500">
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-4 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 text-slate-500 dark:text-slate-400 font-medium">Need access?</span>
+                        </div>
+                    </div>
+
+                    <p className="text-center text-sm text-slate-600 dark:text-slate-400">
                         Don't have an account?{' '}
                         <button
                             type="button"
                             onClick={() => setShowRequestModal(true)}
-                            className="text-primary-600 font-semibold hover:underline"
+                            className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 font-bold hover:from-indigo-700 hover:to-purple-700 transition-all"
                         >
-                            Request access
+                            Request access →
                         </button>
                     </p>
                 </div>

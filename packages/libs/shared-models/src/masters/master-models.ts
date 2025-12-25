@@ -16,8 +16,6 @@ export interface MasterBase {
 
 export interface Department extends MasterBase {
     code?: string;
-    status?: string;
-    level?: string;
     companyName?: string;
 }
 
@@ -92,14 +90,10 @@ export class CreateMasterModel {
 
 export class CreateDepartmentModel extends CreateMasterModel {
     code?: string;
-    status?: string;
-    level?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, status?: string, level?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.code = code;
-        this.status = status;
-        this.level = level;
     }
 }
 
@@ -212,17 +206,13 @@ export class UpdateDepartmentModel {
     description?: string;
     isActive: boolean;
     code?: string;
-    status?: string;
-    level?: string;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string, status?: string, level?: string) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
         this.code = code;
-        this.status = status;
-        this.level = level;
     }
 }
 

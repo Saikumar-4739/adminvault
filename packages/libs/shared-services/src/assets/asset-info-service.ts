@@ -43,4 +43,23 @@ export class AssetInfoService extends CommonAxiosService {
     async getAssetsWithAssignments(companyId: number, config?: AxiosRequestConfig): Promise<GetAssetsWithAssignmentsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('with-assignments'), { companyId }, config);
     }
+
+    async bulkImport(file: File, companyId: number, userId: number, config?: AxiosRequestConfig): Promise<import('@adminvault/shared-models').BulkImportResponseModel> {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('companyId', String(companyId));
+        formData.append('userId', String(userId));
+
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('bulk-import'), formData, {
+            ...config,
+            headers: {
+                ...config?.headers,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    }
+
+    async getTimeline(assetId: number, companyId: number, config?: AxiosRequestConfig): Promise<import('@adminvault/shared-models').AssetTimelineResponseModel> {
+        return await this.axiosGetCall(this.getURLwithMainEndPoint(`${assetId}/timeline?companyId=${companyId}`), config);
+    }
 }

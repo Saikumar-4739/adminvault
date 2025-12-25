@@ -11,6 +11,11 @@ export class EmailInfoController {
         private service: EmailInfoService
     ) { }
 
+    /**
+     * Create a new email info record
+     * @param reqModel - Email info creation data
+     * @returns GlobalResponse indicating creation success
+     */
     @Post('createEmailInfo')
     @ApiBody({ type: CreateEmailInfoModel })
     async createEmailInfo(@Body() reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
@@ -21,6 +26,11 @@ export class EmailInfoController {
         }
     }
 
+    /**
+     * Update existing email info record
+     * @param reqModel - Email info update data
+     * @returns GlobalResponse indicating update success
+     */
     @Post('updateEmailInfo')
     @ApiBody({ type: UpdateEmailInfoModel })
     async updateEmailInfo(@Body() reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
@@ -31,6 +41,11 @@ export class EmailInfoController {
         }
     }
 
+    /**
+     * Retrieve a specific email info record by ID
+     * @param reqModel - Request with email info ID
+     * @returns GetEmailInfoByIdModel with email info details
+     */
     @Post('getEmailInfo')
     @ApiBody({ type: GetEmailInfoModel })
     async getEmailInfo(@Body() reqModel: GetEmailInfoModel): Promise<GetEmailInfoByIdModel> {
@@ -41,7 +56,12 @@ export class EmailInfoController {
         }
     }
 
-    @Get('getAllEmailInfo')
+    /**
+     * Retrieve all email info records, optionally filtered by company
+     * @param companyId - Optional company ID query parameter
+     * @returns GetAllEmailInfoModel with list of email info records
+     */
+    @Post('getAllEmailInfo')
     @ApiQuery({ name: 'companyId', required: false, type: Number })
     async getAllEmailInfo(@Query('companyId') companyId?: number): Promise<GetAllEmailInfoModel> {
         try {
@@ -51,6 +71,11 @@ export class EmailInfoController {
         }
     }
 
+    /**
+     * Delete an email info record
+     * @param reqModel - Request with email info ID
+     * @returns GlobalResponse indicating deletion success
+     */
     @Post('deleteEmailInfo')
     @ApiBody({ type: DeleteEmailInfoModel })
     async deleteEmailInfo(@Body() reqModel: DeleteEmailInfoModel): Promise<GlobalResponse> {

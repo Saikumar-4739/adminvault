@@ -9,6 +9,11 @@ import { CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel,
 export class AssetAssignController {
     constructor(private service: AssetAssignService) { }
 
+    /**
+     * Create a new asset assignment
+     * @param reqModel - Asset assignment creation data
+     * @returns GlobalResponse indicating assignment success
+     */
     @Post('createAssignment')
     @ApiBody({ type: CreateAssetAssignModel })
     async createAssignment(@Body() reqModel: CreateAssetAssignModel): Promise<GlobalResponse> {
@@ -19,6 +24,11 @@ export class AssetAssignController {
         }
     }
 
+    /**
+     * Update existing asset assignment
+     * @param reqModel - Asset assignment update data
+     * @returns GlobalResponse indicating update success
+     */
     @Post('updateAssignment')
     @ApiBody({ type: UpdateAssetAssignModel })
     async updateAssignment(@Body() reqModel: UpdateAssetAssignModel): Promise<GlobalResponse> {
@@ -29,6 +39,11 @@ export class AssetAssignController {
         }
     }
 
+    /**
+     * Retrieve a specific asset assignment by ID
+     * @param reqModel - Request with assignment ID
+     * @returns GetAssetAssignByIdModel with assignment details
+     */
     @Post('getAssignment')
     @ApiBody({ type: GetAssetAssignModel })
     async getAssignment(@Body() reqModel: GetAssetAssignModel): Promise<GetAssetAssignByIdModel> {
@@ -39,6 +54,10 @@ export class AssetAssignController {
         }
     }
 
+    /**
+     * Retrieve all asset assignments
+     * @returns GetAllAssetAssignsModel with list of assignments
+     */
     @Post('getAllAssignments')
     async getAllAssignments(): Promise<GetAllAssetAssignsModel> {
         try {
@@ -48,6 +67,11 @@ export class AssetAssignController {
         }
     }
 
+    /**
+     * Delete an asset assignment (soft delete)
+     * @param reqModel - Request with assignment ID
+     * @returns GlobalResponse indicating deletion success
+     */
     @Post('deleteAssignment')
     @ApiBody({ type: DeleteAssetAssignModel })
     async deleteAssignment(@Body() reqModel: DeleteAssetAssignModel): Promise<GlobalResponse> {

@@ -13,10 +13,8 @@ async function bootstrap() {
 
   // Swagger Configuration (for REST API documentation)
   const config = new DocumentBuilder()
-    .setTitle('AdminVault API')
-    .setDescription('AdminVault API - GraphQL available at /graphql')
+    .setTitle('AdminVault')
     .setVersion('1.0')
-    .addTag('Auth Users', 'Authentication and user management endpoints')
     .addBearerAuth()
     .build();
 

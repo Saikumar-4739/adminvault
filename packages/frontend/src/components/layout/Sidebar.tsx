@@ -19,7 +19,7 @@ const allNavigation: NavigationItem[] = [
     { name: 'Configuration', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
     { name: 'Assets', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Licenses', href: '/licenses', icon: KeySquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Vault', href: '/password-vault', icon: Lock, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Safe Vault', href: '/password-vault', icon: Lock, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Tickets', href: '/tickets', icon: Ticket },
     { name: 'Email Info', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
     { name: 'Slack Users', href: '/slack-users', icon: MessageSquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },

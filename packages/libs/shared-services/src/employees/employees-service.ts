@@ -23,7 +23,7 @@ export class EmployeesService extends CommonAxiosService {
         const url = companyId
             ? this.getURLwithMainEndPoint(`getAllEmployees?companyId=${companyId}`)
             : this.getURLwithMainEndPoint('getAllEmployees');
-        return await this.axiosGetCall(url, config);
+        return await this.axiosPostCall(url, {}, config);
     }
 
     async deleteEmployee(reqObj: DeleteEmployeeModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {

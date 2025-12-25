@@ -13,6 +13,9 @@ export * from './it-admin';
 export * from './slack-user/slack-user-models';
 export * from './document/document-models';
 export * from './ticket';
+export * from './license/license-models';
+export * from './dashboard/dashboard-models';
+
 
 // Re-export commonly used types from backend-utils
 export { GlobalResponse } from '@adminvault/backend-utils';

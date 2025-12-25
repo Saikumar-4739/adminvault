@@ -201,12 +201,32 @@ export class AssetStatisticsResponseModel extends GlobalResponse {
 export class AssetSearchRequestModel {
     companyId: number;
     searchQuery?: string;
-    statusFilter?: AssetStatusEnum;
+    statusFilter?: AssetStatusEnum[];
+    brandIds?: number[];
+    assetTypeIds?: number[];
+    employeeId?: number;
+    purchaseDateFrom?: Date;
+    purchaseDateTo?: Date;
+    // warranty, etc. can be added here
 
-    constructor(companyId: number, searchQuery?: string, statusFilter?: AssetStatusEnum) {
+    constructor(
+        companyId: number,
+        searchQuery?: string,
+        statusFilter?: AssetStatusEnum[],
+        brandIds?: number[],
+        assetTypeIds?: number[],
+        employeeId?: number,
+        purchaseDateFrom?: Date,
+        purchaseDateTo?: Date
+    ) {
         this.companyId = companyId;
         this.searchQuery = searchQuery;
         this.statusFilter = statusFilter;
+        this.brandIds = brandIds;
+        this.assetTypeIds = assetTypeIds;
+        this.employeeId = employeeId;
+        this.purchaseDateFrom = purchaseDateFrom;
+        this.purchaseDateTo = purchaseDateTo;
     }
 }
 

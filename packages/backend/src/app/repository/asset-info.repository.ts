@@ -60,7 +60,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
     /**
      * Search assets by serial number or device name
      */
-    async searchAssets(companyId: number, searchQuery?: string, statusFilter?: string) {
+    async searchAssets(reqModel: import('@adminvault/shared-models').AssetSearchRequestModel) {
         const query = this.createQueryBuilder('asset')
             .leftJoin('device_info', 'device', 'asset.device_id = device.id')
             .select([
@@ -82,17 +82,39 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'device.device_name as deviceName',
                 'device.device_type as deviceType',
             ])
-            .where('asset.company_id = :companyId', { companyId });
+            .where('asset.company_id = :companyId', { companyId: reqModel.companyId });
 
-        if (searchQuery) {
+        if (reqModel.searchQuery) {
             query.andWhere(
                 '(asset.serial_number LIKE :search OR device.device_name LIKE :search)',
-                { search: `%${searchQuery}%` }
+                { search: `%${reqModel.searchQuery}%` }
             );
         }
 
-        if (statusFilter) {
-            query.andWhere('asset.asset_status_enum = :status', { status: statusFilter });
+        if (reqModel.statusFilter && reqModel.statusFilter.length > 0) {
+            // Handle both single status and array of statuses
+            const statuses = Array.isArray(reqModel.statusFilter) ? reqModel.statusFilter : [reqModel.statusFilter];
+            query.andWhere('asset.asset_status_enum IN (:...statuses)', { statuses });
+        }
+
+        if (reqModel.brandIds && reqModel.brandIds.length > 0) {
+            query.andWhere('asset.brand_id IN (:...brandIds)', { brandIds: reqModel.brandIds });
+        }
+
+        if (reqModel.assetTypeIds && reqModel.assetTypeIds.length > 0) {
+            query.andWhere('asset.device_id IN (:...assetTypeIds)', { assetTypeIds: reqModel.assetTypeIds });
+        }
+
+        if (reqModel.employeeId) {
+            query.andWhere('asset.assigned_to_employee_id = :employeeId', { employeeId: reqModel.employeeId });
+        }
+
+        if (reqModel.purchaseDateFrom) {
+            query.andWhere('asset.purchase_date >= :purchaseDateFrom', { purchaseDateFrom: reqModel.purchaseDateFrom });
+        }
+
+        if (reqModel.purchaseDateTo) {
+            query.andWhere('asset.purchase_date <= :purchaseDateTo', { purchaseDateTo: reqModel.purchaseDateTo });
         }
 
         return await query

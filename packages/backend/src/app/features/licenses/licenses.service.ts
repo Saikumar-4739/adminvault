@@ -3,6 +3,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CompanyLicenseEntity } from '../../entities/company-license.entity';
+import { GlobalResponse } from '@adminvault/backend-utils';
+import {
+    CreateLicenseModel,
+    UpdateLicenseModel,
+    DeleteLicenseModel,
+    GetAllLicensesModel,
+    GetLicenseStatsModel,
+    LicenseStatsModel,
+    LicenseResponseModel
+} from '@adminvault/shared-models';
 
 @Injectable()
 export class LicensesService {
@@ -11,7 +21,14 @@ export class LicensesService {
         private repo: Repository<CompanyLicenseEntity>
     ) { }
 
-    async findAll(companyId?: number) {
+    /**
+     * Retrieve all license assignments, optionally filtered by company
+     * Fetches licenses with related company, application, and employee information
+     * 
+     * @param companyId - Optional company ID to filter licenses
+     * @returns GetAllLicensesModel with array of license data including relations
+     */
+    async findAll(companyId?: number): Promise<GetAllLicensesModel> {
         const query = this.repo.createQueryBuilder('license')
             .leftJoinAndSelect('license.company', 'company')
             .leftJoinAndSelect('license.application', 'application')
@@ -23,10 +40,32 @@ export class LicensesService {
         }
 
         const licenses = await query.getMany();
-        return { status: true, data: licenses };
+
+        const licenseResponses = licenses.map(l => new LicenseResponseModel(
+            l.id,
+            l.companyId,
+            l.applicationId,
+            l.createdAt,
+            l.updatedAt,
+            l.assignedEmployeeId,
+            undefined, // licenseKey - not in entity
+            undefined, // purchaseDate - not in entity
+            l.expiryDate,
+            undefined, // seats - not in entity
+            l.remarks // notes mapped to remarks
+        ));
+
+        return new GetAllLicensesModel(true, 200, 'Licenses retrieved successfully', licenseResponses);
     }
 
-    async getStats(companyId?: number) {
+    /**
+     * Calculate license statistics for dashboard
+     * Computes total licenses, used licenses, and licenses expiring within 30 days
+     * 
+     * @param companyId - Optional company ID to filter statistics
+     * @returns GetLicenseStatsModel with license statistics
+     */
+    async getStats(companyId?: number): Promise<GetLicenseStatsModel> {
         const query = this.repo.createQueryBuilder('license');
 
         if (companyId) {
@@ -36,11 +75,7 @@ export class LicensesService {
         const licenses = await query.getMany();
 
         const total = licenses.length;
-        // In the new model, every record is an assignment, so 'used' is effectively the count of active assignments.
-        // We can define 'used' as 'not expired' maybe? Or just keep it same as total for now to represent 'Assigned Count'.
         const used = total;
-
-        // Cost is removed, set to 0
         const totalCost = 0;
 
         // Expiring in 30 days
@@ -51,31 +86,59 @@ export class LicensesService {
             l.expiryDate && new Date(l.expiryDate) <= thirtyDaysFromNow && new Date(l.expiryDate) >= new Date()
         ).length;
 
-        return {
-            status: true,
-            data: {
-                totalLicenses: total, // now represents total assignments
-                usedLicenses: used,
-                totalCost: totalCost,
-                expiringSoon: expiringSoon
-            }
+        const stats = new LicenseStatsModel(total, used, totalCost, expiringSoon);
+        return new GetLicenseStatsModel(true, 200, 'License statistics retrieved successfully', stats);
+    }
+
+    /**
+     * Create a new license assignment
+     * Assigns a software license to an employee
+     * 
+     * @param reqModel - License assignment creation data
+     * @returns GlobalResponse indicating creation success
+     */
+    async create(reqModel: CreateLicenseModel): Promise<GlobalResponse> {
+        const licenseData: Partial<CompanyLicenseEntity> = {
+            companyId: reqModel.companyId,
+            applicationId: reqModel.applicationId,
+            assignedEmployeeId: reqModel.assignedEmployeeId,
+            expiryDate: reqModel.expiryDate,
+            remarks: reqModel.notes
         };
+
+        const license = this.repo.create(licenseData);
+        await this.repo.save(license);
+        return new GlobalResponse(true, 201, 'License assigned successfully');
     }
 
-    async create(data: any) {
-        const license = this.repo.create(data);
-        const saved = await this.repo.save(license);
-        return { status: true, data: saved, message: 'License assigned successfully' };
+    /**
+     * Update an existing license assignment
+     * Modifies license details such as expiry date or assigned employee
+     * 
+     * @param reqModel - License update data with ID
+     * @returns GlobalResponse indicating update success
+     */
+    async update(reqModel: UpdateLicenseModel): Promise<GlobalResponse> {
+        const updateData: Partial<CompanyLicenseEntity> = {
+            applicationId: reqModel.applicationId,
+            assignedEmployeeId: reqModel.assignedEmployeeId,
+            expiryDate: reqModel.expiryDate,
+            remarks: reqModel.notes
+        };
+
+        await this.repo.update(reqModel.id, updateData);
+        return new GlobalResponse(true, 200, 'License updated successfully');
     }
 
-    async update(id: number, data: any) {
-        await this.repo.update(id, data);
-        const updated = await this.repo.findOne({ where: { id } });
-        return { status: true, data: updated, message: 'License updated successfully' };
-    }
-
-    async remove(id: number) {
-        await this.repo.delete(id);
-        return { status: true, message: 'License removed successfully' };
+    /**
+     * Remove a license assignment
+     * Permanently deletes license assignment from database
+     * 
+     * @param reqModel - Delete request with license ID
+     * @returns GlobalResponse indicating deletion success
+     */
+    async remove(reqModel: DeleteLicenseModel): Promise<GlobalResponse> {
+        await this.repo.delete(reqModel.id);
+        return new GlobalResponse(true, 200, 'License removed successfully');
     }
 }

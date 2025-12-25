@@ -33,8 +33,8 @@ export function useDashboard() {
             setIsLoading(true);
             setError(null);
             const response = await dashboardService.getStats();
-            if (response) {
-                setStats(response);
+            if (response && response.status && response.data) {
+                setStats(response.data);
             }
         } catch (err: any) {
             setError(err.message || 'Failed to fetch dashboard stats');

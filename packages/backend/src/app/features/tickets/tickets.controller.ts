@@ -11,6 +11,13 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard'; // Ensure correct pa
 export class TicketsController {
     constructor(private service: TicketsService) { }
 
+    /**
+     * Create a new support ticket
+     * Requires authentication - extracts user email from JWT token
+     * @param reqModel - Ticket creation data
+     * @param req - Express request with authenticated user
+     * @returns GlobalResponse indicating ticket creation success
+     */
     @Post('createTicket')
     @ApiBody({ type: CreateTicketModel })
     async createTicket(@Body() reqModel: CreateTicketModel, @Req() req: any): Promise<GlobalResponse> {
@@ -26,6 +33,11 @@ export class TicketsController {
         }
     }
 
+    /**
+     * Update existing ticket information
+     * @param reqModel - Ticket update data
+     * @returns GlobalResponse indicating update success
+     */
     @Post('updateTicket')
     @ApiBody({ type: UpdateTicketModel })
     async updateTicket(@Body() reqModel: UpdateTicketModel): Promise<GlobalResponse> {
@@ -36,6 +48,11 @@ export class TicketsController {
         }
     }
 
+    /**
+     * Retrieve a specific ticket by ID
+     * @param reqModel - Request with ticket ID
+     * @returns GetTicketByIdModel with ticket details
+     */
     @Post('getTicket')
     @ApiBody({ type: GetTicketModel })
     async getTicket(@Body() reqModel: GetTicketModel): Promise<GetTicketByIdModel> {
@@ -46,7 +63,11 @@ export class TicketsController {
         }
     }
 
-    @Get('getAllTickets')
+    /**
+     * Retrieve all tickets in the system
+     * @returns GetAllTicketsModel with list of all tickets
+     */
+    @Post('getAllTickets')
     async getAllTickets(): Promise<GetAllTicketsModel> {
         try {
             return await this.service.getAllTickets();
@@ -55,6 +76,11 @@ export class TicketsController {
         }
     }
 
+    /**
+     * Delete a ticket (soft delete)
+     * @param reqModel - Request with ticket ID
+     * @returns GlobalResponse indicating deletion success
+     */
     @Post('deleteTicket')
     @ApiBody({ type: DeleteTicketModel })
     async deleteTicket(@Body() reqModel: DeleteTicketModel): Promise<GlobalResponse> {

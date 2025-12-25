@@ -3,6 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmailAccountsEntity } from '../../entities/email-accounts.entity';
 import { GlobalResponse } from '@adminvault/backend-utils';
+import {
+    CreateEmailAccountModel,
+    DeleteEmailAccountModel,
+    GetAllEmailAccountsModel,
+    EmailAccountResponseModel
+} from '@adminvault/shared-models';
 
 @Injectable()
 export class EmailAccountsService {
@@ -11,27 +17,50 @@ export class EmailAccountsService {
         private readonly repo: Repository<EmailAccountsEntity>
     ) { }
 
-    async findAll(companyId?: number) {
-        // Since EmailAccountsEntity doesn't seem to have companyId directly in the snippet I saw earlier, except maybe inherited? 
-        // Checking CommonBaseEntity might be needed, but assuming standard findAll for now.
-        // Wait, the entity definition showed 'employeeId', 'email', 'emailType', 'status'.
-        // It extends CommonBaseEntity. Let's assume retrieval is flat or by employee relation if needed.
-        // For now, return all.
-        const data = await this.repo.find();
-        return {
-            status: true,
-            data: data
-        };
+    /**
+     * Retrieve all email accounts
+     * Fetches complete list of email account configurations
+     * 
+     * @returns GetAllEmailAccountsModel with array of email account data
+     */
+    async findAll(): Promise<GetAllEmailAccountsModel> {
+        const accounts = await this.repo.find();
+
+        const accountResponses = accounts.map(a => new EmailAccountResponseModel(
+            a.id,
+            a.email,
+            a.emailType,
+            a.status,
+            a.createdAt,
+            a.updatedAt,
+            a.employeeId ?? undefined
+        ));
+
+        return new GetAllEmailAccountsModel(true, 200, 'Email accounts retrieved successfully', accountResponses);
     }
 
-    async create(data: any) {
-        const entity = this.repo.create(data);
+    /**
+     * Create a new email account configuration
+     * Adds a new email account entry to the system
+     * 
+     * @param reqModel - Email account creation data
+     * @returns GlobalResponse indicating success with 201 status code
+     */
+    async create(reqModel: CreateEmailAccountModel): Promise<GlobalResponse> {
+        const entity = this.repo.create(reqModel);
         await this.repo.save(entity);
         return new GlobalResponse(true, 201, 'Email account created successfully');
     }
 
-    async delete(id: number) {
-        await this.repo.delete(id);
+    /**
+     * Delete an email account configuration
+     * Permanently removes email account from database
+     * 
+     * @param reqModel - Delete request with email account ID
+     * @returns GlobalResponse indicating success with 200 status code
+     */
+    async delete(reqModel: DeleteEmailAccountModel): Promise<GlobalResponse> {
+        await this.repo.delete(reqModel.id);
         return new GlobalResponse(true, 200, 'Email account deleted successfully');
     }
 }

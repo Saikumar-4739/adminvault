@@ -36,10 +36,9 @@ export class MastersService {
     ) { }
 
     // Departments
-    async getAllDepartments(reqModel: CompanyIdRequestModel): Promise<GetAllDepartmentsResponseModel> {
+    async getAllDepartments(): Promise<GetAllDepartmentsResponseModel> {
         try {
-            const departments = await this.deptRepo.find({ where: { companyId: reqModel.id } });
-            const company = await this.companyRepo.findOne({ where: { id: reqModel.id } });
+            const departments = await this.deptRepo.find();
             const departmentsWithCompanyName = departments.map(dept => ({
                 id: dept.id,
                 userId: dept.userId,
@@ -50,12 +49,11 @@ export class MastersService {
                 description: dept.description,
                 isActive: dept.isActive,
                 status: dept.status,
-                level: dept.level,
                 code: dept.code,
-                companyName: company?.companyName
             }));
             return new GetAllDepartmentsResponseModel(true, 200, 'Departments retrieved successfully', departmentsWithCompanyName);
         } catch (error) {
+            console.error('Error fetching departments:', error);
             throw new ErrorResponse(500, 'Failed to fetch Departments');
         }
     }
@@ -90,7 +88,6 @@ export class MastersService {
                 description: data.description,
                 code: data.code,
                 status: data.status,
-                level: data.level,
                 isActive: data.isActive
             });
             const updated = await repo.findOne({ where: { id: data.id } });
