@@ -31,7 +31,7 @@ export class EmployeesService {
             if (!reqModel.email) {
                 throw new ErrorResponse(0, "Email is required");
             }
-            if (!reqModel.department) {
+            if (!reqModel.departmentId) {
                 throw new ErrorResponse(0, "Department is required");
             }
 
@@ -47,7 +47,7 @@ export class EmployeesService {
             newEmployee.lastName = reqModel.lastName;
             newEmployee.email = reqModel.email;
             newEmployee.empStatus = reqModel.empStatus;
-            newEmployee.department = reqModel.department;
+            newEmployee.departmentId = reqModel.departmentId;
             await transManager.getRepository(EmployeesEntity).save(newEmployee);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Employee created successfully");
@@ -85,7 +85,7 @@ export class EmployeesService {
             updateData.phNumber = reqModel.phNumber;
             updateData.empStatus = reqModel.empStatus;
             updateData.billingAmount = reqModel.billingAmount;
-            updateData.department = reqModel.department;
+            updateData.departmentId = reqModel.departmentId;
             updateData.remarks = reqModel.remarks;
             await transManager.getRepository(EmployeesEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
@@ -110,12 +110,27 @@ export class EmployeesService {
                 throw new ErrorResponse(0, "Employee ID is required");
             }
 
-            const employee = await this.employeesRepo.findOne({ where: { id: reqModel.id } });
+            const employee = await this.employeesRepo.findOne({
+                where: { id: reqModel.id },
+                relations: ['department']
+            });
             if (!employee) {
                 throw new ErrorResponse(0, "Employee not found");
             }
 
-            const employeeResponse = new EmployeeResponseModel(employee.id, employee.companyId, employee.firstName, employee.lastName, employee.email, employee.department, employee.empStatus, employee.phNumber, employee.billingAmount, employee.remarks);
+            const employeeResponse = new EmployeeResponseModel(
+                employee.id,
+                employee.companyId,
+                employee.firstName,
+                employee.lastName,
+                employee.email,
+                employee.departmentId,
+                employee.empStatus,
+                employee.phNumber,
+                employee.billingAmount,
+                employee.remarks,
+                employee.department?.name
+            );
             return new GetEmployeeByIdModel(true, 0, "Employee retrieved successfully", employeeResponse);
         } catch (error) {
             throw error;
@@ -135,12 +150,29 @@ export class EmployeesService {
             let employees: EmployeesEntity[];
 
             if (companyId) {
-                employees = await this.employeesRepo.find({ where: { companyId } });
+                employees = await this.employeesRepo.find({
+                    where: { companyId },
+                    relations: ['department']
+                });
             } else {
-                employees = await this.employeesRepo.find();
+                employees = await this.employeesRepo.find({
+                    relations: ['department']
+                });
             }
 
-            const employeeResponses = employees.map(emp => new EmployeeResponseModel(emp.id, emp.companyId, emp.firstName, emp.lastName, emp.email, emp.department, emp.empStatus, emp.phNumber, emp.billingAmount, emp.remarks));
+            const employeeResponses = employees.map(emp => new EmployeeResponseModel(
+                emp.id,
+                emp.companyId,
+                emp.firstName,
+                emp.lastName,
+                emp.email,
+                emp.departmentId,
+                emp.empStatus,
+                emp.phNumber,
+                emp.billingAmount,
+                emp.remarks,
+                emp.department?.name
+            ));
             return new GetAllEmployeesModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {
             throw error;

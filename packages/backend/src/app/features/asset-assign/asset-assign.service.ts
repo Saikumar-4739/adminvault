@@ -4,7 +4,8 @@ import { AssetAssignEntity } from '../../entities/asset-assign.entity';
 import { AssetAssignRepository } from '../../repository/asset-assign.repository';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel, GetAssetAssignModel, GetAssetAssignByIdModel, AssetAssignResponseModel, GetAllAssetAssignsModel } from '@adminvault/shared-models';
+import { CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel, GetAssetAssignModel, GetAssetAssignByIdModel, AssetAssignResponseModel, GetAllAssetAssignsModel, AssetStatusEnum } from '@adminvault/shared-models';
+import { AssetInfoEntity } from '../../entities/asset-info.entity';
 
 @Injectable()
 export class AssetAssignService {
@@ -47,8 +48,16 @@ export class AssetAssignService {
             newAssetAssign.employeeId = reqModel.employeeId;
             newAssetAssign.assignedById = reqModel.assignedById;
             newAssetAssign.assignedDate = reqModel.assignedDate;
-            newAssetAssign.userId = reqModel.employeeId; 
+            newAssetAssign.userId = reqModel.employeeId;
             await transManager.getRepository(AssetAssignEntity).save(newAssetAssign);
+
+            // Update asset status to IN_USE and set assigned employee
+            await transManager.getRepository(AssetInfoEntity).update(reqModel.assetId, {
+                assetStatusEnum: AssetStatusEnum.IN_USE,
+                assignedToEmployeeId: reqModel.employeeId,
+                userAssignedDate: reqModel.assignedDate
+            });
+
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Asset assigned successfully");
         } catch (error) {
@@ -87,6 +96,15 @@ export class AssetAssignService {
             updatedAssetAssign.assignedDate = reqModel.assignedDate;
             updatedAssetAssign.userId = reqModel.employeeId;
             await transManager.getRepository(AssetAssignEntity).update(reqModel.id, updatedAssetAssign);
+
+            // Update asset's assigned employee if it changed
+            if (existing.employeeId !== reqModel.employeeId || existing.assetId !== reqModel.assetId) {
+                await transManager.getRepository(AssetInfoEntity).update(reqModel.assetId, {
+                    assignedToEmployeeId: reqModel.employeeId,
+                    userAssignedDate: reqModel.assignedDate
+                });
+            }
+
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Assignment updated successfully");
         } catch (error) {
@@ -114,7 +132,7 @@ export class AssetAssignService {
                 throw new ErrorResponse(0, "Assignment not found");
             }
 
-            const response = new AssetAssignResponseModel(assignment.id,assignment.assetId,assignment.employeeId,assignment.assignedById,assignment.assignedDate,assignment.returnDate,assignment.remarks);
+            const response = new AssetAssignResponseModel(assignment.id, assignment.assetId, assignment.employeeId, assignment.assignedById, assignment.assignedDate, assignment.returnDate, assignment.remarks);
             return new GetAssetAssignByIdModel(true, 0, "Assignment retrieved successfully", response);
         } catch (error) {
             throw error;
@@ -159,6 +177,19 @@ export class AssetAssignService {
             }
 
             await transManager.startTransaction();
+
+            // Get the assignment to know which asset to update
+            const assignment = await this.assetAssignRepo.findOne({ where: { id: reqModel.id } });
+            if (assignment) {
+                // Update asset status back to AVAILABLE and clear assignment
+                await transManager.getRepository(AssetInfoEntity).update(assignment.assetId, {
+                    assetStatusEnum: AssetStatusEnum.AVAILABLE,
+                    previousUserEmployeeId: assignment.employeeId,
+                    assignedToEmployeeId: null as any,
+                    lastReturnDate: new Date()
+                });
+            }
+
             await transManager.getRepository(AssetAssignEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Assignment deleted successfully");

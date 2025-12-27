@@ -10,13 +10,14 @@ interface Employee {
     firstName: string;
     lastName: string;
     email: string;
-    phone?: string;
+    phNumber?: string;
     companyId: number;
-    department?: string;
-    accountStatus?: string; // empStatus
+    departmentId: number;
+    departmentName?: string;
+    empStatus: string;
     billingAmount?: number;
     remarks?: string;
-    createdDate?: string;
+    createdAt?: string;
 }
 
 export function useEmployees(companyId?: number) {
@@ -38,13 +39,14 @@ export function useEmployees(companyId?: number) {
                     firstName: item.firstName,
                     lastName: item.lastName,
                     email: item.email,
-                    phone: item.phNumber || item.phone,
+                    phNumber: item.phNumber,
                     companyId: item.companyId,
-                    department: item.department,
-                    accountStatus: item.empStatus,
+                    departmentId: item.departmentId,
+                    departmentName: item.departmentName,
+                    empStatus: item.empStatus,
                     billingAmount: item.billingAmount,
                     remarks: item.remarks,
-                    createdDate: item.created_at || item.createdAt || new Date().toISOString()
+                    createdAt: item.createdAt || new Date().toISOString()
                 }));
                 setEmployees(mappedEmployees);
             } else {

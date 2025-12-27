@@ -44,7 +44,18 @@ export class AssetInfoService {
             entity.companyId = reqModel.companyId;
             entity.deviceId = reqModel.deviceId;
             entity.serialNumber = reqModel.serialNumber;
-            entity.assetStatusEnum = reqModel.assetStatusEnum;
+
+            // Auto-set status based on assignment
+            if (reqModel.assignedToEmployeeId) {
+                // If employee is assigned, set to IN_USE (unless explicitly set to MAINTENANCE or RETIRED)
+                entity.assetStatusEnum = (reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED)
+                    ? reqModel.assetStatusEnum
+                    : AssetStatusEnum.IN_USE;
+            } else {
+                // If no employee assigned, use provided status or default to AVAILABLE
+                entity.assetStatusEnum = reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE;
+            }
+
             if (reqModel.brandId !== undefined) entity.brandId = reqModel.brandId;
             if (reqModel.model !== undefined) entity.model = reqModel.model;
             if (reqModel.configuration !== undefined) entity.configuration = reqModel.configuration;
@@ -88,7 +99,18 @@ export class AssetInfoService {
             entity.companyId = reqModel.companyId;
             entity.deviceId = reqModel.deviceId;
             entity.serialNumber = reqModel.serialNumber;
-            entity.assetStatusEnum = reqModel.assetStatusEnum;
+
+            // Auto-set status based on assignment
+            if (reqModel.assignedToEmployeeId) {
+                // If employee is assigned, set to IN_USE (unless explicitly set to MAINTENANCE or RETIRED)
+                entity.assetStatusEnum = (reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED)
+                    ? reqModel.assetStatusEnum
+                    : AssetStatusEnum.IN_USE;
+            } else {
+                // If no employee assigned, use provided status or default to AVAILABLE
+                entity.assetStatusEnum = reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE;
+            }
+
             if (reqModel.brandId !== undefined) entity.brandId = reqModel.brandId;
             if (reqModel.model !== undefined) entity.model = reqModel.model;
             if (reqModel.configuration !== undefined) entity.configuration = reqModel.configuration;
@@ -228,8 +250,8 @@ export class AssetInfoService {
             }
 
             const assets = await this.assetInfoRepo.searchAssets(reqModel);
-            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate));
-            return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
+            // Return raw data to preserve assignedTo and other joined fields
+            return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", assets as any);
         } catch (error) {
             throw error;
         }

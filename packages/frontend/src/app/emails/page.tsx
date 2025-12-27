@@ -1,184 +1,251 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCompanies } from '@/hooks/useCompanies';
-import { useEmailAccounts } from '@/hooks/useEmailAccounts';
-import Button from '@/components/ui/Button';
+import { useEmailInfo } from '@/hooks/useEmailInfo';
 import Card from '@/components/ui/Card';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum } from '@adminvault/shared-models';
-import { Mail, Building2, Plus, Trash2 } from 'lucide-react';
+import { UserRoleEnum, DepartmentEnum, EmailTypeEnum } from '@adminvault/shared-models';
+import {
+    Mail, Building2, Plus, Trash2, Search,
+    Headphones, ShieldCheck, Landmark, Settings,
+    TrendingUp, Megaphone, Users2, AtSign,
+    User, Users, Globe
+} from 'lucide-react';
 import AddEmailModal from './AddEmailModal';
 
-type EmailType = 'user' | 'company' | 'group';
+// Category Definitions
+type EmailCategory = 'COMPANY' | 'USER' | 'GROUP';
 
-export default function EmailsConfigurationPage() {
+const CategoryConfig: Record<EmailCategory, { label: string, icon: any, color: string, types: EmailTypeEnum[] }> = {
+    COMPANY: {
+        label: 'Enterprise Routing',
+        icon: Globe,
+        color: 'indigo',
+        types: [EmailTypeEnum.COMPANY, EmailTypeEnum.SUPPORT, EmailTypeEnum.BILLING, EmailTypeEnum.GENERAL]
+    },
+    USER: {
+        label: 'Individual Identities',
+        icon: User,
+        color: 'emerald',
+        types: [EmailTypeEnum.USER, EmailTypeEnum.WORK, EmailTypeEnum.PERSONAL]
+    },
+    GROUP: {
+        label: 'Collaboration Groups',
+        icon: Users,
+        color: 'amber',
+        types: [EmailTypeEnum.GROUP]
+    },
+};
+
+// Department Visual Configuration
+const DeptConfig: Record<string, { icon: any, color: string, bg: string, label: string }> = {
+    [DepartmentEnum.IT]: { icon: Settings, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20', label: 'Tech Stack & Infra' },
+    [DepartmentEnum.HR]: { icon: Users2, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20', label: 'People & Culture' },
+    [DepartmentEnum.FINANCE]: { icon: Landmark, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', label: 'Capital & Accounts' },
+    [DepartmentEnum.SUPPORT]: { icon: Headphones, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20', label: 'Client Success' },
+    [DepartmentEnum.MARKETING]: { icon: Megaphone, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', label: 'Growth & Brand' },
+    [DepartmentEnum.SALES]: { icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20', label: 'Revenue Ops' },
+    [DepartmentEnum.OPERATIONS]: { icon: ShieldCheck, color: 'text-cyan-600', bg: 'bg-cyan-50 dark:bg-cyan-900/20', label: 'Global Logistics' },
+};
+
+export default function InfoEmailsPage() {
     const { companies } = useCompanies();
     const [selectedOrg, setSelectedOrg] = useState<string>('');
-    const { emailAccounts, isLoading, createEmailAccount, deleteEmailAccount } = useEmailAccounts(selectedOrg ? Number(selectedOrg) : undefined);
+    const [activeTab, setActiveTab] = useState<EmailCategory>('COMPANY');
+    const { emailInfoList, isLoading, createEmailInfo, deleteEmailInfo } = useEmailInfo(selectedOrg ? Number(selectedOrg) : undefined);
 
-    const [emailType, setEmailType] = useState<EmailType>('user');
+    const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Derived Data
-    const getFilteredData = () => {
-        if (!selectedOrg) return [];
-        return emailAccounts.filter(acc => {
-            const matchesType = acc.emailType?.toLowerCase().includes(emailType === 'company' ? 'company' : emailType === 'group' ? 'group' : 'user');
-            // If department filter needed:
-            // if (emailType === 'group' && selectedDept) return matchesType && acc.department === selectedDept;
-            return matchesType;
+    // Auto-select first organization if none selected
+    useMemo(() => {
+        if (companies.length > 0 && !selectedOrg) {
+            setSelectedOrg(companies[0].id.toString());
+        }
+    }, [companies, selectedOrg]);
+
+    // Filtered and Grouped Data
+    const filteredEmails = useMemo(() => {
+        const categoryTypes = CategoryConfig[activeTab].types;
+        return emailInfoList.filter(acc =>
+            categoryTypes.includes(acc.emailType) && (
+                acc.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                acc.department.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+        );
+    }, [emailInfoList, searchQuery, activeTab]);
+
+    const groupedData = useMemo(() => {
+        const groups: Record<string, typeof emailInfoList> = {};
+        Object.values(DepartmentEnum).forEach(dept => {
+            const emailsInDept = filteredEmails.filter(email => email.department === dept);
+            if (emailsInDept.length > 0 || searchQuery === '') {
+                groups[dept] = emailsInDept;
+            }
         });
-    };
-
-    const tableData = getFilteredData();
-
-    // Helper for Status Color
-    const getStatusColor = (status: string) => {
-        return status === 'Active'
-            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
-            : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800';
-    };
-
-    const formatDate = (dateStr: string) => dateStr ? new Date(dateStr).toLocaleDateString() : '-';
+        return groups;
+    }, [filteredEmails, searchQuery]);
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
-            <div className="h-screen flex flex-col overflow-hidden">
-                {/* Fixed Header */}
-                <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4">
+            <div className="p-6 md:p-8 space-y-8 max-w-[1600px] mx-auto min-h-screen pb-24 text-slate-900 dark:text-white">
+                {/* Header Section */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Info Emails Section</h1>
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1">
-                            Configure and manage email accounts for your organization
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest">Enterprise</span>
+                        </div>
+                        <h1 className="text-4xl font-black tracking-tight">
+                            Communicator <span className="text-indigo-600">Hub</span>
+                        </h1>
+                        <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium flex items-center gap-2 text-sm">
+                            <AtSign className="h-4 w-4" />
+                            Global routing and identity management platform
                         </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
+                        <div className="relative group min-w-[300px]">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search repository..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm outline-none"
+                            />
+                        </div>
+
+                        <div className="relative min-w-[240px]">
+                            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <select
+                                value={selectedOrg}
+                                onChange={(e) => setSelectedOrg(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus:border-indigo-500 transition-all font-black text-xs uppercase tracking-widest appearance-none outline-none"
+                            >
+                                <option value="">Select Organization</option>
+                                {companies.map(c => (
+                                    <option key={c.id} value={c.id}>{c.companyName}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            disabled={!selectedOrg}
+                            className="px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50 disabled:scale-100 flex items-center gap-2 shrink-0 lg:whitespace-nowrap"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Provision New
+                        </button>
                     </div>
                 </div>
 
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                    <div className="space-y-6">
+                {/* Tab Switcher */}
+                <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-fit">
+                    {(Object.keys(CategoryConfig) as EmailCategory[]).map((cat) => {
+                        const config = CategoryConfig[cat];
+                        const Icon = config.icon;
+                        const isActive = activeTab === cat;
 
-                        {/* Filter Toolbar */}
-                        <Card className="p-4 border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800">
-                            <div className="flex flex-col md:flex-row gap-4 items-end md:items-center">
+                        return (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveTab(cat)}
+                                className={`
+                                    flex items-center gap-2 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all
+                                    ${isActive
+                                        ? `bg-white dark:bg-slate-700 shadow-md text-${config.color}-600 scale-100`
+                                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 scale-95'
+                                    }
+                                `}
+                            >
+                                <Icon className="w-4 h-4" />
+                                {config.label}
+                            </button>
+                        );
+                    })}
+                </div>
 
-                                {/* 1. Organization Select */}
-                                <div className="flex-1 w-full md:w-auto">
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">
-                                        Organization
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            value={selectedOrg}
-                                            onChange={(e) => setSelectedOrg(e.target.value)}
-                                            className="w-full appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2.5 pl-10 pr-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium"
-                                        >
-                                            <option value="">Select Organization</option>
-                                            {companies.map(c => (
-                                                <option key={c.id} value={c.id}>{c.companyName}</option>
-                                            ))}
-                                        </select>
-                                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                {!selectedOrg ? (
+                    <div className="py-32 flex flex-col items-center justify-center text-center">
+                        <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-slate-100 dark:border-slate-700/50">
+                            <Mail className="h-10 w-10 text-slate-300" />
+                        </div>
+                        <h3 className="text-2xl font-black">Authentication Required</h3>
+                        <p className="text-slate-500 mt-2 max-w-sm font-medium">Please select an organization to access the communicator registry.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+                        {Object.entries(groupedData).map(([dept, emails]) => {
+                            const config = DeptConfig[dept] || DeptConfig[DepartmentEnum.IT];
+                            const Icon = config.icon;
+
+                            if (emails.length === 0 && searchQuery !== '') return null;
+
+                            return (
+                                <div key={dept} className="space-y-4">
+                                    <div className="flex items-center justify-between px-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-xl ${config.bg} ${config.color}`}>
+                                                <Icon className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-black text-sm uppercase tracking-wider">{dept}</h3>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{config.label}</p>
+                                            </div>
+                                        </div>
+                                        <span className="px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500">
+                                            {emails.length}
+                                        </span>
                                     </div>
-                                </div>
 
-                                {/* 2. Email Type Select */}
-                                <div className="flex-1 w-full md:w-auto">
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">
-                                        Email Type
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            value={emailType}
-                                            onChange={(e) => setEmailType(e.target.value as EmailType)}
-                                            className="w-full appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2.5 pl-10 pr-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium"
-                                        >
-                                            <option value="user">User Emails</option>
-                                            <option value="company">Company Emails</option>
-                                            <option value="group">Group Emails</option>
-                                        </select>
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                                    </div>
-                                </div>
-
-                                {/* Action Button */}
-                                <div className="w-full md:w-auto pb-0.5">
-                                    <Button
-                                        variant="primary"
-                                        className="w-full md:w-auto h-[42px]"
-                                        leftIcon={<Plus className="h-4 w-4" />}
-                                        disabled={!selectedOrg}
-                                        onClick={() => setIsModalOpen(true)}
-                                    >
-                                        Create {emailType === 'group' ? 'Group' : 'Email'}
-                                    </Button>
-                                </div>
-                            </div>
-                        </Card>
-
-                        {/* Data Table Area */}
-                        {!selectedOrg ? (
-                            <Card className="border-slate-200 dark:border-slate-700 border-dashed p-12 flex flex-col items-center justify-center text-center bg-transparent shadow-none">
-                                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                                    <Building2 className="h-8 w-8 text-slate-400" />
-                                </div>
-                                <h3 className="text-lg font-medium text-slate-900 dark:text-white">Select an Organization</h3>
-                                <p className="text-slate-500 mt-1 max-w-sm">Please select an organization from the dropdown above to view and configure emails.</p>
-                            </Card>
-                        ) : (
-                            <Card className="border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                                            <tr>
-                                                <th className="px-6 py-4 font-bold w-16">S.No</th>
-                                                <th className="px-6 py-4 font-bold">Email Address</th>
-                                                <th className="px-6 py-4 font-bold">Type</th>
-                                                <th className="px-6 py-4 font-bold">Created On</th>
-                                                <th className="px-6 py-4 font-bold text-center">Status</th>
-                                                <th className="px-6 py-4 font-bold text-right">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800">
-                                            {isLoading ? (
-                                                <tr><td colSpan={6} className="text-center py-8">Loading...</td></tr>
-                                            ) : tableData.length === 0 ? (
-                                                <tr><td colSpan={6} className="text-center py-8 text-slate-500">No emails found.</td></tr>
-                                            ) : tableData.map((row: any, index) => (
-                                                <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                                                    <td className="px-6 py-4 text-slate-500 font-medium">{index + 1}</td>
-                                                    <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{row.email}</td>
-                                                    <td className="px-6 py-4 text-slate-500">{row.emailType}</td>
-                                                    <td className="px-6 py-4 text-slate-500">{formatDate(row.createdAt)}</td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(row.status)}`}>
-                                                            {row.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
+                                    <div className="space-y-3 min-h-[100px]">
+                                        {isLoading ? (
+                                            <div className="p-8 flex flex-col items-center justify-center space-y-3">
+                                                <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading...</p>
+                                            </div>
+                                        ) : emails.length === 0 ? (
+                                            <div className="p-8 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center text-center">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-50">None Configured</p>
+                                            </div>
+                                        ) : (
+                                            emails.map((acc) => (
+                                                <Card key={acc.id} className="group p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-500 transition-all rounded-3xl shadow-sm">
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className={`px-1.5 py-0.5 rounded bg-${CategoryConfig[activeTab].color}-50 dark:bg-${CategoryConfig[activeTab].color}-900/20 text-${CategoryConfig[activeTab].color}-600 dark:text-${CategoryConfig[activeTab].color}-400 text-[8px] font-black uppercase tracking-widest`}>
+                                                                    {acc.emailType}
+                                                                </span>
+                                                            </div>
+                                                            <p className="font-bold truncate text-sm">{acc.email}</p>
+                                                        </div>
                                                         <button
-                                                            onClick={() => deleteEmailAccount(row.id)}
-                                                            className="text-rose-500 hover:text-rose-700 transition"
+                                                            onClick={() => deleteEmailInfo(acc.id)}
+                                                            className="p-2 opacity-0 group-hover:opacity-100 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all"
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                                    </div>
+                                                </Card>
+                                            ))
+                                        )}
+                                    </div>
                                 </div>
-                            </Card>
-                        )}
+                            );
+                        })}
                     </div>
-                </div>
+                )}
 
                 <AddEmailModal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     companyId={Number(selectedOrg)}
-                    onSuccess={createEmailAccount}
+                    onSuccess={createEmailInfo}
+                    initialTab={activeTab}
                 />
             </div>
         </RouteGuard>

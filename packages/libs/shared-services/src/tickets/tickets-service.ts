@@ -28,7 +28,7 @@ export class TicketsService extends CommonAxiosService {
     }
 
     async getAllTickets(config?: AxiosRequestConfig): Promise<GetAllTicketsModel> {
-        return await this.axiosGetCall(this.getURLwithMainEndPoint('getAllTickets'), config);
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllTickets'), {}, config);
     }
 
     async deleteTicket(reqObj: DeleteTicketModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {

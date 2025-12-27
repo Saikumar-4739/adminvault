@@ -10,20 +10,18 @@ import { EmployeesEntity } from './employees.entity';
 @Index('idx_license_expiry', ['expiryDate'])
 export class CompanyLicenseEntity extends CommonBaseEntity {
 
-    @Column({ name: 'company_id', type: 'bigint', nullable: false })
-    companyId: number;
 
     @Column({ name: 'application_id', nullable: false })
     applicationId: number;
 
     @Column({ name: 'assigned_date', type: 'date', nullable: true })
-    assignedDate: Date;
+    assignedDate: Date | null;
 
     @Column({ type: 'date', nullable: true })
-    expiryDate: Date;
+    expiryDate: Date | null;
 
     @Column({ type: 'text', nullable: true })
-    remarks: string;
+    remarks: string | null;
 
     @ManyToOne(() => CompanyInfoEntity)
     @JoinColumn({ name: 'company_id' })

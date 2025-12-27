@@ -164,6 +164,8 @@ export function useAssets(companyId?: number) {
                     purchaseDate: item.purchaseDate,
                     warrantyExpiry: item.warrantyExpiry,
                     createdAt: item.createdAt || item.created_at,
+                    assignedTo: item.assignedTo,
+                    assignedDate: item.assignedDate,
                     userAssignedDate: item.userAssignedDate,
                     lastReturnDate: item.lastReturnDate,
                     assignedToEmployeeId: item.assignedToEmployeeId,

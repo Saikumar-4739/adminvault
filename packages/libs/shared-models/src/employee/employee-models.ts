@@ -1,5 +1,5 @@
 import { GlobalResponse } from '@adminvault/backend-utils';
-import { EmployeeStatusEnum, DepartmentEnum } from '../enums';
+import { EmployeeStatusEnum } from '../enums';
 
 export class CreateEmployeeModel {
     companyId: number;
@@ -9,7 +9,7 @@ export class CreateEmployeeModel {
     phNumber?: string;
     empStatus: EmployeeStatusEnum;
     billingAmount?: number;
-    department: DepartmentEnum;
+    departmentId: number;
     remarks?: string;
 
     constructor(
@@ -17,7 +17,7 @@ export class CreateEmployeeModel {
         firstName: string,
         lastName: string,
         email: string,
-        department: DepartmentEnum,
+        departmentId: number,
         empStatus: EmployeeStatusEnum = EmployeeStatusEnum.ACTIVE,
         phNumber?: string,
         billingAmount?: number,
@@ -27,7 +27,7 @@ export class CreateEmployeeModel {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.department = department;
+        this.departmentId = departmentId;
         this.empStatus = empStatus;
         this.phNumber = phNumber;
         this.billingAmount = billingAmount;
@@ -44,13 +44,13 @@ export class UpdateEmployeeModel extends CreateEmployeeModel {
         firstName: string,
         lastName: string,
         email: string,
-        department: DepartmentEnum,
+        departmentId: number,
         empStatus: EmployeeStatusEnum = EmployeeStatusEnum.ACTIVE,
         phNumber?: string,
         billingAmount?: number,
         remarks?: string
     ) {
-        super(companyId, firstName, lastName, email, department, empStatus, phNumber, billingAmount, remarks);
+        super(companyId, firstName, lastName, email, departmentId, empStatus, phNumber, billingAmount, remarks);
         this.id = id;
     }
 }
@@ -80,7 +80,8 @@ export class EmployeeResponseModel {
     phNumber?: string;
     empStatus: EmployeeStatusEnum;
     billingAmount?: number;
-    department: DepartmentEnum;
+    departmentId: number;
+    departmentName?: string;
     remarks?: string;
 
     constructor(
@@ -89,22 +90,24 @@ export class EmployeeResponseModel {
         firstName: string,
         lastName: string,
         email: string,
-        department: DepartmentEnum,
+        departmentId: number,
         empStatus: EmployeeStatusEnum,
         phNumber?: string,
         billingAmount?: number,
-        remarks?: string
+        remarks?: string,
+        departmentName?: string
     ) {
         this.id = id;
         this.companyId = companyId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.department = department;
+        this.departmentId = departmentId;
         this.empStatus = empStatus;
         this.phNumber = phNumber;
         this.billingAmount = billingAmount;
         this.remarks = remarks;
+        this.departmentName = departmentName;
     }
 }
 

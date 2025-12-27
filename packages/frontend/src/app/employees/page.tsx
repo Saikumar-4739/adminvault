@@ -15,9 +15,11 @@ import {
 } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
+import { useMasters } from '@/hooks/useMasters';
 
 export default function EmployeesPage() {
     const { companies } = useCompanies();
+    const { departments, fetchDepartments } = useMasters();
 
     const getDefaultCompanyId = (): string => {
         const storedUser = localStorage.getItem('auth_user');
@@ -37,7 +39,8 @@ export default function EmployeesPage() {
         lastName: '',
         email: '',
         phone: '',
-        department: '',
+        companyId: '',
+        departmentId: '',
         accountStatus: 'Active',
         billingAmount: '',
         remarks: ''
@@ -50,11 +53,19 @@ export default function EmployeesPage() {
         }
     }, [selectedOrg]);
 
+    useEffect(() => {
+        fetchDepartments();
+    }, [fetchDepartments]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const companyId = Number(selectedOrg);
+        const companyId = Number(formData.companyId || selectedOrg);
         if (!companyId) {
-            alert('Please select an organization first');
+            alert('Please select a company');
+            return;
+        }
+        if (!formData.departmentId) {
+            alert('Please select a department');
             return;
         }
 
@@ -64,7 +75,7 @@ export default function EmployeesPage() {
             lastName: formData.lastName,
             email: formData.email,
             phNumber: formData.phone,
-            department: formData.department as any,
+            departmentId: Number(formData.departmentId),
             empStatus: formData.accountStatus as any,
             billingAmount: Number(formData.billingAmount),
             remarks: formData.remarks
@@ -84,9 +95,10 @@ export default function EmployeesPage() {
             firstName: employee.firstName,
             lastName: employee.lastName,
             email: employee.email,
-            phone: employee.phone || '',
-            department: employee.department || '',
-            accountStatus: employee.accountStatus || 'Active',
+            phone: employee.phNumber || '',
+            companyId: String(employee.companyId || ''),
+            departmentId: String(employee.departmentId || ''),
+            accountStatus: employee.empStatus || 'Active',
             billingAmount: employee.billingAmount ? String(employee.billingAmount) : '',
             remarks: employee.remarks || ''
         });
@@ -103,7 +115,7 @@ export default function EmployeesPage() {
         setIsModalOpen(false);
         setEditingEmployee(null);
         setFormData({
-            firstName: '', lastName: '', email: '', phone: '', department: '',
+            firstName: '', lastName: '', email: '', phone: '', companyId: '', departmentId: '',
             accountStatus: 'Active', billingAmount: '', remarks: ''
         });
     };
@@ -120,14 +132,19 @@ export default function EmployeesPage() {
     };
 
     const getDepartmentBg = (dept?: string) => {
+        if (!dept) return 'from-slate-500 to-slate-600';
+        const deptLower = dept.toLowerCase();
         const colors: Record<string, string> = {
-            'IT': 'from-blue-500 to-indigo-600',
-            'HR': 'from-pink-500 to-rose-500',
-            'Finance': 'from-emerald-500 to-teal-600',
-            'Admin': 'from-orange-400 to-amber-500',
-            'Sales': 'from-violet-500 to-purple-600',
+            'it': 'from-blue-500 to-indigo-600',
+            'hr': 'from-pink-500 to-rose-500',
+            'finance': 'from-emerald-500 to-teal-600',
+            'admin': 'from-orange-400 to-amber-500',
+            'sales': 'from-violet-500 to-purple-600',
+            'operations': 'from-cyan-500 to-blue-600',
+            'marketing': 'from-fuchsia-500 to-pink-600',
+            'support': 'from-amber-500 to-orange-600',
         };
-        return colors[dept || ''] || 'from-slate-500 to-slate-600';
+        return colors[deptLower] || 'from-slate-500 to-slate-600';
     };
 
     const filteredEmployees = employees.filter(emp => {
@@ -141,10 +158,10 @@ export default function EmployeesPage() {
 
     const stats = {
         total: employees.length,
-        active: employees.filter(e => e.accountStatus === 'Active').length,
-        inactive: employees.filter(e => e.accountStatus !== 'Active').length,
+        active: employees.filter(e => e.empStatus === 'Active').length,
+        inactive: employees.filter(e => e.empStatus !== 'Active').length,
         newThisMonth: employees.filter(e => {
-            const date = new Date(e.createdDate || '');
+            const date = new Date(e.createdAt || '');
             const now = new Date();
             return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
         }).length
@@ -288,7 +305,7 @@ export default function EmployeesPage() {
                             {filteredEmployees.map((emp) => (
                                 <Card key={emp.id} className="group relative overflow-hidden border-slate-200 dark:border-slate-700 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 rounded-2xl bg-white dark:bg-slate-800">
                                     {/* Top Pattern Header */}
-                                    <div className={`h-24 bg-gradient-to-r ${getDepartmentBg(emp.department)} opacity-90 relative overflow-hidden`}>
+                                    <div className={`h-24 bg-gradient-to-r ${getDepartmentBg(emp.departmentName)} opacity-90 relative overflow-hidden`}>
                                         <div className="absolute inset-0 bg-black/10"></div>
                                         <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
                                     </div>
@@ -297,12 +314,12 @@ export default function EmployeesPage() {
                                         {/* Avatar overlaps header */}
                                         <div className="-mt-12 mb-4 flex justify-between items-end">
                                             <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-lg ring-1 ring-black/5 dark:ring-white/10">
-                                                <div className={`w-full h-full rounded-xl flex items-center justify-center text-white font-bold text-2xl bg-gradient-to-br ${getDepartmentBg(emp.department)}`}>
+                                                <div className={`w-full h-full rounded-xl flex items-center justify-center text-white font-bold text-2xl bg-gradient-to-br ${getDepartmentBg(emp.departmentName)}`}>
                                                     {getInitials(emp.firstName, emp.lastName)}
                                                 </div>
                                             </div>
-                                            <span className={`transform -translate-y-1 mb-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(emp.accountStatus)}`}>
-                                                {emp.accountStatus}
+                                            <span className={`transform -translate-y-1 mb-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(emp.empStatus)}`}>
+                                                {emp.empStatus}
                                             </span>
                                         </div>
 
@@ -313,7 +330,7 @@ export default function EmployeesPage() {
                                             </h3>
                                             <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
                                                 <Briefcase className="h-3.5 w-3.5" />
-                                                {emp.department || 'No Dept'}
+                                                {emp.departmentName || 'No Dept'}
                                             </div>
                                         </div>
 
@@ -324,12 +341,12 @@ export default function EmployeesPage() {
                                                 </div>
                                                 <span className="truncate">{emp.email}</span>
                                             </div>
-                                            {emp.phone && (
+                                            {emp.phNumber && (
                                                 <div className="flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
                                                     <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-800 text-slate-400">
                                                         <Phone className="h-3.5 w-3.5" />
                                                     </div>
-                                                    <span className="truncate">{emp.phone}</span>
+                                                    <span className="truncate">{emp.phNumber}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -365,24 +382,24 @@ export default function EmployeesPage() {
                                         <tr key={emp.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br ${getDepartmentBg(emp.department)}`}>
+                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br ${getDepartmentBg(emp.departmentName)}`}>
                                                         {getInitials(emp.firstName, emp.lastName)}
                                                     </div>
                                                     <div>
                                                         <div className="font-bold text-slate-900 dark:text-white">{emp.firstName} {emp.lastName}</div>
-                                                        <div className="text-xs text-slate-500">{emp.department}</div>
+                                                        <div className="text-xs text-slate-500">{emp.departmentName || 'No Dept'}</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-slate-500">
                                                 <div className="flex flex-col gap-0.5">
                                                     <span className="flex items-center gap-1.5"><Mail className="h-3 w-3" /> {emp.email}</span>
-                                                    {emp.phone && <span className="flex items-center gap-1.5"><Phone className="h-3 w-3" /> {emp.phone}</span>}
+                                                    {emp.phNumber && <span className="flex items-center gap-1.5"><Phone className="h-3 w-3" /> {emp.phNumber}</span>}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(emp.accountStatus)}`}>
-                                                    {emp.accountStatus}
+                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(emp.empStatus)}`}>
+                                                    {emp.empStatus}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -406,22 +423,46 @@ export default function EmployeesPage() {
                             <Input label="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required placeholder="e.g. Doe" />
                         </div>
                         <Input label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required placeholder="john.doe@company.com" />
+
                         <div className="grid grid-cols-2 gap-4">
-                            <Input label="Phone" type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Department</label>
-                                <select value={formData.department} onChange={(e) => setFormData({ ...formData, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500">
-                                    <option value="">Select Department</option>
-                                    <option value="IT">IT</option>
-                                    <option value="HR">HR</option>
-                                    <option value="Finance">Finance</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Sales">Sales</option>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Company</label>
+                                <select
+                                    value={formData.companyId}
+                                    onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500"
+                                    required
+                                    disabled={editingEmployee}
+                                >
+                                    <option value="">Select Company</option>
+                                    {companies.map((company) => (
+                                        <option key={company.id} value={company.id}>
+                                            {company.companyName}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
+                            <Input label="Phone" type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
                         </div>
+
                         <div className="grid grid-cols-2 gap-4">
-                            <Input label="Billing Amount" type="number" value={formData.billingAmount} onChange={(e) => setFormData({ ...formData, billingAmount: e.target.value })} placeholder="0.00" />
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Department</label>
+                                <select
+                                    value={formData.departmentId}
+                                    onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500"
+                                    required
+                                >
+                                    <option value="">Select Department</option>
+                                    {departments?.filter(d => d.isActive).map((dept) => (
+                                        <option key={dept.id} value={dept.id}>
+                                            {dept.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Status</label>
                                 <select value={formData.accountStatus} onChange={(e) => setFormData({ ...formData, accountStatus: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500">

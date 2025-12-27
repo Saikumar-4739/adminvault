@@ -30,7 +30,13 @@ export class DocumentsService {
      */
     async uploadDocument(reqModel: UploadDocumentModel, file: Express.Multer.File): Promise<UploadDocumentResponseModel> {
         try {
-            const fileName = `${Date.now()}-${file.originalname}`;
+            if (!file) {
+                throw new ErrorResponse(400, 'No file uploaded');
+            }
+
+            // Sanitize original name and create unique stored name
+            const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+            const fileName = `${Date.now()}-${sanitizedOriginalName}`;
             const filePath = path.join(this.uploadPath, fileName);
 
             // Save file to disk
@@ -38,22 +44,23 @@ export class DocumentsService {
 
             const document = this.documentRepo.create({
                 fileName,
-                originalName: reqModel.originalName,
-                fileSize: reqModel.fileSize,
-                mimeType: reqModel.mimeType,
-                category: reqModel.category,
+                originalName: file.originalname,
+                fileSize: file.size,
+                mimeType: file.mimetype,
+                category: reqModel.category || 'General',
                 filePath: filePath,
-                uploadedBy: reqModel.userId,
+                uploadedBy: Number(reqModel.userId),
                 description: reqModel.description,
                 tags: reqModel.tags,
-                companyId: reqModel.companyId,
-                userId: reqModel.userId
+                companyId: Number(reqModel.companyId),
+                userId: Number(reqModel.userId)
             });
 
             const saved = await this.documentRepo.save(document);
             return new UploadDocumentResponseModel(true, 201, 'Document uploaded successfully', saved as DocumentModel);
-        } catch (error) {
-            throw new ErrorResponse(500, 'Failed to upload document');
+        } catch (error: any) {
+            console.error('File Upload Error:', error);
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, `Failed to upload document: ${error.message}`);
         }
     }
 

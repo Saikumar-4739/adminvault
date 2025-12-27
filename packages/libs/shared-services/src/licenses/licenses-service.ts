@@ -14,14 +14,14 @@ export class LicensesService extends CommonAxiosService {
     }
 
     async create(data: any) {
-        return await this.axiosPostCall(this.BASE_PATH, data);
+        return await this.axiosPostCall(`${this.BASE_PATH}/create`, data);
     }
 
     async update(id: number, data: any) {
-        return await this.axiosPatchCall(`${this.BASE_PATH}/${id}`, data);
+        return await this.axiosPostCall(`${this.BASE_PATH}/update`, { ...data, id });
     }
 
     async remove(id: number) {
-        return await this.axiosDeleteCall(`${this.BASE_PATH}/${id}`);
+        return await this.axiosPostCall(`${this.BASE_PATH}/delete`, { id });
     }
 }

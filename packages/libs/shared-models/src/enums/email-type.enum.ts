@@ -4,4 +4,7 @@ export enum EmailTypeEnum {
   SUPPORT = 'support',
   BILLING = 'billing',
   GENERAL = 'general',
+  USER = 'user',
+  GROUP = 'group',
+  COMPANY = 'company',
 }

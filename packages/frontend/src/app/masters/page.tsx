@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Building2, Users, Package, Smartphone, Tag, Receipt, Store, AppWindow } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, Tag, Receipt, Store, AppWindow, MessageSquare, UserCircle } from 'lucide-react';
 import CompaniesMasterView from './components/companies-master-view';
 import DepartmentsMasterView from './components/departments-master-view';
 import AssetTypesMasterView from './components/asset-types-master-view';
@@ -13,12 +13,22 @@ import ApplicationsMasterView from './components/applications-master-view';
 import TicketCategoriesMasterView from './components/ticket-categories-master-view';
 import ExpenseCategoriesMasterView from './components/expense-categories-master-view';
 
+interface MasterItem {
+    id: string;
+    title: string;
+    description: string;
+    icon: any;
+    color: string;
+    component?: any;
+    href?: string;
+}
+
 export default function MastersPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const selectedMaster = searchParams.get('view');
 
-    const masters = [
+    const masters: MasterItem[] = [
         {
             id: 'companies',
             title: 'Companies',
@@ -84,20 +94,40 @@ export default function MastersPage() {
             color: 'from-amber-500 to-amber-600',
             component: ExpenseCategoriesMasterView
         },
+        {
+            id: 'employees_nav',
+            title: 'Employees',
+            description: 'Manage workforce and roles',
+            icon: UserCircle,
+            color: 'from-indigo-500 to-indigo-600',
+            href: '/employees'
+        },
+        {
+            id: 'slack_users_nav',
+            title: 'Slack Users',
+            description: 'Manage slack integration users',
+            icon: MessageSquare,
+            color: 'from-sky-500 to-sky-600',
+            href: '/slack-users'
+        },
     ];
 
     const selectedMasterData = masters.find(m => m.id === selectedMaster);
 
-    const handleSelectMaster = (masterId: string) => {
-        router.push(`/masters?view=${masterId}`);
+    const handleSelectMaster = (master: any) => {
+        if (master.href) {
+            router.push(master.href);
+        } else {
+            router.push(`/masters?view=${master.id}`);
+        }
     };
 
     const handleBack = () => {
         router.push('/masters');
     };
 
-    if (selectedMaster && selectedMasterData) {
-        const MasterComponent = selectedMasterData.component;
+    if (selectedMaster && selectedMasterData && selectedMasterData.component) {
+        const MasterComponent = selectedMasterData.component as React.ComponentType<{ onBack: () => void }>;
         return (
             <div className="p-6">
                 <MasterComponent onBack={handleBack} />
@@ -126,7 +156,7 @@ export default function MastersPage() {
                             <Card
                                 key={master.id}
                                 className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-slate-200 dark:border-slate-700"
-                                onClick={() => handleSelectMaster(master.id)}
+                                onClick={() => handleSelectMaster(master)}
                             >
                                 <div className="p-6 space-y-4">
                                     {/* Icon */}
@@ -150,7 +180,7 @@ export default function MastersPage() {
                                         className="w-full group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            handleSelectMaster(master.id);
+                                            handleSelectMaster(master);
                                         }}
                                     >
                                         Manage {master.title}

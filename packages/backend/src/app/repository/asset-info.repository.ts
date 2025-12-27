@@ -63,6 +63,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
     async searchAssets(reqModel: import('@adminvault/shared-models').AssetSearchRequestModel) {
         const query = this.createQueryBuilder('asset')
             .leftJoin('device_info', 'device', 'asset.device_id = device.id')
+            .leftJoin('employees', 'employee', 'asset.assigned_to_employee_id = employee.id')
             .select([
                 'asset.id as id',
                 'asset.company_id as companyId',
@@ -82,6 +83,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'device.device_name as deviceName',
                 'device.device_type as deviceType',
             ])
+            .addSelect('CONCAT(employee.first_name, \' \', employee.last_name)', 'assignedTo')
             .where('asset.company_id = :companyId', { companyId: reqModel.companyId });
 
         if (reqModel.searchQuery) {

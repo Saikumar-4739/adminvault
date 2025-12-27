@@ -19,10 +19,14 @@ import AddLicenseModal from './AddLicenseModal';
 
 export default function LicensesPage() {
     const { companies } = useCompanies();
+    const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     const {
         licenses, stats, isLoading,
         createLicense
-    } = useLicenses();
+    } = useLicenses(selectedCompanyId ? Number(selectedCompanyId) : undefined);
 
     // Fetch employees for the dropdown
     const { employees: allEmployees } = useEmployees();
@@ -30,9 +34,12 @@ export default function LicensesPage() {
     // Fetch applications from masters
     const { applications, fetchApplications } = useMasters();
 
-    const [selectedCompanyId, setSelectedCompanyId] = useState<string>('all');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    // Set default company on load
+    useEffect(() => {
+        if (companies.length > 0 && !selectedCompanyId) {
+            setSelectedCompanyId(companies[0].id.toString());
+        }
+    }, [companies, selectedCompanyId]);
 
     useEffect(() => {
         fetchApplications();
@@ -43,11 +50,13 @@ export default function LicensesPage() {
 
 
 
-    const filteredLicenses = licenses.filter(l =>
-        (selectedCompanyId ? l.companyId === Number(selectedCompanyId) : true) &&
-        (l.application?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (l.assignedEmployee?.firstName + ' ' + l.assignedEmployee?.lastName).toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    const filteredLicenses = licenses.filter(l => {
+        const matchesSearch =
+            (l.application?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (l.assignedEmployee?.firstName && (l.assignedEmployee.firstName + ' ' + l.assignedEmployee.lastName).toLowerCase().includes(searchQuery.toLowerCase())));
+
+        return matchesSearch;
+    });
 
     const getDaysRemaining = (date?: string) => {
         if (!date) return null;

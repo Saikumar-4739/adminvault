@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { slackUsersService } from '@/lib/api/services';
-import { SlackUserModel, CreateSlackUserModel, UpdateSlackUserModel } from '@adminvault/shared-models';
+import { slackUsersService, employeeService, mastersService } from '@/lib/api/services';
+import { SlackUserModel, CreateSlackUserModel, UpdateSlackUserModel, EmployeeResponseModel, Department } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import StatCard from '@/components/ui/StatCard';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
-import { Search, Plus, MessageSquare, Pencil, Trash2, User, Users, UserCheck, UserX } from 'lucide-react';
+import { Search, Plus, MessageSquare, Pencil, Trash2, User, Users } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
@@ -18,6 +17,9 @@ export default function SlackUsersPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<SlackUserModel | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [employees, setEmployees] = useState<EmployeeResponseModel[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -31,7 +33,23 @@ export default function SlackUsersPage() {
 
     useEffect(() => {
         fetchUsers();
+        fetchInitialData();
     }, []);
+
+    const fetchInitialData = async () => {
+        try {
+            const companyId = 1; // Default companyId
+            const [empRes, deptRes] = await Promise.all([
+                employeeService.getAllEmployees(companyId),
+                mastersService.getAllDepartments()
+            ]);
+
+            if (empRes.status) setEmployees(empRes.employees);
+            if (deptRes.status) setDepartments(deptRes.departments);
+        } catch (error) {
+            console.error('Failed to fetch initial data:', error);
+        }
+    };
 
     const fetchUsers = async () => {
         try {
@@ -49,6 +67,7 @@ export default function SlackUsersPage() {
 
     const handleCreate = () => {
         setEditingUser(null);
+        setSelectedEmployeeId('');
         setFormData({
             name: '',
             email: '',
@@ -60,6 +79,22 @@ export default function SlackUsersPage() {
             notes: ''
         });
         setIsModalOpen(true);
+    };
+
+    const handleEmployeeSelect = (employeeId: string) => {
+        setSelectedEmployeeId(employeeId);
+        if (employeeId) {
+            const emp = employees.find(e => e.id.toString() === employeeId);
+            if (emp) {
+                setFormData(prev => ({
+                    ...prev,
+                    name: `${emp.firstName} ${emp.lastName}`,
+                    email: emp.email,
+                    phone: emp.phNumber || prev.phone,
+                    department: emp.departmentName || prev.department
+                }));
+            }
+        }
     };
 
     const handleEdit = (user: SlackUserModel) => {
@@ -120,11 +155,6 @@ export default function SlackUsersPage() {
         user.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const stats = {
-        total: users.length,
-        active: users.filter(u => u.isActive).length,
-        inactive: users.filter(u => !u.isActive).length,
-    };
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
@@ -163,38 +193,7 @@ export default function SlackUsersPage() {
                     </div>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <StatCard
-                        title="Total Users"
-                        value={stats.total}
-                        icon={Users}
-                        gradient="from-purple-500 to-indigo-600"
-                        iconBg="bg-purple-50 dark:bg-purple-900/20"
-                        iconColor="text-purple-600 dark:text-purple-400"
-                        isLoading={isLoading}
-                    />
-                    <StatCard
-                        title="Active"
-                        value={stats.active}
-                        icon={UserCheck}
-                        gradient="from-emerald-500 to-teal-600"
-                        iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-                        iconColor="text-emerald-600 dark:text-emerald-400"
-                        isLoading={isLoading}
-                    />
-                    <StatCard
-                        title="Inactive"
-                        value={stats.inactive}
-                        icon={UserX}
-                        gradient="from-rose-500 to-red-600"
-                        iconBg="bg-rose-50 dark:bg-rose-900/20"
-                        iconColor="text-rose-600 dark:text-rose-400"
-                        isLoading={isLoading}
-                    />
-                </div>
-
-                {/* Grid */}
+                {/* Table */}
                 {isLoading ? (
                     <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div></div>
                 ) : filteredUsers.length === 0 ? (
@@ -205,70 +204,100 @@ export default function SlackUsersPage() {
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">No users found</h3>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredUsers.map((user) => (
-                            <Card key={user.id} className="group relative overflow-hidden border-slate-200 dark:border-slate-700 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 rounded-2xl bg-white dark:bg-slate-800">
-                                <div className="h-24 bg-gradient-to-r from-purple-500 to-indigo-600 opacity-90 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-black/10"></div>
-                                    <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
-                                </div>
-
-                                <div className="px-6 pb-6 relative">
-                                    <div className="-mt-12 mb-4 flex justify-between items-end">
-                                        <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-lg ring-1 ring-black/5 dark:ring-white/10">
-                                            <div className="w-full h-full rounded-xl flex items-center justify-center text-white font-bold text-2xl bg-gradient-to-br from-purple-500 to-indigo-600">
-                                                <User className="h-8 w-8" />
-                                            </div>
-                                        </div>
-                                        <span className={`transform -translate-y-1 mb-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${user.isActive
-                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
-                                            : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800'
-                                            }`}>
-                                            {user.isActive ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
-                                            {user.name}
-                                        </h3>
-                                        {user.displayName && (
-                                            <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
-                                                @{user.displayName}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-700/50">
-                                        <div className="text-xs text-slate-600 dark:text-slate-400 font-medium truncate">
-                                            {user.email}
-                                        </div>
-                                        {user.role && (
-                                            <div className="text-xs text-slate-500 dark:text-slate-500">
-                                                {user.role} {user.department && `• ${user.department}`}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className="flex gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-1 rounded-lg shadow-sm border border-slate-200/50 dark:border-slate-700/50">
-                                            <button onClick={() => handleEdit(user)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-600 hover:text-indigo-600 transition-colors">
-                                                <Pencil className="h-4 w-4" />
-                                            </button>
-                                            <button onClick={() => handleDelete(user.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md text-slate-600 hover:text-rose-600 transition-colors">
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
+                    <Card className="overflow-hidden border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm p-0">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-16">S.No</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Details</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Organization & Contact</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Status</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                    {filteredUsers.map((user, index) => (
+                                        <tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+                                            <td className="px-6 py-4 text-sm font-medium text-slate-500 dark:text-slate-400">
+                                                {index + 1}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shrink-0">
+                                                        <User className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-slate-900 dark:text-white">
+                                                            {user.name}
+                                                        </div>
+                                                        {user.displayName && (
+                                                            <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                                                                @{user.displayName}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-medium text-slate-900 dark:text-white mb-0.5">{user.email}</div>
+                                                <div className="text-xs text-slate-500 dark:text-slate-400">
+                                                    {user.role || 'No Role'} {user.department && `• ${user.department}`}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${user.isActive
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
+                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800'
+                                                    }`}>
+                                                    {user.isActive ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleEdit(user)}
+                                                        className="p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg text-slate-500 hover:text-indigo-600 transition-colors"
+                                                        title="Edit User"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(user.id)}
+                                                        className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg text-slate-500 hover:text-rose-600 transition-colors"
+                                                        title="Delete User"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
                 )}
 
                 {/* Modal */}
                 <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingUser ? 'Edit Slack User' : 'Add Slack User'} size="lg">
                     <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
+                        {!editingUser && (
+                            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800/50">
+                                <label className="block text-sm font-bold text-indigo-900 dark:text-indigo-100 mb-2">Select Employee (Optional)</label>
+                                <select
+                                    value={selectedEmployeeId}
+                                    onChange={(e) => handleEmployeeSelect(e.target.value)}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
+                                >
+                                    <option value="">-- Choose Employee --</option>
+                                    {employees.map(emp => (
+                                        <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.email})</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-4">
                             <Input label="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="Full Name" />
                             <Input label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required placeholder="email@company.com" />
@@ -279,16 +308,29 @@ export default function SlackUsersPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <Input label="Role" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} placeholder="Developer" />
-                            <Input label="Department" value={formData.department} onChange={(e) => setFormData({ ...formData, department: e.target.value })} placeholder="Engineering" />
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Department</label>
+                                <select
+                                    value={formData.department}
+                                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
+                                >
+                                    <option value="">-- Select Department --</option>
+                                    {departments.map(dept => (
+                                        <option key={dept.id} value={dept.name}>{dept.name}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                         <Input label="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Notes</label>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Remarks</label>
                             <textarea
                                 value={formData.notes}
                                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                 rows={3}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
+                                placeholder="Enter any additional remarks..."
                             />
                         </div>
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">

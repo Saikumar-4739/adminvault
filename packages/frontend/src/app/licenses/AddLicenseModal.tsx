@@ -30,9 +30,9 @@ export default function AddLicenseModal({ isOpen, onClose, onSuccess, companies,
             ...formData,
             companyId: Number(formData.companyId),
             applicationId: Number(formData.applicationId),
-            assignedDate: formData.assignedDate,
-            expiryDate: formData.expiryDate,
-            remarks: formData.remarks,
+            assignedDate: formData.assignedDate || null,
+            expiryDate: formData.expiryDate || null,
+            remarks: formData.remarks || null,
             assignedEmployeeId: formData.assignedEmployeeId ? Number(formData.assignedEmployeeId) : null
         });
 

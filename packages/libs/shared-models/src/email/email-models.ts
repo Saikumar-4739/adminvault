@@ -81,19 +81,19 @@ export class EmailInfoResponseModel {
 }
 
 export class GetAllEmailInfoModel extends GlobalResponse {
-    emailInfo: EmailInfoResponseModel[];
+    data: EmailInfoResponseModel[];
 
-    constructor(status: boolean, code: number, message: string, emailInfo: EmailInfoResponseModel[]) {
+    constructor(status: boolean, code: number, message: string, data: EmailInfoResponseModel[]) {
         super(status, code, message);
-        this.emailInfo = emailInfo;
+        this.data = data;
     }
 }
 
 export class GetEmailInfoByIdModel extends GlobalResponse {
-    emailInfo: EmailInfoResponseModel;
+    data: EmailInfoResponseModel;
 
-    constructor(status: boolean, code: number, message: string, emailInfo: EmailInfoResponseModel) {
+    constructor(status: boolean, code: number, message: string, data: EmailInfoResponseModel) {
         super(status, code, message);
-        this.emailInfo = emailInfo;
+        this.data = data;
     }
 }

@@ -94,12 +94,16 @@ export function useTickets() {
 
                 if (response.status) {
                     await fetchTickets();
+                    toast.success('Success', 'Ticket updated successfully');
                     return true;
                 } else {
-                    throw new Error(response.message || 'Failed to update ticket');
+                    const errorMsg = response.message || 'Failed to update ticket';
+                    toast.error('Error', errorMsg);
+                    throw new Error(errorMsg);
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to update ticket');
+                const errorMessage = err.message || 'Failed to update ticket';
+                toast.error('Error', errorMessage);
                 return false;
             } finally {
                 setIsLoading(false);
@@ -116,12 +120,16 @@ export function useTickets() {
 
                 if (response.status) {
                     await fetchTickets();
+                    toast.success('Success', 'Ticket deleted successfully');
                     return true;
                 } else {
-                    throw new Error(response.message || 'Failed to delete ticket');
+                    const errorMsg = response.message || 'Failed to delete ticket';
+                    toast.error('Error', errorMsg);
+                    throw new Error(errorMsg);
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to delete ticket');
+                const errorMessage = err.message || 'Failed to delete ticket';
+                toast.error('Error', errorMessage);
                 return false;
             } finally {
                 setIsLoading(false);

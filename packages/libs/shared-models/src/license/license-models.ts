@@ -9,9 +9,10 @@ export class CreateLicenseModel {
     assignedEmployeeId?: number;
     licenseKey?: string;
     purchaseDate?: Date;
+    assignedDate?: Date;
     expiryDate?: Date;
     seats?: number;
-    notes?: string;
+    remarks?: string;
 
     constructor(
         companyId: number,
@@ -19,18 +20,20 @@ export class CreateLicenseModel {
         assignedEmployeeId?: number,
         licenseKey?: string,
         purchaseDate?: Date,
+        assignedDate?: Date,
         expiryDate?: Date,
         seats?: number,
-        notes?: string
+        remarks?: string
     ) {
         this.companyId = companyId;
         this.applicationId = applicationId;
         this.assignedEmployeeId = assignedEmployeeId;
         this.licenseKey = licenseKey;
         this.purchaseDate = purchaseDate;
+        this.assignedDate = assignedDate;
         this.expiryDate = expiryDate;
         this.seats = seats;
-        this.notes = notes;
+        this.remarks = remarks;
     }
 }
 
@@ -44,9 +47,10 @@ export class UpdateLicenseModel {
     assignedEmployeeId?: number;
     licenseKey?: string;
     purchaseDate?: Date;
+    assignedDate?: Date;
     expiryDate?: Date;
     seats?: number;
-    notes?: string;
+    remarks?: string;
 
     constructor(
         id: number,
@@ -55,9 +59,10 @@ export class UpdateLicenseModel {
         assignedEmployeeId?: number,
         licenseKey?: string,
         purchaseDate?: Date,
+        assignedDate?: Date,
         expiryDate?: Date,
         seats?: number,
-        notes?: string
+        remarks?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -65,9 +70,10 @@ export class UpdateLicenseModel {
         this.assignedEmployeeId = assignedEmployeeId;
         this.licenseKey = licenseKey;
         this.purchaseDate = purchaseDate;
+        this.assignedDate = assignedDate;
         this.expiryDate = expiryDate;
         this.seats = seats;
-        this.notes = notes;
+        this.remarks = remarks;
     }
 }
 
@@ -100,14 +106,17 @@ export class LicenseResponseModel {
     id: number;
     companyId: number;
     applicationId: number;
-    assignedEmployeeId?: number;
-    licenseKey?: string;
-    purchaseDate?: Date;
-    expiryDate?: Date;
-    seats?: number;
-    notes?: string;
+    assignedEmployeeId?: number | null;
+    licenseKey?: string | null;
+    purchaseDate?: Date | null;
+    expiryDate?: Date | null;
+    seats?: number | null;
+    remarks?: string | null;
     createdAt: Date;
     updatedAt: Date;
+    company?: any;
+    application?: any;
+    assignedEmployee?: any;
 
     constructor(
         id: number,
@@ -115,12 +124,15 @@ export class LicenseResponseModel {
         applicationId: number,
         createdAt: Date,
         updatedAt: Date,
-        assignedEmployeeId?: number,
-        licenseKey?: string,
-        purchaseDate?: Date,
-        expiryDate?: Date,
-        seats?: number,
-        notes?: string
+        assignedEmployeeId?: number | null,
+        licenseKey?: string | null,
+        purchaseDate?: Date | null,
+        expiryDate?: Date | null,
+        seats?: number | null,
+        remarks?: string | null,
+        company?: any,
+        application?: any,
+        assignedEmployee?: any
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -130,9 +142,12 @@ export class LicenseResponseModel {
         this.purchaseDate = purchaseDate;
         this.expiryDate = expiryDate;
         this.seats = seats;
-        this.notes = notes;
+        this.remarks = remarks;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.company = company;
+        this.application = application;
+        this.assignedEmployee = assignedEmployee;
     }
 }
 

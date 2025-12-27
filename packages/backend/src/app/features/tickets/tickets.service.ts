@@ -42,11 +42,7 @@ export class TicketsService {
             const employee = await this.employeesRepo.findOne({ where: { email: userEmail } });
 
             if (!employee) {
-                // Determine if we should fail or allow unlinked tickets? 
-                // Given the DB constraint, we MUST have an employee_id.
-                // If it's an admin creating it, maybe they are also an employee?
-                // For now, fail if no profile found, as standard users need an employee profile.
-                throw new ErrorResponse(0, "No Employee profile found for this user. Please contact HR.");
+                throw new ErrorResponse(0, `No Employee profile found for ${userEmail}. Tickets must be linked to an employee. Please contact your Admin.`);
             }
 
             if (!reqModel.ticketCode) {

@@ -5,19 +5,20 @@ import { documentsService } from '@/lib/api/services';
 import { DocumentModel, UploadDocumentModel } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import StatCard from '@/components/ui/StatCard';
-import { FileText, Upload, Download, Trash2, Search, File, FolderOpen, HardDrive } from 'lucide-react';
+import { FileText, Upload, Download, Trash2, Search, File, FolderOpen, HardDrive, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Plus } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
+import { Modal } from '@/components/ui/modal';
 
 export default function DocumentsPage() {
     const [documents, setDocuments] = useState<DocumentModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
+    const [tags, setTags] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterCategory, setFilterCategory] = useState('');
 
     useEffect(() => {
         fetchDocuments();
@@ -53,6 +54,7 @@ export default function DocumentsPage() {
                 mimeType: selectedFile.type,
                 category: category || undefined,
                 description: description || undefined,
+                tags: tags || undefined,
                 companyId: 1,
                 userId: 1
             };
@@ -61,10 +63,32 @@ export default function DocumentsPage() {
             setSelectedFile(null);
             setCategory('');
             setDescription('');
+            setTags('');
+            setIsUploadModalOpen(false);
             fetchDocuments();
         } catch (error) {
             console.error('Failed to upload document:', error);
         }
+    };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    const getFileIcon = (mimeType: string) => {
+        if (mimeType.includes('pdf')) return <FileText className="h-5 w-5 text-rose-500" />;
+        if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType.includes('csv'))
+            return <FileSpreadsheet className="h-5 w-5 text-emerald-500" />;
+        if (mimeType.includes('image')) return <ImageIcon className="h-5 w-5 text-blue-500" />;
+        if (mimeType.includes('code') || mimeType.includes('javascript') || mimeType.includes('html'))
+            return <FileCode className="h-5 w-5 text-amber-500" />;
+        if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('archive'))
+            return <FileArchive className="h-5 w-5 text-purple-500" />;
+        return <File className="h-5 w-5 text-slate-400" />;
     };
 
     const handleDelete = async (id: number) => {
@@ -84,9 +108,7 @@ export default function DocumentsPage() {
     };
 
     const filteredDocuments = documents.filter(doc => {
-        const matchesSearch = doc.originalName.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = !filterCategory || doc.category === filterCategory;
-        return matchesSearch && matchesCategory;
+        return doc.originalName.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
     const categories = Array.from(new Set(documents.map(d => d.category).filter(Boolean)));
@@ -102,116 +124,74 @@ export default function DocumentsPage() {
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
             <div className="p-6 space-y-8 max-w-[1600px] mx-auto min-h-screen">
                 {/* Header */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-300">
                     <div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-display">
-                            Documents
+                        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                            Document Hub
                         </h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium flex items-center gap-2">
-                            <FileText className="h-4 w-4" />
-                            Upload and manage company documents
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
+                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                            Manage your enterprise assets
                         </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                        <div className="relative flex-1 min-w-[280px]">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="relative group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search documents..."
-                                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-sm shadow-sm"
+                                placeholder="Search repository..."
+                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border-none rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-indigo-500/20 transition-all font-medium text-[11px] w-full sm:w-[220px]"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <select
-                            value={filterCategory}
-                            onChange={(e) => setFilterCategory(e.target.value)}
-                            className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50"
+
+                        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 hidden sm:block" />
+
+                        <Button
+                            variant="primary"
+                            leftIcon={<Plus className="h-3.5 w-3.5" />}
+                            onClick={() => setIsUploadModalOpen(true)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl shadow-md shadow-indigo-500/10 active:scale-95 transition-all text-xs font-bold h-9"
                         >
-                            <option value="">All Categories</option>
-                            {categories.map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
-                            ))}
-                        </select>
+                            Add New
+                        </Button>
                     </div>
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <StatCard
-                        title="Total Documents"
-                        value={stats.total}
-                        icon={File}
-                        gradient="from-blue-500 to-cyan-600"
-                        iconBg="bg-blue-50 dark:bg-blue-900/20"
-                        iconColor="text-blue-600 dark:text-blue-400"
-                        isLoading={isLoading}
-                    />
-                    <StatCard
-                        title="Storage Used"
-                        value={`${stats.totalSize} MB`}
-                        icon={HardDrive}
-                        gradient="from-violet-500 to-purple-600"
-                        iconBg="bg-violet-50 dark:bg-violet-900/20"
-                        iconColor="text-violet-600 dark:text-violet-400"
-                        isLoading={isLoading}
-                    />
-                    <StatCard
-                        title="Categories"
-                        value={stats.categories}
-                        icon={FolderOpen}
-                        gradient="from-amber-500 to-orange-600"
-                        iconBg="bg-amber-50 dark:bg-amber-900/20"
-                        iconColor="text-amber-600 dark:text-amber-400"
-                        isLoading={isLoading}
-                    />
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                        <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                            <File className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Assets</div>
+                            <div className="text-lg font-bold text-slate-900 dark:text-white leading-none">{stats.total}</div>
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                        <div className="p-2.5 rounded-xl bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400">
+                            <HardDrive className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Storage Usage</div>
+                            <div className="text-lg font-bold text-slate-900 dark:text-white leading-none">{stats.totalSize} MB</div>
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                        <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
+                            <FolderOpen className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Categories</div>
+                            <div className="text-lg font-bold text-slate-900 dark:text-white leading-none">{stats.categories}</div>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Upload Section */}
-                <Card className="p-6 border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Upload Document</h3>
-                    <div className="space-y-4">
-                        <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors">
-                            <input
-                                type="file"
-                                onChange={handleFileSelect}
-                                className="hidden"
-                                id="file-upload"
-                            />
-                            <label htmlFor="file-upload" className="cursor-pointer">
-                                <Upload className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-                                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                    {selectedFile ? selectedFile.name : 'Click to select a file or drag and drop'}
-                                </p>
-                            </label>
-                        </div>
-                        {selectedFile && (
-                            <>
-                                <input
-                                    type="text"
-                                    placeholder="Category (optional)"
-                                    value={category}
-                                    onChange={(e) => setCategory(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500"
-                                />
-                                <textarea
-                                    placeholder="Description (optional)"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    rows={2}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500"
-                                />
-                                <Button variant="primary" onClick={handleUpload} className="w-full shadow-lg shadow-indigo-500/20">
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Upload Document
-                                </Button>
-                            </>
-                        )}
-                    </div>
-                </Card>
-
-                {/* Grid */}
+                {/* Content */}
                 {isLoading ? (
                     <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div></div>
                 ) : filteredDocuments.length === 0 ? (
@@ -220,62 +200,192 @@ export default function DocumentsPage() {
                             <FileText className="h-8 w-8 text-slate-400" />
                         </div>
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">No documents found</h3>
+                        <p className="text-slate-500 text-sm mt-1">Upload your first document to get started.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredDocuments.map((doc) => (
-                            <Card key={doc.id} className="group relative overflow-hidden border-slate-200 dark:border-slate-700 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 rounded-2xl bg-white dark:bg-slate-800">
-                                <div className="h-24 bg-gradient-to-r from-blue-500 to-cyan-600 opacity-90 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-black/10"></div>
-                                    <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
-                                </div>
-
-                                <div className="px-6 pb-6 relative">
-                                    <div className="-mt-12 mb-4">
-                                        <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-lg ring-1 ring-black/5 dark:ring-white/10">
-                                            <div className="w-full h-full rounded-xl flex items-center justify-center text-white font-bold text-2xl bg-gradient-to-br from-blue-500 to-cyan-600">
-                                                <FileText className="h-8 w-8" />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
-                                            {doc.originalName}
-                                        </h3>
-                                        {doc.category && (
-                                            <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
-                                                {doc.category}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-700/50">
-                                        <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                                            {(doc.fileSize / 1024).toFixed(2)} KB
-                                        </div>
-                                        {doc.createdAt && (
-                                            <div className="text-xs text-slate-500 dark:text-slate-500">
-                                                {new Date(doc.createdAt).toLocaleDateString()}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className="flex gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-1 rounded-lg shadow-sm border border-slate-200/50 dark:border-slate-700/50">
-                                            <button onClick={() => handleDownload(doc.id)} className="p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md text-slate-600 hover:text-emerald-600 transition-colors">
-                                                <Download className="h-4 w-4" />
-                                            </button>
-                                            <button onClick={() => handleDelete(doc.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md text-slate-600 hover:text-rose-600 transition-colors">
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
+                    <Card className="overflow-hidden border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm p-0">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50/50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-slate-700">
+                                        <th className="px-6 py-3">File Asset</th>
+                                        <th className="px-6 py-3">Details</th>
+                                        <th className="px-6 py-3">Storage</th>
+                                        <th className="px-6 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                    {filteredDocuments.map((doc) => (
+                                        <tr key={doc.id} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/5 transition-all group border-b border-slate-100 dark:border-slate-700 last:border-0">
+                                            <td className="px-6 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-700 group-hover:scale-105 transition-all duration-300">
+                                                        {getFileIcon(doc.mimeType)}
+                                                    </div>
+                                                    <div className="space-y-0.5">
+                                                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate max-w-xs text-sm tracking-tight">
+                                                            {doc.originalName}
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium">
+                                                            <span>{formatFileSize(doc.fileSize)}</span>
+                                                            <span className="w-0.5 h-0.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                                                            <span>{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {doc.category && (
+                                                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800/50">
+                                                            {doc.category}
+                                                        </span>
+                                                    )}
+                                                    {doc.tags?.split(',').slice(0, 2).map((tag, i) => (
+                                                        <span key={i} className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
+                                                            #{tag.trim()}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <div className="space-y-0.5">
+                                                    <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                                        {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString(undefined, {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            year: 'numeric'
+                                                        }) : 'N/A'}
+                                                    </div>
+                                                    <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">
+                                                        Vault Entry
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-3 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleDownload(doc.id)}
+                                                        className="p-1.5 hover:bg-emerald-600 hover:text-white rounded-lg text-slate-400 transition-all"
+                                                        title="Download"
+                                                    >
+                                                        <Download className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(doc.id)}
+                                                        className="p-1.5 hover:bg-rose-600 hover:text-white rounded-lg text-slate-400 transition-all"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
                 )}
+
+                {/* Upload Modal */}
+                <Modal
+                    isOpen={isUploadModalOpen}
+                    onClose={() => {
+                        setIsUploadModalOpen(false);
+                        setSelectedFile(null);
+                        setCategory('');
+                        setDescription('');
+                        setTags('');
+                    }}
+                    title="Upload New Document"
+                    size="lg"
+                >
+                    <div className="space-y-6 pt-2">
+                        <div
+                            className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-900/30 ${selectedFile
+                                ? 'border-emerald-500/50 bg-emerald-50/10'
+                                : 'border-slate-300 dark:border-slate-700 hover:border-indigo-500'
+                                }`}
+                            onClick={() => document.getElementById('file-upload-modal')?.click()}
+                        >
+                            <input
+                                type="file"
+                                onChange={handleFileSelect}
+                                className="hidden"
+                                id="file-upload-modal"
+                            />
+                            <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center transition-transform duration-300 ${selectedFile ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 scale-110' : 'bg-white dark:bg-slate-800 text-slate-400 shadow-sm'}`}>
+                                <Upload className="h-8 w-8" />
+                            </div>
+                            <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+                                {selectedFile ? 'File Selected' : 'Choose a file to upload'}
+                            </h4>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                {selectedFile ? selectedFile.name : 'Click here or drag and drop any document'}
+                            </p>
+                            {selectedFile && (
+                                <div className="mt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                                    {formatFileSize(selectedFile.size)}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Category</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Legal, Finance, HR"
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Tags</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. 2024, confidential"
+                                    value={tags}
+                                    onChange={(e) => setTags(e.target.value)}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Description</label>
+                            <textarea
+                                placeholder="What is this document about?"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                rows={3}
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setIsUploadModalOpen(false);
+                                    setSelectedFile(null);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={handleUpload}
+                                disabled={!selectedFile}
+                                className="shadow-lg shadow-indigo-500/20 px-8"
+                            >
+                                Start Upload
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
             </div>
         </RouteGuard>
     );

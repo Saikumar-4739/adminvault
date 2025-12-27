@@ -12,7 +12,7 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
 import StatCard from '@/components/ui/StatCard';
-import { Search, Plus, Package, Building2, TrendingUp, CheckCircle2, AlertCircle, Laptop, Monitor, Smartphone, Tablet, HardDrive, Pencil, Trash2, User, Calendar, Printer, Upload, QrCode, History, Filter, X } from 'lucide-react';
+import { Search, Plus, Package, Building2, TrendingUp, CheckCircle2, AlertCircle, Laptop, Monitor, Smartphone, Tablet, HardDrive, Pencil, Trash2, User, Printer, Upload, QrCode, History, Filter, X } from 'lucide-react';
 import { AssetStatusEnum } from '@adminvault/shared-models';
 import StoreAssetsTab from './components/StoreAssetsTab';
 import ReturnAssetsTab from './components/ReturnAssetsTab';
@@ -381,7 +381,7 @@ export default function AssetsPage() {
                         iconBg="bg-emerald-50 dark:bg-emerald-900/20"
                         iconColor="text-emerald-600 dark:text-emerald-400"
                         isActive={activeFilters.status === 'AVAILABLE'}
-                        onClick={() => setActiveFilters(prev => ({ ...prev, status: prev.status === 'AVAILABLE' ? undefined : 'AVAILABLE' }))}
+                        onClick={() => setActiveFilters((prev: any) => ({ ...prev, status: prev.status === 'AVAILABLE' ? undefined : 'AVAILABLE' }))}
                         className="cursor-pointer"
                         isLoading={isLoading}
                     />
@@ -393,7 +393,7 @@ export default function AssetsPage() {
                         iconBg="bg-blue-50 dark:bg-blue-900/20"
                         iconColor="text-blue-600 dark:text-blue-400"
                         isActive={activeFilters.status === 'IN_USE'}
-                        onClick={() => setActiveFilters(prev => ({ ...prev, status: prev.status === 'IN_USE' ? undefined : 'IN_USE' }))}
+                        onClick={() => setActiveFilters((prev: any) => ({ ...prev, status: prev.status === 'IN_USE' ? undefined : 'IN_USE' }))}
                         className="cursor-pointer"
                         isLoading={isLoading}
                     />
@@ -405,7 +405,7 @@ export default function AssetsPage() {
                         iconBg="bg-amber-50 dark:bg-amber-900/20"
                         iconColor="text-amber-600 dark:text-amber-400"
                         isActive={activeFilters.status === 'MAINTENANCE'}
-                        onClick={() => setActiveFilters(prev => ({ ...prev, status: prev.status === 'MAINTENANCE' ? undefined : 'MAINTENANCE' }))}
+                        onClick={() => setActiveFilters((prev: any) => ({ ...prev, status: prev.status === 'MAINTENANCE' ? undefined : 'MAINTENANCE' }))}
                         className="cursor-pointer"
                         isLoading={isLoading}
                     />
@@ -417,7 +417,7 @@ export default function AssetsPage() {
                         iconBg="bg-slate-50 dark:bg-slate-800"
                         iconColor="text-slate-600 dark:text-slate-400"
                         isActive={activeFilters.status === 'RETIRED'}
-                        onClick={() => setActiveFilters(prev => ({ ...prev, status: prev.status === 'RETIRED' ? undefined : 'RETIRED' }))}
+                        onClick={() => setActiveFilters((prev: any) => ({ ...prev, status: prev.status === 'RETIRED' ? undefined : 'RETIRED' }))}
                         className="cursor-pointer"
                         isLoading={isLoading}
                     />
@@ -462,7 +462,7 @@ export default function AssetsPage() {
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                 }`}
                         >
-                            Next Assign Assets
+                            Assign Assets
                         </button>
                     </div>
 
@@ -473,70 +473,64 @@ export default function AssetsPage() {
                         {activeTab === 'next' && <NextAssignAssetsTab />}
                         {activeTab === 'all' && (
                             <>
-                                {/* Search and Filters - Only show on All Assets tab */}
-                                {/* Search and Filters - Only show on All Assets tab */}
-                                <Card className="p-4 mb-6">
-                                    <div className="flex flex-col gap-4">
-                                        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                                            <div className="relative">
-                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                                <Input
-                                                    placeholder="Search assets..."
-                                                    value={searchQuery}
-                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                    className="pl-9 w-full sm:w-64 bg-white dark:bg-slate-800"
-                                                />
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    leftIcon={<Filter className="h-4 w-4" />}
-                                                    onClick={() => setIsFilterModalOpen(true)}
-                                                    className={Object.keys(activeFilters).length > 0 ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : ''}
-                                                >
-                                                    Filters
-                                                </Button>
-                                                <Button variant="primary" size="sm" onClick={handleSearch}>
-                                                    Search
-                                                </Button>
-                                            </div>
+                                {/* Search and Filters */}
+                                <div className="mb-6">
+                                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                                        <div className="relative flex-1 max-w-md">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <Input
+                                                placeholder="Search assets by name or serial number..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                                            />
                                         </div>
-
-                                        {/* Active Filters Chips */}
-                                        {Object.keys(activeFilters).length > 0 && (
-                                            <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                                                {Object.entries(activeFilters).map(([key, value]) => {
-                                                    if (!value || (Array.isArray(value) && value.length === 0)) return null;
-
-                                                    const renderChip = (val: any, k: string, arrayVal?: any) => (
-                                                        <span key={`${k}-${val}`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-medium border border-indigo-100 dark:border-indigo-800">
-                                                            {k === 'status' ? String(val).replace('_', ' ') : val}
-                                                            <button
-                                                                onClick={() => removeFilter(k, arrayVal)}
-                                                                className="hover:bg-indigo-200 dark:hover:bg-indigo-800 rounded-full p-0.5 transition-colors"
-                                                            >
-                                                                <X className="h-3 w-3" />
-                                                            </button>
-                                                        </span>
-                                                    );
-
-                                                    if (Array.isArray(value)) {
-                                                        return value.map((v: any) => renderChip(v, key, v));
-                                                    }
-                                                    return renderChip(value, key);
-                                                })}
-                                                <button
-                                                    onClick={() => setActiveFilters({})}
-                                                    className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline ml-2"
-                                                >
-                                                    Clear All
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                leftIcon={<Filter className="h-4 w-4" />}
+                                                onClick={() => setIsFilterModalOpen(true)}
+                                                className={Object.keys(activeFilters).length > 0 ? 'border-indigo-500 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : ''}
+                                            >
+                                                Filters {Object.keys(activeFilters).length > 0 && `(${Object.keys(activeFilters).length})`}
+                                            </Button>
+                                        </div>
                                     </div>
-                                </Card>
 
-                                {/* Assets Grid - Only show on All Assets tab */}
+                                    {/* Active Filters Chips */}
+                                    {Object.keys(activeFilters).length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            {Object.entries(activeFilters).map(([key, value]) => {
+                                                if (!value || (Array.isArray(value) && value.length === 0)) return null;
+
+                                                const renderChip = (val: any, k: string, arrayVal?: any) => (
+                                                    <span key={`${k}-${val}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-medium border border-indigo-200 dark:border-indigo-800">
+                                                        {k === 'status' ? String(val).replace('_', ' ') : val}
+                                                        <button
+                                                            onClick={() => removeFilter(k, arrayVal)}
+                                                            className="hover:bg-indigo-200 dark:hover:bg-indigo-800 rounded-full p-0.5 transition-colors"
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </span>
+                                                );
+
+                                                if (Array.isArray(value)) {
+                                                    return value.map((v: any) => renderChip(v, key, v));
+                                                }
+                                                return renderChip(value, key);
+                                            })}
+                                            <button
+                                                onClick={() => setActiveFilters({})}
+                                                className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline"
+                                            >
+                                                Clear All
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Assets Grid */}
                                 {isLoading ? (
                                     <PageLoader />
                                 ) : assets.length === 0 ? (
@@ -547,133 +541,118 @@ export default function AssetsPage() {
                                         <p className="text-slate-500 dark:text-slate-400 font-medium">No assets found</p>
                                     </Card>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{assets.map((asset) => {
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{assets.map((asset) => {
                                         const AssetIcon = getAssetIcon(asset.assetName || 'Device');
                                         const warrantyExpiring = isWarrantyExpiring(asset.warrantyExpiry);
                                         const warrantyExpired = isWarrantyExpired(asset.warrantyExpiry);
 
                                         return (
-                                            <Card key={asset.id} className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-slate-200 dark:border-slate-700 overflow-hidden relative">
-                                                {/* Status Stripe */}
-                                                <div className={`absolute top-0 left-0 w-1 h-full ${asset.status === 'AVAILABLE' || asset.status === 'Available' ? 'bg-emerald-500' :
+                                            <Card key={asset.id} className="group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-slate-200 dark:border-slate-700 overflow-hidden relative">
+                                                {/* Status Indicator */}
+                                                <div className={`absolute top-0 left-0 right-0 h-1 ${asset.status === 'AVAILABLE' || asset.status === 'Available' ? 'bg-emerald-500' :
                                                     asset.status === 'IN_USE' || asset.status === 'InUse' ? 'bg-blue-500' :
                                                         asset.status === 'MAINTENANCE' || asset.status === 'Maintenance' ? 'bg-amber-500' :
                                                             'bg-slate-400'
                                                     }`} />
 
-                                                <div className="p-5 pl-6">
+                                                <div className="p-4">
                                                     {/* Header */}
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl">
-                                                            <AssetIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+                                                    <div className="flex items-start justify-between mb-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 p-2 rounded-lg">
+                                                                <AssetIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate" title={asset.assetName}>{asset.assetName}</h3>
+                                                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">SN: {asset.serialNumber}</p>
+                                                            </div>
                                                         </div>
-                                                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${asset.status === 'AVAILABLE' || asset.status === 'Available' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${asset.status === 'AVAILABLE' || asset.status === 'Available' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
                                                             asset.status === 'IN_USE' || asset.status === 'InUse' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
                                                                 asset.status === 'MAINTENANCE' || asset.status === 'Maintenance' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
                                                                     'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
                                                             }`}>
-                                                            {asset.status || 'Unknown'}
+                                                            {asset.status === 'IN_USE' || asset.status === 'InUse' ? 'In Use' : asset.status || 'Unknown'}
                                                         </span>
-                                                    </div>
-
-                                                    {/* Content */}
-                                                    <div className="space-y-1 mb-4">
-                                                        <h3 className="font-bold text-lg text-slate-900 dark:text-white truncate" title={asset.assetName}>{asset.assetName}</h3>
-                                                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">SN: {asset.serialNumber}</p>
                                                     </div>
 
                                                     {/* Assignment Info */}
                                                     {asset.assignedTo && (
-                                                        <div className="mb-4 p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                                                            <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-400">
-                                                                <User className="h-3.5 w-3.5" />
-                                                                <span className="font-semibold">{asset.assignedTo}</span>
+                                                        <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                                                            <div className="text-[10px] text-blue-600 dark:text-blue-500 font-semibold uppercase tracking-wide mb-1">Assigned User:</div>
+                                                            <div className="flex items-center gap-1.5 text-[11px] text-blue-700 dark:text-blue-400">
+                                                                <User className="h-3 w-3 flex-shrink-0" />
+                                                                <span className="font-semibold truncate">{asset.assignedTo}</span>
                                                             </div>
-                                                            {asset.assignedDate && (
-                                                                <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-500 mt-1">
-                                                                    <Calendar className="h-3.5 w-3.5" />
-                                                                    <span>{new Date(asset.assignedDate).toLocaleDateString()}</span>
-                                                                </div>
-                                                            )}
                                                         </div>
                                                     )}
 
-                                                    {/* Details Grid */}
-                                                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 mb-4">
-                                                        <div>
-                                                            <span className="block text-slate-400 text-[10px] uppercase">Purchased</span>
-                                                            {asset.purchaseDate ? new Date(asset.purchaseDate).toLocaleDateString() : '-'}
+                                                    {/* Compact Details */}
+                                                    <div className="space-y-1.5 mb-3 text-[11px]">
+                                                        <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                                                            <span className="text-slate-400">Purchase:</span>
+                                                            <span className="font-medium">{asset.purchaseDate ? new Date(asset.purchaseDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '-'}</span>
                                                         </div>
-                                                        <div>
-                                                            <span className="block text-slate-400 text-[10px] uppercase">Warranty</span>
-                                                            <span className={warrantyExpired ? 'text-rose-600 dark:text-rose-400 font-semibold' : warrantyExpiring ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''}>
-                                                                {asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toLocaleDateString() : '-'}
+                                                        <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                                                            <span className="text-slate-400">Warranty:</span>
+                                                            <span className={`font-medium ${warrantyExpired ? 'text-rose-600 dark:text-rose-400' : warrantyExpiring ? 'text-amber-600 dark:text-amber-400' : ''}`}>
+                                                                {asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '-'}
                                                             </span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="block text-slate-400 text-[10px] uppercase">User Assigned</span>
-                                                            {asset.userAssignedDate ? new Date(asset.userAssignedDate).toLocaleDateString() : '-'}
-                                                        </div>
-                                                        <div>
-                                                            <span className="block text-slate-400 text-[10px] uppercase">Last Return</span>
-                                                            {asset.lastReturnDate ? new Date(asset.lastReturnDate).toLocaleDateString() : '-'}
                                                         </div>
                                                     </div>
 
                                                     {/* Warranty Warning */}
                                                     {(warrantyExpiring || warrantyExpired) && (
-                                                        <div className={`mb-4 p-2 rounded-lg text-xs font-medium ${warrantyExpired
-                                                            ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/30'
-                                                            : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30'
+                                                        <div className={`mb-3 px-2 py-1 rounded text-[10px] font-semibold text-center ${warrantyExpired
+                                                            ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400'
+                                                            : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
                                                             }`}>
-                                                            {warrantyExpired ? '⚠️ Warranty Expired' : '⏰ Warranty Expiring Soon'}
+                                                            {warrantyExpired ? '⚠️ Expired' : '⏰ Expiring Soon'}
                                                         </div>
                                                     )}
 
                                                     {/* Actions */}
-                                                    <div className="grid grid-cols-5 gap-2">
+                                                    <div className="grid grid-cols-5 gap-1">
                                                         <button
                                                             onClick={() => {
                                                                 setTimelineAsset(asset);
                                                                 setIsTimelineModalOpen(true);
                                                             }}
-                                                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-xs font-semibold"
+                                                            className="flex items-center justify-center p-1.5 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                                                             title="History"
                                                         >
                                                             <History className="h-3.5 w-3.5" />
-                                                            Hist
                                                         </button>
                                                         <button
                                                             onClick={() => {
                                                                 setQrAsset(asset);
                                                                 setIsQRModalOpen(true);
                                                             }}
-                                                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-xs font-semibold"
-                                                            title="QR Label"
+                                                            className="flex items-center justify-center p-1.5 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                                            title="QR Code"
                                                         >
                                                             <QrCode className="h-3.5 w-3.5" />
-                                                            QR
                                                         </button>
                                                         <button
                                                             onClick={() => handleEdit(asset)}
-                                                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-xs font-semibold"
+                                                            className="flex items-center justify-center p-1.5 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+                                                            title="Edit"
                                                         >
                                                             <Pencil className="h-3.5 w-3.5" />
-                                                            Edit
                                                         </button>
                                                         <button
                                                             onClick={() => handlePrint(asset)}
-                                                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors text-xs font-semibold"
+                                                            className="flex items-center justify-center p-1.5 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
+                                                            title="Print"
                                                         >
                                                             <Printer className="h-3.5 w-3.5" />
-                                                            Print
                                                         </button>
                                                         <button
                                                             onClick={() => handleDelete(asset)}
-                                                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors text-xs font-semibold"
+                                                            className="flex items-center justify-center p-1.5 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors"
+                                                            title="Delete"
                                                         >
                                                             <Trash2 className="h-3.5 w-3.5" />
-                                                            Delete
                                                         </button>
                                                     </div>
                                                 </div>

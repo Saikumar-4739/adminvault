@@ -5,7 +5,7 @@ import {
 } from '@adminvault/shared-models';
 
 export class DocumentsService extends CommonAxiosService {
-    private BASE_PATH = '/api/documents';
+    private BASE_PATH = '/documents';
 
     async uploadDocument(file: File, reqModel: UploadDocumentModel): Promise<UploadDocumentResponseModel> {
         const formData = new FormData();
@@ -42,6 +42,6 @@ export class DocumentsService extends CommonAxiosService {
     }
 
     getDownloadUrl(id: number): string {
-        return `${this.BASE_PATH}/download/${id}`;
+        return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}${this.BASE_PATH}/download/${id}`;
     }
 }

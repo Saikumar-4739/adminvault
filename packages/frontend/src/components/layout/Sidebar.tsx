@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Users, Package, Ticket, LayoutDashboard, Menu, X, Database, PieChart, Mail, KeySquare, ChevronLeft, ChevronRight, MessageSquare, FileText, Lock } from 'lucide-react';
+import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, PieChart, Mail, KeySquare, ChevronLeft, ChevronRight, MessageSquare, FileText, Lock } from 'lucide-react';
 import { useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { UserRoleEnum } from '@adminvault/shared-models';
@@ -17,14 +17,13 @@ interface NavigationItem {
 const allNavigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Configuration', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
-    { name: 'Assets', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Assets Info', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Licenses', href: '/licenses', icon: KeySquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Safe Vault', href: '/password-vault', icon: Lock, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Tickets', href: '/tickets', icon: Ticket },
+    { name: 'Support Tickets', href: '/tickets', icon: Ticket, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Quick Support', href: '/create-ticket', icon: MessageSquare, roles: [UserRoleEnum.USER, UserRoleEnum.VIEWER] },
     { name: 'Email Info', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
-    { name: 'Slack Users', href: '/slack-users', icon: MessageSquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'Documents', href: '/documents', icon: FileText, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Employees', href: '/employees', icon: Users, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'All Reports', href: '/reports', icon: PieChart, roles: [UserRoleEnum.ADMIN] },
 ];
 

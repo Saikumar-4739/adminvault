@@ -11,7 +11,7 @@ import { PageLoader } from '@/components/ui/Spinner';
 import {
     Search, Edit, Trash2, Ticket, Clock, MessageSquare,
     Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, FileText,
-    AlertTriangle, CheckCircle, Plus
+    AlertTriangle, CheckCircle
 } from 'lucide-react';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
 import Input from '@/components/ui/Input';
@@ -81,17 +81,6 @@ export default function TicketsPage() {
         }
     };
 
-    const handleCreate = () => {
-        setEditingTicket(null);
-        setFormData({
-            subject: '',
-            categoryEnum: TicketCategoryEnum.OTHER,
-            priorityEnum: TicketPriorityEnum.MEDIUM,
-            ticketStatus: TicketStatusEnum.OPEN,
-            ticketCode: '',
-        });
-        setIsModalOpen(true);
-    };
 
     const handleEdit = (ticket: any) => {
         setEditingTicket(ticket);
@@ -154,9 +143,6 @@ export default function TicketsPage() {
                     {/* Organization Dropdown (Only show if filtering logic implemented properly or needed) */}
                     {/* <div className="relative min-w-[240px]"> ... </div> */}
 
-                    <Button onClick={handleCreate} leftIcon={<Plus className="h-4 w-4" />}>
-                        Create Ticket
-                    </Button>
                 </div>
             </div>
 

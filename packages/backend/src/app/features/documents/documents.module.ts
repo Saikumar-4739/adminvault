@@ -9,9 +9,7 @@ import { DocumentRepository } from '../../repository/document.repository';
 @Module({
     imports: [
         TypeOrmModule.forFeature([DocumentEntity]),
-        MulterModule.register({
-            dest: './uploads/documents',
-        }),
+        MulterModule.register({}),
     ],
     controllers: [DocumentsController],
     providers: [DocumentsService, DocumentRepository],

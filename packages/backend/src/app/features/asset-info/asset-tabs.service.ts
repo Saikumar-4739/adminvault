@@ -47,13 +47,13 @@ export class AssetTabsService {
                 })
                 .select([
                     'asset.id as id',
-                    'device.name as deviceName',
+                    'device.deviceName as deviceName',
                     'asset.configuration as configuration',
                     'asset.serialNumber as serialNumber',
                     'asset.expressCode as expressCode',
                     'asset.boxNo as boxNo',
-                    'CONCAT(pastUser.firstName, " ", pastUser.lastName) as pastUserName',
-                    'CONCAT(presentUser.firstName, " ", presentUser.lastName) as presentUserName',
+                    'CONCAT(pastUser.firstName, \' \', pastUser.lastName) as pastUserName',
+                    'CONCAT(presentUser.firstName, \' \', presentUser.lastName) as presentUserName',
                     'asset.assetStatusEnum as assetStatusEnum',
                     'brand.name as brandName',
                     'asset.model as model',
@@ -108,9 +108,9 @@ export class AssetTabsService {
 
             query.select([
                 'returnHistory.id as id',
-                'CONCAT(employee.firstName, " ", employee.lastName) as employeeName',
+                'CONCAT(employee.firstName, \' \', employee.lastName) as employeeName',
                 'employee.designation as employeeRole',
-                'device.name as deviceType',
+                'device.deviceName as deviceType',
                 'asset.configuration as configuration',
                 'returnHistory.allocationDate as allocationDate',
                 'returnHistory.returnDate as returnDate',
@@ -207,13 +207,13 @@ export class AssetTabsService {
                 .andWhere('assignment.status != :cancelled', { cancelled: NextAssignmentStatusEnum.CANCELLED })
                 .select([
                     'assignment.id as id',
-                    'CONCAT(employee.firstName, " ", employee.lastName) as employeeName',
+                    'CONCAT(employee.firstName, \' \', employee.lastName) as employeeName',
                     'employee.designation as employeeRole',
                     'assignment.assetType as assetType',
                     'assignment.requestDate as requestDate',
                     'assignment.expectedDate as expectedDate',
                     'assignment.assignedAssetId as assignedAssetId',
-                    'device.name as assignedAssetName',
+                    'device.deviceName as assignedAssetName',
                     'assignment.status as status',
                     'assignment.priority as priority',
                     'assignment.remarks as remarks'

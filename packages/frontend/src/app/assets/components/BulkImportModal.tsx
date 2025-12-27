@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import { Modal } from '@/components/ui/modal';
 import { useToast } from '@/contexts/ToastContext';
 import { services } from '@/lib/api/services';
-// import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 
 interface BulkImportModalProps {
     isOpen: boolean;
@@ -36,10 +36,6 @@ export default function BulkImportModal({ isOpen, onClose, companyId, onSuccess 
     };
 
     const handleDownloadTemplate = () => {
-        // XLSX disabled due to missing dependency
-        alert("Template download disabled temporarily (missing xlsx dependency).");
-
-        /* 
         const headers = [
             'Asset Type ID',
             'Brand ID',
@@ -57,8 +53,7 @@ export default function BulkImportModal({ isOpen, onClose, companyId, onSuccess 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
         XLSX.utils.book_append_sheet(wb, ws, 'Template');
-        XLSX.writeFile(wb, 'Asset_Import_Template.xlsx'); 
-        */
+        XLSX.writeFile(wb, 'Asset_Import_Template.xlsx');
     };
 
     const handleUpload = async () => {

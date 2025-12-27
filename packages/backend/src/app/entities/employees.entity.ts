@@ -1,10 +1,11 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { CommonBaseEntity } from './common-base.entity';
-import { EmployeeStatusEnum, DepartmentEnum } from '@adminvault/shared-models';
+import { EmployeeStatusEnum } from '@adminvault/shared-models';
+import { DepartmentsMasterEntity } from './masters/department.entity';
 
 @Entity('employees')
 @Index('idx_emp_email', ['email'])
-@Index('idx_emp_dept', ['department'])
+@Index('idx_emp_dept_id', ['departmentId'])
 export class EmployeesEntity extends CommonBaseEntity {
   @Column('varchar', { name: 'first_name', length: 100, nullable: false, comment: 'Employee first name' })
   firstName: string;
@@ -24,8 +25,12 @@ export class EmployeesEntity extends CommonBaseEntity {
   @Column('decimal', { name: 'billing_amount', precision: 10, scale: 2, nullable: true, comment: 'Employee billing amount' })
   billingAmount: number;
 
-  @Column('enum', { name: 'department', enum: DepartmentEnum, nullable: false, comment: 'Employee department' })
-  department: DepartmentEnum;
+  @Column('int', { name: 'department_id', nullable: false, comment: 'Department ID from departments master table' })
+  departmentId: number;
+
+  @ManyToOne(() => DepartmentsMasterEntity, { nullable: false })
+  @JoinColumn({ name: 'department_id' })
+  department: DepartmentsMasterEntity;
 
   @Column('text', { name: 'remarks', nullable: true, comment: 'Additional remarks about employee' })
   remarks: string;

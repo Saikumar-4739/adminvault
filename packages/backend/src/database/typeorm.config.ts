@@ -19,7 +19,7 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
             },
             poolSize: configService.get<number>('DB_POOL_LIMIT', 10),
             supportBigNumbers: false,
-            synchronize: false,
+            synchronize: true,
             logging: configService.get<string>('NODE_ENV') !== 'production',
             autoLoadEntities: true,
             ssl: configService.get<string>('DB_HOST')?.includes('aivencloud.com')

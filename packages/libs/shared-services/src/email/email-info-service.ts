@@ -20,8 +20,9 @@ export class EmailInfoService extends CommonAxiosService {
     }
 
     async getAllEmailInfo(companyId?: number, config?: AxiosRequestConfig): Promise<GetAllEmailInfoModel> {
-        const url = companyId ? this.getURLwithMainEndPoint(`getAllEmailInfo?companyId=${companyId}`) : this.getURLwithMainEndPoint('getAllEmailInfo');
-        return await this.axiosGetCall(url, config);
+        const url = this.getURLwithMainEndPoint('getAllEmailInfo');
+        const queryParams = companyId ? `?companyId=${companyId}` : '';
+        return await this.axiosPostCall(`${url}${queryParams}`, {}, config);
     }
 
     async deleteEmailInfo(reqObj: DeleteEmailInfoModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {

@@ -48,11 +48,14 @@ export class LicensesService {
             l.createdAt,
             l.updatedAt,
             l.assignedEmployeeId,
-            undefined, // licenseKey - not in entity
-            undefined, // purchaseDate - not in entity
+            undefined, // licenseKey
+            undefined, // purchaseDate
             l.expiryDate,
-            undefined, // seats - not in entity
-            l.remarks // notes mapped to remarks
+            undefined, // seats
+            l.remarks,
+            l.company,
+            l.application,
+            l.assignedEmployee
         ));
 
         return new GetAllLicensesModel(true, 200, 'Licenses retrieved successfully', licenseResponses);
@@ -102,8 +105,9 @@ export class LicensesService {
             companyId: reqModel.companyId,
             applicationId: reqModel.applicationId,
             assignedEmployeeId: reqModel.assignedEmployeeId,
-            expiryDate: reqModel.expiryDate,
-            remarks: reqModel.notes
+            assignedDate: reqModel.assignedDate || null,
+            expiryDate: reqModel.expiryDate || null,
+            remarks: reqModel.remarks || null
         };
 
         const license = this.repo.create(licenseData);
@@ -122,8 +126,9 @@ export class LicensesService {
         const updateData: Partial<CompanyLicenseEntity> = {
             applicationId: reqModel.applicationId,
             assignedEmployeeId: reqModel.assignedEmployeeId,
-            expiryDate: reqModel.expiryDate,
-            remarks: reqModel.notes
+            assignedDate: reqModel.assignedDate || null,
+            expiryDate: reqModel.expiryDate || null,
+            remarks: reqModel.remarks || null
         };
 
         await this.repo.update(reqModel.id, updateData);

@@ -87,7 +87,7 @@ export class DocumentsController {
      * @param id - Document ID from URL parameter
      * @param res - Express response object for file download
      */
-    @Post('download/:id')
+    @Get('download/:id')
     async downloadDocument(@Param('id') id: number, @Res() res: express.Response) {
         try {
             const { filePath, originalName } = await this.service.downloadDocument(id);

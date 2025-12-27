@@ -5,7 +5,7 @@ import {
 } from '@adminvault/shared-models';
 
 export class SlackUsersService extends CommonAxiosService {
-    private BASE_PATH = '/api/slack-users';
+    private BASE_PATH = '/slack-users';
 
     async createSlackUser(reqModel: CreateSlackUserModel): Promise<GlobalResponse> {
         return await this.axiosPostCall(`${this.BASE_PATH}/create`, reqModel);
