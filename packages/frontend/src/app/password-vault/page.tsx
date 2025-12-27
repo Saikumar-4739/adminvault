@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
 import {
-    Search, Plus, Lock, Eye, EyeOff, Copy, Check, Pencil, Trash2, Key,
+    Search, Plus, Lock, Eye, EyeOff, Copy, Check,
     ShieldCheck, Globe, User, Wand2,
     LayoutGrid, List, ArrowUpRight, Shield, Users, Activity
 } from 'lucide-react';

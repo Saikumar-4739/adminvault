@@ -24,7 +24,7 @@ const allNavigation: NavigationItem[] = [
     { name: 'Quick Support', href: '/create-ticket', icon: MessageSquare, roles: [UserRoleEnum.USER, UserRoleEnum.VIEWER] },
     { name: 'Email Info', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
     { name: 'Documents', href: '/documents', icon: FileText, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'All Reports', href: '/reports', icon: PieChart, roles: [UserRoleEnum.ADMIN] },
+    // { name: 'All Reports', href: '/reports', icon: PieChart, roles: [UserRoleEnum.ADMIN] },
 ];
 
 export default function Sidebar() {
