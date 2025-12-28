@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { assetService } from '@/lib/api/services';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, AssetSearchRequestModel, AssetStatusEnum } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, AssetSearchRequestModel } from '@adminvault/shared-models';
 
 interface Asset {
     id: number;
