@@ -1,4 +1,4 @@
-import { GlobalResponse } from '@adminvault/backend-utils';
+import { GlobalResponse } from '../common/global-response';
 import { DeviceTypeEnum } from '../enums';
 
 export class CreateDeviceModel {

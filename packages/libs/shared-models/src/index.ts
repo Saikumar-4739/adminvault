@@ -17,5 +17,5 @@ export * from './license/license-models';
 export * from './dashboard/dashboard-models';
 
 
-// Re-export commonly used types from backend-utils
-export { GlobalResponse } from '@adminvault/backend-utils';
+// Export commonly used types
+export { GlobalResponse } from './common/global-response';

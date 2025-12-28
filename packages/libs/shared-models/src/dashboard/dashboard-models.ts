@@ -1,4 +1,4 @@
-import { GlobalResponse } from '@adminvault/backend-utils';
+import { GlobalResponse } from '../common/global-response';
 
 export interface DashboardStats {
     assets: {
@@ -21,7 +21,7 @@ export interface DashboardStats {
 }
 
 export class DashboardStatsResponseModel extends GlobalResponse {
-    data: DashboardStats;
+    override data: DashboardStats;
 
     constructor(status: boolean, code: number, message: string, data: DashboardStats) {
         super(status, code, message);

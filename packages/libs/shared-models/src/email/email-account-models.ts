@@ -1,4 +1,4 @@
-import { GlobalResponse } from '@adminvault/backend-utils';
+import { GlobalResponse } from '../common/global-response';
 import { EmailTypeEnum, EmailStatusEnum } from '../enums';
 
 /**

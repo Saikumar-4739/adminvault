@@ -1,4 +1,4 @@
-import { GlobalResponse } from '@adminvault/backend-utils';
+import { GlobalResponse } from '../common/global-response';
 
 export class BulkImportResponseModel extends GlobalResponse {
     successCount: number;
