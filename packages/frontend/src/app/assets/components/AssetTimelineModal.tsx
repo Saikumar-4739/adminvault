@@ -1,15 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-    Calendar,
-    User,
-    ArrowLeft,
-    Plus,
-    CheckCircle,
-    AlertTriangle,
-    History
-} from 'lucide-react';
+import { Calendar, User, ArrowLeft, Plus, CheckCircle, AlertTriangle, History } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { services } from '@/lib/api/services';
 import { AssetTimelineEvent, AssetTimelineEventType } from '@adminvault/shared-models';

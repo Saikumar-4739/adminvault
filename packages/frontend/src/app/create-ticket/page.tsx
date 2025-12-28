@@ -8,12 +8,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PageHeader from '@/components/ui/PageHeader';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
-import {
-    Building2, CheckCircle, LogOut, Ticket, Monitor, Cpu,
-    Wifi, Mail, Lock, HelpCircle, AlertTriangle, Sparkles,
-    Send, ArrowLeft, Info, Clock, MessageSquare, List, Plus,
-    Calendar, Tag, User
-} from 'lucide-react';
+import { Building2, CheckCircle, LogOut, Ticket, Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, AlertTriangle, Send, Clock, MessageSquare, List, Plus } from 'lucide-react';
 
 const CategoryIcons: Record<string, any> = {
     [TicketCategoryEnum.HARDWARE]: Monitor,
@@ -58,19 +53,12 @@ const PriorityColors: Record<string, { bg: string, text: string, border: string 
 
 export default function CreateTicketPage() {
     const router = useRouter();
-    const { logout, user } = useAuth();
+    const { logout } = useAuth();
     const { tickets, createTicket, isLoading, fetchMyTickets } = useTickets();
     const [isSuccess, setIsSuccess] = useState(false);
     const [activeTab, setActiveTab] = useState<'tickets' | 'create'>('tickets');
-    const [formData, setFormData] = useState({
-        subject: '',
-        categoryEnum: TicketCategoryEnum.OTHER,
-        priorityEnum: TicketPriorityEnum.MEDIUM,
-        ticketStatus: TicketStatusEnum.OPEN,
-        ticketCode: '',
-    });
+    const [formData, setFormData] = useState({ subject: '', categoryEnum: TicketCategoryEnum.OTHER, priorityEnum: TicketPriorityEnum.MEDIUM, ticketStatus: TicketStatusEnum.OPEN, ticketCode: '' });
 
-    // Fetch user's tickets on mount
     useEffect(() => {
         fetchMyTickets();
     }, []);

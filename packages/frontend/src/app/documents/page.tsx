@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { documentsService } from '@/lib/api/services';
 import { DocumentModel, UploadDocumentModel } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
@@ -20,11 +20,7 @@ export default function DocumentsPage() {
     const [tags, setTags] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
 
-    useEffect(() => {
-        fetchDocuments();
-    }, []);
-
-    const fetchDocuments = async () => {
+    const fetchDocuments = useCallback(async () => {
         try {
             setIsLoading(true);
             const response = await documentsService.getAllDocuments();
@@ -36,15 +32,19 @@ export default function DocumentsPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    useEffect(() => {
+        fetchDocuments();
+    }, [fetchDocuments]);
+
+    const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setSelectedFile(e.target.files[0]);
         }
-    };
+    }, []);
 
-    const handleUpload = async () => {
+    const handleUpload = useCallback(async () => {
         if (!selectedFile) return;
 
         try {
@@ -69,17 +69,17 @@ export default function DocumentsPage() {
         } catch (error) {
             console.error('Failed to upload document:', error);
         }
-    };
+    }, [selectedFile, category, description, tags, fetchDocuments]);
 
-    const formatFileSize = (bytes: number) => {
+    const formatFileSize = useCallback((bytes: number) => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
+    }, []);
 
-    const getFileIcon = (mimeType: string) => {
+    const getFileIcon = useCallback((mimeType: string) => {
         if (mimeType.includes('pdf')) return <FileText className="h-5 w-5 text-rose-500" />;
         if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType.includes('csv'))
             return <FileSpreadsheet className="h-5 w-5 text-emerald-500" />;
@@ -89,9 +89,9 @@ export default function DocumentsPage() {
         if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('archive'))
             return <FileArchive className="h-5 w-5 text-purple-500" />;
         return <File className="h-5 w-5 text-slate-400" />;
-    };
+    }, []);
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = useCallback(async (id: number) => {
         if (confirm('Are you sure you want to delete this document?')) {
             try {
                 await documentsService.deleteDocument({ id, userId: 1 });
@@ -100,25 +100,31 @@ export default function DocumentsPage() {
                 console.error('Failed to delete document:', error);
             }
         }
-    };
+    }, [fetchDocuments]);
 
-    const handleDownload = (id: number) => {
+    const handleDownload = useCallback((id: number) => {
         const url = documentsService.getDownloadUrl(id);
         window.open(url, '_blank');
-    };
+    }, []);
 
-    const filteredDocuments = documents.filter(doc => {
-        return doc.originalName.toLowerCase().includes(searchQuery.toLowerCase());
-    });
+    const filteredDocuments = useMemo(() => {
+        return documents.filter(doc => {
+            return doc.originalName.toLowerCase().includes(searchQuery.toLowerCase());
+        });
+    }, [documents, searchQuery]);
 
-    const categories = Array.from(new Set(documents.map(d => d.category).filter(Boolean)));
-    const totalSize = documents.reduce((sum, doc) => sum + doc.fileSize, 0);
+    const categories = useMemo(() => {
+        return Array.from(new Set(documents.map(d => d.category).filter(Boolean)));
+    }, [documents]);
 
-    const stats = {
-        total: documents.length,
-        totalSize: (totalSize / (1024 * 1024)).toFixed(2),
-        categories: categories.length,
-    };
+    const stats = useMemo(() => {
+        const totalSize = documents.reduce((sum, doc) => sum + doc.fileSize, 0);
+        return {
+            total: documents.length,
+            totalSize: (totalSize / (1024 * 1024)).toFixed(2),
+            categories: categories.length,
+        };
+    }, [documents, categories]);
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
@@ -130,7 +136,7 @@ export default function DocumentsPage() {
                             Document Hub
                         </h1>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
-                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                             Manage your enterprise assets
                         </p>
                     </div>

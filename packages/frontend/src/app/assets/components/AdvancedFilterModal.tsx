@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-    Check
-} from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/Button';
 import { AssetStatusEnum } from '@adminvault/shared-models';
@@ -18,13 +16,7 @@ interface AdvancedFilterModalProps {
 
 export default function AdvancedFilterModal({ isOpen, onClose, onApply, initialFilters }: AdvancedFilterModalProps) {
     const { brands, fetchBrands, assetTypes, fetchAssetTypes } = useMasters();
-    const [localFilters, setLocalFilters] = useState<any>({
-        brandIds: [],
-        assetTypeIds: [],
-        statusFilter: [],
-        purchaseDateFrom: '',
-        purchaseDateTo: ''
-    });
+    const [localFilters, setLocalFilters] = useState<any>({ brandIds: [], assetTypeIds: [], statusFilter: [], purchaseDateFrom: '', purchaseDateTo: '' });
 
     useEffect(() => {
         if (isOpen) {
@@ -35,7 +27,6 @@ export default function AdvancedFilterModal({ isOpen, onClose, onApply, initialF
                 purchaseDateFrom: initialFilters.purchaseDateFrom || '',
                 purchaseDateTo: initialFilters.purchaseDateTo || ''
             });
-            // Ensure masters are loaded
             if (brands.length === 0) fetchBrands();
             if (assetTypes.length === 0) fetchAssetTypes();
         }

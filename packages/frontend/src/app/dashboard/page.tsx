@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useDashboard } from '@/hooks/useDashboard';
 import Card from '@/components/ui/Card';
@@ -203,7 +203,7 @@ export default function DashboardPage() {
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
                             <div className="h-56 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minHeight={224}>
                                     <PieChart>
                                         <defs>
                                             <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
@@ -263,7 +263,7 @@ export default function DashboardPage() {
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
                             <div className="h-56 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minHeight={224}>
                                     <BarChart data={ticketPriorityData}>
                                         <defs>
                                             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
@@ -322,7 +322,7 @@ export default function DashboardPage() {
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
                             <div className="h-56 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minHeight={224}>
                                     <AreaChart data={employeeDeptData}>
                                         <defs>
                                             <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
@@ -384,7 +384,7 @@ export default function DashboardPage() {
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
                             <div className="h-56 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minHeight={224}>
                                     <BarChart data={ticketStatusData} layout="vertical">
                                         <defs>
                                             <linearGradient id="horizontalGradient" x1="0" y1="0" x2="1" y2="0">

@@ -11,9 +11,9 @@ import { PageLoader } from '@/components/ui/Spinner';
 import PageHeader from '@/components/ui/PageHeader';
 import {
     Search, Edit, Trash2, Ticket, Clock, MessageSquare,
-    Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, FileText,
+    Monitor, Cpu, Wifi, Mail, Lock, HelpCircle,
     AlertTriangle, CheckCircle, User, Users, Filter, Plus,
-    TrendingUp, Calendar, Tag
+    Tag
 } from 'lucide-react';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
 import Input from '@/components/ui/Input';

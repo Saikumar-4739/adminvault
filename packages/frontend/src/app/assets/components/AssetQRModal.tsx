@@ -1,24 +1,20 @@
 'use client';
 
-// import { QRCodeSVG } from 'qrcode.react';
 import { useRef } from 'react';
 import { Printer } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { Modal } from '@/components/ui/modal';
-// import ReactToPrint from 'react-to-print';
+import { Modal } from '@/components/ui/modal'
 
 interface AssetQRModalProps {
     isOpen: boolean;
     onClose: () => void;
-    asset: any; // Using any for simplicity as Asset generic type isn't exported easily, but should be stricter ideally
+    asset: any;
 }
 
 export default function AssetQRModal({ isOpen, onClose, asset }: AssetQRModalProps) {
     const componentRef = useRef<HTMLDivElement>(null);
 
     if (!asset) return null;
-
-    // const qrValue = `ASSET-${asset.id}-${asset.serialNumber}`;
 
     return (
         <Modal
@@ -59,26 +55,6 @@ export default function AssetQRModal({ isOpen, onClose, asset }: AssetQRModalPro
                     <Button variant="outline" className="flex-1" onClick={onClose}>
                         Close
                     </Button>
-
-                    {/* <ReactToPrint
-                        trigger={() => (
-                            <Button variant="primary" className="flex-1" leftIcon={<Printer className="h-4 w-4" />}>
-                                Print Label
-                            </Button>
-                        )}
-                        content={() => componentRef.current}
-                        pageStyle={`
-                            @page {
-                                size: auto;
-                                margin: 0mm;
-                            }
-                            @media print {
-                                body {
-                                    -webkit-print-color-adjust: exact;
-                                }
-                            }
-                        `}
-                    /> */}
                     <Button variant="primary" className="flex-1" leftIcon={<Printer className="h-4 w-4" />} disabled>
                         Print (Disabled)
                     </Button>

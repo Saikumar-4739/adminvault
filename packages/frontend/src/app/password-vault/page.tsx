@@ -7,11 +7,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
 import PageHeader from '@/components/ui/PageHeader';
-import {
-    Search, Plus, Lock, Eye, EyeOff, Copy, Check,
-    ShieldCheck, Globe, User, Wand2,
-    LayoutGrid, List, ArrowUpRight, Shield, Users, Activity
-} from 'lucide-react';
+import { Search, Plus, Lock, Eye, EyeOff, Copy, Check, ShieldCheck, Globe, User, Wand2, LayoutGrid, List, ArrowUpRight, Users, Activity } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { useToast } from '@/contexts/ToastContext';

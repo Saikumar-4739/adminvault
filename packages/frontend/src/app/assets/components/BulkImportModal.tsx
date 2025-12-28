@@ -18,13 +18,7 @@ interface BulkImportModalProps {
 export default function BulkImportModal({ isOpen, onClose, companyId, onSuccess }: BulkImportModalProps) {
     const [file, setFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [importResult, setImportResult] = useState<{
-        success: boolean;
-        message: string;
-        successCount: number;
-        errorCount: number;
-        errors: { row: number; error: string }[];
-    } | null>(null);
+    const [importResult, setImportResult] = useState<{ success: boolean; message: string; successCount: number; errorCount: number; errors: { row: number; error: string }[] } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { success, error: showError } = useToast();
 

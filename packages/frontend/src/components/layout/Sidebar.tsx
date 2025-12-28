@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, PieChart, Mail, KeySquare, ChevronLeft, ChevronRight, MessageSquare, FileText, Lock } from 'lucide-react';
+import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, MessageSquare, FileText, Lock } from 'lucide-react';
 import { useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { UserRoleEnum } from '@adminvault/shared-models';
