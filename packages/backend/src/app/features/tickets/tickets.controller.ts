@@ -90,4 +90,22 @@ export class TicketsController {
             return returnException(GlobalResponse, error);
         }
     }
+
+    /**
+     * Retrieve tickets for the authenticated user
+     * @param req - Express request with authenticated user
+     * @returns GetAllTicketsModel with list of user's tickets
+     */
+    @Post('getMyTickets')
+    async getMyTickets(@Req() req: any): Promise<GetAllTicketsModel> {
+        try {
+            const userEmail = req.user?.email;
+            if (!userEmail) {
+                throw new Error("User email not found in token");
+            }
+            return await this.service.getTicketsByUser(userEmail);
+        } catch (error) {
+            return returnException(GetAllTicketsModel, error);
+        }
+    }
 }

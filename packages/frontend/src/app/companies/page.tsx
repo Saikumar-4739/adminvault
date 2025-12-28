@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
 import { Modal } from '@/components/ui/modal';
+import PageHeader from '@/components/ui/PageHeader';
 import { Plus, Search, Edit, Trash2, Building2 } from 'lucide-react';
 
 export default function CompaniesPage() {
@@ -13,7 +14,7 @@ export default function CompaniesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCompany, setEditingCompany] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [formData, setFormData] = useState({ companyName: '', location: '', estDate: '', phone: '', email: '',});
+    const [formData, setFormData] = useState({ companyName: '', location: '', estDate: '', phone: '', email: '', });
     const filteredCompanies = companies.filter((company) => (company.companyName || '').toLowerCase().includes(searchQuery.toLowerCase()));
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -62,34 +63,33 @@ export default function CompaniesPage() {
     return (
         <div className="p-6 space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Companies</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                        Manage your organization's companies
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="w-56">
-                        <Input
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="h-9 text-xs border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20 bg-white dark:bg-slate-800 shadow-sm"
-                            leftIcon={<Search className="h-3.5 w-3.5 text-slate-400" />}
-                        />
-                    </div>
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        className="shadow-md shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-300"
-                        leftIcon={<Plus className="h-4 w-4" />}
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        Add Company
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                icon={Building2}
+                title="Companies"
+                subtitle="Manage your organization's companies"
+                actions={
+                    <>
+                        <div className="w-56">
+                            <Input
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-9 text-xs border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20 bg-white dark:bg-slate-800 shadow-sm"
+                                leftIcon={<Search className="h-3.5 w-3.5 text-slate-400" />}
+                            />
+                        </div>
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            className="shadow-md shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-300"
+                            leftIcon={<Plus className="h-4 w-4" />}
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            Add Company
+                        </Button>
+                    </>
+                }
+            />
 
             {/* Companies Table */}
             <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden">

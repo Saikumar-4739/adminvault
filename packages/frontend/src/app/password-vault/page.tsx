@@ -6,6 +6,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/modal';
+import PageHeader from '@/components/ui/PageHeader';
 import {
     Search, Plus, Lock, Eye, EyeOff, Copy, Check,
     ShieldCheck, Globe, User, Wand2,
@@ -168,84 +169,80 @@ export default function PasswordVaultPage() {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 lg:p-10 space-y-10 max-w-[1800px] mx-auto min-h-screen bg-slate-50 dark:bg-slate-950">
-                {/* Office Dashboard Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 space-y-6 max-w-[1800px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
+                {/* Clean Header */}
+                <PageHeader
+                    icon={Lock}
+                    title="Employee Vault"
+                    subtitle="Office-wide application access manager"
+                    actions={
+                        <>
+                            <div className="flex bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    <LayoutGrid className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    <List className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <Button
+                                variant="primary"
+                                onClick={handleOpenCreate}
+                                leftIcon={<Plus className="w-4 h-4" />}
+                            >
+                                New Entry
+                            </Button>
+                        </>
+                    }
+                />
+
+                {/* Stats Dashboard */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {adminStats.map((stat, idx) => (
-                        <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-5 hover:border-indigo-500 transition-colors group">
-                            <div className={`w-14 h-14 rounded-2xl ${stat.bg} flex items-center justify-center shrink-0`}>
-                                <stat.icon className={`w-7 h-7 ${stat.color}`} />
+                        <div key={idx} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:border-indigo-500 transition-colors">
+                            <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
+                                <stat.icon className={`w-6 h-6 ${stat.color}`} />
                             </div>
                             <div>
-                                <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{stat.label}</p>
-                                <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{stat.value}</p>
+                                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stat.value}</p>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Bento Header */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
-                    <div className="lg:col-span-5 space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-slate-900 dark:bg-white rounded-2xl flex items-center justify-center shadow-xl shadow-slate-900/20">
-                                <Lock className="w-6 h-6 text-white dark:text-slate-900" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Employee Vault</h1>
-                                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Office-wide application access manager</p>
-                            </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {categories.map(cat => (
-                                <button
-                                    key={cat}
-                                    onClick={() => setActiveCategory(cat)}
-                                    className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all border ${activeCategory === cat
-                                        ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-lg'
-                                        : 'bg-white text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 hover:border-indigo-500'
-                                        }`}
-                                >
-                                    {cat}
-                                </button>
-                            ))}
-                        </div>
+                {/* Category Filters & Search */}
+                <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="flex flex-wrap gap-2">
+                        {categories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${activeCategory === cat
+                                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+                                    : 'bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                                    }`}
+                            >
+                                {cat}
+                            </button>
+                        ))}
                     </div>
 
-                    <div className="lg:col-span-4 relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input
                             type="text"
                             placeholder="Search by Employee or Service..."
-                            className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-medium focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
+                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                    </div>
-
-                    <div className="lg:col-span-3 flex items-center gap-3">
-                        <div className="flex bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-                            >
-                                <LayoutGrid className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-2 rounded-xl transition-all ${viewMode === 'list' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-                            >
-                                <List className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <Button
-                            variant="primary"
-                            onClick={handleOpenCreate}
-                            className="flex-1 h-[52px] rounded-2xl shadow-xl shadow-indigo-500/20 text-sm font-black"
-                            leftIcon={<Plus className="w-5 h-5" />}
-                        >
-                            New Entry
-                        </Button>
                     </div>
                 </div>
 

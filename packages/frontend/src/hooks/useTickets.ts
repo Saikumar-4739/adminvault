@@ -13,6 +13,8 @@ interface Ticket {
     priorityEnum: TicketPriorityEnum;
     ticketStatus: TicketStatusEnum;
     employeeId: number;
+    employeeName?: string;
+    employeeEmail?: string;
     assignAdminId?: number;
     resolvedAt?: string;
     createdAt?: string;
@@ -42,6 +44,8 @@ export function useTickets() {
                     priorityEnum: item.priorityEnum,
                     ticketStatus: item.ticketStatus,
                     employeeId: item.employeeId,
+                    employeeName: item.employeeName,
+                    employeeEmail: item.employeeEmail,
                     assignAdminId: item.assignAdminId,
                     resolvedAt: item.resolvedAt,
                     createdAt: item.createdAt || item.created_at,
@@ -53,6 +57,42 @@ export function useTickets() {
             }
         } catch (err: any) {
             const errorMessage = err.message || 'Failed to fetch tickets';
+            setError(errorMessage);
+            toast.error('Error', errorMessage);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toast]);
+
+    const fetchMyTickets = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const response = await ticketService.getMyTickets();
+
+            if (response.status) {
+                const data = (response as any).tickets || response.data || [];
+                const mappedTickets: Ticket[] = data.map((item: any) => ({
+                    id: item.id,
+                    ticketCode: item.ticketCode,
+                    subject: item.subject,
+                    categoryEnum: item.categoryEnum,
+                    priorityEnum: item.priorityEnum,
+                    ticketStatus: item.ticketStatus,
+                    employeeId: item.employeeId,
+                    employeeName: item.employeeName,
+                    employeeEmail: item.employeeEmail,
+                    assignAdminId: item.assignAdminId,
+                    resolvedAt: item.resolvedAt,
+                    createdAt: item.createdAt || item.created_at,
+                    updatedAt: item.updatedAt || item.updated_at
+                }));
+                setTickets(mappedTickets);
+            } else {
+                throw new Error(response.message || 'Failed to fetch my tickets');
+            }
+        } catch (err: any) {
+            const errorMessage = err.message || 'Failed to fetch my tickets';
             setError(errorMessage);
             toast.error('Error', errorMessage);
         } finally {
@@ -147,6 +187,7 @@ export function useTickets() {
         isLoading,
         error,
         fetchTickets,
+        fetchMyTickets,
         createTicket,
         updateTicket,
         deleteTicket,

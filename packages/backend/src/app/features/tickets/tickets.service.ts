@@ -158,15 +158,34 @@ export class TicketsService {
 
     /**
      * Retrieve all tickets in the system
-     * Fetches complete list of all support tickets
+     * Fetches complete list of all support tickets with employee details
      * 
      * @returns GetAllTicketsModel with list of all tickets
      * @throws Error if database query fails
      */
     async getAllTickets(): Promise<GetAllTicketsModel> {
         try {
-            const tickets = await this.ticketsRepo.find();
-            const responses = tickets.map(t => new TicketResponseModel(t.id, t.ticketCode, t.employeeId, t.categoryEnum, t.priorityEnum, t.subject, t.ticketStatus, t.assignAdminId, t.resolvedAt));
+            const tickets = await this.ticketsRepo
+                .createQueryBuilder('ticket')
+                .leftJoinAndSelect('ticket.raisedByEmployee', 'employee')
+                .orderBy('ticket.createdAt', 'DESC')
+                .getMany();
+
+            const responses = tickets.map(t => new TicketResponseModel(
+                t.id,
+                t.ticketCode,
+                t.employeeId,
+                t.categoryEnum,
+                t.priorityEnum,
+                t.subject,
+                t.ticketStatus,
+                t.assignAdminId,
+                t.resolvedAt,
+                t.raisedByEmployee ? `${t.raisedByEmployee.firstName} ${t.raisedByEmployee.lastName}` : undefined,
+                t.raisedByEmployee?.email,
+                t.createdAt,
+                t.updatedAt
+            ));
             return new GetAllTicketsModel(true, 0, "Tickets retrieved successfully", responses);
         } catch (error) {
             throw error;
@@ -198,6 +217,39 @@ export class TicketsService {
             return new GlobalResponse(true, 0, "Ticket deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    /**
+     * Retrieve tickets for a specific user
+     * Fetches all tickets raised by the user with the given email
+     * 
+     * @param userEmail - Email of the user whose tickets to retrieve
+     * @returns GetAllTicketsModel with list of user's tickets
+     * @throws ErrorResponse if user email is missing or employee not found
+     */
+    async getTicketsByUser(userEmail: string): Promise<GetAllTicketsModel> {
+        try {
+            if (!userEmail) {
+                throw new ErrorResponse(0, "User email is required");
+            }
+
+            const employee = await this.employeesRepo.findOne({ where: { email: userEmail } });
+            if (!employee) {
+                throw new ErrorResponse(0, `No Employee profile found for ${userEmail}`);
+            }
+
+            const tickets = await this.ticketsRepo
+                .createQueryBuilder('ticket')
+                .leftJoinAndSelect('ticket.raisedByEmployee', 'employee')
+                .where('ticket.employeeId = :employeeId', { employeeId: employee.id })
+                .orderBy('ticket.createdAt', 'DESC')
+                .getMany();
+
+            const responses = tickets.map(t => new TicketResponseModel(t.id, t.ticketCode, t.employeeId, t.categoryEnum, t.priorityEnum, t.subject, t.ticketStatus, t.assignAdminId, t.resolvedAt, t.raisedByEmployee ? `${t.raisedByEmployee.firstName} ${t.raisedByEmployee.lastName}` : undefined, t.raisedByEmployee?.email, t.createdAt, t.updatedAt));
+            return new GetAllTicketsModel(true, 0, "User tickets retrieved successfully", responses);
+        } catch (error) {
             throw error;
         }
     }

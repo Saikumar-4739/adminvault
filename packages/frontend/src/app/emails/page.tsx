@@ -4,12 +4,13 @@ import { useState, useMemo } from 'react';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useEmailInfo } from '@/hooks/useEmailInfo';
 import Card from '@/components/ui/Card';
+import PageHeader from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, DepartmentEnum, EmailTypeEnum } from '@adminvault/shared-models';
 import {
     Mail, Building2, Plus, Trash2, Search,
     Headphones, ShieldCheck, Landmark, Settings,
-    TrendingUp, Megaphone, Users2, AtSign,
+    TrendingUp, Megaphone, Users2,
     User, Users, Globe
 } from 'lucide-react';
 import AddEmailModal from './AddEmailModal';
@@ -89,57 +90,50 @@ export default function InfoEmailsPage() {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
-            <div className="p-6 md:p-8 space-y-8 max-w-[1600px] mx-auto min-h-screen pb-24 text-slate-900 dark:text-white">
-                {/* Header Section */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest">Enterprise</span>
-                        </div>
-                        <h1 className="text-4xl font-black tracking-tight">
-                            Communicator <span className="text-indigo-600">Hub</span>
-                        </h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium flex items-center gap-2 text-sm">
-                            <AtSign className="h-4 w-4" />
-                            Global routing and identity management platform
-                        </p>
-                    </div>
+            <div className="p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
+                {/* Clean Header */}
+                <PageHeader
+                    icon={Mail}
+                    title="Communicator Hub"
+                    subtitle="Global routing and identity management platform"
+                    actions={
+                        <>
+                            <div className="relative min-w-[240px]">
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                <select
+                                    value={selectedOrg}
+                                    onChange={(e) => setSelectedOrg(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-indigo-500 transition-all font-semibold text-sm appearance-none outline-none"
+                                >
+                                    <option value="">Select Organization</option>
+                                    {companies.map(c => (
+                                        <option key={c.id} value={c.id}>{c.companyName}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
-                        <div className="relative group min-w-[300px]">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search repository..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm outline-none"
-                            />
-                        </div>
-
-                        <div className="relative min-w-[240px]">
-                            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <select
-                                value={selectedOrg}
-                                onChange={(e) => setSelectedOrg(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus:border-indigo-500 transition-all font-black text-xs uppercase tracking-widest appearance-none outline-none"
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                disabled={!selectedOrg}
+                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50 disabled:scale-100 flex items-center gap-2"
                             >
-                                <option value="">Select Organization</option>
-                                {companies.map(c => (
-                                    <option key={c.id} value={c.id}>{c.companyName}</option>
-                                ))}
-                            </select>
-                        </div>
+                                <Plus className="w-4 h-4" />
+                                Add New
+                            </button>
+                        </>
+                    }
+                />
 
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            disabled={!selectedOrg}
-                            className="px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50 disabled:scale-100 flex items-center gap-2 shrink-0 lg:whitespace-nowrap"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Provision New
-                        </button>
-                    </div>
+                {/* Search Bar */}
+                <div className="relative max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search repository..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-sm outline-none"
+                    />
                 </div>
 
                 {/* Tab Switcher */}
