@@ -1,7 +1,7 @@
 import { GlobalResponse } from '../common/global-response';
 
 export class BulkImportResponseModel extends GlobalResponse {
-    override successCount: number;
+    successCount: number;
     errorCount: number;
     errors: { row: number; error: string }[];
 

@@ -37,7 +37,7 @@ export class GetDocumentModel {
 }
 
 export class GetAllDocumentsModel extends GlobalResponse {
-    override documents: DocumentModel[];
+    documents: DocumentModel[];
     constructor(status: boolean, code: number, message: string, documents: DocumentModel[]) {
         super(status, code, message);
         this.documents = documents;
@@ -45,7 +45,7 @@ export class GetAllDocumentsModel extends GlobalResponse {
 }
 
 export class GetDocumentByIdModel extends GlobalResponse {
-    override document: DocumentModel;
+    document: DocumentModel;
     constructor(status: boolean, code: number, message: string, document: DocumentModel) {
         super(status, code, message);
         this.document = document;
@@ -53,7 +53,7 @@ export class GetDocumentByIdModel extends GlobalResponse {
 }
 
 export class UploadDocumentResponseModel extends GlobalResponse {
-    override document: DocumentModel;
+    document: DocumentModel;
     constructor(status: boolean, code: number, message: string, document: DocumentModel) {
         super(status, code, message);
         this.document = document;

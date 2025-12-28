@@ -368,7 +368,7 @@ export class UpdatePasswordVaultModel {
 // RESPONSE MODELS - GET ALL
 // ============================================
 export class GetAllDepartmentsResponseModel extends GlobalResponse {
-    override departments: Department[];
+    departments: Department[];
 
     constructor(status: boolean, code: number, message: string, departments: Department[]) {
         super(status, code, message);
@@ -377,7 +377,7 @@ export class GetAllDepartmentsResponseModel extends GlobalResponse {
 }
 
 export class GetAllDesignationsResponseModel extends GlobalResponse {
-    override designations: Designation[];
+    designations: Designation[];
 
     constructor(status: boolean, code: number, message: string, designations: Designation[]) {
         super(status, code, message);
@@ -386,7 +386,7 @@ export class GetAllDesignationsResponseModel extends GlobalResponse {
 }
 
 export class GetAllAssetTypesResponseModel extends GlobalResponse {
-    override assetTypes: AssetType[];
+    assetTypes: AssetType[];
 
     constructor(status: boolean, code: number, message: string, assetTypes: AssetType[]) {
         super(status, code, message);
@@ -395,7 +395,7 @@ export class GetAllAssetTypesResponseModel extends GlobalResponse {
 }
 
 export class GetAllBrandsResponseModel extends GlobalResponse {
-    override brands: DeviceBrand[];
+    brands: DeviceBrand[];
 
     constructor(status: boolean, code: number, message: string, brands: DeviceBrand[]) {
         super(status, code, message);
@@ -404,7 +404,7 @@ export class GetAllBrandsResponseModel extends GlobalResponse {
 }
 
 export class GetAllVendorsResponseModel extends GlobalResponse {
-    override vendors: Vendor[];
+    vendors: Vendor[];
 
     constructor(status: boolean, code: number, message: string, vendors: Vendor[]) {
         super(status, code, message);
@@ -413,7 +413,7 @@ export class GetAllVendorsResponseModel extends GlobalResponse {
 }
 
 export class GetAllLocationsResponseModel extends GlobalResponse {
-    override locations: Location[];
+    locations: Location[];
 
     constructor(status: boolean, code: number, message: string, locations: Location[]) {
         super(status, code, message);
@@ -422,7 +422,7 @@ export class GetAllLocationsResponseModel extends GlobalResponse {
 }
 
 export class GetAllTicketCategoriesResponseModel extends GlobalResponse {
-    override ticketCategories: TicketCategory[];
+    ticketCategories: TicketCategory[];
 
     constructor(status: boolean, code: number, message: string, ticketCategories: TicketCategory[]) {
         super(status, code, message);
@@ -431,7 +431,7 @@ export class GetAllTicketCategoriesResponseModel extends GlobalResponse {
 }
 
 export class GetAllApplicationsResponseModel extends GlobalResponse {
-    override applications: Application[];
+    applications: Application[];
 
     constructor(status: boolean, code: number, message: string, applications: Application[]) {
         super(status, code, message);
@@ -440,7 +440,7 @@ export class GetAllApplicationsResponseModel extends GlobalResponse {
 }
 
 export class GetAllExpenseCategoriesResponseModel extends GlobalResponse {
-    override expenseCategories: ExpenseCategory[];
+    expenseCategories: ExpenseCategory[];
 
     constructor(status: boolean, code: number, message: string, expenseCategories: ExpenseCategory[]) {
         super(status, code, message);
@@ -449,7 +449,7 @@ export class GetAllExpenseCategoriesResponseModel extends GlobalResponse {
 }
 
 export class GetAllPasswordVaultsResponseModel extends GlobalResponse {
-    override passwordVaults: PasswordVault[];
+    passwordVaults: PasswordVault[];
 
     constructor(status: boolean, code: number, message: string, passwordVaults: PasswordVault[]) {
         super(status, code, message);
@@ -461,7 +461,7 @@ export class GetAllPasswordVaultsResponseModel extends GlobalResponse {
 // RESPONSE MODELS - CREATE (Single Item)
 // ============================================
 export class CreateDepartmentResponseModel extends GlobalResponse {
-    override department: Department;
+    department: Department;
 
     constructor(status: boolean, code: number, message: string, department: Department) {
         super(status, code, message);
@@ -470,7 +470,7 @@ export class CreateDepartmentResponseModel extends GlobalResponse {
 }
 
 export class CreateDesignationResponseModel extends GlobalResponse {
-    override designation: Designation;
+    designation: Designation;
 
     constructor(status: boolean, code: number, message: string, designation: Designation) {
         super(status, code, message);
@@ -479,7 +479,7 @@ export class CreateDesignationResponseModel extends GlobalResponse {
 }
 
 export class CreateAssetTypeResponseModel extends GlobalResponse {
-    override assetType: AssetType;
+    assetType: AssetType;
 
     constructor(status: boolean, code: number, message: string, assetType: AssetType) {
         super(status, code, message);
@@ -488,7 +488,7 @@ export class CreateAssetTypeResponseModel extends GlobalResponse {
 }
 
 export class CreateBrandResponseModel extends GlobalResponse {
-    override brand: DeviceBrand;
+    brand: DeviceBrand;
 
     constructor(status: boolean, code: number, message: string, brand: DeviceBrand) {
         super(status, code, message);
@@ -497,7 +497,7 @@ export class CreateBrandResponseModel extends GlobalResponse {
 }
 
 export class CreateVendorResponseModel extends GlobalResponse {
-    override vendor: Vendor;
+    vendor: Vendor;
 
     constructor(status: boolean, code: number, message: string, vendor: Vendor) {
         super(status, code, message);
@@ -506,7 +506,7 @@ export class CreateVendorResponseModel extends GlobalResponse {
 }
 
 export class CreateLocationResponseModel extends GlobalResponse {
-    override location: Location;
+    location: Location;
 
     constructor(status: boolean, code: number, message: string, location: Location) {
         super(status, code, message);
@@ -515,7 +515,7 @@ export class CreateLocationResponseModel extends GlobalResponse {
 }
 
 export class CreateTicketCategoryResponseModel extends GlobalResponse {
-    override ticketCategory: TicketCategory;
+    ticketCategory: TicketCategory;
 
     constructor(status: boolean, code: number, message: string, ticketCategory: TicketCategory) {
         super(status, code, message);
@@ -524,7 +524,7 @@ export class CreateTicketCategoryResponseModel extends GlobalResponse {
 }
 
 export class CreateApplicationResponseModel extends GlobalResponse {
-    override application: Application;
+    application: Application;
 
     constructor(status: boolean, code: number, message: string, application: Application) {
         super(status, code, message);
@@ -533,7 +533,7 @@ export class CreateApplicationResponseModel extends GlobalResponse {
 }
 
 export class CreateExpenseCategoryResponseModel extends GlobalResponse {
-    override expenseCategory: ExpenseCategory;
+    expenseCategory: ExpenseCategory;
 
     constructor(status: boolean, code: number, message: string, expenseCategory: ExpenseCategory) {
         super(status, code, message);
@@ -542,7 +542,7 @@ export class CreateExpenseCategoryResponseModel extends GlobalResponse {
 }
 
 export class CreatePasswordVaultResponseModel extends GlobalResponse {
-    override passwordVault: PasswordVault;
+    passwordVault: PasswordVault;
 
     constructor(status: boolean, code: number, message: string, passwordVault: PasswordVault) {
         super(status, code, message);
@@ -554,7 +554,7 @@ export class CreatePasswordVaultResponseModel extends GlobalResponse {
 // RESPONSE MODELS - UPDATE (Single Item)
 // ============================================
 export class UpdateDepartmentResponseModel extends GlobalResponse {
-    override department: Department;
+    department: Department;
 
     constructor(status: boolean, code: number, message: string, department: Department) {
         super(status, code, message);
@@ -563,7 +563,7 @@ export class UpdateDepartmentResponseModel extends GlobalResponse {
 }
 
 export class UpdateAssetTypeResponseModel extends GlobalResponse {
-    override assetType: AssetType;
+    assetType: AssetType;
 
     constructor(status: boolean, code: number, message: string, assetType: AssetType) {
         super(status, code, message);
@@ -572,7 +572,7 @@ export class UpdateAssetTypeResponseModel extends GlobalResponse {
 }
 
 export class UpdateBrandResponseModel extends GlobalResponse {
-    override brand: DeviceBrand;
+    brand: DeviceBrand;
 
     constructor(status: boolean, code: number, message: string, brand: DeviceBrand) {
         super(status, code, message);
@@ -581,7 +581,7 @@ export class UpdateBrandResponseModel extends GlobalResponse {
 }
 
 export class UpdateVendorResponseModel extends GlobalResponse {
-    override vendor: Vendor;
+    vendor: Vendor;
 
     constructor(status: boolean, code: number, message: string, vendor: Vendor) {
         super(status, code, message);
@@ -590,7 +590,7 @@ export class UpdateVendorResponseModel extends GlobalResponse {
 }
 
 export class UpdateLocationResponseModel extends GlobalResponse {
-    override location: Location;
+    location: Location;
 
     constructor(status: boolean, code: number, message: string, location: Location) {
         super(status, code, message);
@@ -599,7 +599,7 @@ export class UpdateLocationResponseModel extends GlobalResponse {
 }
 
 export class UpdateTicketCategoryResponseModel extends GlobalResponse {
-    override ticketCategory: TicketCategory;
+    ticketCategory: TicketCategory;
 
     constructor(status: boolean, code: number, message: string, ticketCategory: TicketCategory) {
         super(status, code, message);
@@ -608,7 +608,7 @@ export class UpdateTicketCategoryResponseModel extends GlobalResponse {
 }
 
 export class UpdateApplicationResponseModel extends GlobalResponse {
-    override application: Application;
+    application: Application;
 
     constructor(status: boolean, code: number, message: string, application: Application) {
         super(status, code, message);
@@ -617,7 +617,7 @@ export class UpdateApplicationResponseModel extends GlobalResponse {
 }
 
 export class UpdateExpenseCategoryResponseModel extends GlobalResponse {
-    override expenseCategory: ExpenseCategory;
+    expenseCategory: ExpenseCategory;
 
     constructor(status: boolean, code: number, message: string, expenseCategory: ExpenseCategory) {
         super(status, code, message);
@@ -626,7 +626,7 @@ export class UpdateExpenseCategoryResponseModel extends GlobalResponse {
 }
 
 export class UpdatePasswordVaultResponseModel extends GlobalResponse {
-    override passwordVault: PasswordVault;
+    passwordVault: PasswordVault;
 
     constructor(status: boolean, code: number, message: string, passwordVault: PasswordVault) {
         super(status, code, message);

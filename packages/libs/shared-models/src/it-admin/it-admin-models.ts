@@ -93,7 +93,7 @@ export class ItAdminResponseModel {
 }
 
 export class GetAllItAdminsModel extends GlobalResponse {
-    override admins: ItAdminResponseModel[];
+    admins: ItAdminResponseModel[];
     constructor(status: boolean, code: number, message: string, admins: ItAdminResponseModel[]) {
         super(status, code, message);
         this.admins = admins;
@@ -101,7 +101,7 @@ export class GetAllItAdminsModel extends GlobalResponse {
 }
 
 export class GetItAdminByIdModel extends GlobalResponse {
-    override admin: ItAdminResponseModel;
+    admin: ItAdminResponseModel;
     constructor(status: boolean, code: number, message: string, admin: ItAdminResponseModel) {
         super(status, code, message);
         this.admin = admin;

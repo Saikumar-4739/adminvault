@@ -88,7 +88,7 @@ export class DeviceResponseModel {
 }
 
 export class GetAllDevicesModel extends GlobalResponse {
-    override devices: DeviceResponseModel[];
+    devices: DeviceResponseModel[];
 
     constructor(status: boolean, code: number, message: string, devices: DeviceResponseModel[]) {
         super(status, code, message);
@@ -97,7 +97,7 @@ export class GetAllDevicesModel extends GlobalResponse {
 }
 
 export class GetDeviceByIdModel extends GlobalResponse {
-    override device: DeviceResponseModel;
+    device: DeviceResponseModel;
 
     constructor(status: boolean, code: number, message: string, device: DeviceResponseModel) {
         super(status, code, message);

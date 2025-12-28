@@ -56,7 +56,7 @@ export class GetSlackUserModel {
 }
 
 export class GetAllSlackUsersModel extends GlobalResponse {
-    override slackUsers: SlackUserModel[];
+    slackUsers: SlackUserModel[];
     constructor(status: boolean, code: number, message: string, slackUsers: SlackUserModel[]) {
         super(status, code, message);
         this.slackUsers = slackUsers;
@@ -64,7 +64,7 @@ export class GetAllSlackUsersModel extends GlobalResponse {
 }
 
 export class GetSlackUserByIdModel extends GlobalResponse {
-    override slackUser: SlackUserModel;
+    slackUser: SlackUserModel;
     constructor(status: boolean, code: number, message: string, slackUser: SlackUserModel) {
         super(status, code, message);
         this.slackUser = slackUser;
