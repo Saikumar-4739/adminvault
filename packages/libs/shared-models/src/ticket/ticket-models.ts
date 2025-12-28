@@ -112,7 +112,7 @@ export class TicketResponseModel {
 }
 
 export class GetAllTicketsModel extends GlobalResponse {
-    tickets: TicketResponseModel[];
+    override tickets: TicketResponseModel[];
     constructor(status: boolean, code: number, message: string, tickets: TicketResponseModel[]) {
         super(status, code, message);
         this.tickets = tickets;
@@ -120,7 +120,7 @@ export class GetAllTicketsModel extends GlobalResponse {
 }
 
 export class GetTicketByIdModel extends GlobalResponse {
-    ticket: TicketResponseModel;
+    override ticket: TicketResponseModel;
     constructor(status: boolean, code: number, message: string, ticket: TicketResponseModel) {
         super(status, code, message);
         this.ticket = ticket;

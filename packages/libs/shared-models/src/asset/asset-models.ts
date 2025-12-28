@@ -155,7 +155,7 @@ export class AssetResponseModel {
 }
 
 export class GetAllAssetsModel extends GlobalResponse {
-    assets: AssetResponseModel[];
+    override assets: AssetResponseModel[];
     constructor(status: boolean, code: number, message: string, assets: AssetResponseModel[]) {
         super(status, code, message);
         this.assets = assets;
@@ -163,7 +163,7 @@ export class GetAllAssetsModel extends GlobalResponse {
 }
 
 export class GetAssetByIdModel extends GlobalResponse {
-    asset: AssetResponseModel;
+    override asset: AssetResponseModel;
     constructor(status: boolean, code: number, message: string, asset: AssetResponseModel) {
         super(status, code, message);
         this.asset = asset;
@@ -173,7 +173,7 @@ export class GetAssetByIdModel extends GlobalResponse {
 // New Models for Enhanced Asset Management
 
 export class AssetStatisticsResponseModel extends GlobalResponse {
-    statistics: {
+    override statistics: {
         total: number;
         available: number;
         inUse: number;
@@ -284,7 +284,7 @@ export class AssetWithAssignmentModel {
 }
 
 export class GetAssetsWithAssignmentsResponseModel extends GlobalResponse {
-    assets: AssetWithAssignmentModel[];
+    override assets: AssetWithAssignmentModel[];
 
     constructor(status: boolean, code: number, message: string, assets: AssetWithAssignmentModel[]) {
         super(status, code, message);

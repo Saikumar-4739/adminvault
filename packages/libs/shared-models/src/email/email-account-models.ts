@@ -69,7 +69,7 @@ export class EmailAccountResponseModel {
  * Response model for getting all email accounts
  */
 export class GetAllEmailAccountsModel extends GlobalResponse {
-    data: EmailAccountResponseModel[];
+    override data: EmailAccountResponseModel[];
 
     constructor(status: boolean, code: number, message: string, data: EmailAccountResponseModel[]) {
         super(status, code, message);

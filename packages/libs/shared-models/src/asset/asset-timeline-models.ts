@@ -22,7 +22,7 @@ export interface AssetTimelineEvent {
 }
 
 export class AssetTimelineResponseModel extends GlobalResponse {
-    events: AssetTimelineEvent[];
+    override events: AssetTimelineEvent[];
 
     constructor(
         status: boolean,

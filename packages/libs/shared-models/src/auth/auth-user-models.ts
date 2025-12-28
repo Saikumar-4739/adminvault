@@ -95,7 +95,7 @@ export class RefreshTokenResponseModel {
 }
 
 export class LoginResponseModel extends GlobalResponse {
-    userInfo: RegisterUserModel
+    override userInfo: RegisterUserModel
     accessToken: string;
     refreshToken: string;
     constructor(status: boolean, code: number, message: string, userInfo: RegisterUserModel, accessToken: string, refreshToken: string) {
@@ -107,7 +107,7 @@ export class LoginResponseModel extends GlobalResponse {
 }
 
 export class GetAllUsersModel extends GlobalResponse {
-    users: RegisterUserModel[]
+    override users: RegisterUserModel[]
     constructor(status: boolean, code: number, message: string, users: RegisterUserModel[]) {
         super(status, code, message);
         this.users = users;

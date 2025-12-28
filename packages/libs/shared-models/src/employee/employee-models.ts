@@ -112,7 +112,7 @@ export class EmployeeResponseModel {
 }
 
 export class GetAllEmployeesModel extends GlobalResponse {
-    employees: EmployeeResponseModel[];
+    override employees: EmployeeResponseModel[];
 
     constructor(status: boolean, code: number, message: string, employees: EmployeeResponseModel[]) {
         super(status, code, message);
@@ -121,7 +121,7 @@ export class GetAllEmployeesModel extends GlobalResponse {
 }
 
 export class GetEmployeeByIdModel extends GlobalResponse {
-    employee: EmployeeResponseModel;
+    override employee: EmployeeResponseModel;
 
     constructor(status: boolean, code: number, message: string, employee: EmployeeResponseModel) {
         super(status, code, message);

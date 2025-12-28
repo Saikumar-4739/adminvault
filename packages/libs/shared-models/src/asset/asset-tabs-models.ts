@@ -28,7 +28,7 @@ export class GetStoreAssetsRequestModel {
 }
 
 export class GetStoreAssetsResponseModel extends GlobalResponse {
-    assets: StoreAssetModel[];
+    override assets: StoreAssetModel[];
     constructor(status: boolean, code: number, message: string, assets: StoreAssetModel[]) {
         super(status, code, message);
         this.assets = assets;
@@ -69,7 +69,7 @@ export class GetReturnAssetsRequestModel {
 }
 
 export class GetReturnAssetsResponseModel extends GlobalResponse {
-    returns: ReturnAssetModel[];
+    override returns: ReturnAssetModel[];
     constructor(status: boolean, code: number, message: string, returns: ReturnAssetModel[]) {
         super(status, code, message);
         this.returns = returns;
@@ -108,7 +108,7 @@ export class ProcessReturnRequestModel {
 }
 
 export class ProcessReturnResponseModel extends GlobalResponse {
-    returnRecord: ReturnAssetModel;
+    override returnRecord: ReturnAssetModel;
     constructor(status: boolean, code: number, message: string, returnRecord: ReturnAssetModel) {
         super(status, code, message);
         this.returnRecord = returnRecord;
@@ -155,7 +155,7 @@ export class GetNextAssignmentsRequestModel {
 }
 
 export class GetNextAssignmentsResponseModel extends GlobalResponse {
-    assignments: NextAssignmentModel[];
+    override assignments: NextAssignmentModel[];
     constructor(status: boolean, code: number, message: string, assignments: NextAssignmentModel[]) {
         super(status, code, message);
         this.assignments = assignments;
@@ -194,7 +194,7 @@ export class CreateNextAssignmentRequestModel {
 }
 
 export class CreateNextAssignmentResponseModel extends GlobalResponse {
-    assignment: NextAssignmentModel;
+    override assignment: NextAssignmentModel;
     constructor(status: boolean, code: number, message: string, assignment: NextAssignmentModel) {
         super(status, code, message);
         this.assignment = assignment;
@@ -214,7 +214,7 @@ export class AssignFromQueueRequestModel {
 }
 
 export class AssignFromQueueResponseModel extends GlobalResponse {
-    assignment: NextAssignmentModel;
+    override assignment: NextAssignmentModel;
     constructor(status: boolean, code: number, message: string, assignment: NextAssignmentModel) {
         super(status, code, message);
         this.assignment = assignment;

@@ -155,7 +155,7 @@ export class LicenseResponseModel {
  * Response model for getting all licenses
  */
 export class GetAllLicensesModel extends GlobalResponse {
-    data: LicenseResponseModel[];
+    override data: LicenseResponseModel[];
 
     constructor(status: boolean, code: number, message: string, data: LicenseResponseModel[]) {
         super(status, code, message);
@@ -167,7 +167,7 @@ export class GetAllLicensesModel extends GlobalResponse {
  * Response model for getting a single license by ID
  */
 export class GetLicenseByIdModel extends GlobalResponse {
-    data: LicenseResponseModel;
+    override data: LicenseResponseModel;
 
     constructor(status: boolean, code: number, message: string, data: LicenseResponseModel) {
         super(status, code, message);
@@ -196,7 +196,7 @@ export class LicenseStatsModel {
  * Response model for license statistics endpoint
  */
 export class GetLicenseStatsModel extends GlobalResponse {
-    data: LicenseStatsModel;
+    override data: LicenseStatsModel;
 
     constructor(status: boolean, code: number, message: string, data: LicenseStatsModel) {
         super(status, code, message);

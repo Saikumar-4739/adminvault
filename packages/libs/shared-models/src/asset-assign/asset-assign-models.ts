@@ -85,7 +85,7 @@ export class AssetAssignResponseModel {
 }
 
 export class GetAllAssetAssignsModel extends GlobalResponse {
-    assignments: AssetAssignResponseModel[];
+    override assignments: AssetAssignResponseModel[];
     constructor(status: boolean, code: number, message: string, assignments: AssetAssignResponseModel[]) {
         super(status, code, message);
         this.assignments = assignments;
@@ -93,7 +93,7 @@ export class GetAllAssetAssignsModel extends GlobalResponse {
 }
 
 export class GetAssetAssignByIdModel extends GlobalResponse {
-    assignment: AssetAssignResponseModel;
+    override assignment: AssetAssignResponseModel;
     constructor(status: boolean, code: number, message: string, assignment: AssetAssignResponseModel) {
         super(status, code, message);
         this.assignment = assignment;
