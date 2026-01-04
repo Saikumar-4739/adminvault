@@ -1,9 +1,12 @@
 import { Column, Entity, Index } from 'typeorm';
-import { CommonBaseEntity } from './common-base.entity';
+import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { CommentByEnum } from '@adminvault/shared-models';
 
 @Entity('ticket_comments')
 @Index('idx_comment_ticket', ['ticketId'])
+@Index('idx_comment_by_id', ['commentedById'])
+@Index('idx_comment_company', ['companyId'])
+@Index('idx_comment_user', ['userId'])
 export class TicketCommentsEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'ticket_id', nullable: false, comment: 'Reference to tickets table' })
     ticketId: number;

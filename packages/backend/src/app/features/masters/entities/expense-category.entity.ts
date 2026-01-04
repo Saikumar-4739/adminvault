@@ -1,8 +1,10 @@
 import { Column, Entity, Index } from 'typeorm';
-import { CommonBaseEntity } from '../common-base.entity';
+import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('expense_categories')
 @Index('idx_expense_cat_name', ['name'])
+@Index('idx_expense_cat_company', ['companyId'])
+@Index('idx_expense_cat_user', ['userId'])
 export class ExpenseCategoriesMasterEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Expense category name' })
     name: string;

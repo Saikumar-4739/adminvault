@@ -1,18 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { DeviceInfoRepository } from '../../../repository/device-info.repository';
-import { DeviceInfoEntity } from '../../../entities/device-info.entity';
+import { DeviceInfoRepository } from '../repositories/device-info.repository';
+import { DeviceInfoEntity } from '../entities/device-info.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateDeviceModel, UpdateDeviceModel, DeleteDeviceModel, GetDeviceModel, GetAllDevicesModel, GetDeviceByIdModel, DeviceResponseModel } from '@adminvault/shared-models';
-import { AuditLogsService } from '../../audit-logs/audit-logs.service';
 
 @Injectable()
 export class DeviceInfoService {
     constructor(
         private dataSource: DataSource,
-        private deviceInfoRepo: DeviceInfoRepository,
-        private auditLogsService: AuditLogsService
+        private deviceInfoRepo: DeviceInfoRepository
     ) { }
 
     async createDevice(reqModel: CreateDeviceModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {

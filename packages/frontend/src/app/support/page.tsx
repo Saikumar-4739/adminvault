@@ -148,4 +148,4 @@ export default function SupportChatPage() {
     );
 };
 
-export default SupportPage;
+

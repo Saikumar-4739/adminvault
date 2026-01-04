@@ -5,7 +5,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useCompanies } from '@/hooks/useCompanies';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import {
     Plus, Users, Edit, Trash2, Mail, Phone,
     LayoutGrid, List, Search, Building2, Upload
@@ -214,15 +214,17 @@ export default function EmployeesPage() {
             <div className="p-4 lg:p-6 space-y-6 max-w-[1920px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-900/50">
                 {/* Header & Controls */}
                 <div className="flex flex-col gap-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                                <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                                Employees
-                            </h1>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">
-                                {stats.total} total employees · {stats.active} active
-                            </p>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl">
+                                <Users className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Employees</h1>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                    {stats.total} total employees Â· {stats.active} active
+                                </p>
+                            </div>
                         </div>
 
                         {/* Actions */}
@@ -499,4 +501,4 @@ export default function EmployeesPage() {
     );
 };
 
-export default EmployeesPage;
+

@@ -11,3 +11,4 @@ export * from './admin-role.enum';
 export * from './admin-status.enum';
 export * from './email-status.enum';
 export * from './comment-by.enum';
+export * from './setting-type.enum';

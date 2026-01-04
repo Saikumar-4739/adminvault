@@ -5,7 +5,7 @@ import { useCompanies } from '@/hooks/useCompanies';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
@@ -90,7 +90,7 @@ export default function CompaniesMasterView({ onAddClick, onBack }: { onAddClick
                     <div className="flex items-center gap-3">
                         {onBack && (
                             <Button size="sm" variant="outline" onClick={onBack}>
-                                ← Back to Masters
+                                â† Back to Masters
                             </Button>
                         )}
                         <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>

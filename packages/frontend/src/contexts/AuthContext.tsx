@@ -18,7 +18,7 @@ interface AuthContextType {
     token: string | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (credentials: LoginUserModel) => Promise<void>;
+    login: (credentials: LoginUserModel) => Promise<User | undefined>;
     register: (data: RegisterUserModel) => Promise<void>;
     logout: () => Promise<void>;
 }
@@ -33,14 +33,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Load user from localStorage on mount
     useEffect(() => {
-        const storedToken = localStorage.getItem('auth_token');
-        const storedUser = localStorage.getItem('auth_user');
+        try {
+            const storedToken = localStorage.getItem('auth_token');
+            const storedUser = localStorage.getItem('auth_user');
 
-        if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
+            if (storedToken && storedUser) {
+                const parsedUser = JSON.parse(storedUser);
+                setToken(storedToken);
+                setUser(parsedUser);
+            } else if (storedUser && !storedToken) {
+                localStorage.removeItem('auth_user');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('refresh_token');
+                setUser(null);
+                setToken(null);
+            }
+        } catch (error) {
+            console.error('Failed to restore session:', error);
+            // Optional: Clear invalid storage
+            localStorage.removeItem('auth_user');
+            localStorage.removeItem('auth_token');
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     }, []);
 
     const login = useCallback(
@@ -48,33 +63,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
                 setIsLoading(true);
 
-                console.log('🌍 Attempting to get location...');
-
-                // Attempt to get exact location from browser (non-blocking)
-                let location: { latitude: number; longitude: number } | null = null;
-                try {
-                    const { geolocationService } = await import('@adminvault/shared-services');
-                    console.log('✅ Geolocation service loaded');
-
-                    location = await geolocationService.getCurrentPosition();
-
-                } catch (geoError) {
-                    // Silently fail - location is optional
-                }
-
-                // Include location in login request if available
                 const loginData = new LoginUserModel(
                     credentials.email,
                     credentials.password,
-                    location?.latitude,
-                    location?.longitude
+                    undefined,
+                    undefined
                 );
 
                 const response: LoginResponseModel = await authService.loginUser(loginData);
 
-                if (response.status && response.accessToken) {
+                if (response.status && (response.accessToken || (response as any).access_token)) {
+                    const tokenToSave = response.accessToken || (response as any).access_token;
+
                     const userData: User = {
-                        id: response.userInfo.companyId, // Adjust based on actual response
+                        id: (response.userInfo as any).id || response.userInfo.companyId,
                         fullName: response.userInfo.fullName,
                         email: response.userInfo.email,
                         companyId: response.userInfo.companyId,
@@ -82,18 +84,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     };
 
                     setUser(userData);
-                    setToken(response.accessToken);
+                    setToken(tokenToSave);
 
                     // Store in localStorage
-                    localStorage.setItem('auth_token', response.accessToken);
-                    localStorage.setItem('auth_user', JSON.stringify(userData));
-                    localStorage.setItem('refresh_token', response.refreshToken);
+                    try {
+                        localStorage.setItem('auth_token', tokenToSave);
+                        localStorage.setItem('auth_user', JSON.stringify(userData));
+                        localStorage.setItem('refresh_token', response.refreshToken);
+                    } catch (storageErr) {
+                        console.error('LocalStorage Save Error:', storageErr);
+                    }
 
-                    localStorage.setItem('refresh_token', response.refreshToken);
+                    return userData;
                 } else {
+                    console.error('Login failed, status false or token missing', response);
                     throw new Error(response.message || 'Login failed');
                 }
             } catch (error: any) {
+                console.error('Login error in context:', error);
                 throw error;
             } finally {
                 setIsLoading(false);
@@ -113,9 +121,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 } else {
                     throw new Error(response.message || 'Registration failed');
                 }
-            } catch (error: any) {
-                // toast.error('Registration failed', error.message);
-                throw error;
             } finally {
                 setIsLoading(false);
             }

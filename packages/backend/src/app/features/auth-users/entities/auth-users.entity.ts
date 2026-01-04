@@ -3,6 +3,9 @@ import { UserRoleEnum } from '@adminvault/shared-models';
 
 @Entity('auth_users')
 @Index('idx_auth_email', ['email'])
+@Index('idx_auth_company', ['companyId'])
+@Index('idx_auth_role', ['userRole'])
+@Index('idx_auth_status', ['status'])
 export class AuthUsersEntity {
   @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for auth users' })
   id: number;

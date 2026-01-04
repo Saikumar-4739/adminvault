@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { ticketService } from '@/lib/api/services';
 import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
 import { useToast } from '@/contexts/ToastContext';
@@ -21,17 +21,21 @@ interface Ticket {
     updatedAt?: string;
 }
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export function useTickets() {
+    const { user } = useAuth();
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const toast = useToast();
 
     const fetchTickets = useCallback(async () => {
+        if (!user?.companyId) return; // Guard clause
         try {
             setIsLoading(true);
             setError(null);
-            const response = await ticketService.getAllTickets();
+            const response = await ticketService.getAllTickets(user.companyId);
 
             if (response.status) {
                 const data = (response as any).tickets || response.data || [];
@@ -178,9 +182,7 @@ export function useTickets() {
         [toast, fetchTickets]
     );
 
-    useEffect(() => {
-        fetchTickets();
-    }, [fetchTickets]);
+
 
     return {
         tickets,

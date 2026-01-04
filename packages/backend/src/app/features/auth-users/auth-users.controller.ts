@@ -1,5 +1,5 @@
 import { Body, Controller, Post, Req } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel } from '@adminvault/shared-models';
@@ -14,6 +14,7 @@ export class AuthUsersController {
     ) { }
 
     @Post('registerUser')
+    @Public()
     @ApiBody({ type: RegisterUserModel })
     async registerUser(@Body() reqModel: RegisterUserModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -25,6 +26,7 @@ export class AuthUsersController {
     }
 
     @Post('loginUser')
+    @Public()
     @ApiBody({ type: LoginUserModel })
     async loginUser(@Body() reqModel: LoginUserModel, @Req() req: Request): Promise<LoginResponseModel> {
         try {
@@ -70,7 +72,7 @@ export class AuthUsersController {
     }
 
     @Post('getAllUsers')
-    @ApiBody({ type: CompanyIdRequestModel })   
+    @ApiBody({ type: CompanyIdRequestModel })
     async getAllUsers(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllUsersModel> {
         try {
             return await this.service.getAllUsers(reqModel);
@@ -80,6 +82,7 @@ export class AuthUsersController {
     }
 
     @Post('requestAccess')
+    @Public()
     @ApiBody({ type: RequestAccessModel })
     async requestAccess(@Body() reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {

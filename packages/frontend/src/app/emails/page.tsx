@@ -246,4 +246,4 @@ export default function InfoEmailsPage() {
     );
 };
 
-export default EmailsPage;
+

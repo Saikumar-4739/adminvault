@@ -215,7 +215,7 @@ export default function AssetsPage() {
                 <BulkImportModal
                     isOpen={isBulkImportOpen}
                     companyId={companyId}
-                    onSuccess={() => { }}
+                    onSuccess={() => { /* handled */ }}
                     onClose={() => setIsBulkImportOpen(false)}
                 />
             )}
@@ -224,7 +224,10 @@ export default function AssetsPage() {
                     isOpen={isFilterModalOpen}
                     initialFilters={{}}
                     onClose={() => setIsFilterModalOpen(false)}
-                    onApply={(filters) => console.log('Applying filters:', filters)}
+                    onApply={(filters) => {
+                        // TODO: Implement filter logic
+                        setIsFilterModalOpen(false);
+                    }}
                 />
             )}
             {isAssetFormOpen && (
@@ -239,6 +242,4 @@ export default function AssetsPage() {
             )}
         </div>
     );
-};
-
-export default AssetsPage;
+}

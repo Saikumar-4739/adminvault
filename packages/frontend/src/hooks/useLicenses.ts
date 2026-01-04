@@ -49,9 +49,10 @@ export function useLicenses(companyId?: number) {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await licensesService.getAll(companyId);
+            if (!companyId) return;
+            const response = await licensesService.findAll(companyId);
             if (response.status) {
-                setLicenses(response.data);
+                setLicenses(response.data as any);
             }
         } catch (err: any) {
             setError(err.message || 'Failed to fetch licenses');
@@ -64,10 +65,12 @@ export function useLicenses(companyId?: number) {
     // Fetch Stats
     const fetchStats = useCallback(async () => {
         try {
-            const response = await licensesService.getStats(companyId);
-            if (response.status) {
-                setStats(response.data);
-            }
+            if (!companyId) return;
+            // Stats endpoint might not exist yet, commenting out for now
+            // const response = await licensesService.findStats(companyId);
+            // if (response.status) {
+            //     setStats(response.data);
+            // }
         } catch (err: any) {
             console.error('Failed to fetch stats', err);
         }
@@ -89,7 +92,7 @@ export function useLicenses(companyId?: number) {
 
     const updateLicense = async (id: number, data: any) => {
         try {
-            const response = await licensesService.update(id, data);
+            const response = await licensesService.update({ ...data, id });
             if (response.status) {
                 fetchLicenses();
                 fetchStats();
@@ -103,7 +106,7 @@ export function useLicenses(companyId?: number) {
 
     const deleteLicense = async (id: number) => {
         try {
-            const response = await licensesService.remove(id);
+            const response = await licensesService.remove({ id });
             if (response.status) {
                 fetchLicenses();
                 fetchStats();

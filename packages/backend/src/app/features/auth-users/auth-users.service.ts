@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { AuthUsersRepository } from './repositories/auth-users.repository';
 import { AuthUsersEntity } from './entities/auth-users.entity';
@@ -9,9 +9,8 @@ import { UserRoleEnum } from '@adminvault/shared-models';
 import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
 import { LoginSessionService } from './login-session.service';
-import { MailService } from '../mail/mail.service';
+import { EmailInfoService } from '../administration/email-info.service';
 import { RequestAccessModel } from '@adminvault/shared-models';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 
 const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
@@ -23,7 +22,8 @@ export class AuthUsersService {
         private dataSource: DataSource,
         private authUsersRepo: AuthUsersRepository,
         private loginSessionService: LoginSessionService,
-        private mailService: MailService,
+        @Inject(forwardRef(() => EmailInfoService))
+        private emailService: EmailInfoService,
         private jwtService: JwtService,
     ) { }
 
@@ -44,7 +44,7 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "Email already exists")
             }
 
-            if (!reqModel.companyId || reqModel.companyId <= 0 ||  reqModel.password.length < 8) {
+            if (!reqModel.companyId || reqModel.companyId <= 0 || reqModel.password.length < 8) {
                 throw new ErrorResponse(0, "Invalid company ID or password")
             }
 
@@ -165,7 +165,7 @@ export class AuthUsersService {
      */
     async requestAccess(reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {
-            await this.mailService.sendAccessRequestEmail(reqModel);
+            await this.emailService.sendAccessRequestEmail(reqModel);
             return new GlobalResponse(true, 0, "Access request sent successfully");
         } catch (error) {
             throw error;
@@ -232,14 +232,30 @@ export class AuthUsersService {
     async updateUser(reqModel: UpdateUserModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
-            if (!existingUser) {
-                throw new ErrorResponse(0, "Email does not exist");
+            let existingUser;
+            if (reqModel.id) {
+                existingUser = await this.authUsersRepo.findOne({ where: { id: reqModel.id } });
+            } else if (reqModel.email) {
+                existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
             }
+
+            if (!existingUser) {
+                throw new ErrorResponse(0, "User does not exist");
+            }
+
             await transManager.startTransaction();
-            await this.authUsersRepo.update({ email: reqModel.email }, { fullName: reqModel.fullName, phNumber: reqModel.phNumber })
+
+            const updateData: any = {};
+            if (reqModel.fullName) updateData.fullName = reqModel.fullName;
+            if (reqModel.phNumber) updateData.phNumber = reqModel.phNumber;
+            // Handle other fields if necessary
+
+            if (Object.keys(updateData).length > 0) {
+                await this.authUsersRepo.update({ id: existingUser.id }, updateData);
+            }
+
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 0, "User Logged Out Successfully");
+            return new GlobalResponse(true, 0, "User Updated Successfully");
         } catch (err) {
             await transManager.releaseTransaction();
             throw err;
@@ -287,7 +303,19 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "No users found");
             }
 
-            const users = existingUser.map(user => new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole));
+            const users = existingUser.map(user => ({
+                id: user.id,
+                fullName: user.fullName,
+                companyId: user.companyId,
+                email: user.email,
+                phNumber: user.phNumber,
+                userRole: user.userRole,
+                status: user.status,
+                lastLogin: user.lastLogin,
+                roles: [],
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            }));
             return new GetAllUsersModel(true, 0, "Users Retrieved Successfully", users);
         } catch (err) {
             await transManager.releaseTransaction();

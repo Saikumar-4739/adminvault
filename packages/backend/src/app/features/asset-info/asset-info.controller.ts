@@ -1,6 +1,6 @@
 import { Body, Controller, Post, UploadedFile, UseInterceptors, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AssetInfoService } from './asset-info.service';
 import { AssetTabsService } from './asset-tabs.service';

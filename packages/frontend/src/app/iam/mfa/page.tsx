@@ -5,7 +5,7 @@ import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
 import { Shield, Smartphone, Mail, Key, CheckCircle2, XCircle, QrCode, Copy } from 'lucide-react';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
 import { iamService } from '@/lib/api/services';

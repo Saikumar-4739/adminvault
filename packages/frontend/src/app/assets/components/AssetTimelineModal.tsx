@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Calendar, User, ArrowLeft, Plus, CheckCircle, AlertTriangle, History } from 'lucide-react';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import { services } from '@/lib/api/services';
 import { AssetTimelineEvent, AssetTimelineEventType } from '@adminvault/shared-models';
 import { PageLoader } from '@/components/ui/Spinner';

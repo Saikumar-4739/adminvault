@@ -1,4 +1,5 @@
-import { CommonAxiosService } from '../common-axios-service';
+import { AxiosRequestConfig } from "axios";
+import { CommonAxiosService } from "../common-axios-service";
 import {
     GetStoreAssetsRequestModel, GetStoreAssetsResponseModel,
     GetReturnAssetsRequestModel, GetReturnAssetsResponseModel,
@@ -9,47 +10,40 @@ import {
 } from '@adminvault/shared-models';
 
 export class AssetTabsService extends CommonAxiosService {
-    private readonly BASE_PATH = '/asset-info';
+    private getURLwithMainEndPoint(childUrl: string) {
+        return '/asset-info/' + childUrl;
+    }
 
     // ============================================
     // STORE ASSETS TAB
     // ============================================
-    async getStoreAssets(companyId: number): Promise<GetStoreAssetsResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/store-assets`,
-            new GetStoreAssetsRequestModel(companyId)
-        );
+    async getStoreAssets(reqObj: GetStoreAssetsRequestModel, config?: AxiosRequestConfig): Promise<GetStoreAssetsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('store-assets'), reqObj, config);
     }
 
     // ============================================
     // RETURN ASSETS TAB
     // ============================================
-    async getReturnAssets(companyId: number, startDate?: string, endDate?: string, employeeId?: number): Promise<GetReturnAssetsResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/return-assets`,
-            new GetReturnAssetsRequestModel(companyId, startDate, endDate, employeeId)
-        );
+    async getReturnAssets(reqObj: GetReturnAssetsRequestModel, config?: AxiosRequestConfig): Promise<GetReturnAssetsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('return-assets'), reqObj, config);
     }
 
-    async processReturn(data: ProcessReturnRequestModel): Promise<ProcessReturnResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/process-return`, data);
+    async processReturn(reqObj: ProcessReturnRequestModel, config?: AxiosRequestConfig): Promise<ProcessReturnResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('process-return'), reqObj, config);
     }
 
     // ============================================
     // NEXT ASSIGN ASSETS TAB
     // ============================================
-    async getNextAssignments(companyId: number): Promise<GetNextAssignmentsResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/next-assignments`,
-            new GetNextAssignmentsRequestModel(companyId)
-        );
+    async getNextAssignments(reqObj: GetNextAssignmentsRequestModel, config?: AxiosRequestConfig): Promise<GetNextAssignmentsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('next-assignments'), reqObj, config);
     }
 
-    async createNextAssignment(data: CreateNextAssignmentRequestModel): Promise<CreateNextAssignmentResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/create-next-assignment`, data);
+    async createNextAssignment(reqObj: CreateNextAssignmentRequestModel, config?: AxiosRequestConfig): Promise<CreateNextAssignmentResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('create-next-assignment'), reqObj, config);
     }
 
-    async assignFromQueue(data: AssignFromQueueRequestModel): Promise<AssignFromQueueResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/assign-from-queue`, data);
+    async assignFromQueue(reqObj: AssignFromQueueRequestModel, config?: AxiosRequestConfig): Promise<AssignFromQueueResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('assign-from-queue'), reqObj, config);
     }
 }

@@ -1,27 +1,29 @@
-import { CommonAxiosService } from '../common-axios-service';
+import { AxiosRequestConfig } from "axios";
+import { CommonAxiosService } from "../common-axios-service";
+import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesModel, GetLicenseStatsModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class LicensesService extends CommonAxiosService {
-    private readonly BASE_PATH = '/licenses';
-
-    async getAll(companyId?: number) {
-        const data = companyId ? { id: companyId } : {};
-        return await this.axiosPostCall(`${this.BASE_PATH}/findAll`, data);
+    private getURLwithMainEndPoint(childUrl: string) {
+        return '/licenses/' + childUrl;
     }
 
-    async getStats(companyId?: number) {
-        const data = companyId ? { id: companyId } : {};
-        return await this.axiosPostCall(`${this.BASE_PATH}/stats`, data);
+    async findAll(companyId: number, config?: AxiosRequestConfig): Promise<GetAllLicensesModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('findAll'), { id: companyId }, config);
     }
 
-    async create(data: any) {
-        return await this.axiosPostCall(`${this.BASE_PATH}/create`, data);
+    async getStats(companyId: number, config?: AxiosRequestConfig): Promise<GetLicenseStatsModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('stats'), { id: companyId }, config);
     }
 
-    async update(id: number, data: any) {
-        return await this.axiosPostCall(`${this.BASE_PATH}/update`, { ...data, id });
+    async create(reqObj: CreateLicenseModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('create'), reqObj, config);
     }
 
-    async remove(id: number) {
-        return await this.axiosPostCall(`${this.BASE_PATH}/delete`, { id });
+    async update(reqObj: UpdateLicenseModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('update'), reqObj, config);
+    }
+
+    async remove(reqObj: DeleteLicenseModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('delete'), reqObj, config);
     }
 }

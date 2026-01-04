@@ -15,11 +15,12 @@ import { AssetInfoRepository } from './repositories/asset-info.repository';
 import { AssetReturnHistoryRepository } from './repositories/asset-return-history.repository';
 import { AssetNextAssignmentRepository } from './repositories/asset-next-assignment.repository';
 import { AssetAssignRepository } from './repositories/asset-assign.repository';
+import { EmployeesRepository } from '../employees/repositories/employees.repository';
 
 @Module({
     imports: [TypeOrmModule.forFeature([AssetInfoEntity, AssetReturnHistoryEntity, AssetNextAssignmentEntity, AssetAssignEntity, EmployeesEntity])],
     controllers: [AssetInfoController],
-    providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetAssignService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository, AssetAssignRepository],
+    providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetAssignService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository, AssetAssignRepository, EmployeesRepository],
     exports: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetAssignService]
 })
 export class AssetInfoModule { }

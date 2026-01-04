@@ -17,7 +17,7 @@ const nextConfig = {
   ],
 
   // Performance Optimizations
-  swcMinify: true, // Use SWC for faster minification
+
   compress: true, // Enable gzip compression
   productionBrowserSourceMaps: false, // Disable source maps in production
 

@@ -1,10 +1,12 @@
 import { Column, Entity, Index } from 'typeorm';
-import { CommonBaseEntity } from './common-base.entity';
+import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { DeviceTypeEnum } from '@adminvault/shared-models';
 
 @Entity('device_info')
 @Index('idx_device_type', ['deviceType'])
 @Index('idx_device_name', ['deviceName'])
+@Index('idx_device_company', ['companyId'])
+@Index('idx_device_user', ['userId'])
 export class DeviceInfoEntity extends CommonBaseEntity {
   @Column('enum', { name: 'device_type', enum: DeviceTypeEnum, nullable: false, comment: 'Type of device' })
   deviceType: DeviceTypeEnum;

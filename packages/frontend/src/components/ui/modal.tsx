@@ -1,111 +1,100 @@
-import React, { useEffect } from 'react';
+'use client';
+
+import { X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
-import { X } from 'lucide-react';
+import Button from '@/components/ui/Button';
 
-export interface ModalProps {
+interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
     title?: string;
     children: React.ReactNode;
-    size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-    showCloseButton?: boolean;
+    className?: string;
+    size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
     footer?: React.ReactNode;
 }
 
-export function Modal({
-    isOpen,
-    onClose,
-    title,
-    children,
-    size = 'md',
-    showCloseButton = true,
-    footer,
-}: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, className, size = 'md', footer }: ModalProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Prevent body scroll when modal is open
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
         }
+
         return () => {
             document.body.style.overflow = 'unset';
         };
     }, [isOpen]);
 
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) {
-                onClose();
-            }
-        };
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, [isOpen, onClose]);
+    if (!mounted || !isOpen) return null;
 
-    if (!isOpen) return null;
-
-    const sizes = {
-        sm: 'max-w-md',
-        md: 'max-w-lg',
-        lg: 'max-w-2xl',
-        xl: 'max-w-4xl',
-        full: 'max-w-7xl',
+    const sizeClasses = {
+        sm: 'max-w-sm',
+        md: 'max-w-md',
+        lg: 'max-w-lg',
+        xl: 'max-w-xl',
+        '2xl': 'max-w-2xl',
+        full: 'max-w-full m-4',
     };
 
-    const modalContent = (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={onClose}
-                aria-hidden="true"
-            />
-
-            {/* Modal */}
+    return createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div
                 className={cn(
-                    'relative w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl animate-slide-up',
-                    'border border-gray-200 dark:border-gray-700',
-                    sizes[size]
+                    'bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200',
+                    sizeClasses[size],
+                    className
                 )}
-                role="dialog"
-                aria-modal="true"
             >
                 {/* Header */}
-                {(title || showCloseButton) && (
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                        {title && (
-                            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                {title}
-                            </h2>
-                        )}
-                        {showCloseButton && (
-                            <button
-                                onClick={onClose}
-                                className="ml-auto p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                aria-label="Close modal"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
-                        )}
-                    </div>
-                )}
+                <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        {title}
+                    </h3>
+                    <button
+                        onClick={onClose}
+                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
 
                 {/* Body */}
-                <div className="px-6 py-4 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                     {children}
                 </div>
 
                 {/* Footer */}
                 {footer && (
-                    <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-b-xl">
+                    <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 rounded-b-xl flex justify-end gap-2">
                         {footer}
                     </div>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
+}
 
-    return createPortal(modalContent, document.body);
+// Sub-components for more control if needed
+export function ModalHeader({ children, className }: { children: React.ReactNode; className?: string }) {
+    return <div className={cn("p-4 border-b", className)}>{children}</div>;
+}
+
+export function ModalBody({ children, className }: { children: React.ReactNode; className?: string }) {
+    return <div className={cn("p-4", className)}>{children}</div>;
+}
+
+export function ModalFooter({ children, className }: { children: React.ReactNode; className?: string }) {
+    return <div className={cn("p-4 border-t flex justify-end gap-2", className)}>{children}</div>;
 }

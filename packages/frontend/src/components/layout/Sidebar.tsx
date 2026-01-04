@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users } from 'lucide-react';
+import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users, Settings as SettingsIcon, UserCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { UserRoleEnum } from '@adminvault/shared-models';
@@ -30,12 +30,14 @@ const allNavigation: NavigationItem[] = [
     // SECURITY & ACCESS
     { name: 'Password Vault', href: '/password-vault', icon: Lock, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
     { name: 'IAM & SSO', href: '/iam', icon: ShieldAlert, roles: [UserRoleEnum.ADMIN] },
-    { name: 'My Security', href: '/profile', icon: KeySquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER] },
 
     // SYSTEM
     { name: 'Configuration', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
     { name: 'System Reports', href: '/reports', icon: PieChart, roles: [UserRoleEnum.ADMIN] },
-    { name: 'Audit Logs', href: '/audit-logs', icon: ShieldAlert, roles: [UserRoleEnum.ADMIN] },
+
+    // ACCOUNT
+    { name: 'Profile', href: '/profile', icon: UserCircle, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER] },
+    { name: 'Settings', href: '/settings', icon: SettingsIcon, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER] },
 ];
 
 export default function Sidebar() {
@@ -47,7 +49,7 @@ export default function Sidebar() {
     const navigationGroups = [
         {
             title: 'System',
-            items: allNavigation.filter(item => ['Dashboard', 'Configuration', 'System Reports', 'Audit Logs'].includes(item.name))
+            items: allNavigation.filter(item => ['Dashboard', 'Configuration', 'System Reports'].includes(item.name))
         },
         {
             title: 'Operations',
@@ -59,7 +61,11 @@ export default function Sidebar() {
         },
         {
             title: 'Security & Access',
-            items: allNavigation.filter(item => ['Password Vault', 'IAM & SSO', 'My Security'].includes(item.name))
+            items: allNavigation.filter(item => ['Password Vault', 'IAM & SSO'].includes(item.name))
+        },
+        {
+            title: 'Account',
+            items: allNavigation.filter(item => ['Profile', 'Settings'].includes(item.name))
         }
     ];
 

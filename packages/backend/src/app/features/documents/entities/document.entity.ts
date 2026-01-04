@@ -3,6 +3,9 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('documents')
 @Index('idx_document_category', ['category'])
+@Index('idx_document_company', ['companyId'])
+@Index('idx_document_uploader', ['uploadedBy'])
+@Index('idx_document_user', ['userId'])
 export class DocumentEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'company_id', nullable: false, comment: 'Company ID' })
     companyId: number;

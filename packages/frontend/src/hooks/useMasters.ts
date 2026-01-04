@@ -384,7 +384,7 @@ export function useMasters() {
             if (!user) return;
             const res = await mastersService.getAllApplications(user.companyId);
             if (res.status) setApplications(res.applications);
-        } catch (e) { } finally { setIsLoading(false); }
+        } catch (e) { /* ignore */ } finally { setIsLoading(false); }
     }, []);
 
     const createApplication = async (data: any) => {
@@ -422,7 +422,7 @@ export function useMasters() {
         try {
             const res = await mastersService.getAllExpenseCategories(getCompanyId());
             if (res.status && res.expenseCategories) setExpenseCategories(res.expenseCategories);
-        } catch (e) { } finally { setIsLoading(false); }
+        } catch (e) { /* ignore */ } finally { setIsLoading(false); }
     }, []);
 
     const createExpenseCategory = async (data: any) => {
@@ -455,7 +455,7 @@ export function useMasters() {
         try {
             const res = await mastersService.getAllPasswordVaults(getCompanyId());
             if (res.status && res.passwordVaults) setPasswordVaults(res.passwordVaults);
-        } catch (e) { } finally { setIsLoading(false); }
+        } catch (e) { /* ignore */ } finally { setIsLoading(false); }
     }, []);
 
     const createPasswordVault = async (data: any) => {

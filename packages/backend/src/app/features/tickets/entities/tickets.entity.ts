@@ -8,6 +8,9 @@ import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@admin
 @Index('idx_ticket_category', ['categoryEnum'])
 @Index('idx_ticket_priority', ['priorityEnum'])
 @Index('idx_ticket_assignee', ['assignAdminId'])
+@Index('idx_ticket_code', ['ticketCode'])
+@Index('idx_ticket_company', ['companyId'])
+@Index('idx_ticket_user', ['userId'])
 export class TicketsEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'ticket_code', length: 50, nullable: false, unique: true, comment: 'Unique ticket code' })
     ticketCode: string;
@@ -24,8 +27,14 @@ export class TicketsEntity extends CommonBaseEntity {
     @Column('enum', { name: 'priority_enum', enum: TicketPriorityEnum, nullable: false, comment: 'Ticket priority level' })
     priorityEnum: TicketPriorityEnum;
 
-    @Column('text', { name: 'subject', nullable: false, comment: 'Ticket subject/description' })
+    @Column('text', { name: 'subject', nullable: false, comment: 'Ticket subject' })
     subject: string;
+
+    @Column('text', { name: 'description', nullable: true, comment: 'Detailed ticket description' })
+    description: string;
+
+    @Column('text', { name: 'response', nullable: true, comment: 'Admin response summary' })
+    response: string;
 
     @Column('enum', { name: 'ticket_status', enum: TicketStatusEnum, default: TicketStatusEnum.OPEN, nullable: false, comment: 'Current ticket status' })
     ticketStatus: TicketStatusEnum;

@@ -12,39 +12,39 @@ import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/
 import Button from '@/components/ui/Button';
 
 // Lazy load chart components
-const AssetDistributionChart = dynamic(() => import('./components/AssetDistributionChart'), {
+const AssetDistributionChart = dynamic(() => import('@/features/dashboard/components/AssetDistributionChart'), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const TicketPriorityChart = dynamic(() => import('./components/TicketPriorityChart'), {
+const TicketPriorityChart = dynamic(() => import('@/features/dashboard/components/TicketPriorityChart'), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const EmployeeDeptChart = dynamic(() => import('./components/EmployeeDeptChart'), {
+const EmployeeDeptChart = dynamic(() => import('@/features/dashboard/components/EmployeeDeptChart'), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const TicketStatusChart = dynamic(() => import('./components/TicketStatusChart'), {
+const TicketStatusChart = dynamic(() => import('@/features/dashboard/components/TicketStatusChart'), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
 
 // Lazy load new Enterprise Widgets
-const SystemHealthWidget = dynamic(() => import('./components/SystemHealthWidget'), {
+const SystemHealthWidget = dynamic(() => import('@/features/dashboard/components/SystemHealthWidget'), {
     ssr: false,
     loading: () => <div className="h-full animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg p-4"></div>
 });
-const RenewalsWidget = dynamic(() => import('./components/RenewalsWidget'), {
+const RenewalsWidget = dynamic(() => import('@/features/dashboard/components/RenewalsWidget'), {
     ssr: false,
     loading: () => <div className="h-full animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg p-4"></div>
 });
 
-const SecurityScoreCard = dynamic(() => import('./components/SecurityScoreCard'), {
+const SecurityScoreCard = dynamic(() => import('@/features/dashboard/components/SecurityScoreCard'), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
 
-export const DashboardPage: React.FC = () => {
+export default function DashboardPage() {
     const { stats, isLoading, refresh } = useDashboard();
 
     // Mock security metrics for demonstration
@@ -125,24 +125,7 @@ export const DashboardPage: React.FC = () => {
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
             <div className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950">
-                {/* Compact Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">System Overview</h1>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Real-time system overview</p>
-                    </div>
-                    <Button
-                        variant="outline"
-                        onClick={refresh}
-                        disabled={isLoading}
-                        leftIcon={<RefreshCcw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
-                        className="text-sm py-1.5 px-3"
-                    >
-                        Refresh
-                    </Button>
-                </div>
-
-                {/* Compact KPI Cards */}
+                {/* KPI Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {kpiCards.map((card, idx) => (
                         <Card key={idx} className="p-3 border-none shadow-md hover:shadow-lg transition-shadow">
@@ -309,4 +292,4 @@ export const DashboardPage: React.FC = () => {
     );
 };
 
-export default DashboardPage;
+

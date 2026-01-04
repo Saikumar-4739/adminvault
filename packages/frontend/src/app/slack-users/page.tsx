@@ -6,7 +6,7 @@ import { SlackUserModel, CreateSlackUserModel, UpdateSlackUserModel, EmployeeRes
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import { Search, Plus, MessageSquare, Pencil, Trash2, User, Users } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
@@ -242,7 +242,7 @@ export default function SlackUsersPage() {
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-slate-900 dark:text-white mb-0.5">{user.email}</div>
                                                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                                                    {user.role || 'No Role'} {user.department && `• ${user.department}`}
+                                                    {user.role || 'No Role'} {user.department && `â€¢ ${user.department}`}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-center">
@@ -344,4 +344,4 @@ export default function SlackUsersPage() {
     );
 };
 
-export default SlackUsersPage;
+

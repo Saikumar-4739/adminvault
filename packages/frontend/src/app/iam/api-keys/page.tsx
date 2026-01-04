@@ -5,7 +5,7 @@ import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
 import { Key, Plus, Copy, Trash2, Eye, EyeOff, Calendar, CheckCircle2, XCircle } from 'lucide-react';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
 import { iamService } from '@/lib/api/services';
@@ -106,7 +106,7 @@ export const APIKeysPage: React.FC = () => {
     };
 
     const maskKey = (key: string) => {
-        return key.substring(0, 8) + '•'.repeat(16) + key.substring(key.length - 4);
+        return key.substring(0, 8) + 'â€¢'.repeat(16) + key.substring(key.length - 4);
     };
 
     return (

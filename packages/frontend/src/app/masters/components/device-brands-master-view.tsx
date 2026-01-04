@@ -5,7 +5,7 @@ import { useMasters } from '@/hooks/useMasters';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
@@ -94,7 +94,7 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
                     <div className="flex items-center gap-3">
                         {onBack && (
                             <Button size="sm" variant="outline" onClick={onBack}>
-                                ← Back to Masters
+                                â† Back to Masters
                             </Button>
                         )}
                         <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
@@ -133,7 +133,7 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     {item.rating ? (
                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                                            ⭐ {parseFloat(item.rating).toFixed(1)}
+                                                            â­ {parseFloat(item.rating).toFixed(1)}
                                                         </span>
                                                     ) : '-'}
                                                 </td>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { AssetStatusEnum } from '@adminvault/shared-models';
 import { useMasters } from '@/hooks/useMasters';

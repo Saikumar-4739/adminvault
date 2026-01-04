@@ -5,16 +5,14 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { TicketsEntity } from './entities/tickets.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel } from '@adminvault/shared-models';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum } from '@adminvault/shared-models';
 
 @Injectable()
 export class TicketsService {
     constructor(
         private dataSource: DataSource,
         private ticketsRepo: TicketsRepository,
-        private employeesRepo: EmployeesRepository,
-        private auditLogsService: AuditLogsService
+        private employeesRepo: EmployeesRepository
     ) { }
 
     /**
@@ -69,16 +67,6 @@ export class TicketsService {
             await transManager.getRepository(TicketsEntity).save(entity);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_TICKET',
-                resource: 'Ticket',
-                details: `Ticket ${entity.ticketCode} created by ${userEmail}`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: employee.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new GlobalResponse(true, 0, "Ticket created successfully");
         } catch (error) {
@@ -140,16 +128,6 @@ export class TicketsService {
             await transManager.getRepository(TicketsEntity).update(reqModel.id, reqModel);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_TICKET',
-                resource: 'Ticket',
-                details: `Ticket ${existing.ticketCode} updated`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new GlobalResponse(true, 0, "Ticket updated successfully");
         } catch (error) {
@@ -247,16 +225,6 @@ export class TicketsService {
             await transManager.getRepository(TicketsEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'DELETE_TICKET',
-                resource: 'Ticket',
-                details: `Ticket ${existing.ticketCode} deleted`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new GlobalResponse(true, 0, "Ticket deleted successfully");
         } catch (error) {
@@ -295,5 +263,61 @@ export class TicketsService {
         } catch (error) {
             throw error;
         }
+    }
+
+    async getStatistics(companyId: number): Promise<any> {
+        const tickets = await this.ticketsRepo.find({ where: { companyId } });
+
+        return {
+            total: tickets.length,
+            open: tickets.filter(t => t.ticketStatus === TicketStatusEnum.OPEN).length,
+            inProgress: tickets.filter(t => t.ticketStatus === TicketStatusEnum.IN_PROGRESS).length,
+            resolved: tickets.filter(t => t.ticketStatus === TicketStatusEnum.RESOLVED).length,
+            closed: tickets.filter(t => t.ticketStatus === TicketStatusEnum.CLOSED).length,
+            byPriority: {
+                high: tickets.filter(t => t.priorityEnum === TicketPriorityEnum.HIGH).length,
+                medium: tickets.filter(t => t.priorityEnum === TicketPriorityEnum.MEDIUM).length,
+                low: tickets.filter(t => t.priorityEnum === TicketPriorityEnum.LOW).length,
+            },
+            byCategory: {
+                hardware: tickets.filter(t => t.categoryEnum === TicketCategoryEnum.HARDWARE).length,
+                software: tickets.filter(t => t.categoryEnum === TicketCategoryEnum.SOFTWARE).length,
+                network: tickets.filter(t => t.categoryEnum === TicketCategoryEnum.NETWORK).length,
+                email: tickets.filter(t => t.categoryEnum === TicketCategoryEnum.EMAIL).length,
+                access: tickets.filter(t => t.categoryEnum === TicketCategoryEnum.ACCESS).length,
+                other: tickets.filter(t => t.categoryEnum === TicketCategoryEnum.OTHER).length,
+            },
+        };
+    }
+
+    async assignTicket(id: number, assignAdminId: number): Promise<GlobalResponse> {
+        const ticket = await this.ticketsRepo.findOne({ where: { id } });
+        if (!ticket) throw new ErrorResponse(404, "Ticket not found");
+
+        ticket.assignAdminId = assignAdminId;
+        ticket.ticketStatus = TicketStatusEnum.IN_PROGRESS;
+        await this.ticketsRepo.save(ticket);
+        return new GlobalResponse(true, 200, "Ticket assigned successfully");
+    }
+
+    async addResponse(id: number, response: string): Promise<GlobalResponse> {
+        const ticket = await this.ticketsRepo.findOne({ where: { id } });
+        if (!ticket) throw new ErrorResponse(404, "Ticket not found");
+
+        ticket.response = response;
+        await this.ticketsRepo.save(ticket);
+        return new GlobalResponse(true, 200, "Response added successfully");
+    }
+
+    async updateStatus(id: number, status: TicketStatusEnum): Promise<GlobalResponse> {
+        const ticket = await this.ticketsRepo.findOne({ where: { id } });
+        if (!ticket) throw new ErrorResponse(404, "Ticket not found");
+
+        ticket.ticketStatus = status;
+        if (status === TicketStatusEnum.RESOLVED || status === TicketStatusEnum.CLOSED) {
+            ticket.resolvedAt = new Date();
+        }
+        await this.ticketsRepo.save(ticket);
+        return new GlobalResponse(true, 200, "Status updated successfully");
     }
 }

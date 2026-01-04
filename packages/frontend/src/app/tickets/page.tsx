@@ -6,7 +6,7 @@ import { useTickets } from '@/hooks/useTickets';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import StatCard from '@/components/ui/StatCard';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/Spinner';
 import PageHeader from '@/components/ui/PageHeader';
 import {
@@ -592,4 +592,4 @@ export default function TicketsPage() {
     );
 };
 
-export default TicketsPage;
+

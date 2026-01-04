@@ -2,17 +2,14 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as XLSX from 'xlsx';
-import { AssetInfoEntity } from '../../entities/asset-info.entity';
-import { EmployeesEntity } from '../../entities/employees.entity';
-import { TicketsEntity } from '../../entities/tickets.entity';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { EmployeesEntity } from '../employees/entities/employees.entity';
+import { TicketsEntity } from '../tickets/entities/tickets.entity';
 
 @Injectable()
 export class ReportsService {
     constructor(
-        private readonly dataSource: DataSource,
-        private auditLogsService: AuditLogsService
+        private readonly dataSource: DataSource
     ) { }
 
     private generateExcelBuffer(data: any[]): Buffer {
@@ -255,17 +252,6 @@ export class ReportsService {
     }
 
     async generateReport(type: string, filters: any, userId?: number, ipAddress?: string) {
-        // AUDIT LOG
-        await this.auditLogsService.create({
-            action: 'GENERATE_REPORT',
-            resource: 'Reports',
-            details: `Generated ${type} report (Format: ${filters.format || 'summary'})`,
-            status: 'SUCCESS',
-            userId: userId || undefined,
-            companyId: 0,
-            ipAddress: ipAddress || '0.0.0.0'
-        });
-
         const format = filters.format || 'summary';
         let data: any[] = [];
 

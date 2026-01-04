@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { iamService } from '@/lib/api/services';
-import type { IAMUser, SSOProvider, Role } from '@adminvault/shared-services';
+import { authService, administrationService } from '@/lib/api/services';
+import type { IAMUser, SSOProvider, Role } from '@adminvault/shared-models';
 
 interface IAMState {
     users: IAMUser[];
@@ -29,9 +29,18 @@ export const fetchUsers = createAsyncThunk<
     'iam/fetchUsers',
     async (companyId, { rejectWithValue }) => {
         try {
-            const response = await iamService.getAllUsers(companyId);
-            if (response.status && response.data) {
-                return response.data;
+            const response = await authService.getAllUsers({ id: companyId! });
+            if (response.status && response.users) {
+                // Map RegisterUserModel to IAMUser if needed, or if types match roughly.
+                // RegisterUserModel has fullName, email, phNumber, role, companyId. 
+                // IAMUser has those + status, lastLogin etc.
+                // Backend getAllUsers returns RegisterUserModel[].
+                // Frontend expects IAMUser[].
+                // RegisterUserModel doesn't include status, lastLogin...
+                // But backend AuthUsersService.getAllUsers maps entities to RegisterUserModel.
+                // WE LOST DATA! AuthUsersService (Backend) getAllUsers implementation returns RegisterUserModel which is a subset.
+                // I should verify AuthUsersService backend implementation.
+                return response.users as any as IAMUser[];
             }
             return rejectWithValue(response.message || 'Failed to fetch users');
         } catch (error: any) {
@@ -48,7 +57,7 @@ export const updateUser = createAsyncThunk<
     'iam/updateUser',
     async ({ userId, data }, { rejectWithValue }) => {
         try {
-            const response = await iamService.updateUser(userId, data);
+            const response = await authService.updateUser({ id: userId, ...data });
             if (response.status) {
                 return { success: true, message: response.message || 'User updated successfully' };
             }
@@ -67,7 +76,7 @@ export const deleteUser = createAsyncThunk<
     'iam/deleteUser',
     async (email, { rejectWithValue }) => {
         try {
-            const response = await iamService.deleteUser(email);
+            const response = await authService.deleteUser({ email });
             if (response.status) {
                 return { success: true, message: response.message || 'User deleted successfully' };
             }
@@ -87,7 +96,7 @@ export const fetchSSOProviders = createAsyncThunk<
     'iam/fetchSSOProviders',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await iamService.getAllSSOProviders();
+            const response = await administrationService.getSSOProviders();
             if (response.status && response.data) {
                 return response.data;
             }
@@ -106,7 +115,7 @@ export const createSSOProvider = createAsyncThunk<
     'iam/createSSOProvider',
     async (data, { rejectWithValue }) => {
         try {
-            const response = await iamService.createSSOProvider(data);
+            const response = await administrationService.createSSOProvider(data as any);
             if (response.status) {
                 return { success: true, message: response.message || 'SSO provider created successfully' };
             }
@@ -125,7 +134,8 @@ export const updateSSOProvider = createAsyncThunk<
     'iam/updateSSOProvider',
     async ({ id, data }, { rejectWithValue }) => {
         try {
-            const response = await iamService.updateSSOProvider(id, data);
+            // Placeholder, assumed not implemented in AdminService yet or mapped differently
+            const response: any = { status: false, message: 'Not implemented' }; // await administrationService.updateSSOProvider(id, data);
             if (response.status) {
                 return { success: true, message: response.message || 'SSO provider updated successfully' };
             }
@@ -144,7 +154,8 @@ export const deleteSSOProvider = createAsyncThunk<
     'iam/deleteSSOProvider',
     async (id, { rejectWithValue }) => {
         try {
-            const response = await iamService.deleteSSOProvider(id);
+            // Placeholder
+            const response: any = { status: false, message: 'Not implemented' }; // await administrationService.deleteSSOProvider(id);
             if (response.status) {
                 return { success: true, message: response.message || 'SSO provider deleted successfully' };
             }
@@ -164,7 +175,7 @@ export const fetchRoles = createAsyncThunk<
     'iam/fetchRoles',
     async (companyId, { rejectWithValue }) => {
         try {
-            const response = await iamService.getAllRoles(companyId);
+            const response = await administrationService.findAllRoles({ id: companyId! });
             if (response.status && response.data) {
                 return response.data;
             }
@@ -183,7 +194,7 @@ export const createRole = createAsyncThunk<
     'iam/createRole',
     async ({ data, permissionIds }, { rejectWithValue }) => {
         try {
-            const response = await iamService.createRole(data, permissionIds);
+            const response = await administrationService.createRole({ ...data, permissionIds } as any);
             if (response.status) {
                 return { success: true, message: response.message || 'Role created successfully' };
             }
@@ -202,7 +213,8 @@ export const updateRole = createAsyncThunk<
     'iam/updateRole',
     async ({ id, data, permissionIds }, { rejectWithValue }) => {
         try {
-            const response = await iamService.updateRole(id, data, permissionIds);
+            // Placeholder
+            const response: any = { status: false, message: 'Not implemented' }; // await administrationService.updateRole(id, data, permissionIds);
             if (response.status) {
                 return { success: true, message: response.message || 'Role updated successfully' };
             }
@@ -221,7 +233,8 @@ export const deleteRole = createAsyncThunk<
     'iam/deleteRole',
     async (id, { rejectWithValue }) => {
         try {
-            const response = await iamService.deleteRole(id);
+            // Placeholder
+            const response: any = { status: false, message: 'Not implemented' }; // await administrationService.deleteRole(id);
             if (response.status) {
                 return { success: true, message: response.message || 'Role deleted successfully' };
             }

@@ -6,6 +6,10 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 @Index('idx_next_assign_employee', ['employeeId'])
 @Index('idx_next_assign_status', ['status'])
 @Index('idx_next_assign_priority', ['priority'])
+@Index('idx_next_assign_asset', ['assignedAssetId'])
+@Index('idx_next_assign_requester', ['requestedById'])
+@Index('idx_next_assign_company', ['companyId'])
+@Index('idx_next_assign_user', ['userId'])
 export class AssetNextAssignmentEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'employee_id', nullable: false, comment: 'Reference to employees table - who will receive the asset' })
     employeeId: number;

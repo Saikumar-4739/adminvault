@@ -1,5 +1,5 @@
 import { Column, Entity, Index } from 'typeorm';
-import { CommonBaseEntity } from '../common-base.entity';
+import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('password_vaults')
 @Index('idx_password_vault_name', ['name'])

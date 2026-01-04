@@ -5,7 +5,7 @@ import { useMasters } from '@/hooks/useMasters';
 import { useEmployees } from '@/hooks/useEmployees';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import PageHeader from '@/components/ui/PageHeader';
 import { Search, Plus, Lock, Eye, EyeOff, Copy, Check, ShieldCheck, Globe, User, Wand2, LayoutGrid, List, ArrowUpRight, Users, Activity } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
@@ -317,7 +317,7 @@ export default function PasswordVaultPage() {
                                         <div className="mt-4 flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/50">
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Access Identity</p>
-                                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{vault.username || '—'}</p>
+                                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{vault.username || 'â€”'}</p>
                                             </div>
                                             <button
                                                 onClick={() => copyToClipboard(vault.username || '', vault.id)}
@@ -331,7 +331,7 @@ export default function PasswordVaultPage() {
                                         <div className="mt-2.5 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 relative overflow-hidden group/pass shadow-sm">
                                             <div className="flex items-center justify-between">
                                                 <div className="font-mono text-xs tracking-[0.2em] text-slate-900 dark:text-slate-200">
-                                                    {visiblePasswords.has(vault.id) ? vault.password : '••••••••••••'}
+                                                    {visiblePasswords.has(vault.id) ? vault.password : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'}
                                                 </div>
                                                 <div className="flex gap-1 opacity-0 group-hover/pass:opacity-100 transition-opacity">
                                                     <button
@@ -422,7 +422,7 @@ export default function PasswordVaultPage() {
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     required
-                                    placeholder="••••••••"
+                                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                 />
                                 <button
                                     type="button"
@@ -479,4 +479,4 @@ export default function PasswordVaultPage() {
     );
 };
 
-export default PasswordVaultPage;
+

@@ -1,18 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { CompanyInfoRepository } from '../../../repository/company-info.repository';
-import { CompanyInfoEntity } from '../../../entities/company-info.entity';
+import { CompanyInfoRepository } from '../repositories/company-info.repository';
+import { CompanyInfoEntity } from '../entities/company-info.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateCompanyModel, DeleteCompanyModel, GetCompanyModel, UpdateCompanyModel, CompanyDocs } from '@adminvault/shared-models';
-import { AuditLogsService } from '../../audit-logs/audit-logs.service';
 
 @Injectable()
 export class CompanyInfoService {
     constructor(
         private dataSource: DataSource,
-        private companyInfoRepo: CompanyInfoRepository,
-        private auditLogsService: AuditLogsService
+        private companyInfoRepo: CompanyInfoRepository
     ) { }
 
     /**

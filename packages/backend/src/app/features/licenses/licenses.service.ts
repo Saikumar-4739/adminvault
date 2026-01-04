@@ -2,7 +2,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CompanyLicenseEntity } from '../../entities/company-license.entity';
 import { GlobalResponse } from '@adminvault/backend-utils';
 import {
     CreateLicenseModel,
@@ -13,14 +12,13 @@ import {
     LicenseStatsModel,
     LicenseResponseModel
 } from '@adminvault/shared-models';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { CompanyLicenseEntity } from './entities/company-license.entity';
 
 @Injectable()
 export class LicensesService {
     constructor(
         @InjectRepository(CompanyLicenseEntity)
-        private repo: Repository<CompanyLicenseEntity>,
-        private auditLogsService: AuditLogsService
+        private repo: Repository<CompanyLicenseEntity>
     ) { }
 
     /**
@@ -112,16 +110,6 @@ export class LicensesService {
         const license = this.repo.create(licenseData);
         await this.repo.save(license);
 
-        // AUDIT LOG
-        await this.auditLogsService.create({
-            action: 'CREATE_LICENSE',
-            resource: 'License',
-            details: `License assigned to Employee ${reqModel.assignedEmployeeId} for App ${reqModel.applicationId}`,
-            status: 'SUCCESS',
-            userId: userId || undefined,
-            companyId: reqModel.companyId,
-            ipAddress: ipAddress || '0.0.0.0'
-        });
 
         return new GlobalResponse(true, 201, 'License assigned successfully');
     }
@@ -144,16 +132,7 @@ export class LicensesService {
 
         await this.repo.update(reqModel.id, updateData);
 
-        // AUDIT LOG
-        await this.auditLogsService.create({
-            action: 'UPDATE_LICENSE',
-            resource: 'License',
-            details: `License ${reqModel.id} updated`,
-            status: 'SUCCESS',
-            userId: userId || undefined,
-            companyId: 0,
-            ipAddress: ipAddress || '0.0.0.0'
-        });
+
 
         return new GlobalResponse(true, 200, 'License updated successfully');
     }
@@ -168,16 +147,6 @@ export class LicensesService {
     async remove(reqModel: DeleteLicenseModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         await this.repo.delete(reqModel.id);
 
-        // AUDIT LOG
-        await this.auditLogsService.create({
-            action: 'DELETE_LICENSE',
-            resource: 'License',
-            details: `License ${reqModel.id} deleted`,
-            status: 'SUCCESS',
-            userId: userId || undefined,
-            companyId: 0,
-            ipAddress: ipAddress || '0.0.0.0'
-        });
 
         return new GlobalResponse(true, 200, 'License removed successfully');
     }

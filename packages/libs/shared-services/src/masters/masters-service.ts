@@ -1,223 +1,139 @@
 import {
     CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, CreateApplicationModel, CreateApplicationResponseModel, CreateExpenseCategoryModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultModel, CreatePasswordVaultResponseModel,
     GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel,
-    GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateBrandModel, UpdateBrandResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, UpdateTicketCategoryModel, UpdateTicketCategoryResponseModel, UpdateVendorModel, UpdateVendorResponseModel, UpdateApplicationModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultModel, UpdatePasswordVaultResponseModel
+    GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateBrandModel, UpdateBrandResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, UpdateLocationModel, UpdateLocationResponseModel, UpdateTicketCategoryModel, UpdateTicketCategoryResponseModel, UpdateVendorModel, UpdateVendorResponseModel, UpdateApplicationModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultModel, UpdatePasswordVaultResponseModel
 } from '@adminvault/shared-models';
 import { CommonAxiosService } from '../common-axios-service';
+import { AxiosRequestConfig } from 'axios';
 
 export class MastersService extends CommonAxiosService {
-    private readonly BASE_PATH = '/masters';
-
-    async getAllDepartments(): Promise<GetAllDepartmentsResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/getAllDepartments`, {});
+    private getURLwithMainEndPoint(childUrl: string) {
+        return '/masters/' + childUrl;
     }
 
-    async createDepartment(data: CreateDepartmentModel): Promise<CreateDepartmentResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/departments`, data);
+    // Departments
+    async getAllDepartments(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllDepartmentsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllDepartments'), reqObj, config);
+    }
+    async createDepartment(data: CreateDepartmentModel, config?: AxiosRequestConfig): Promise<CreateDepartmentResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('departments'), data, config);
+    }
+    async updateDepartment(data: UpdateDepartmentModel, config?: AxiosRequestConfig): Promise<UpdateDepartmentResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateDepartment'), data, config);
+    }
+    async deleteDepartment(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteDepartment'), { id }, config);
     }
 
-    async updateDepartment(data: UpdateDepartmentModel): Promise<UpdateDepartmentResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/updateDepartment`, data);
+    // Asset Types
+    async getAllAssetTypes(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetTypesResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllAssetTypes'), reqObj, config);
+    }
+    async createAssetType(data: CreateAssetTypeModel, config?: AxiosRequestConfig): Promise<CreateAssetTypeResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('asset-types'), data, config);
+    }
+    async updateAssetType(data: UpdateAssetTypeModel, config?: AxiosRequestConfig): Promise<UpdateAssetTypeResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateAssetType'), data, config);
+    }
+    async deleteAssetType(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteAssetType'), { id }, config);
     }
 
-    async deleteDepartment(id: number): Promise<GlobalResponse> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/deleteDepartment`,
-            new IdRequestModel(id)
-        );
+    // Brands
+    async getAllBrands(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllBrandsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllBrands'), reqObj, config);
+    }
+    async createBrand(data: CreateBrandModel, config?: AxiosRequestConfig): Promise<CreateBrandResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('brands'), data, config);
+    }
+    async updateBrand(data: UpdateBrandModel, config?: AxiosRequestConfig): Promise<UpdateBrandResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateBrand'), data, config);
+    }
+    async deleteBrand(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteBrand'), { id }, config);
     }
 
-    // ============================================
-    // ASSET TYPES
-    // ============================================
-    async getAllAssetTypes(companyId: number): Promise<GetAllAssetTypesResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/getAllAssetTypes`,
-            new CompanyIdRequestModel(companyId)
-        );
+    // Vendors
+    async getAllVendors(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllVendorsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllVendors'), reqObj, config);
+    }
+    async createVendor(data: CreateVendorModel, config?: AxiosRequestConfig): Promise<CreateVendorResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('vendors'), data, config);
+    }
+    async updateVendor(data: UpdateVendorModel, config?: AxiosRequestConfig): Promise<UpdateVendorResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateVendor'), data, config);
+    }
+    async deleteVendor(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteVendor'), { id }, config);
     }
 
-    async createAssetType(data: CreateAssetTypeModel): Promise<CreateAssetTypeResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/asset-types`, data);
+    // Applications
+    async getAllApplications(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllApplicationsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllApplications'), reqObj, config);
+    }
+    async createApplication(data: CreateApplicationModel, config?: AxiosRequestConfig): Promise<CreateApplicationResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('applications'), data, config);
+    }
+    async updateApplication(data: UpdateApplicationModel, config?: AxiosRequestConfig): Promise<UpdateApplicationResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateApplication'), data, config);
+    }
+    async deleteApplication(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteApplication'), { id }, config);
     }
 
-    async updateAssetType(data: UpdateAssetTypeModel): Promise<UpdateAssetTypeResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/updateAssetType`, data);
+    // Ticket Categories
+    async getAllTicketCategories(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllTicketCategoriesResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllTicketCategories'), reqObj, config);
     }
-
-    async deleteAssetType(id: number): Promise<GlobalResponse> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/deleteAssetType`,
-            new IdRequestModel(id)
-        );
+    async createTicketCategory(data: CreateTicketCategoryModel, config?: AxiosRequestConfig): Promise<CreateTicketCategoryResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('ticket-categories'), data, config);
     }
-
-    // ============================================
-    // BRANDS
-    // ============================================
-    async getAllBrands(companyId: number): Promise<GetAllBrandsResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/getAllBrands`,
-            new CompanyIdRequestModel(companyId)
-        );
+    async updateTicketCategory(data: UpdateTicketCategoryModel, config?: AxiosRequestConfig): Promise<UpdateTicketCategoryResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateTicketCategory'), data, config);
     }
-
-    async createBrand(data: CreateBrandModel): Promise<CreateBrandResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/brands`, data);
-    }
-
-    async updateBrand(data: UpdateBrandModel): Promise<UpdateBrandResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/updateBrand`, data);
-    }
-
-    async deleteBrand(id: number): Promise<GlobalResponse> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/deleteBrand`,
-            new IdRequestModel(id)
-        );
-    }
-
-    // ============================================
-    // VENDORS
-    // ============================================
-    async getAllVendors(companyId: number): Promise<GetAllVendorsResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/getAllVendors`,
-            new CompanyIdRequestModel(companyId)
-        );
-    }
-
-    async createVendor(data: CreateVendorModel): Promise<CreateVendorResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/vendors`, data);
-    }
-
-    async updateVendor(data: UpdateVendorModel): Promise<UpdateVendorResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/updateVendor`, data);
-    }
-
-    async deleteVendor(id: number): Promise<GlobalResponse> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/deleteVendor`,
-            new IdRequestModel(id)
-        );
-    }
-
-    // ============================================
-    // LOCATIONS
-    // ============================================
-    async getAllLocations(companyId: number): Promise<GetAllLocationsResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/getAllLocations`,
-            new CompanyIdRequestModel(companyId)
-        );
-    }
-
-    async createLocation(data: CreateLocationModel): Promise<CreateLocationResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/locations`, data);
-    }
-
-    async deleteLocation(id: number): Promise<GlobalResponse> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/deleteLocation`,
-            new IdRequestModel(id)
-        );
-    }
-
-    // ============================================
-    // TICKET CATEGORIES
-    // ============================================
-    async getAllTicketCategories(companyId: number): Promise<GetAllTicketCategoriesResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/getAllTicketCategories`,
-            new CompanyIdRequestModel(companyId)
-        );
-    }
-
-    async createTicketCategory(data: CreateTicketCategoryModel): Promise<CreateTicketCategoryResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/ticket-categories`, data);
-    }
-
-    async updateTicketCategory(data: UpdateTicketCategoryModel): Promise<UpdateTicketCategoryResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/updateTicketCategory`, data);
-    }
-
-    async deleteTicketCategory(id: number): Promise<GlobalResponse> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/deleteTicketCategory`,
-            new IdRequestModel(id)
-        );
-    }
-
-    // ============================================
-    // APPLICATIONS
-    // ============================================
-    async getAllApplications(companyId: number): Promise<GetAllApplicationsResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/getAllApplications`,
-            new CompanyIdRequestModel(companyId)
-        );
-    }
-
-    async createApplication(data: CreateApplicationModel): Promise<CreateApplicationResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/applications`, data);
-    }
-
-    async updateApplication(data: UpdateApplicationModel): Promise<UpdateApplicationResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/updateApplication`, data);
-    }
-
-    async deleteApplication(id: number): Promise<GlobalResponse> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/deleteApplication`,
-            new IdRequestModel(id)
-        );
+    async deleteTicketCategory(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteTicketCategory'), { id }, config);
     }
 
     // Expense Categories
-    async getAllExpenseCategories(companyId: number): Promise<GetAllExpenseCategoriesResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/getAllExpenseCategories`,
-            new CompanyIdRequestModel(companyId)
-        );
+    async getAllExpenseCategories(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllExpenseCategoriesResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllExpenseCategories'), reqObj, config);
+    }
+    async createExpenseCategory(data: CreateExpenseCategoryModel, config?: AxiosRequestConfig): Promise<CreateExpenseCategoryResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('expense-categories'), data, config);
+    }
+    async updateExpenseCategory(data: UpdateExpenseCategoryModel, config?: AxiosRequestConfig): Promise<UpdateExpenseCategoryResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateExpenseCategory'), data, config);
+    }
+    async deleteExpenseCategory(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteExpenseCategory'), { id }, config);
     }
 
-    async createExpenseCategory(data: CreateExpenseCategoryModel): Promise<CreateExpenseCategoryResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/expense-categories`, data);
+    // Password Vault (Master)
+    async getAllPasswordVaults(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllPasswordVaultsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllPasswordVaults'), reqObj, config);
+    }
+    async createPasswordVault(data: CreatePasswordVaultModel, config?: AxiosRequestConfig): Promise<CreatePasswordVaultResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vaults'), data, config);
+    }
+    async updatePasswordVault(data: UpdatePasswordVaultModel, config?: AxiosRequestConfig): Promise<UpdatePasswordVaultResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updatePasswordVault'), data, config);
+    }
+    async deletePasswordVault(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deletePasswordVault'), { id }, config);
     }
 
-    async updateExpenseCategory(data: UpdateExpenseCategoryModel): Promise<UpdateExpenseCategoryResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/updateExpenseCategory`, data);
+    // Locations
+    async getAllLocations(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllLocationsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllLocations'), reqObj, config);
     }
-
-    async deleteExpenseCategory(id: number): Promise<GlobalResponse> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/deleteExpenseCategory`,
-            new IdRequestModel(id)
-        );
+    async createLocation(data: CreateLocationModel, config?: AxiosRequestConfig): Promise<CreateLocationResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('locations'), data, config);
     }
-
-    // ============================================
-    // PASSWORD VAULTS
-    // ============================================
-    async getAllPasswordVaults(companyId: number): Promise<GetAllPasswordVaultsResponseModel> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/getAllPasswordVaults`,
-            new CompanyIdRequestModel(companyId)
-        );
+    async updateLocation(data: UpdateLocationModel, config?: AxiosRequestConfig): Promise<UpdateLocationResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateLocation'), data, config);
     }
-
-    async createPasswordVault(data: CreatePasswordVaultModel): Promise<CreatePasswordVaultResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/password-vaults`, data);
-    }
-
-    async updatePasswordVault(data: UpdatePasswordVaultModel): Promise<UpdatePasswordVaultResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/updatePasswordVault`, data);
-    }
-
-    async deletePasswordVault(id: number): Promise<GlobalResponse> {
-        return await this.axiosPostCall(
-            `${this.BASE_PATH}/deletePasswordVault`,
-            new IdRequestModel(id)
-        );
+    async deleteLocation(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteLocation'), { id }, config);
     }
 }

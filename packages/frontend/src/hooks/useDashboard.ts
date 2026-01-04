@@ -43,7 +43,7 @@ export function useDashboard() {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await dashboardService.getStats();
+            const response = await dashboardService.getDashboardStats();
             if (response && response.status && response.data) {
                 setStats(response.data);
             }

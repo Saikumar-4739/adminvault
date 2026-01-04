@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import { FileText, Upload, Download, Trash2, Search, File, FolderOpen, HardDrive, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Plus } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 
 export default function DocumentsPage() {
     const [documents, setDocuments] = useState<DocumentModel[]>([]);
@@ -130,15 +130,15 @@ export default function DocumentsPage() {
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
             <div className="p-6 space-y-8 max-w-[1600px] mx-auto min-h-screen">
                 {/* Header */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-300">
-                    <div>
-                        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                            Document Hub
-                        </h1>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                            Manage your enterprise assets
-                        </p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+                            <FileText className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Document Hub</h1>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">Manage your enterprise assets</p>
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
@@ -147,19 +147,16 @@ export default function DocumentsPage() {
                             <input
                                 type="text"
                                 placeholder="Search repository..."
-                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border-none rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-indigo-500/20 transition-all font-medium text-[11px] w-full sm:w-[220px]"
+                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm w-full sm:w-[220px]"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
 
-                        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 hidden sm:block" />
-
                         <Button
                             variant="primary"
-                            leftIcon={<Plus className="h-3.5 w-3.5" />}
+                            leftIcon={<Plus className="h-4 w-4" />}
                             onClick={() => setIsUploadModalOpen(true)}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl shadow-md shadow-indigo-500/10 active:scale-95 transition-all text-xs font-bold h-9"
                         >
                             Add New
                         </Button>
@@ -397,4 +394,4 @@ export default function DocumentsPage() {
     );
 };
 
-export default DocumentsPage;
+

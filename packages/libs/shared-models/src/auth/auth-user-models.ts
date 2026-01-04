@@ -18,11 +18,23 @@ export class RegisterUserModel {
     }
 }
 
-export class UpdateUserModel extends RegisterUserModel {
+export class UpdateUserModel {
     id: number;
-    constructor(id: number, fullName: string, companyId: number, email: string, phNumber: string, password: string) {
-        super(fullName, companyId, email, phNumber, password);
+    fullName?: string;
+    companyId?: number;
+    email?: string;
+    phNumber?: string;
+    password?: string;
+    role?: UserRoleEnum;
+
+    constructor(id: number, fullName?: string, companyId?: number, email?: string, phNumber?: string, password?: string, role?: UserRoleEnum) {
         this.id = id;
+        this.fullName = fullName;
+        this.companyId = companyId;
+        this.email = email;
+        this.phNumber = phNumber;
+        this.password = password;
+        this.role = role;
     }
 }
 
@@ -107,8 +119,8 @@ export class LoginResponseModel extends GlobalResponse {
 }
 
 export class GetAllUsersModel extends GlobalResponse {
-    users: RegisterUserModel[]
-    constructor(status: boolean, code: number, message: string, users: RegisterUserModel[]) {
+    users: IAMUser[]
+    constructor(status: boolean, code: number, message: string, users: IAMUser[]) {
         super(status, code, message);
         this.users = users;
     }
@@ -128,4 +140,26 @@ export class CompanyIdRequestModel {
         this.id = id;
         this.name = name;
     }
+}
+
+export class UserIdRequestModel {
+    id: number;
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+// --- Interfaces for UI ---
+export interface IAMUser {
+    id: number;
+    fullName: string;
+    email: string;
+    phNumber?: string;
+    companyId: number;
+    userRole: string;
+    status: boolean;
+    lastLogin?: Date;
+    roles?: any[];
+    createdAt: Date;
+    updatedAt: Date;
 }

@@ -1,6 +1,8 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetEmployeeByIdModel, GetAllEmployeesModel, GlobalResponse, CreateSlackUserModel, UpdateSlackUserModel, DeleteSlackUserModel, GetSlackUserModel, GetSlackUserByIdModel, GetAllSlackUsersModel } from '@adminvault/shared-models';
+import {
+    CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetEmployeeByIdModel, GetAllEmployeesModel, GlobalResponse, CreateSlackUserModel, UpdateSlackUserModel, DeleteSlackUserModel, GetSlackUserModel, GetSlackUserByIdModel, GetAllSlackUsersModel
+} from '@adminvault/shared-models';
 
 export class EmployeesService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -19,11 +21,8 @@ export class EmployeesService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getEmployee'), reqObj, config);
     }
 
-    async getAllEmployees(companyId?: number, config?: AxiosRequestConfig): Promise<GetAllEmployeesModel> {
-        const url = companyId
-            ? this.getURLwithMainEndPoint(`getAllEmployees?companyId=${companyId}`)
-            : this.getURLwithMainEndPoint('getAllEmployees');
-        return await this.axiosPostCall(url, {}, config);
+    async getAllEmployees(companyId: number, config?: AxiosRequestConfig): Promise<GetAllEmployeesModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllEmployees'), { id: companyId }, config);
     }
 
     async deleteEmployee(reqObj: DeleteEmployeeModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
@@ -62,10 +61,7 @@ export class EmployeesService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getSlackUser'), reqObj, config);
     }
 
-    async getAllSlackUsers(companyId?: number, config?: AxiosRequestConfig): Promise<GetAllSlackUsersModel> {
-        const url = companyId
-            ? this.getURLwithMainEndPoint(`getAllSlackUsers?companyId=${companyId}`)
-            : this.getURLwithMainEndPoint('getAllSlackUsers');
-        return await this.axiosPostCall(url, { id: companyId }, config); // Use {id: companyId} to match controller's @Body() reqModel: CompanyIdRequestModel
+    async getAllSlackUsers(companyId: number, config?: AxiosRequestConfig): Promise<GetAllSlackUsersModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllSlackUsers'), { id: companyId }, config);
     }
 }

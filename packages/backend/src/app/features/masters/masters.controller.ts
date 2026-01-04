@@ -2,10 +2,10 @@ import { Body, Controller, Post, Req } from '@nestjs/common';
 import { MastersService } from './masters.service';
 import {
     CreateAssetTypeModel, CreateBrandModel, CreateDepartmentModel, CreateVendorModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel,
-    CreateApplicationModel, UpdateApplicationModel, CreateExpenseCategoryModel, CreatePasswordVaultModel, UpdatePasswordVaultModel, CreateTicketCategoryModel, UpdateTicketCategoryModel,
-    GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, GetAllTicketCategoriesResponseModel,
-    CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultResponseModel, CreateTicketCategoryResponseModel,
-    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultResponseModel, UpdateTicketCategoryResponseModel,
+    CreateApplicationModel, UpdateApplicationModel, CreateExpenseCategoryModel, CreatePasswordVaultModel, UpdatePasswordVaultModel, CreateTicketCategoryModel, UpdateTicketCategoryModel, CreateLocationModel, UpdateLocationModel,
+    GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, GetAllTicketCategoriesResponseModel, GetAllLocationsResponseModel,
+    CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultResponseModel, CreateTicketCategoryResponseModel, CreateLocationResponseModel,
+    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultResponseModel, UpdateTicketCategoryResponseModel, UpdateLocationResponseModel,
     IdRequestModel, CompanyIdRequestModel
 } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -214,6 +214,57 @@ export class MastersController {
             const userId = req.user?.id || req.user?.userId;
             const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
             return await this.mastersService.deleteVendor(reqModel, userId, ipAddress);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    // Locations
+    @Post('getAllLocations')
+    @ApiOperation({ summary: 'Get all locations' })
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getAllLocations(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllLocationsResponseModel> {
+        try {
+            return await this.mastersService.getAllLocations(reqModel);
+        } catch (error) {
+            return returnException(GetAllLocationsResponseModel, error);
+        }
+    }
+
+    @Post('locations')
+    @ApiOperation({ summary: 'Create location' })
+    @ApiBody({ type: CreateLocationModel })
+    async createLocation(@Body() data: CreateLocationModel, @Req() req: any): Promise<CreateLocationResponseModel> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createLocation(data, userId, ipAddress);
+        } catch (error) {
+            return returnException(CreateLocationResponseModel, error);
+        }
+    }
+
+    @Post('updateLocation')
+    @ApiOperation({ summary: 'Update location' })
+    @ApiBody({ type: UpdateLocationModel })
+    async updateLocation(@Body() data: UpdateLocationModel, @Req() req: any): Promise<UpdateLocationResponseModel> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updateLocation(data, userId, ipAddress);
+        } catch (error) {
+            return returnException(UpdateLocationResponseModel, error);
+        }
+    }
+
+    @Post('deleteLocation')
+    @ApiOperation({ summary: 'Delete location' })
+    @ApiBody({ type: IdRequestModel })
+    async deleteLocation(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deleteLocation(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

@@ -9,7 +9,7 @@ import Input from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
 import { Building2, ShieldCheck, BarChart3, Users, Zap, X } from 'lucide-react';
 import { authService } from '@/lib/api/services';
-import { RequestAccessModel } from '@adminvault/shared-models';
+import { RequestAccessModel, UserRoleEnum } from '@adminvault/shared-models';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -44,7 +44,6 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // setError(''); // Using toast instead
 
         try {
             if (rememberMe) {
@@ -53,10 +52,27 @@ export default function LoginPage() {
                 localStorage.removeItem('remember_email');
             }
 
-            await login({ email, password });
-            router.push('/'); // Redirect to root to let page.tsx handle role-based routing
+            const user = await login({ email, password });
+
+            if (user) {
+                // Determine redirection based on role
+                // Allow state propagation
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                const userRole = (user.role || '').toLowerCase();
+                // Ensure comparison against lowercase enum values if needed, or just standard strings
+                if (userRole === UserRoleEnum.USER.toLowerCase() || userRole === UserRoleEnum.VIEWER.toLowerCase()) {
+                    router.push('/create-ticket');
+                } else {
+                    router.push('/dashboard');
+                }
+            } else {
+                console.error('User object is missing after login');
+                toastError('Login Failed', 'Unable to retrieve user details.');
+            }
         } catch (err: any) {
-            toastError('Login Failed', err.message || 'Invalid credentials');
+            console.error('Login error caught in component:', err);
+            toastError('Login Failed', err.message && err.message !== 'Login failed' ? err.message : 'Invalid email or password. Please try again.');
         }
     };
 
@@ -321,4 +337,4 @@ export default function LoginPage() {
     );
 };
 
-export default LoginPage;
+

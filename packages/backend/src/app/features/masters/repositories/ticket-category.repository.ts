@@ -1,6 +1,6 @@
 import { DataSource, Repository } from "typeorm";
 import { Injectable } from "@nestjs/common";
-import { TicketCategoriesMasterEntity } from "../../entities/masters/ticket-category.entity";
+import { TicketCategoriesMasterEntity } from "../entities/ticket-category.entity";
 
 @Injectable()
 export class TicketCategoryRepository extends Repository<TicketCategoriesMasterEntity> {

@@ -1,13 +1,16 @@
-import { CommonAxiosService } from '../common-axios-service';
+import { AxiosRequestConfig } from "axios";
+import { CommonAxiosService } from "../common-axios-service";
 import {
-    UploadDocumentModel, DeleteDocumentModel, GetDocumentModel,
-    GetAllDocumentsModel, GetDocumentByIdModel, UploadDocumentResponseModel, GlobalResponse
+    DeleteDocumentModel, GetDocumentModel,
+    GetAllDocumentsModel, GetDocumentByIdModel, UploadDocumentResponseModel, UploadDocumentModel, GlobalResponse
 } from '@adminvault/shared-models';
 
 export class DocumentsService extends CommonAxiosService {
-    private BASE_PATH = '/documents';
+    private getURLwithMainEndPoint(childUrl: string) {
+        return '/documents/' + childUrl;
+    }
 
-    async uploadDocument(file: File, reqModel: UploadDocumentModel): Promise<UploadDocumentResponseModel> {
+    async uploadDocument(file: File, reqModel: UploadDocumentModel, config?: AxiosRequestConfig): Promise<UploadDocumentResponseModel> {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('originalName', reqModel.originalName);
@@ -19,29 +22,25 @@ export class DocumentsService extends CommonAxiosService {
         if (reqModel.description) formData.append('description', reqModel.description);
         if (reqModel.tags) formData.append('tags', reqModel.tags);
 
-        return await this.axiosPostCall(`${this.BASE_PATH}/upload`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('uploadDocument'), formData, {
+            ...config,
+            headers: { ...config?.headers, 'Content-Type': 'multipart/form-data' }
         });
     }
 
-    async deleteDocument(reqModel: DeleteDocumentModel): Promise<GlobalResponse> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/delete`, reqModel);
+    async deleteDocument(reqObj: DeleteDocumentModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteDocument'), reqObj, config);
     }
 
-    async getDocument(reqModel: GetDocumentModel): Promise<GetDocumentByIdModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/get`, reqModel);
+    async getDocument(reqObj: GetDocumentModel, config?: AxiosRequestConfig): Promise<GetDocumentByIdModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getDocument'), reqObj, config);
     }
 
-    async getAllDocuments(companyId?: number, category?: string): Promise<GetAllDocumentsModel> {
-        let url = `${this.BASE_PATH}/getAll`;
-        const params = [];
-        if (companyId) params.push(`companyId=${companyId}`);
-        if (category) params.push(`category=${category}`);
-        if (params.length > 0) url += `?${params.join('&')}`;
-        return await this.axiosPostCall(url, {});
+    async getAllDocuments(companyId: number, category?: string, config?: AxiosRequestConfig): Promise<GetAllDocumentsModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllDocuments'), { companyId, category }, config);
     }
 
     getDownloadUrl(id: number): string {
-        return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}${this.BASE_PATH}/download/${id}`;
+        return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}${this.getURLwithMainEndPoint(`downloadDocument/${id}`)}`;
     }
 }

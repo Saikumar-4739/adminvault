@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { TicketsService } from './tickets.service';
-import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, CompanyIdRequestModel, TicketStatusEnum } from '@adminvault/shared-models';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
 @ApiTags('Tickets')
@@ -122,6 +122,50 @@ export class TicketsController {
             return await this.service.getTicketsByUser(userEmail);
         } catch (error) {
             return returnException(GetAllTicketsModel, error);
+        }
+    }
+
+    @Post('statistics')
+    @ApiOperation({ summary: 'Get ticket statistics' })
+    async getStatistics(@Req() req: any) {
+        try {
+            const { companyId } = req.user;
+            return await this.service.getStatistics(companyId);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('status')
+    @ApiOperation({ summary: 'Update ticket status' })
+    @ApiBody({ schema: { properties: { id: { type: 'number' }, status: { type: 'string', enum: Object.values(TicketStatusEnum) } } } })
+    async updateStatus(@Body() body: { id: number, status: TicketStatusEnum }) {
+        try {
+            return await this.service.updateStatus(body.id, body.status);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('assign')
+    @ApiOperation({ summary: 'Assign ticket' })
+    @ApiBody({ schema: { properties: { id: { type: 'number' }, assignAdminId: { type: 'number' } } } })
+    async assignTicket(@Body() body: { id: number, assignAdminId: number }) {
+        try {
+            return await this.service.assignTicket(body.id, body.assignAdminId);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('addResponse')
+    @ApiOperation({ summary: 'Add response to ticket' })
+    @ApiBody({ schema: { properties: { id: { type: 'number' }, response: { type: 'string' } } } })
+    async addResponse(@Body() body: { id: number, response: string }) {
+        try {
+            return await this.service.addResponse(body.id, body.response);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

@@ -58,9 +58,12 @@ AxiosInstance.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
         if (typeof window !== 'undefined' && error.response?.status === 401) {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
+            // Avoid redirect loop if we are already on login page or if the error comes from the login endpoint itself
+            if (!window.location.pathname.includes('/login') && !error.config?.url?.includes('loginUser')) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('auth_user'); // Correct key name from 'user' to 'auth_user'
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

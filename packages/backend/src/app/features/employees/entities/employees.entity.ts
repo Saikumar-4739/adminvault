@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { EmployeeStatusEnum } from '@adminvault/shared-models';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
@@ -6,6 +6,9 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 @Index('idx_emp_email', ['email'])
 @Index('idx_emp_dept_id', ['departmentId'])
 @Index('idx_emp_slack_id', ['slackUserId'])
+@Index('idx_emp_status', ['empStatus'])
+@Index('idx_emp_company', ['companyId'])
+@Index('idx_emp_user', ['userId'])
 export class EmployeesEntity extends CommonBaseEntity {
   @Column('varchar', { name: 'first_name', length: 100, nullable: false, comment: 'Employee first name' })
   firstName: string;
@@ -43,4 +46,3 @@ export class EmployeesEntity extends CommonBaseEntity {
   @Column('boolean', { name: 'is_slack_active', default: false, nullable: false, comment: 'Whether slack user is active' })
   isSlackActive: boolean;
 }
-

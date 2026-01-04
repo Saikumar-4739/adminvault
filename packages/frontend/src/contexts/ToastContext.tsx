@@ -42,12 +42,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             const id = Math.random().toString(36).substring(7);
             const toast: Toast = { id, type, title, message, duration };
 
-            console.log('🔔 Toast triggered:', { type, title, message });
-            setToasts((prev) => {
-                const newToasts = [...prev, toast];
-                console.log('📋 Current toasts:', newToasts.length);
-                return newToasts;
-            });
+            setToasts((prev) => [...prev, toast]);
 
             if (duration > 0) {
                 setTimeout(() => removeToast(id), duration);

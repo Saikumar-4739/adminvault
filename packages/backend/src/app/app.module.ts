@@ -5,7 +5,6 @@ import { AppService } from './app.service';
 import { CompanyInfoModule } from './features/masters/company-info/company-info.module';
 import { AuthUsersModule } from './features/auth-users/auth-users.module';
 import { EmployeesModule } from './features/employees/employees.module';
-import { EmailInfoModule } from './features/email-info/email-info.module';
 import { DeviceInfoModule } from './features/masters/device-info/device-info.module';
 import { TicketsModule } from './features/tickets/tickets.module';
 import { AssetInfoModule } from './features/asset-info/asset-info.module';
@@ -15,9 +14,7 @@ import { DatabaseModule } from '../database/database.module';
 import { ReportsModule } from './features/reports/reports.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { DocumentsModule } from './features/documents/documents.module';
-import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
-import { IAMModule } from './features/iam/iam.module';
-import { OperationsModule } from './features/operations/operations.module';
+import { AdministrationModule } from './features/administration/administration.module';
 import configuration from '../config/configuration';
 
 
@@ -35,7 +32,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     CompanyInfoModule,
     AuthUsersModule,
     EmployeesModule,
-    EmailInfoModule,
     DeviceInfoModule,
     TicketsModule,
     AssetInfoModule,
@@ -44,9 +40,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     ReportsModule,
     DashboardModule,
     DocumentsModule,
-    AuditLogsModule,
-    IAMModule,
-    OperationsModule,
+    AdministrationModule,
   ],
   controllers: [AppController],
   providers: [

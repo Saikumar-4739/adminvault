@@ -5,7 +5,7 @@ import { useCompanies } from '@/hooks/useCompanies';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import PageHeader from '@/components/ui/PageHeader';
 import { Plus, Search, Edit, Trash2, Building2 } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
@@ -273,4 +273,4 @@ export default function CompaniesPage() {
     );
 };
 
-export default CompaniesPage;
+

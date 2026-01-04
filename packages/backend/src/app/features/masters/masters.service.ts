@@ -1,26 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, EntityTarget, Repository, ObjectLiteral } from 'typeorm';
-import { DepartmentRepository } from '../../repository/masters/department.repository';
-import { AssetTypeRepository } from '../../repository/masters/asset-type.repository';
-import { BrandRepository } from '../../repository/masters/brand.repository';
-import { VendorRepository } from '../../repository/masters/vendor.repository';
-import { LocationRepository } from '../../repository/masters/location.repository';
-import { TicketCategoryRepository } from '../../repository/masters/ticket-category.repository';
-import { CompanyInfoRepository } from '../../repository/company-info.repository';
-import { PasswordVaultRepository } from '../../repository/masters/password-vault.repository';
+import { DepartmentRepository } from './repositories/department.repository';
+import { AssetTypeRepository } from './repositories/asset-type.repository';
+import { BrandRepository } from './repositories/brand.repository';
+import { VendorRepository } from './repositories/vendor.repository';
+import { LocationRepository } from './repositories/location.repository';
+import { TicketCategoryRepository } from './repositories/ticket-category.repository';
+import { CompanyInfoRepository } from './repositories/company-info.repository';
+import { PasswordVaultRepository } from './repositories/password-vault.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateDepartmentModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel, CreateAssetTypeModel, CreateBrandModel, CreateApplicationModel, CreateExpenseCategoryModel, CreatePasswordVaultModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel, UpdateLocationModel, UpdateTicketCategoryModel, UpdateApplicationModel, UpdateExpenseCategoryModel, UpdatePasswordVaultModel, GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateLocationResponseModel, CreateTicketCategoryResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultResponseModel, UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateLocationResponseModel, UpdateTicketCategoryResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
-import { DepartmentsMasterEntity } from '../../entities/masters/department.entity';
-import { AssetTypeMasterEntity } from '../../entities/masters/asset-type.entity';
-import { BrandsMasterEntity } from '../../entities/masters/brand.entity';
-import { VendorsMasterEntity } from '../../entities/masters/vendor.entity';
-import { LocationsMasterEntity } from '../../entities/masters/location.entity';
-import { TicketCategoriesMasterEntity } from '../../entities/masters/ticket-category.entity';
-import { ApplicationsMasterEntity } from '../../entities/masters/application.entity';
-import { ExpenseCategoriesMasterEntity } from '../../entities/masters/expense-category.entity';
-import { PasswordVaultMasterEntity } from '../../entities/masters/password-vault.entity';
+import { DepartmentsMasterEntity } from './entities/department.entity';
+import { AssetTypeMasterEntity } from './entities/asset-type.entity';
+import { BrandsMasterEntity } from './entities/brand.entity';
+import { VendorsMasterEntity } from './entities/vendor.entity';
+import { LocationsMasterEntity } from './entities/location.entity';
+import { TicketCategoriesMasterEntity } from './entities/ticket-category.entity';
+import { ApplicationsMasterEntity } from './entities/application.entity';
+import { ExpenseCategoriesMasterEntity } from './entities/expense-category.entity';
+import { PasswordVaultMasterEntity } from './entities/password-vault.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class MastersService {
@@ -33,8 +32,7 @@ export class MastersService {
         private locationRepo: LocationRepository,
         private ticketCatRepo: TicketCategoryRepository,
         private companyRepo: CompanyInfoRepository,
-        private passwordVaultRepo: PasswordVaultRepository,
-        private auditLogsService: AuditLogsService
+        private passwordVaultRepo: PasswordVaultRepository
     ) { }
 
     // Departments
@@ -70,16 +68,6 @@ export class MastersService {
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_DEPARTMENT',
-                resource: 'Masters',
-                details: `Department ${savedItem.name} created`,
-                status: 'SUCCESS',
-                userId: userId || savedItem.userId,
-                companyId: savedItem.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new CreateDepartmentResponseModel(true, 201, 'Department created successfully', savedItem);
         } catch (error) {
@@ -110,16 +98,6 @@ export class MastersService {
             }
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_DEPARTMENT',
-                resource: 'Masters',
-                details: `Department ${updated.name} updated`,
-                status: 'SUCCESS',
-                userId: userId || existing.userId,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new UpdateDepartmentResponseModel(true, 200, 'Department updated successfully', updated);
         } catch (error) {
@@ -139,16 +117,6 @@ export class MastersService {
             await transManager.completeTransaction();
 
             if (existing) {
-                // AUDIT LOG
-                await this.auditLogsService.create({
-                    action: 'DELETE_DEPARTMENT',
-                    resource: 'Masters',
-                    details: `Department ${existing.name} deleted`,
-                    status: 'SUCCESS',
-                    userId: userId || existing.userId,
-                    companyId: existing.companyId,
-                    ipAddress: ipAddress || '0.0.0.0'
-                });
             }
 
             return new GlobalResponse(true, 200, 'Department deleted successfully');
@@ -191,16 +159,6 @@ export class MastersService {
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_ASSET_TYPE',
-                resource: 'Masters',
-                details: `Asset Type ${savedItem.name} created`,
-                status: 'SUCCESS',
-                userId: userId || savedItem.userId,
-                companyId: savedItem.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new CreateAssetTypeResponseModel(true, 201, 'Asset Type created successfully', savedItem);
         } catch (error) {
@@ -226,16 +184,6 @@ export class MastersService {
             }
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_ASSET_TYPE',
-                resource: 'Masters',
-                details: `Asset Type ${updated.name} updated`,
-                status: 'SUCCESS',
-                userId: userId || existing.userId,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new UpdateAssetTypeResponseModel(true, 200, 'Asset Type updated successfully', updated);
         } catch (error) {
@@ -255,16 +203,6 @@ export class MastersService {
             await transManager.completeTransaction();
 
             if (existing) {
-                // AUDIT LOG
-                await this.auditLogsService.create({
-                    action: 'DELETE_ASSET_TYPE',
-                    resource: 'Masters',
-                    details: `Asset Type ${existing.name} deleted`,
-                    status: 'SUCCESS',
-                    userId: userId || existing.userId,
-                    companyId: existing.companyId,
-                    ipAddress: ipAddress || '0.0.0.0'
-                });
             }
 
             return new GlobalResponse(true, 200, 'Asset Type deleted successfully');
@@ -293,16 +231,6 @@ export class MastersService {
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_BRAND',
-                resource: 'Masters',
-                details: `Brand ${savedItem.name} created`,
-                status: 'SUCCESS',
-                userId: userId || savedItem.userId,
-                companyId: savedItem.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new CreateBrandResponseModel(true, 201, 'Brand created successfully', savedItem);
         } catch (error) {
@@ -334,16 +262,6 @@ export class MastersService {
             }
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_BRAND',
-                resource: 'Masters',
-                details: `Brand ${updated.name} updated`,
-                status: 'SUCCESS',
-                userId: userId || existing.userId,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new UpdateBrandResponseModel(true, 200, 'Brand updated successfully', updated);
         } catch (error) {
@@ -363,16 +281,6 @@ export class MastersService {
             await transManager.completeTransaction();
 
             if (existing) {
-                // AUDIT LOG
-                await this.auditLogsService.create({
-                    action: 'DELETE_BRAND',
-                    resource: 'Masters',
-                    details: `Brand ${existing.name} deleted`,
-                    status: 'SUCCESS',
-                    userId: userId || existing.userId,
-                    companyId: existing.companyId,
-                    ipAddress: ipAddress || '0.0.0.0'
-                });
             }
 
             return new GlobalResponse(true, 200, 'Brand deleted successfully');
@@ -401,16 +309,6 @@ export class MastersService {
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_VENDOR',
-                resource: 'Masters',
-                details: `Vendor ${savedItem.name} created`,
-                status: 'SUCCESS',
-                userId: userId || savedItem.userId,
-                companyId: savedItem.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new CreateVendorResponseModel(true, 201, 'Vendor created successfully', savedItem);
         } catch (error) {
@@ -444,16 +342,6 @@ export class MastersService {
             }
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_VENDOR',
-                resource: 'Masters',
-                details: `Vendor ${updated.name} updated`,
-                status: 'SUCCESS',
-                userId: userId || existing.userId,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new UpdateVendorResponseModel(true, 200, 'Vendor updated successfully', updated);
         } catch (error) {
@@ -473,22 +361,98 @@ export class MastersService {
             await transManager.completeTransaction();
 
             if (existing) {
-                // AUDIT LOG
-                await this.auditLogsService.create({
-                    action: 'DELETE_VENDOR',
-                    resource: 'Masters',
-                    details: `Vendor ${existing.name} deleted`,
-                    status: 'SUCCESS',
-                    userId: userId || existing.userId,
-                    companyId: existing.companyId,
-                    ipAddress: ipAddress || '0.0.0.0'
-                });
             }
 
             return new GlobalResponse(true, 200, 'Vendor deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
             throw new ErrorResponse(500, 'Failed to delete Vendor');
+        }
+    }
+
+    // Locations
+    async getAllLocations(reqModel: CompanyIdRequestModel): Promise<GetAllLocationsResponseModel> {
+        try {
+            const locations = await this.locationRepo.find({ where: { companyId: reqModel.id } });
+            return new GetAllLocationsResponseModel(true, 200, 'Locations retrieved successfully', locations);
+        } catch (error) {
+            throw new ErrorResponse(500, 'Failed to fetch Locations');
+        }
+    }
+
+    async createLocation(data: CreateLocationModel, userId?: number, ipAddress?: string): Promise<CreateLocationResponseModel> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(LocationsMasterEntity);
+            const newItem = repo.create({
+                userId: data.userId,
+                companyId: data.companyId,
+                name: data.name,
+                description: data.description,
+                isActive: data.isActive,
+                address: data.address,
+                city: data.city,
+                country: data.country
+            });
+            const savedItem = await repo.save(newItem);
+            await transManager.completeTransaction();
+
+            return new CreateLocationResponseModel(true, 201, 'Location created successfully', savedItem);
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw new ErrorResponse(500, 'Failed to create Location');
+        }
+    }
+
+    async updateLocation(data: UpdateLocationModel, userId?: number, ipAddress?: string): Promise<UpdateLocationResponseModel> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            const existing = await this.locationRepo.findOne({ where: { id: data.id } });
+            if (!existing) {
+                throw new ErrorResponse(404, 'Location not found');
+            }
+
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(LocationsMasterEntity);
+            await repo.update(data.id, {
+                name: data.name,
+                description: data.description,
+                isActive: data.isActive,
+                address: data.address,
+                city: data.city,
+                country: data.country
+            });
+            const updated = await repo.findOne({ where: { id: data.id } });
+            if (!updated) {
+                throw new ErrorResponse(500, 'Failed to retrieve updated location');
+            }
+            await transManager.completeTransaction();
+
+            return new UpdateLocationResponseModel(true, 200, 'Location updated successfully', updated);
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update Location');
+        }
+    }
+
+    async deleteLocation(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            const existing = await this.locationRepo.findOne({ where: { id: reqModel.id } });
+
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(LocationsMasterEntity);
+            await repo.delete(reqModel.id);
+            await transManager.completeTransaction();
+
+            if (existing) {
+            }
+
+            return new GlobalResponse(true, 200, 'Location deleted successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw new ErrorResponse(500, 'Failed to delete Location');
         }
     }
 
@@ -525,16 +489,6 @@ export class MastersService {
             const saved = await repo.save(newApp);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_APPLICATION',
-                resource: 'Masters',
-                details: `Application ${saved.name} created`,
-                status: 'SUCCESS',
-                userId: userId || saved.userId,
-                companyId: saved.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new CreateApplicationResponseModel(true, 201, 'Application created successfully', saved);
         } catch (error) {
@@ -574,16 +528,6 @@ export class MastersService {
             }
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_APPLICATION',
-                resource: 'Masters',
-                details: `Application ${updated.name} updated`,
-                status: 'SUCCESS',
-                userId: userId || existing.userId,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new UpdateApplicationResponseModel(true, 200, 'Application updated successfully', updated);
         } catch (error) {
@@ -603,16 +547,6 @@ export class MastersService {
             await transManager.completeTransaction();
 
             if (existing) {
-                // AUDIT LOG
-                await this.auditLogsService.create({
-                    action: 'DELETE_APPLICATION',
-                    resource: 'Masters',
-                    details: `Application ${existing.name} deleted`,
-                    status: 'SUCCESS',
-                    userId: userId || existing.userId,
-                    companyId: existing.companyId,
-                    ipAddress: ipAddress || '0.0.0.0'
-                });
             }
 
             return new GlobalResponse(true, 200, 'Application deleted successfully');
@@ -648,16 +582,6 @@ export class MastersService {
             const saved = await repo.save(newCategory);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_TICKET_CATEGORY',
-                resource: 'Masters',
-                details: `Ticket Category ${saved.name} created`,
-                status: 'SUCCESS',
-                userId: userId || saved.userId,
-                companyId: saved.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new CreateTicketCategoryResponseModel(true, 201, 'Ticket Category created successfully', saved);
         } catch (error) {
@@ -690,16 +614,6 @@ export class MastersService {
             }
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_TICKET_CATEGORY',
-                resource: 'Masters',
-                details: `Ticket Category ${updated.name} updated`,
-                status: 'SUCCESS',
-                userId: userId || existing.userId,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new UpdateTicketCategoryResponseModel(true, 200, 'Ticket Category updated successfully', updated);
         } catch (error) {
@@ -719,16 +633,6 @@ export class MastersService {
             await transManager.completeTransaction();
 
             if (existing) {
-                // AUDIT LOG
-                await this.auditLogsService.create({
-                    action: 'DELETE_TICKET_CATEGORY',
-                    resource: 'Masters',
-                    details: `Ticket Category ${existing.name} deleted`,
-                    status: 'SUCCESS',
-                    userId: userId || existing.userId,
-                    companyId: existing.companyId,
-                    ipAddress: ipAddress || '0.0.0.0'
-                });
             }
 
             return new GlobalResponse(true, 200, 'Ticket Category deleted successfully');
@@ -765,16 +669,6 @@ export class MastersService {
             const saved = await repo.save(newCategory);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_EXPENSE_CATEGORY',
-                resource: 'Masters',
-                details: `Expense Category ${saved.name} created`,
-                status: 'SUCCESS',
-                userId: userId || saved.userId,
-                companyId: saved.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new CreateExpenseCategoryResponseModel(true, 201, 'Expense Category created successfully', saved as any);
         } catch (error) {
@@ -808,16 +702,6 @@ export class MastersService {
             }
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_EXPENSE_CATEGORY',
-                resource: 'Masters',
-                details: `Expense Category ${updated.name} updated`,
-                status: 'SUCCESS',
-                userId: userId || existing.userId,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new UpdateExpenseCategoryResponseModel(true, 200, 'Expense Category updated successfully', updated as any);
         } catch (error) {
@@ -837,16 +721,6 @@ export class MastersService {
             await transManager.completeTransaction();
 
             if (existing) {
-                // AUDIT LOG
-                await this.auditLogsService.create({
-                    action: 'DELETE_EXPENSE_CATEGORY',
-                    resource: 'Masters',
-                    details: `Expense Category ${existing.name} deleted`,
-                    status: 'SUCCESS',
-                    userId: userId || existing.userId,
-                    companyId: existing.companyId,
-                    ipAddress: ipAddress || '0.0.0.0'
-                });
             }
 
             return new GlobalResponse(true, 200, 'Expense Category deleted successfully');
@@ -875,16 +749,6 @@ export class MastersService {
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_PASSWORD_VAULT',
-                resource: 'Masters',
-                details: `Password Vault ${savedItem.name} created`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: savedItem.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new CreatePasswordVaultResponseModel(true, 201, 'Password Vault created successfully', savedItem);
         } catch (error) {
@@ -918,16 +782,6 @@ export class MastersService {
             }
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_PASSWORD_VAULT',
-                resource: 'Masters',
-                details: `Password Vault ${updated.name} updated`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
 
             return new UpdatePasswordVaultResponseModel(true, 200, 'Password Vault updated successfully', updated);
         } catch (error) {
@@ -947,16 +801,6 @@ export class MastersService {
             await transManager.completeTransaction();
 
             if (existing) {
-                // AUDIT LOG
-                await this.auditLogsService.create({
-                    action: 'DELETE_PASSWORD_VAULT',
-                    resource: 'Masters',
-                    details: `Password Vault ${existing.name} deleted`,
-                    status: 'SUCCESS',
-                    userId: userId || undefined,
-                    companyId: existing.companyId,
-                    ipAddress: ipAddress || '0.0.0.0'
-                });
             }
 
             return new GlobalResponse(true, 200, 'Password Vault deleted successfully');

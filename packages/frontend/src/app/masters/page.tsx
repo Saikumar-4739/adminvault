@@ -122,11 +122,16 @@ export default function MastersPage() {
         <div className="h-screen flex flex-col overflow-hidden">
             {/* Fixed Page Header */}
             <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">System Configuration</h1>
-                    <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1">
-                        Manage all master data for your organization
-                    </p>
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
+                        <Package className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">System Configuration</h1>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Manage all master data for your organization
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -178,4 +183,4 @@ export default function MastersPage() {
     );
 };
 
-export default MastersPage;
+

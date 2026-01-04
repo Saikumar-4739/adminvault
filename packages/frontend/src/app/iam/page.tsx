@@ -16,12 +16,12 @@ import {
     CheckCircle2,
     XCircle,
     Search,
-    Building2,
+    // Building2,
     Mail,
     Phone,
     Calendar
 } from 'lucide-react';
-import { Modal } from '@/components/ui/modal';
+import { Modal } from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
@@ -54,7 +54,7 @@ import {
     selectEmployeeStats,
 } from '@/store/slices/employeesSlice';
 import { useToast } from '@/contexts/ToastContext';
-import type { SSOProvider, Role } from '@adminvault/shared-services';
+import type { SSOProvider, Role } from '@adminvault/shared-models';
 import type { Employee } from '@/store/slices/employeesSlice';
 
 export default function IAMPage() {
@@ -342,15 +342,17 @@ export default function IAMPage() {
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
             <div className="p-4 lg:p-6 space-y-6 max-w-[1920px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-900/50">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                            <ShieldAlert className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                            Identity & Access Management
-                        </h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">
-                            Manage users, roles, and SSO integrations
-                        </p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
+                            <ShieldAlert className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Identity & Access Management</h1>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                Manage users, roles, and SSO integrations
+                            </p>
+                        </div>
                     </div>
 
                     {/* Stats */}
@@ -373,8 +375,8 @@ export default function IAMPage() {
                             <button
                                 onClick={() => dispatch(setActiveTab('users'))}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'users'
-                                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
-                                        : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
+                                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
+                                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
                                     }`}
                             >
                                 <Users className="h-4 w-4" />
@@ -383,8 +385,8 @@ export default function IAMPage() {
                             <button
                                 onClick={() => dispatch(setActiveTab('sso'))}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'sso'
-                                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
-                                        : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
+                                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
+                                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
                                     }`}
                             >
                                 <Key className="h-4 w-4" />
@@ -393,8 +395,8 @@ export default function IAMPage() {
                             <button
                                 onClick={() => dispatch(setActiveTab('roles'))}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'roles'
-                                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
-                                        : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
+                                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
+                                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
                                     }`}
                             >
                                 <Shield className="h-4 w-4" />
@@ -481,8 +483,8 @@ export default function IAMPage() {
                                                 {/* Status Badge */}
                                                 <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
                                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${emp.empStatus === 'Active'
-                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
-                                                            : 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800'
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
+                                                        : 'bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800'
                                                         }`}>
                                                         <span className={`w-1.5 h-1.5 rounded-full ${emp.empStatus === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
                                                         {emp.empStatus}
@@ -774,4 +776,4 @@ export default function IAMPage() {
     );
 };
 
-export default IAMPage;
+

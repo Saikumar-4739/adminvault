@@ -152,6 +152,7 @@ export default function CreateTicketPage() {
                 icon={Building2}
                 title="Support Portal"
                 subtitle="Welcome back! Manage your support tickets here"
+                gradient="from-blue-500 to-indigo-600"
                 actions={
                     <Button
                         variant="outline"
@@ -457,4 +458,4 @@ export default function CreateTicketPage() {
     );
 };
 
-export default CreateTicketPage;
+

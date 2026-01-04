@@ -15,6 +15,7 @@ export * from './document/document-models';
 export * from './ticket';
 export * from './license/license-models';
 export * from './dashboard/dashboard-models';
+export * from './administration';
 
 
 // Export commonly used types
