@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import axios from 'axios';
 import * as UAParser from 'ua-parser-js';
-import { UserLoginSessionRepository } from '../../repository/user-login-session.repository';
-import { UserLoginSessionsEntity } from '../../entities/user-login-sessions.entity';
+import { UserLoginSessionRepository } from '../iam/repositories/user-login-session.repository';
+import { UserLoginSessionsEntity } from '../iam/entities/user-login-sessions.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateLoginSessionModel, LoginSessionResponseModel, GetUserLoginHistoryModel, GetActiveSessionsModel, LogoutSessionModel } from '@adminvault/shared-models';
@@ -20,7 +20,7 @@ export class LoginSessionService {
      */
     private async getLocationFromIP(ipAddress: string) {
         try {
-            if (ipAddress === '127.0.0.1' || ipAddress === '::1' || ipAddress.startsWith('192.168.')) {
+            if (ipAddress === '127.0.0.1' || ipAddress === '::1' || ipAddress.startsWith('192.168.') || ipAddress.startsWith('10.') || ipAddress.startsWith('172.')) {
                 return null;
             }
 

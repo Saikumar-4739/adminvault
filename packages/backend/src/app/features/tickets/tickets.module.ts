@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TicketsService } from './tickets.service';
 import { TicketsController } from './tickets.controller';
-import { TicketsEntity } from '../../entities/tickets.entity';
-import { EmployeesEntity } from '../../entities/employees.entity';
-import { TicketsRepository, EmployeesRepository } from '../../repository';
+import { TicketsEntity } from './entities/tickets.entity';
+import { EmployeesEntity } from '../employees/entities/employees.entity';
+import { TicketsRepository } from './repositories/tickets.repository';
+import { EmployeesRepository } from '../employees/repositories/employees.repository';
 
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 

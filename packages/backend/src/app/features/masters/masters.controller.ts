@@ -9,13 +9,16 @@ import {
     IdRequestModel, CompanyIdRequestModel
 } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
+import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 
+@ApiTags('Masters')
 @Controller('masters')
 export class MastersController {
     constructor(private mastersService: MastersService) { }
 
     // Departments
     @Post('getAllDepartments')
+    @ApiOperation({ summary: 'Get all departments' })
     async getAllDepartments(): Promise<GetAllDepartmentsResponseModel> {
         try {
             return await this.mastersService.getAllDepartments();
@@ -25,6 +28,8 @@ export class MastersController {
     }
 
     @Post('departments')
+    @ApiOperation({ summary: 'Create department' })
+    @ApiBody({ type: CreateDepartmentModel })
     async createDepartment(@Body() data: CreateDepartmentModel, @Req() req: any): Promise<CreateDepartmentResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -36,6 +41,8 @@ export class MastersController {
     }
 
     @Post('updateDepartment')
+    @ApiOperation({ summary: 'Update department' })
+    @ApiBody({ type: UpdateDepartmentModel })
     async updateDepartment(@Body() data: UpdateDepartmentModel, @Req() req: any): Promise<UpdateDepartmentResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -47,6 +54,8 @@ export class MastersController {
     }
 
     @Post('deleteDepartment')
+    @ApiOperation({ summary: 'Delete department' })
+    @ApiBody({ type: IdRequestModel })
     async deleteDepartment(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -59,6 +68,8 @@ export class MastersController {
 
     // Asset Types
     @Post('getAllAssetTypes')
+    @ApiOperation({ summary: 'Get all asset types' })
+    @ApiBody({ type: CompanyIdRequestModel })
     async getAllAssetTypes(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllAssetTypesResponseModel> {
         try {
             return await this.mastersService.getAllAssetTypes(reqModel);
@@ -68,6 +79,8 @@ export class MastersController {
     }
 
     @Post('asset-types')
+    @ApiOperation({ summary: 'Create asset type' })
+    @ApiBody({ type: CreateAssetTypeModel })
     async createAssetType(@Body() data: CreateAssetTypeModel, @Req() req: any): Promise<CreateAssetTypeResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -79,6 +92,8 @@ export class MastersController {
     }
 
     @Post('updateAssetType')
+    @ApiOperation({ summary: 'Update asset type' })
+    @ApiBody({ type: UpdateAssetTypeModel })
     async updateAssetType(@Body() data: UpdateAssetTypeModel, @Req() req: any): Promise<UpdateAssetTypeResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -90,6 +105,8 @@ export class MastersController {
     }
 
     @Post('deleteAssetType')
+    @ApiOperation({ summary: 'Delete asset type' })
+    @ApiBody({ type: IdRequestModel })
     async deleteAssetType(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -102,6 +119,8 @@ export class MastersController {
 
     // Brands
     @Post('getAllBrands')
+    @ApiOperation({ summary: 'Get all brands' })
+    @ApiBody({ type: CompanyIdRequestModel })
     async getAllBrands(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllBrandsResponseModel> {
         try {
             return await this.mastersService.getAllBrands(reqModel);
@@ -111,6 +130,8 @@ export class MastersController {
     }
 
     @Post('brands')
+    @ApiOperation({ summary: 'Create brand' })
+    @ApiBody({ type: CreateBrandModel })
     async createBrand(@Body() data: CreateBrandModel, @Req() req: any): Promise<CreateBrandResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -122,6 +143,8 @@ export class MastersController {
     }
 
     @Post('updateBrand')
+    @ApiOperation({ summary: 'Update brand' })
+    @ApiBody({ type: UpdateBrandModel })
     async updateBrand(@Body() data: UpdateBrandModel, @Req() req: any): Promise<UpdateBrandResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -133,6 +156,8 @@ export class MastersController {
     }
 
     @Post('deleteBrand')
+    @ApiOperation({ summary: 'Delete brand' })
+    @ApiBody({ type: IdRequestModel })
     async deleteBrand(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -145,6 +170,8 @@ export class MastersController {
 
     // Vendors
     @Post('getAllVendors')
+    @ApiOperation({ summary: 'Get all vendors' })
+    @ApiBody({ type: CompanyIdRequestModel })
     async getAllVendors(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllVendorsResponseModel> {
         try {
             return await this.mastersService.getAllVendors(reqModel);
@@ -154,6 +181,8 @@ export class MastersController {
     }
 
     @Post('vendors')
+    @ApiOperation({ summary: 'Create vendor' })
+    @ApiBody({ type: CreateVendorModel })
     async createVendor(@Body() data: CreateVendorModel, @Req() req: any): Promise<CreateVendorResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -165,6 +194,8 @@ export class MastersController {
     }
 
     @Post('updateVendor')
+    @ApiOperation({ summary: 'Update vendor' })
+    @ApiBody({ type: UpdateVendorModel })
     async updateVendor(@Body() data: UpdateVendorModel, @Req() req: any): Promise<UpdateVendorResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -176,6 +207,8 @@ export class MastersController {
     }
 
     @Post('deleteVendor')
+    @ApiOperation({ summary: 'Delete vendor' })
+    @ApiBody({ type: IdRequestModel })
     async deleteVendor(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -188,6 +221,8 @@ export class MastersController {
 
     // Applications
     @Post('getAllApplications')
+    @ApiOperation({ summary: 'Get all applications' })
+    @ApiBody({ type: CompanyIdRequestModel })
     async getAllApplications(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllApplicationsResponseModel> {
         try {
             return await this.mastersService.getAllApplications(reqModel);
@@ -197,6 +232,8 @@ export class MastersController {
     }
 
     @Post('applications')
+    @ApiOperation({ summary: 'Create application' })
+    @ApiBody({ type: CreateApplicationModel })
     async createApplication(@Body() data: CreateApplicationModel, @Req() req: any): Promise<CreateApplicationResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -208,6 +245,8 @@ export class MastersController {
     }
 
     @Post('updateApplication')
+    @ApiOperation({ summary: 'Update application' })
+    @ApiBody({ type: UpdateApplicationModel })
     async updateApplication(@Body() data: UpdateApplicationModel, @Req() req: any): Promise<UpdateApplicationResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -219,6 +258,8 @@ export class MastersController {
     }
 
     @Post('deleteApplication')
+    @ApiOperation({ summary: 'Delete application' })
+    @ApiBody({ type: IdRequestModel })
     async deleteApplication(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -231,6 +272,8 @@ export class MastersController {
 
     // Ticket Categories
     @Post('getAllTicketCategories')
+    @ApiOperation({ summary: 'Get all ticket categories' })
+    @ApiBody({ type: CompanyIdRequestModel })
     async getAllTicketCategories(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllTicketCategoriesResponseModel> {
         try {
             return await this.mastersService.getAllTicketCategories(reqModel);
@@ -240,6 +283,8 @@ export class MastersController {
     }
 
     @Post('ticket-categories')
+    @ApiOperation({ summary: 'Create ticket category' })
+    @ApiBody({ type: CreateTicketCategoryModel })
     async createTicketCategory(@Body() data: CreateTicketCategoryModel, @Req() req: any): Promise<CreateTicketCategoryResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -251,6 +296,8 @@ export class MastersController {
     }
 
     @Post('updateTicketCategory')
+    @ApiOperation({ summary: 'Update ticket category' })
+    @ApiBody({ type: UpdateTicketCategoryModel })
     async updateTicketCategory(@Body() data: UpdateTicketCategoryModel, @Req() req: any): Promise<UpdateTicketCategoryResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -262,6 +309,8 @@ export class MastersController {
     }
 
     @Post('deleteTicketCategory')
+    @ApiOperation({ summary: 'Delete ticket category' })
+    @ApiBody({ type: IdRequestModel })
     async deleteTicketCategory(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -274,6 +323,8 @@ export class MastersController {
 
     // Expense Categories
     @Post('getAllExpenseCategories')
+    @ApiOperation({ summary: 'Get all expense categories' })
+    @ApiBody({ type: CompanyIdRequestModel })
     async getAllExpenseCategories(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllExpenseCategoriesResponseModel> {
         try {
             return await this.mastersService.getAllExpenseCategories(reqModel);
@@ -283,6 +334,8 @@ export class MastersController {
     }
 
     @Post('expense-categories')
+    @ApiOperation({ summary: 'Create expense category' })
+    @ApiBody({ type: CreateExpenseCategoryModel })
     async createExpenseCategory(@Body() data: CreateExpenseCategoryModel, @Req() req: any): Promise<CreateExpenseCategoryResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -294,6 +347,8 @@ export class MastersController {
     }
 
     @Post('updateExpenseCategory')
+    @ApiOperation({ summary: 'Update expense category' })
+    @ApiBody({ type: UpdateExpenseCategoryModel })
     async updateExpenseCategory(@Body() data: UpdateExpenseCategoryModel, @Req() req: any): Promise<UpdateExpenseCategoryResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -305,6 +360,8 @@ export class MastersController {
     }
 
     @Post('deleteExpenseCategory')
+    @ApiOperation({ summary: 'Delete expense category' })
+    @ApiBody({ type: IdRequestModel })
     async deleteExpenseCategory(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -317,6 +374,8 @@ export class MastersController {
 
     // Password Vaults
     @Post('getAllPasswordVaults')
+    @ApiOperation({ summary: 'Get all password vaults' })
+    @ApiBody({ type: CompanyIdRequestModel })
     async getAllPasswordVaults(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllPasswordVaultsResponseModel> {
         try {
             return await this.mastersService.getAllPasswordVaults(reqModel);
@@ -326,6 +385,8 @@ export class MastersController {
     }
 
     @Post('password-vaults')
+    @ApiOperation({ summary: 'Create password vault' })
+    @ApiBody({ type: CreatePasswordVaultModel })
     async createPasswordVault(@Body() data: CreatePasswordVaultModel, @Req() req: any): Promise<CreatePasswordVaultResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -337,6 +398,8 @@ export class MastersController {
     }
 
     @Post('updatePasswordVault')
+    @ApiOperation({ summary: 'Update password vault' })
+    @ApiBody({ type: UpdatePasswordVaultModel })
     async updatePasswordVault(@Body() data: UpdatePasswordVaultModel, @Req() req: any): Promise<UpdatePasswordVaultResponseModel> {
         try {
             const userId = req.user?.id || req.user?.userId;
@@ -348,6 +411,8 @@ export class MastersController {
     }
 
     @Post('deletePasswordVault')
+    @ApiOperation({ summary: 'Delete password vault' })
+    @ApiBody({ type: IdRequestModel })
     async deletePasswordVault(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
             const userId = req.user?.id || req.user?.userId;

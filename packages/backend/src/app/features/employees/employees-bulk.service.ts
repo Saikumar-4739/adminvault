@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as XLSX from 'xlsx';
-import { EmployeesEntity } from '../../entities/employees.entity';
-import { EmployeesRepository } from '../../repository/employees.repository';
-// Correct import path
-import { DepartmentRepository } from '../../repository/masters/department.repository';
+import { EmployeesEntity } from './entities/employees.entity';
+import { EmployeesRepository } from './repositories/employees.repository';
+import { DepartmentRepository } from '../masters/repositories/department.repository';
 import {
     EmployeeStatusEnum,
     BulkImportResponseModel

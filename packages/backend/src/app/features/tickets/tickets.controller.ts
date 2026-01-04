@@ -1,13 +1,13 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { TicketsService } from './tickets.service';
-import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel } from '@adminvault/shared-models';
-import { JwtAuthGuard } from '../../guards/jwt-auth.guard'; // Ensure correct path
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
 @ApiTags('Tickets')
 @Controller('tickets')
-@UseGuards(JwtAuthGuard) // Apply guard to ensure req.user is populated
+@UseGuards(JwtAuthGuard)
 export class TicketsController {
     constructor(private service: TicketsService) { }
 
@@ -19,6 +19,7 @@ export class TicketsController {
      * @returns GlobalResponse indicating ticket creation success
      */
     @Post('createTicket')
+    @ApiOperation({ summary: 'Create new ticket' })
     @ApiBody({ type: CreateTicketModel })
     async createTicket(@Body() reqModel: CreateTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -42,6 +43,7 @@ export class TicketsController {
      * @returns GlobalResponse indicating update success
      */
     @Post('updateTicket')
+    @ApiOperation({ summary: 'Update ticket' })
     @ApiBody({ type: UpdateTicketModel })
     async updateTicket(@Body() reqModel: UpdateTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -59,6 +61,7 @@ export class TicketsController {
      * @returns GetTicketByIdModel with ticket details
      */
     @Post('getTicket')
+    @ApiOperation({ summary: 'Get ticket by ID' })
     @ApiBody({ type: GetTicketModel })
     async getTicket(@Body() reqModel: GetTicketModel): Promise<GetTicketByIdModel> {
         try {
@@ -73,9 +76,13 @@ export class TicketsController {
      * @returns GetAllTicketsModel with list of all tickets
      */
     @Post('getAllTickets')
-    async getAllTickets(): Promise<GetAllTicketsModel> {
+    @ApiOperation({ summary: 'Get all tickets' })
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getAllTickets(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllTicketsModel> {
         try {
-            return await this.service.getAllTickets();
+            // Updated to pass companyId if service supports it, otherwise generic get
+            // Assuming service update might be needed later, but standardizing controller signature first
+            return await this.service.getAllTickets(reqModel.id);
         } catch (error) {
             return returnException(GetAllTicketsModel, error);
         }
@@ -87,6 +94,7 @@ export class TicketsController {
      * @returns GlobalResponse indicating deletion success
      */
     @Post('deleteTicket')
+    @ApiOperation({ summary: 'Delete ticket' })
     @ApiBody({ type: DeleteTicketModel })
     async deleteTicket(@Body() reqModel: DeleteTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -104,6 +112,7 @@ export class TicketsController {
      * @returns GetAllTicketsModel with list of user's tickets
      */
     @Post('getMyTickets')
+    @ApiOperation({ summary: 'Get tickets for current user' })
     async getMyTickets(@Req() req: any): Promise<GetAllTicketsModel> {
         try {
             const userEmail = req.user?.email;

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { TicketsRepository, EmployeesRepository } from '../../repository';
-import { TicketsEntity } from '../../entities/tickets.entity';
+import { TicketsRepository } from './repositories/tickets.repository';
+import { EmployeesRepository } from '../employees/repositories/employees.repository';
+import { TicketsEntity } from './entities/tickets.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel } from '@adminvault/shared-models';
@@ -186,15 +187,21 @@ export class TicketsService {
      * Retrieve all tickets in the system
      * Fetches complete list of all support tickets with employee details
      * 
+     * @param companyId - Optional company ID to filter tickets
      * @returns GetAllTicketsModel with list of all tickets
      * @throws Error if database query fails
      */
-    async getAllTickets(): Promise<GetAllTicketsModel> {
+    async getAllTickets(companyId?: number): Promise<GetAllTicketsModel> {
         try {
-            const tickets = await this.ticketsRepo
+            const query = this.ticketsRepo
                 .createQueryBuilder('ticket')
-                .orderBy('ticket.createdAt', 'DESC')
-                .getMany();
+                .orderBy('ticket.createdAt', 'DESC');
+
+            if (companyId) {
+                query.where('ticket.companyId = :companyId', { companyId });
+            }
+
+            const tickets = await query.getMany();
 
             const responses = tickets.map(t => new TicketResponseModel(
                 t.id,

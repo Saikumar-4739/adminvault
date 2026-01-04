@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { AuthUsersRepository } from '../../repository/auth-users.repository';
-import { AuthUsersEntity } from '../../entities/auth-users.entity';
+import { AuthUsersRepository } from './repositories/auth-users.repository';
+import { AuthUsersEntity } from './entities/auth-users.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, CreateLoginSessionModel } from '@adminvault/shared-models';
@@ -25,7 +25,6 @@ export class AuthUsersService {
         private loginSessionService: LoginSessionService,
         private mailService: MailService,
         private jwtService: JwtService,
-        private auditLogsService: AuditLogsService
     ) { }
 
 
@@ -45,16 +44,11 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "Email already exists")
             }
 
-            if (!reqModel.companyId) {
-                throw new ErrorResponse(0, "Company ID is required")
-            }
-
-            if (reqModel.password.length < 8) {
-                throw new ErrorResponse(0, "Password must be at least 8 characters long")
+            if (!reqModel.companyId || reqModel.companyId <= 0 ||  reqModel.password.length < 8) {
+                throw new ErrorResponse(0, "Invalid company ID or password")
             }
 
             const passwordHash = await bcrypt.hash(reqModel.password, 10)
-
             await transManager.startTransaction()
             const newUser = new AuthUsersEntity()
             newUser.email = reqModel.email
@@ -68,18 +62,6 @@ export class AuthUsersService {
             newUser.updatedAt = new Date()
             const save = await transManager.getRepository(AuthUsersEntity).save(newUser)
             await transManager.completeTransaction()
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'REGISTER_USER',
-                resource: 'Auth',
-                details: `User ${newUser.email} registered`,
-                status: 'SUCCESS',
-                userId: save.id,
-                companyId: newUser.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "User Created Successfully")
         } catch (err) {
             await transManager.releaseTransaction()
@@ -120,10 +102,6 @@ export class AuthUsersService {
      */
     async loginUser(reqModel: LoginUserModel, req?: any): Promise<LoginResponseModel> {
         try {
-            if (reqModel.latitude && reqModel.longitude) {
-                // GPS coordinates provided
-            }
-
             const user = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
             if (!user) {
                 if (req) {
@@ -151,22 +129,10 @@ export class AuthUsersService {
 
             if (req) {
                 try {
-                    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || '127.0.0.1';
+                    const ipAddress = this.extractClientIp(req);
                     const userAgent = req.headers['user-agent'];
                     const loginSessionModel = new CreateLoginSessionModel(user.id, user.companyId, ipAddress, userAgent, 'email_password', accessToken, reqModel.latitude, reqModel.longitude);
                     await this.loginSessionService.createLoginSession(loginSessionModel);
-
-                    // AUDIT LOG
-                    await this.auditLogsService.create({
-                        action: 'LOGIN_SUCCESS',
-                        resource: 'Auth',
-                        details: `User ${user.email} logged in successfully`,
-                        status: 'SUCCESS',
-                        ipAddress: ipAddress,
-                        userId: user.id,
-                        companyId: user.companyId
-                    });
-
                 } catch (sessionError) {
                     throw sessionError;
                 }
@@ -176,6 +142,17 @@ export class AuthUsersService {
         } catch (err) {
             throw err;
         }
+    }
+
+    private extractClientIp(req: any): string {
+        let ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || '127.0.0.1';
+        if (typeof ip === 'string' && ip.includes(',')) {
+            ip = ip.split(',')[0].trim();
+        }
+        if (typeof ip === 'string' && ip.startsWith('::ffff:')) {
+            ip = ip.replace('::ffff:', '');
+        }
+        return ip as string;
     }
 
     /**
@@ -210,7 +187,7 @@ export class AuthUsersService {
      */
     private async trackFailedLogin(req: any, email: string, reason: string, userId?: number, companyId?: number, latitude?: number, longitude?: number): Promise<void> {
         try {
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || '127.0.0.1';
+            const ipAddress = this.extractClientIp(req);
             const userAgent = req.headers['user-agent'];
 
             await this.loginSessionService.createFailedLoginAttempt({ userId: userId || 0, companyId: companyId || 0, ipAddress, userAgent, loginMethod: 'email_password', failureReason: reason, attemptedEmail: email, latitude, longitude });
@@ -237,18 +214,6 @@ export class AuthUsersService {
             await transManager.startTransaction();
             await this.authUsersRepo.update({ email: reqModel.email }, { lastLogin: new Date() })
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'LOGOUT',
-                resource: 'Auth',
-                details: `User ${reqModel.email} logged out`,
-                status: 'SUCCESS',
-                userId: existingUser.id,
-                companyId: existingUser.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "User Logged Out Successfully");
         } catch (err) {
             await transManager.releaseTransaction();
@@ -274,18 +239,6 @@ export class AuthUsersService {
             await transManager.startTransaction();
             await this.authUsersRepo.update({ email: reqModel.email }, { fullName: reqModel.fullName, phNumber: reqModel.phNumber })
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_USER',
-                resource: 'Auth',
-                details: `User ${reqModel.email} profile updated`,
-                status: 'SUCCESS',
-                userId: userId || existingUser.id,
-                companyId: existingUser.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "User Logged Out Successfully");
         } catch (err) {
             await transManager.releaseTransaction();
@@ -311,18 +264,6 @@ export class AuthUsersService {
             await transManager.startTransaction();
             await this.authUsersRepo.delete({ email: reqModel.email })
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'DELETE_USER',
-                resource: 'Auth',
-                details: `User ${reqModel.email} deleted`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: existingUser.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "User Deleted Successfully");
         } catch (err) {
             await transManager.releaseTransaction();
@@ -343,7 +284,6 @@ export class AuthUsersService {
         try {
             const existingUser = await this.authUsersRepo.find({ where: { companyId: reqModel.id } });
             if (!existingUser) {
-                // This seems like it should just return empty list, but keeping existing check logic pattern (though 'existingUser' is array)
                 throw new ErrorResponse(0, "No users found");
             }
 

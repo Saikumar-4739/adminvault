@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import * as crypto from 'crypto';
-import { APIKeyEntity } from '../../../entities/api-key.entity';
+import { APIKeyEntity } from '../entities/api-key.entity';
 
 @Injectable()
 export class APIKeyService {

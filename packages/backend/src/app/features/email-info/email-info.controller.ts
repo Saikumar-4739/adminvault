@@ -1,94 +1,73 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
-import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { EmailInfoService } from './email-info.service';
-import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetAllEmailInfoModel, GetEmailInfoByIdModel } from '@adminvault/shared-models';
+import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetAllEmailInfoModel, GetEmailInfoByIdModel, CompanyIdRequestModel, EmailStatsResponseModel } from '@adminvault/shared-models';
 
-@ApiTags('Email Info')
+@ApiTags('Email Management')
 @Controller('email-info')
+@UseGuards(JwtAuthGuard)
 export class EmailInfoController {
-    constructor(
-        private service: EmailInfoService
-    ) { }
+    constructor(private readonly service: EmailInfoService) { }
 
-    /**
-     * Create a new email info record
-     * @param reqModel - Email info creation data
-     * @returns GlobalResponse indicating creation success
-     */
     @Post('createEmailInfo')
     @ApiBody({ type: CreateEmailInfoModel })
-    async createEmailInfo(@Body() reqModel: CreateEmailInfoModel, @Req() req: any): Promise<GlobalResponse> {
+    async createEmailInfo(@Body() reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.service.createEmailInfo(reqModel, userId, ipAddress);
-        } catch (error) {
+             return await this.service.createEmailInfo(reqModel); 
+            } catch (error) { 
             return returnException(GlobalResponse, error);
-        }
+             }
     }
 
-    /**
-     * Update existing email info record
-     * @param reqModel - Email info update data
-     * @returns GlobalResponse indicating update success
-     */
     @Post('updateEmailInfo')
     @ApiBody({ type: UpdateEmailInfoModel })
-    async updateEmailInfo(@Body() reqModel: UpdateEmailInfoModel, @Req() req: any): Promise<GlobalResponse> {
-        try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.service.updateEmailInfo(reqModel, userId, ipAddress);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
+    async updateEmailInfo(@Body() reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
+        try { 
+            return await this.service.updateEmailInfo(reqModel);
+         } catch (error) { 
+            return returnException(GlobalResponse, error); 
+         }
     }
 
-    /**
-     * Retrieve a specific email info record by ID
-     * @param reqModel - Request with email info ID
-     * @returns GetEmailInfoByIdModel with email info details
-     */
     @Post('getEmailInfo')
     @ApiBody({ type: GetEmailInfoModel })
     async getEmailInfo(@Body() reqModel: GetEmailInfoModel): Promise<GetEmailInfoByIdModel> {
-        try {
-            return await this.service.getEmailInfo(reqModel);
-        } catch (error) {
-            return returnException(GetEmailInfoByIdModel, error);
-        }
+        try { 
+            return await this.service.getEmailInfo(reqModel); 
+         } catch (error) { 
+            return returnException(GetEmailInfoByIdModel, error); 
+         }
     }
 
-    /**
-     * Retrieve all email info records, optionally filtered by company
-     * @param companyId - Optional company ID query parameter
-     * @returns GetAllEmailInfoModel with list of email info records
-     */
     @Post('getAllEmailInfo')
-    @ApiQuery({ name: 'companyId', required: false, type: Number })
-    async getAllEmailInfo(@Query('companyId') companyId?: number): Promise<GetAllEmailInfoModel> {
-        try {
-            return await this.service.getAllEmailInfo(companyId);
-        } catch (error) {
-            return returnException(GetAllEmailInfoModel, error);
-        }
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getAllEmailInfo(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllEmailInfoModel> {
+        try { 
+            return await this.service.getAllEmailInfo(reqModel.id); 
+         } catch (error) { 
+            return returnException(GetAllEmailInfoModel, error); 
+         }
     }
 
-    /**
-     * Delete an email info record
-     * @param reqModel - Request with email info ID
-     * @returns GlobalResponse indicating deletion success
-     */
+    @Post('getEmailStats')
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getEmailStats(@Body() reqModel: CompanyIdRequestModel): Promise<EmailStatsResponseModel> {
+        try { 
+            return await this.service.getEmailStats(reqModel.id); 
+         } catch (error) { 
+            return returnException(EmailStatsResponseModel, error); 
+         }
+    }
+
     @Post('deleteEmailInfo')
     @ApiBody({ type: DeleteEmailInfoModel })
-    async deleteEmailInfo(@Body() reqModel: DeleteEmailInfoModel, @Req() req: any): Promise<GlobalResponse> {
-        try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.service.deleteEmailInfo(reqModel, userId, ipAddress);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
+    async deleteEmailInfo(@Body() reqModel: DeleteEmailInfoModel): Promise<GlobalResponse> {
+        try { 
+            return await this.service.deleteEmailInfo(reqModel); 
+         } catch (error) { 
+            return returnException(GlobalResponse, error); 
+         }
     }
 }

@@ -1,23 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { DocumentRepository } from '../../repository/document.repository';
-import {
-    UploadDocumentModel, DeleteDocumentModel, GetDocumentModel,
-    GetAllDocumentsModel, GetDocumentByIdModel, DocumentModel, UploadDocumentResponseModel
-} from '@adminvault/shared-models';
+import { DataSource } from 'typeorm';
+import { UploadDocumentModel, DeleteDocumentModel, GetDocumentModel, GetAllDocumentsModel, GetDocumentByIdModel, DocumentModel, UploadDocumentResponseModel } from '@adminvault/shared-models';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import * as path from 'path';
 import * as fs from 'fs';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { DocumentRepository } from './repositories/document.repository';
+import { GenericTransactionManager } from '../../../database/typeorm-transactions';
+import { DocumentEntity } from './entities/document.entity';
 
 @Injectable()
 export class DocumentsService {
     private readonly uploadPath = path.join(process.cwd(), 'uploads', 'documents');
 
     constructor(
-        private documentRepo: DocumentRepository,
-        private auditLogsService: AuditLogsService
+        private readonly dataSource: DataSource,
+        private readonly documentRepo: DocumentRepository
     ) {
-        // Ensure upload directory exists
         if (!fs.existsSync(this.uploadPath)) {
             fs.mkdirSync(this.uploadPath, { recursive: true });
         }
@@ -32,55 +30,49 @@ export class DocumentsService {
      * @returns UploadDocumentResponseModel with saved document details
      * @throws ErrorResponse if file save or database operation fails
      */
-    async uploadDocument(reqModel: UploadDocumentModel, file: Express.Multer.File, userId?: number, ipAddress?: string): Promise<UploadDocumentResponseModel> {
+    async uploadDocument(reqModel: UploadDocumentModel, file: Express.Multer.File): Promise<UploadDocumentResponseModel> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        let fileSaved = false;
+        let filePath = '';
         try {
             if (!file) {
                 throw new ErrorResponse(400, 'No file uploaded');
             }
 
             if (!reqModel.userId) {
-                throw new ErrorResponse(400, 'User ID is required'); // Ensure User ID is present
+                throw new ErrorResponse(400, 'User ID is required');
             }
 
-            // Sanitize original name and create unique stored name
             const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
             const fileName = `${Date.now()}-${sanitizedOriginalName}`;
-            const filePath = path.join(this.uploadPath, fileName);
-
+            filePath = path.join(this.uploadPath, fileName);
             // Save file to disk
             fs.writeFileSync(filePath, file.buffer);
+            fileSaved = true;
 
-            const document = this.documentRepo.create({
-                fileName,
-                originalName: file.originalname,
-                fileSize: file.size,
-                mimeType: file.mimetype,
-                category: reqModel.category || 'General',
-                filePath: filePath,
-                uploadedBy: Number(reqModel.userId),
-                description: reqModel.description,
-                tags: reqModel.tags,
-                companyId: Number(reqModel.companyId),
-                userId: Number(reqModel.userId)
-            });
+            await transManager.startTransaction();
 
-            const saved = await this.documentRepo.save(document);
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPLOAD_DOCUMENT',
-                resource: 'Document',
-                details: `Document ${file.originalname} uploaded`,
-                status: 'SUCCESS',
-                userId: userId || Number(reqModel.userId),
-                companyId: Number(reqModel.companyId),
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
-            return new UploadDocumentResponseModel(true, 201, 'Document uploaded successfully', saved as DocumentModel);
-        } catch (error: any) {
-            console.error('File Upload Error:', error);
-            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, `Failed to upload document: ${error.message}`);
+            const document = new DocumentEntity();
+            document.fileName = fileName;
+            document.originalName = file.originalname;
+            document.fileSize = file.size;
+            document.mimeType = file.mimetype;
+            document.category = reqModel.category || 'General';
+            document.filePath = filePath;
+            document.uploadedBy = Number(reqModel.userId);
+            document.description = reqModel.description;
+            document.tags = reqModel.tags;
+            document.companyId = Number(reqModel.companyId);
+            document.userId = Number(reqModel.userId);
+            const saved = await transManager.getRepository(DocumentEntity).save(document);
+            await transManager.completeTransaction();
+            return new UploadDocumentResponseModel(true, 201, 'Document uploaded successfully', saved as unknown as DocumentModel);
+        } catch (error) {
+            await transManager.releaseTransaction();
+            if (fileSaved && fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+            throw error;
         }
     }
 
@@ -92,34 +84,29 @@ export class DocumentsService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if document not found or deletion fails
      */
-    async deleteDocument(reqModel: DeleteDocumentModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async deleteDocument(reqModel: DeleteDocumentModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const document = await this.documentRepo.findOne({ where: { id: reqModel.id } });
             if (!document) {
                 throw new ErrorResponse(404, 'Document not found');
             }
 
+            await transManager.startTransaction();
+            
+            // Delete from DB first
+            await transManager.getRepository(DocumentEntity).delete(reqModel.id);
+
             // Delete file from disk
             if (fs.existsSync(document.filePath)) {
                 fs.unlinkSync(document.filePath);
             }
 
-            await this.documentRepo.delete(reqModel.id);
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'DELETE_DOCUMENT',
-                resource: 'Document',
-                details: `Document ${document.originalName} deleted`,
-                status: 'SUCCESS',
-                userId: userId || document.userId, // Assuming document stores uploader, or fetch current user context if available
-                companyId: document.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
+            await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Document deleted successfully');
         } catch (error) {
-            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to delete document');
+            await transManager.releaseTransaction();
+            throw error;
         }
     }
 
@@ -137,9 +124,9 @@ export class DocumentsService {
             if (!document) {
                 throw new ErrorResponse(404, 'Document not found');
             }
-            return new GetDocumentByIdModel(true, 200, 'Document retrieved successfully', document as DocumentModel);
+            return new GetDocumentByIdModel(true, 200, 'Document retrieved successfully', document as unknown as DocumentModel);
         } catch (error) {
-            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to fetch document');
+            throw error;
         }
     }
 
@@ -159,9 +146,9 @@ export class DocumentsService {
             if (category) where.category = category;
 
             const documents = await this.documentRepo.find({ where, order: { createdAt: 'DESC' } });
-            return new GetAllDocumentsModel(true, 200, 'Documents retrieved successfully', documents as DocumentModel[]);
+            return new GetAllDocumentsModel(true, 200, 'Documents retrieved successfully', documents as unknown as DocumentModel[]);
         } catch (error) {
-            throw new ErrorResponse(500, 'Failed to fetch documents');
+            throw error;
         }
     }
 
@@ -184,7 +171,7 @@ export class DocumentsService {
             }
             return { filePath: document.filePath, originalName: document.originalName };
         } catch (error) {
-            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to download document');
+            throw error;
         }
     }
 }

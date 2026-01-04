@@ -2,8 +2,8 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
-import { MFASettingsEntity } from '../../../entities/mfa-settings.entity';
-import { AuthUsersEntity } from '../../../entities/auth-users.entity';
+import { MFASettingsEntity } from '../entities/mfa-settings.entity';
+import { AuthUsersEntity } from '../../auth-users/entities/auth-users.entity';
 
 @Injectable()
 export class MFAService {

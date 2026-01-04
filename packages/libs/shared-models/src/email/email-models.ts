@@ -82,7 +82,6 @@ export class EmailInfoResponseModel {
 
 export class GetAllEmailInfoModel extends GlobalResponse {
     override data: EmailInfoResponseModel[];
-
     constructor(status: boolean, code: number, message: string, data: EmailInfoResponseModel[]) {
         super(status, code, message);
         this.data = data;
@@ -91,8 +90,18 @@ export class GetAllEmailInfoModel extends GlobalResponse {
 
 export class GetEmailInfoByIdModel extends GlobalResponse {
     override data: EmailInfoResponseModel;
-
     constructor(status: boolean, code: number, message: string, data: EmailInfoResponseModel) {
+        super(status, code, message);
+        this.data = data;
+    }
+}
+
+export class EmailStatsResponseModel extends GlobalResponse {
+    override data: {
+        byType: any[];
+        byStatus: any[];
+    };
+    constructor(status: boolean, code: number, message: string, data: { byType: any[]; byStatus: any[] }) {
         super(status, code, message);
         this.data = data;
     }

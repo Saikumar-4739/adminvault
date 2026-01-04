@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SupportController } from './support.controller';
 import { SupportService } from './support.service';
-import { SupportTicketEntity } from '../../entities/support-ticket.entity';
+import { SupportTicketEntity } from './entities/support-ticket.entity';
 
 @Module({
     imports: [TypeOrmModule.forFeature([SupportTicketEntity])],

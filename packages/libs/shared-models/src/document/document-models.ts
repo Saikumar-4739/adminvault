@@ -27,6 +27,11 @@ export class UploadDocumentModel {
     userId!: number;
 }
 
+export class FilterDocumentModel {
+    companyId?: number;
+    category?: string;
+}
+
 export class DeleteDocumentModel {
     id!: number;
     userId!: number;

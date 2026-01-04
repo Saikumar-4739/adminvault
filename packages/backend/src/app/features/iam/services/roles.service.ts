@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { RoleEntity } from '../../../entities/role.entity';
-import { PermissionEntity } from '../../../entities/permission.entity';
+import { RoleEntity } from '../entities/role.entity';
+import { PermissionEntity } from '../entities/permission.entity';
 
 @Injectable()
 export class RolesService {

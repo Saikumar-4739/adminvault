@@ -11,6 +11,10 @@ export class CreateEmployeeModel {
     billingAmount?: number;
     departmentId: number;
     remarks?: string;
+    slackUserId?: string;
+    slackDisplayName?: string;
+    slackAvatar?: string;
+    isSlackActive?: boolean;
 
     constructor(
         companyId: number,
@@ -21,7 +25,11 @@ export class CreateEmployeeModel {
         empStatus: EmployeeStatusEnum = EmployeeStatusEnum.ACTIVE,
         phNumber?: string,
         billingAmount?: number,
-        remarks?: string
+        remarks?: string,
+        slackUserId?: string,
+        slackDisplayName?: string,
+        slackAvatar?: string,
+        isSlackActive?: boolean
     ) {
         this.companyId = companyId;
         this.firstName = firstName;
@@ -32,6 +40,10 @@ export class CreateEmployeeModel {
         this.phNumber = phNumber;
         this.billingAmount = billingAmount;
         this.remarks = remarks;
+        this.slackUserId = slackUserId;
+        this.slackDisplayName = slackDisplayName;
+        this.slackAvatar = slackAvatar;
+        this.isSlackActive = isSlackActive;
     }
 }
 
@@ -48,9 +60,13 @@ export class UpdateEmployeeModel extends CreateEmployeeModel {
         empStatus: EmployeeStatusEnum = EmployeeStatusEnum.ACTIVE,
         phNumber?: string,
         billingAmount?: number,
-        remarks?: string
+        remarks?: string,
+        slackUserId?: string,
+        slackDisplayName?: string,
+        slackAvatar?: string,
+        isSlackActive?: boolean
     ) {
-        super(companyId, firstName, lastName, email, departmentId, empStatus, phNumber, billingAmount, remarks);
+        super(companyId, firstName, lastName, email, departmentId, empStatus, phNumber, billingAmount, remarks, slackUserId, slackDisplayName, slackAvatar, isSlackActive);
         this.id = id;
     }
 }
@@ -83,6 +99,10 @@ export class EmployeeResponseModel {
     departmentId: number;
     departmentName?: string;
     remarks?: string;
+    slackUserId?: string;
+    slackDisplayName?: string;
+    slackAvatar?: string;
+    isSlackActive?: boolean;
 
     constructor(
         id: number,
@@ -95,7 +115,11 @@ export class EmployeeResponseModel {
         phNumber?: string,
         billingAmount?: number,
         remarks?: string,
-        departmentName?: string
+        departmentName?: string,
+        slackUserId?: string,
+        slackDisplayName?: string,
+        slackAvatar?: string,
+        isSlackActive?: boolean
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -108,6 +132,10 @@ export class EmployeeResponseModel {
         this.billingAmount = billingAmount;
         this.remarks = remarks;
         this.departmentName = departmentName;
+        this.slackUserId = slackUserId;
+        this.slackDisplayName = slackDisplayName;
+        this.slackAvatar = slackAvatar;
+        this.isSlackActive = isSlackActive;
     }
 }
 

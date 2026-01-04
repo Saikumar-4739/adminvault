@@ -1,5 +1,16 @@
 import { GlobalResponse } from '../common/global-response';
 
+export class BulkImportRequestModel {
+    fileBuffer: any;
+    companyId: number;
+    userId: number;
+    constructor(fileBuffer: any, companyId: number, userId: number) {
+        this.fileBuffer = fileBuffer;
+        this.companyId = companyId;
+        this.userId = userId;
+    }
+}
+
 export class BulkImportResponseModel extends GlobalResponse {
     successCount: number;
     errorCount: number;

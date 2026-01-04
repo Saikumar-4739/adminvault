@@ -1,18 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { AssetInfoRepository } from '../../repository/asset-info.repository';
-import { AssetInfoEntity } from '../../entities/asset-info.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, AssetWithAssignmentModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum } from '@adminvault/shared-models';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AssetInfoEntity } from './entities/asset-info.entity';
+import { AssetInfoRepository } from './repositories/asset-info.repository';
 
 @Injectable()
 export class AssetInfoService {
     constructor(
         private dataSource: DataSource,
-        private assetInfoRepo: AssetInfoRepository,
-        private auditLogsService: AuditLogsService
+        private assetInfoRepo: AssetInfoRepository
     ) { }
 
     /**
@@ -23,21 +21,15 @@ export class AssetInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if validation fails or serial number already exists
      */
-    async createAsset(reqModel: CreateAssetModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async createAsset(reqModel: CreateAssetModel, userId?: number): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            if (!reqModel.companyId) {
-                throw new ErrorResponse(0, "Company ID is required");
-            }
-            if (!reqModel.deviceId) {
-                throw new ErrorResponse(0, "Device ID is required");
-            }
-            if (!reqModel.serialNumber) {
-                throw new ErrorResponse(0, "Serial number is required");
+            if (!reqModel.companyId || !reqModel.deviceId || !reqModel.serialNumber) {
+                throw new ErrorResponse(0, "Company ID, Device ID and Serial Number are required");
             }
 
-            const existing = await this.assetInfoRepo.findOne({ where: { serialNumber: reqModel.serialNumber } });
-            if (existing) {
+            const existingModel = await this.assetInfoRepo.findOne({ where: { serialNumber: reqModel.serialNumber } });
+            if (existingModel) {
                 throw new ErrorResponse(0, "Serial number already exists");
             }
 
@@ -46,42 +38,18 @@ export class AssetInfoService {
             entity.companyId = reqModel.companyId;
             entity.deviceId = reqModel.deviceId;
             entity.serialNumber = reqModel.serialNumber;
-
-            // Auto-set status based on assignment
-            if (reqModel.assignedToEmployeeId) {
-                // If employee is assigned, set to IN_USE (unless explicitly set to MAINTENANCE or RETIRED)
-                entity.assetStatusEnum = (reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED)
-                    ? reqModel.assetStatusEnum
-                    : AssetStatusEnum.IN_USE;
-            } else {
-                // If no employee assigned, use provided status or default to AVAILABLE
-                entity.assetStatusEnum = reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE;
-            }
-
-            if (reqModel.brandId !== undefined) entity.brandId = reqModel.brandId;
-            if (reqModel.model !== undefined) entity.model = reqModel.model;
-            if (reqModel.configuration !== undefined) entity.configuration = reqModel.configuration;
-            if (reqModel.assignedToEmployeeId !== undefined) entity.assignedToEmployeeId = reqModel.assignedToEmployeeId;
-            if (reqModel.previousUserEmployeeId !== undefined) entity.previousUserEmployeeId = reqModel.previousUserEmployeeId;
-            if (reqModel.purchaseDate) entity.purchaseDate = new Date(reqModel.purchaseDate);
-            if (reqModel.warrantyExpiry) entity.warrantyExpiry = new Date(reqModel.warrantyExpiry);
-            if (reqModel.userAssignedDate) entity.userAssignedDate = new Date(reqModel.userAssignedDate);
-            if (reqModel.lastReturnDate) entity.lastReturnDate = new Date(reqModel.lastReturnDate);
-
+            entity.brandId = reqModel.brandId;
+            entity.model = reqModel.model;
+            entity.configuration = reqModel.configuration;
+            entity.assignedToEmployeeId = reqModel.assignedToEmployeeId;
+            entity.previousUserEmployeeId = reqModel.previousUserEmployeeId;
+            entity.purchaseDate = reqModel.purchaseDate;
+            entity.warrantyExpiry = reqModel.warrantyExpiry;
+            entity.userAssignedDate = reqModel.userAssignedDate;
+            entity.lastReturnDate = reqModel.lastReturnDate;
+            entity.assetStatusEnum = reqModel.assignedToEmployeeId? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE): (reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE);
             await transManager.getRepository(AssetInfoEntity).save(entity);
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_ASSET',
-                resource: 'Asset',
-                details: `Asset ${entity.serialNumber} created`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: entity.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "Asset created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -97,7 +65,7 @@ export class AssetInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if asset not found or update fails
      */
-    async updateAsset(reqModel: UpdateAssetModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async updateAsset(reqModel: UpdateAssetModel, userId?: number): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -110,46 +78,22 @@ export class AssetInfoService {
             }
 
             await transManager.startTransaction();
-            const entity = new AssetInfoEntity();
-            entity.companyId = reqModel.companyId;
-            entity.deviceId = reqModel.deviceId;
-            entity.serialNumber = reqModel.serialNumber;
-
-            // Auto-set status based on assignment
-            if (reqModel.assignedToEmployeeId) {
-                // If employee is assigned, set to IN_USE (unless explicitly set to MAINTENANCE or RETIRED)
-                entity.assetStatusEnum = (reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED)
-                    ? reqModel.assetStatusEnum
-                    : AssetStatusEnum.IN_USE;
-            } else {
-                // If no employee assigned, use provided status or default to AVAILABLE
-                entity.assetStatusEnum = reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE;
-            }
-
-            if (reqModel.brandId !== undefined) entity.brandId = reqModel.brandId;
-            if (reqModel.model !== undefined) entity.model = reqModel.model;
-            if (reqModel.configuration !== undefined) entity.configuration = reqModel.configuration;
-            if (reqModel.assignedToEmployeeId !== undefined) entity.assignedToEmployeeId = reqModel.assignedToEmployeeId;
-            if (reqModel.previousUserEmployeeId !== undefined) entity.previousUserEmployeeId = reqModel.previousUserEmployeeId;
-            if (reqModel.purchaseDate) entity.purchaseDate = new Date(reqModel.purchaseDate);
-            if (reqModel.warrantyExpiry) entity.warrantyExpiry = new Date(reqModel.warrantyExpiry);
-            if (reqModel.userAssignedDate) entity.userAssignedDate = new Date(reqModel.userAssignedDate);
-            if (reqModel.lastReturnDate) entity.lastReturnDate = new Date(reqModel.lastReturnDate);
-
-            await transManager.getRepository(AssetInfoEntity).update(reqModel.id, entity);
+            existing.companyId = reqModel.companyId;
+            existing.deviceId = reqModel.deviceId;
+            existing.serialNumber = reqModel.serialNumber;
+            existing.brandId = reqModel.brandId;
+            existing.model = reqModel.model;
+            existing.configuration = reqModel.configuration;
+            existing.assignedToEmployeeId = reqModel.assignedToEmployeeId;
+            existing.previousUserEmployeeId = reqModel.previousUserEmployeeId;
+            existing.purchaseDate = reqModel.purchaseDate ? new Date(reqModel.purchaseDate) : null;
+            existing.warrantyExpiry = reqModel.warrantyExpiry ? new Date(reqModel.warrantyExpiry) : null;
+            existing.userAssignedDate = reqModel.userAssignedDate ? new Date(reqModel.userAssignedDate) : null;
+            existing.lastReturnDate = reqModel.lastReturnDate ? new Date(reqModel.lastReturnDate) : null;
+            existing.userId = userId || existing.userId;
+            existing.assetStatusEnum = reqModel.assignedToEmployeeId? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE): (reqModel.assetStatusEnum || existing.assetStatusEnum || AssetStatusEnum.AVAILABLE);
+            await transManager.getRepository(AssetInfoEntity).save(existing);
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_ASSET',
-                resource: 'Asset',
-                details: `Asset ${entity.serialNumber || reqModel.id} updated`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: entity.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "Asset updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -209,7 +153,7 @@ export class AssetInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if asset not found or deletion fails
      */
-    async deleteAsset(reqModel: DeleteAssetModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async deleteAsset(reqModel: DeleteAssetModel, userId?: number): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -224,18 +168,6 @@ export class AssetInfoService {
             await transManager.startTransaction();
             await transManager.getRepository(AssetInfoEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'DELETE_ASSET',
-                resource: 'Asset',
-                details: `Asset ${reqModel.id} deleted`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: existing.companyId,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "Asset deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -290,7 +222,6 @@ export class AssetInfoService {
             }
 
             const assets = await this.assetInfoRepo.searchAssets(reqModel);
-            // Return raw data to preserve assignedTo and other joined fields
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", assets as any);
         } catch (error) {
             throw error;

@@ -9,14 +9,11 @@ import { EmailInfoModule } from './features/email-info/email-info.module';
 import { DeviceInfoModule } from './features/masters/device-info/device-info.module';
 import { TicketsModule } from './features/tickets/tickets.module';
 import { AssetInfoModule } from './features/asset-info/asset-info.module';
-import { AssetAssignModule } from './features/asset-assign/asset-assign.module';
 import { MastersModule } from './features/masters/masters.module';
 import { LicensesModule } from './features/licenses/licenses.module';
 import { DatabaseModule } from '../database/database.module';
-import { EmailAccountsModule } from './features/email-accounts/email-accounts.module';
 import { ReportsModule } from './features/reports/reports.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
-import { SlackUsersModule } from './features/slack-users/slack-users.module';
 import { DocumentsModule } from './features/documents/documents.module';
 import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
 import { IAMModule } from './features/iam/iam.module';
@@ -42,13 +39,10 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     DeviceInfoModule,
     TicketsModule,
     AssetInfoModule,
-    AssetAssignModule,
     MastersModule,
     LicensesModule,
-    EmailAccountsModule,
     ReportsModule,
     DashboardModule,
-    SlackUsersModule,
     DocumentsModule,
     AuditLogsModule,
     IAMModule,

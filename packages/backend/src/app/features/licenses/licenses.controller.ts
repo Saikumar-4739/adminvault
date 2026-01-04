@@ -20,10 +20,11 @@ export class LicensesController {
 
     /**
      * Retrieve all license assignments, optionally filtered by company
-     * @param companyId - Optional company ID query parameter
+     * @param reqModel - Request with company ID
      * @returns GetAllLicensesModel with license data
      */
     @Post('findAll')
+    @ApiBody({ type: CompanyIdRequestModel })
     async findAll(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllLicensesModel> {
         try {
             return await this.licensesService.findAll(reqModel.id);
@@ -34,10 +35,11 @@ export class LicensesController {
 
     /**
      * Get license statistics for dashboard
-     * @param companyId - Optional company ID query parameter
+     * @param reqModel - Request with company ID
      * @returns GetLicenseStatsModel with license statistics
      */
     @Post('stats')
+    @ApiBody({ type: CompanyIdRequestModel })
     async getStats(@Body() reqModel: CompanyIdRequestModel): Promise<GetLicenseStatsModel> {
         try {
             return await this.licensesService.getStats(reqModel.id);

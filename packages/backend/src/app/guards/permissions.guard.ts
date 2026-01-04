@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@
 import { Reflector } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import { PERMISSION_KEY, RequiredPermission } from '../decorators/permissions.decorator';
-import { AuthUsersEntity } from '../entities/auth-users.entity';
+import { AuthUsersEntity } from '../features/auth-users/entities/auth-users.entity';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {

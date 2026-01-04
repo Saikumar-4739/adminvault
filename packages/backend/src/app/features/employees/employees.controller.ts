@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
-import { ApiBody, ApiTags, ApiQuery, ApiConsumes } from '@nestjs/swagger';
+import { Body, Controller, Post, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { ApiBody, ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { EmployeesService } from './employees.service';
 import { EmployeesBulkService } from './employees-bulk.service';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesModel, GetEmployeeByIdModel, BulkImportResponseModel } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesModel, GetEmployeeByIdModel, BulkImportResponseModel, CompanyIdRequestModel, CreateSlackUserModel, UpdateSlackUserModel, DeleteSlackUserModel, GetSlackUserModel, GetSlackUserByIdModel, GetAllSlackUsersModel } from '@adminvault/shared-models';
 
 @ApiTags('Employees')
 @Controller('employees')
@@ -92,14 +92,14 @@ export class EmployeesController {
 
     /**
      * Retrieve all employees, optionally filtered by company
-     * @param companyId - Optional company ID query parameter
+     * @param reqModel - Request with company ID
      * @returns GetAllEmployeesModel with list of employees
      */
     @Post('getAllEmployees')
-    @ApiQuery({ name: 'companyId', required: false, type: Number })
-    async getAllEmployees(@Query('companyId') companyId?: number): Promise<GetAllEmployeesModel> {
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getAllEmployees(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllEmployeesModel> {
         try {
-            return await this.service.getAllEmployees(companyId);
+            return await this.service.getAllEmployees(reqModel.id);
         } catch (error) {
             return returnException(GetAllEmployeesModel, error);
         }
@@ -117,6 +117,57 @@ export class EmployeesController {
             return await this.service.deleteEmployee(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
+        }
+    }
+
+    // Slack User Endpoints
+    @Post('createSlackUser')
+    @ApiBody({ type: CreateSlackUserModel })
+    async createSlackUser(@Body() reqModel: CreateSlackUserModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.createSlackUser(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('updateSlackUser')
+    @ApiBody({ type: UpdateSlackUserModel })
+    async updateSlackUser(@Body() reqModel: UpdateSlackUserModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.updateSlackUser(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('deleteSlackUser')
+    @ApiBody({ type: DeleteSlackUserModel })
+    async deleteSlackUser(@Body() reqModel: DeleteSlackUserModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.deleteSlackUser(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('getSlackUser')
+    @ApiBody({ type: GetSlackUserModel })
+    async getSlackUser(@Body() reqModel: GetSlackUserModel): Promise<GetSlackUserByIdModel> {
+        try {
+            return await this.service.getSlackUser(reqModel);
+        } catch (error) {
+            return returnException(GetSlackUserByIdModel, error);
+        }
+    }
+
+    @Post('getAllSlackUsers')
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getAllSlackUsers(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllSlackUsersModel> {
+        try {
+            return await this.service.getAllSlackUsers(reqModel.id);
+        } catch (error) {
+            return returnException(GetAllSlackUsersModel, error);
         }
     }
 }

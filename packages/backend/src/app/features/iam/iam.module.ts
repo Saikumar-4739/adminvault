@@ -1,11 +1,11 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RoleEntity } from '../../entities/role.entity';
-import { PermissionEntity } from '../../entities/permission.entity';
-import { AuthUsersEntity } from '../../entities/auth-users.entity';
-import { MFASettingsEntity } from '../../entities/mfa-settings.entity';
-import { APIKeyEntity } from '../../entities/api-key.entity';
-import { SSOProviderEntity } from '../../entities/sso-provider.entity';
+import { RoleEntity } from './entities/role.entity';
+import { PermissionEntity } from './entities/permission.entity';
+import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { MFASettingsEntity } from './entities/mfa-settings.entity';
+import { APIKeyEntity } from './entities/api-key.entity';
+import { SSOProviderEntity } from './entities/sso-provider.entity';
 
 import { RolesService } from './services/roles.service';
 import { PermissionsService } from './services/permissions.service';
@@ -20,7 +20,7 @@ import { APIKeyController } from './controllers/api-key.controller';
 import { SSOController } from './controllers/sso.controller';
 
 import { LoginSessionService } from '../auth-users/login-session.service';
-import { UserLoginSessionRepository } from '../../repository/user-login-session.repository';
+import { UserLoginSessionRepository } from './repositories/user-login-session.repository';
 
 @Module({
     imports: [

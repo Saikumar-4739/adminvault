@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { SSOProviderEntity } from '../../../entities/sso-provider.entity';
+import { SSOProviderEntity } from '../entities/sso-provider.entity';
 
 @Injectable()
 export class SSOService {

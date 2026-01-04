@@ -8,15 +8,10 @@ const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb7
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor() {
-        super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: false,
-            secretOrKey: SECRET_KEY,
-        });
+        super({ jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), ignoreExpiration: false, secretOrKey: SECRET_KEY });
     }
 
     async validate(payload: any) {
-        // payload matches what we sign in AuthUsersService
         return { userId: payload.sub, email: payload.email, companyId: payload.companyId };
     }
 }
