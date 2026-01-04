@@ -29,7 +29,7 @@
   "dependencies": {
     "@adminvault/backend-utils": "*",
     "dotenv": "^17.2.3",
-    "nodemailer": "^6.9.13",
+    "nodemailer": "^7.0.12",
     "@nestjs/passport": "^11.0.0",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/microservices": "^11.0.0",
