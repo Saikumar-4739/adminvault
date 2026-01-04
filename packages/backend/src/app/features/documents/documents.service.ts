@@ -7,12 +7,16 @@ import {
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import * as path from 'path';
 import * as fs from 'fs';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class DocumentsService {
     private readonly uploadPath = path.join(process.cwd(), 'uploads', 'documents');
 
-    constructor(private documentRepo: DocumentRepository) {
+    constructor(
+        private documentRepo: DocumentRepository,
+        private auditLogsService: AuditLogsService
+    ) {
         // Ensure upload directory exists
         if (!fs.existsSync(this.uploadPath)) {
             fs.mkdirSync(this.uploadPath, { recursive: true });
@@ -28,10 +32,14 @@ export class DocumentsService {
      * @returns UploadDocumentResponseModel with saved document details
      * @throws ErrorResponse if file save or database operation fails
      */
-    async uploadDocument(reqModel: UploadDocumentModel, file: Express.Multer.File): Promise<UploadDocumentResponseModel> {
+    async uploadDocument(reqModel: UploadDocumentModel, file: Express.Multer.File, userId?: number, ipAddress?: string): Promise<UploadDocumentResponseModel> {
         try {
             if (!file) {
                 throw new ErrorResponse(400, 'No file uploaded');
+            }
+
+            if (!reqModel.userId) {
+                throw new ErrorResponse(400, 'User ID is required'); // Ensure User ID is present
             }
 
             // Sanitize original name and create unique stored name
@@ -57,6 +65,18 @@ export class DocumentsService {
             });
 
             const saved = await this.documentRepo.save(document);
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPLOAD_DOCUMENT',
+                resource: 'Document',
+                details: `Document ${file.originalname} uploaded`,
+                status: 'SUCCESS',
+                userId: userId || Number(reqModel.userId),
+                companyId: Number(reqModel.companyId),
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new UploadDocumentResponseModel(true, 201, 'Document uploaded successfully', saved as DocumentModel);
         } catch (error: any) {
             console.error('File Upload Error:', error);
@@ -72,7 +92,7 @@ export class DocumentsService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if document not found or deletion fails
      */
-    async deleteDocument(reqModel: DeleteDocumentModel): Promise<GlobalResponse> {
+    async deleteDocument(reqModel: DeleteDocumentModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         try {
             const document = await this.documentRepo.findOne({ where: { id: reqModel.id } });
             if (!document) {
@@ -85,6 +105,18 @@ export class DocumentsService {
             }
 
             await this.documentRepo.delete(reqModel.id);
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'DELETE_DOCUMENT',
+                resource: 'Document',
+                details: `Document ${document.originalName} deleted`,
+                status: 'SUCCESS',
+                userId: userId || document.userId, // Assuming document stores uploader, or fetch current user context if available
+                companyId: document.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 200, 'Document deleted successfully');
         } catch (error) {
             throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to delete document');

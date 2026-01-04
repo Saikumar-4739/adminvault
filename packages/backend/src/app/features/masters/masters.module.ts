@@ -19,6 +19,7 @@ import { ExpenseCategoriesMasterEntity } from '../../entities/masters/expense-ca
 import { PasswordVaultMasterEntity } from '../../entities/masters/password-vault.entity';
 import { PasswordVaultRepository } from '../../repository/masters/password-vault.repository';
 import { CompanyInfoRepository } from '../../repository';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 @Module({
     imports: [
@@ -32,7 +33,8 @@ import { CompanyInfoRepository } from '../../repository';
             ApplicationsMasterEntity,
             ExpenseCategoriesMasterEntity,
             PasswordVaultMasterEntity
-        ])
+        ]),
+        AuditLogsModule
     ],
     controllers: [MastersController],
     providers: [

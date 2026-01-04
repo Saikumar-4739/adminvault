@@ -2,8 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, MessageSquare, FileText, Lock } from 'lucide-react';
-import { useState } from 'react';
+import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
@@ -11,20 +11,31 @@ interface NavigationItem {
     name: string;
     href: string;
     icon: any;
-    roles?: UserRoleEnum[]; // Empty array or undefined means accessible to all
+    roles?: UserRoleEnum[];
 }
 
 const allNavigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Configuration', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
-    { name: 'Assets Info', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Licenses', href: '/licenses', icon: KeySquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Safe Vault', href: '/password-vault', icon: Lock, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+
+    // OPERATIONS SECTION
+    { name: 'IT Asset Inventory', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'License Manager', href: '/licenses', icon: KeySquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'Employee Directory', href: '/employees', icon: Users, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+
+    // SUPPORT & COMMS
     { name: 'Support Tickets', href: '/tickets', icon: Ticket, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Quick Support', href: '/create-ticket', icon: MessageSquare, roles: [UserRoleEnum.USER, UserRoleEnum.VIEWER] },
-    { name: 'Email Info', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
-    { name: 'Documents', href: '/documents', icon: FileText, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    // { name: 'All Reports', href: '/reports', icon: PieChart, roles: [UserRoleEnum.ADMIN] },
+    { name: 'Email Accounts', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
+    { name: 'Document Center', href: '/documents', icon: FileText, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+
+    // SECURITY & ACCESS
+    { name: 'Password Vault', href: '/password-vault', icon: Lock, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'IAM & SSO', href: '/iam', icon: ShieldAlert, roles: [UserRoleEnum.ADMIN] },
+    { name: 'My Security', href: '/profile', icon: KeySquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER] },
+
+    // SYSTEM
+    { name: 'Configuration', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
+    { name: 'System Reports', href: '/reports', icon: PieChart, roles: [UserRoleEnum.ADMIN] },
+    { name: 'Audit Logs', href: '/audit-logs', icon: ShieldAlert, roles: [UserRoleEnum.ADMIN] },
 ];
 
 export default function Sidebar() {
@@ -33,19 +44,30 @@ export default function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const permissions = usePermissions();
 
-    // Filter navigation based on user permissions
-    const navigation = allNavigation.filter(item => {
-        // If no roles specified, accessible to all
-        if (!item.roles || item.roles.length === 0) return true;
-        // Check if user has required role
-        return permissions.hasRole(item.roles);
-    });
+    const navigationGroups = [
+        {
+            title: 'System',
+            items: allNavigation.filter(item => ['Dashboard', 'Configuration', 'System Reports', 'Audit Logs'].includes(item.name))
+        },
+        {
+            title: 'Operations',
+            items: allNavigation.filter(item => ['IT Asset Inventory', 'License Manager', 'Employee Directory'].includes(item.name))
+        },
+        {
+            title: 'Support & Comms',
+            items: allNavigation.filter(item => ['Support Tickets', 'Email Accounts', 'Document Center'].includes(item.name))
+        },
+        {
+            title: 'Security & Access',
+            items: allNavigation.filter(item => ['Password Vault', 'IAM & SSO', 'My Security'].includes(item.name))
+        }
+    ];
 
     const SidebarContent = ({ collapsed }: { collapsed: boolean }) => (
         <>
             {/* Logo */}
             <div className={`flex items-center gap-3 px-6 py-6 mb-2 ${collapsed ? 'justify-center px-2' : ''}`}>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/10 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30 ring-1 ring-white/10 shrink-0">
                     <Building2 className="h-5 w-5 text-white" />
                 </div>
                 {!collapsed && (
@@ -57,49 +79,52 @@ export default function Sidebar() {
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 px-4 py-2 space-y-8">
-                <div>
-                    {!collapsed && (
-                        <h3 className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 whitespace-nowrap transition-opacity duration-300">
-                            Main Menu
-                        </h3>
-                    )}
-                    <nav className="space-y-1">
-                        {navigation.map((item) => {
-                            const Icon = item.icon;
-                            // Check exact match for dashboard, startsWith for others to handle sub-routes
-                            const isActive = item.href === '/dashboard'
-                                ? pathname === '/dashboard'
-                                : pathname?.startsWith(item.href);
+            <div className="flex-1 px-4 py-2 space-y-6 overflow-y-auto custom-scrollbar">
+                {navigationGroups.map((group) => {
+                    const filteredItems = group.items.filter(item => {
+                        if (!item.roles || item.roles.length === 0) return true;
+                        return permissions.hasRole(item.roles);
+                    });
 
-                            return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={`relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group font-medium text-sm ${isActive
-                                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-900/30'
-                                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                                        } ${collapsed ? 'justify-center px-2' : ''}`}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    <Icon className={`h-4.5 w-4.5 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
+                    if (filteredItems.length === 0) return null;
 
-                                    {!collapsed && <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>}
+                    return (
+                        <div key={group.title} className="space-y-1">
+                            {!collapsed && (
+                                <h3 className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                    <span className="w-1 h-3 bg-indigo-500/50 rounded-full" />
+                                    {group.title}
+                                </h3>
+                            )}
+                            <nav className="space-y-0.5">
+                                {filteredItems.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = item.href === '/dashboard'
+                                        ? pathname === '/dashboard'
+                                        : pathname?.startsWith(item.href);
 
-                                    {/* Active Indicator Dot */}
-                                    {isActive && !collapsed && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-sm shrink-0" />}
+                                    return (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            className={`relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 group font-medium text-xs ${isActive
+                                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30'
+                                                : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                                } ${collapsed ? 'justify-center px-2' : ''}`}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            <Icon className={`h-4 w-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
 
-                                    {/* Tooltip for collapsed state */}
-                                    {collapsed && (
-                                        <div className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-white text-xs rounded border border-slate-700 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl">
-                                            {item.name}
-                                        </div>
-                                    )}
-                                </Link>
-                            );
-                        })}
-                    </nav>
-                </div>
+                                            {!collapsed && <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>}
+
+                                            {isActive && !collapsed && <div className="ml-auto w-1 h-1 rounded-full bg-white/50" />}
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Collapse Toggle Button (Desktop Only) */}
@@ -151,6 +176,49 @@ export default function Sidebar() {
             >
                 <SidebarContent collapsed={isCollapsed} />
             </aside>
+
+            {/* Scroll to Top Button */}
+            <ScrollToTopButton />
         </>
+    );
+}
+
+function ScrollToTopButton() {
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const mainContent = document.querySelector('main');
+        if (!mainContent) return;
+
+        const toggleVisibility = () => {
+            if (mainContent.scrollTop > 300) {
+                setIsVisible(true);
+            } else {
+                setIsVisible(false);
+            }
+        };
+
+        mainContent.addEventListener('scroll', toggleVisibility, { passive: true });
+        return () => mainContent.removeEventListener('scroll', toggleVisibility);
+    }, []);
+
+    const scrollToTop = () => {
+        const mainContent = document.querySelector('main');
+        mainContent?.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+        });
+    };
+
+    if (!isVisible) return null;
+
+    return (
+        <button
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-300 z-50 animate-bounce"
+            aria-label="Scroll to top"
+        >
+            <ChevronLeft className="h-6 w-6 transform rotate-90" />
+        </button>
     );
 }

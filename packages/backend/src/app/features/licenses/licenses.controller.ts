@@ -1,5 +1,5 @@
 
-import { Body, Controller, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Param, Post, Query, Req } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { LicensesService } from './licenses.service';
@@ -53,9 +53,11 @@ export class LicensesController {
      */
     @Post('create')
     @ApiBody({ type: CreateLicenseModel })
-    async create(@Body() reqModel: CreateLicenseModel): Promise<GlobalResponse> {
+    async create(@Body() reqModel: CreateLicenseModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.licensesService.create(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.licensesService.create(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -68,9 +70,11 @@ export class LicensesController {
      */
     @Post('update')
     @ApiBody({ type: UpdateLicenseModel })
-    async update(@Body() reqModel: UpdateLicenseModel): Promise<GlobalResponse> {
+    async update(@Body() reqModel: UpdateLicenseModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.licensesService.update(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.licensesService.update(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -83,9 +87,11 @@ export class LicensesController {
      */
     @Post('delete')
     @ApiBody({ type: DeleteLicenseModel })
-    async remove(@Body() reqModel: DeleteLicenseModel): Promise<GlobalResponse> {
+    async remove(@Body() reqModel: DeleteLicenseModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.licensesService.remove(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.licensesService.remove(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

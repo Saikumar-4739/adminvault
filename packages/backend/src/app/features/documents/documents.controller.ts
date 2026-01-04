@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Query, Get, Param, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Post, Query, Get, Param, Res, UploadedFile, UseInterceptors, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiTags, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -23,10 +23,13 @@ export class DocumentsController {
     @UseInterceptors(FileInterceptor('file'))
     async uploadDocument(
         @UploadedFile() file: Express.Multer.File,
-        @Body() reqModel: UploadDocumentModel
+        @Body() reqModel: UploadDocumentModel,
+        @Req() req: any
     ): Promise<UploadDocumentResponseModel> {
         try {
-            return await this.service.uploadDocument(reqModel, file);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.uploadDocument(reqModel, file, userId, ipAddress);
         } catch (error) {
             return returnException(UploadDocumentResponseModel, error);
         }
@@ -39,9 +42,11 @@ export class DocumentsController {
      */
     @Post('delete')
     @ApiBody({ type: DeleteDocumentModel })
-    async deleteDocument(@Body() reqModel: DeleteDocumentModel): Promise<GlobalResponse> {
+    async deleteDocument(@Body() reqModel: DeleteDocumentModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.deleteDocument(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.deleteDocument(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

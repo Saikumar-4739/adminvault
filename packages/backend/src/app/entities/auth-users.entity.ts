@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, Index } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, Index, ManyToMany, JoinTable } from 'typeorm';
 import { UserRoleEnum } from '@adminvault/shared-models';
+import { RoleEntity } from './role.entity';
 
 @Entity('auth_users')
 @Index('idx_auth_email', ['email'])
@@ -22,8 +23,16 @@ export class AuthUsersEntity {
   @Column('text', { name: 'password_hash', nullable: false, comment: 'Hashed password' })
   passwordHash: string;
 
-  @Column('enum', { name: 'user_role', enum: UserRoleEnum, default: UserRoleEnum.USER, nullable: false, comment: 'User role in the system' })
+  @Column('enum', { name: 'user_role', enum: UserRoleEnum, default: UserRoleEnum.USER, nullable: false, comment: 'Legacy user role' })
   userRole: UserRoleEnum;
+
+  @ManyToMany(() => RoleEntity)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' }
+  })
+  roles: RoleEntity[];
 
   @Column('boolean', { name: 'status', default: true, nullable: false, comment: 'User active status' })
   status: boolean;

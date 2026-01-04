@@ -41,24 +41,24 @@ export default function StatCard({
     return (
         <Card className={cardClasses} onClick={onClick}>
             {isLoading ? (
-                <div className="p-6 animate-pulse space-y-4">
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
-                    <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+                <div className="p-3 animate-pulse space-y-2">
+                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                    <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
                 </div>
             ) : (
-                <div className="p-6 relative z-10">
+                <div className="p-3 relative z-10">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</p>
-                            <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">{value}</h3>
-                            {subText && <div className="mt-1 text-xs text-slate-500">{subText}</div>}
+                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</p>
+                            <h3 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{value}</h3>
+                            {subText && <div className="mt-0.5 text-[9px] text-slate-500">{subText}</div>}
                         </div>
-                        <div className={`p-3 rounded-xl ${iconBg}`}>
-                            <Icon className={`h-6 w-6 ${iconColor}`} />
+                        <div className={`p-1.5 rounded-lg ${iconBg}`}>
+                            <Icon className={`h-4 w-4 ${iconColor}`} />
                         </div>
                     </div>
                     {/* Decorative Gradient Blob */}
-                    <div className={`absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-br ${gradient} opacity-10 rounded-full blur-2xl`}></div>
+                    <div className={`absolute -bottom-6 -right-6 w-16 h-16 bg-gradient-to-br ${gradient} opacity-10 rounded-full blur-xl`}></div>
                 </div>
             )}
         </Card>

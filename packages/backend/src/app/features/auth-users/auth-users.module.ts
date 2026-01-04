@@ -13,6 +13,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 
 import { MailModule } from '../mail/mail.module';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
 
@@ -24,7 +25,8 @@ const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb7
             secret: SECRET_KEY,
             signOptions: { expiresIn: '1h' },
         }),
-        TypeOrmModule.forFeature([AuthUsersEntity, UserLoginSessionsEntity])
+        TypeOrmModule.forFeature([AuthUsersEntity, UserLoginSessionsEntity]),
+        AuditLogsModule
     ],
     controllers: [AuthUsersController, LoginSessionController],
     providers: [

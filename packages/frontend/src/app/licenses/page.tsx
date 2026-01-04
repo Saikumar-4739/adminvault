@@ -10,15 +10,19 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import StatCard from '@/components/ui/StatCard';
 import {
-    Plus, Search, Building2, Key, Calendar,
+    Plus, Search, Building2, Key,
     CreditCard, AlertTriangle, CheckCircle, Smartphone
 } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import AddLicenseModal from './AddLicenseModal';
+import { useToast } from '@/contexts/ToastContext';
+
+import PageHeader from '@/components/ui/PageHeader';
 
 export default function LicensesPage() {
     const { companies } = useCompanies();
+    const { success, error: toastError } = useToast();
     const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,11 +49,6 @@ export default function LicensesPage() {
         fetchApplications();
     }, [fetchApplications]);
 
-
-
-
-
-
     const filteredLicenses = licenses.filter(l => {
         const matchesSearch =
             (l.application?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -66,62 +65,54 @@ export default function LicensesPage() {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 space-y-8 max-w-[1600px] mx-auto min-h-screen">
-                {/* Header and Stats Omitted for Brevity - Keeping Existing */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-display">
-                            Software Licenses
-                        </h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium flex items-center gap-2">
-                            <Key className="h-4 w-4" />
-                            Manage application licenses and subscriptions
-                        </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                        <div className="relative flex-1 min-w-[280px]">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Search licenses..."
-                                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-sm shadow-sm"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        {/* Org Dropdown and Add Button */}
-                        <div className="relative min-w-[240px]">
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                            <select
-                                value={selectedCompanyId}
-                                onChange={(e) => setSelectedCompanyId(e.target.value)}
-                                className="w-full appearance-none pl-10 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                            >
-                                <option value="">All Organizations</option>
-                                {companies.map((company) => (
-                                    <option key={company.id} value={company.id}>
-                                        {company.companyName}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+            <div className="p-6 space-y-6 max-w-[1800px] mx-auto min-h-screen">
+                <PageHeader
+                    icon={Key}
+                    title="Software Licenses"
+                    subtitle="Manage application licenses and subscriptions"
+                    actions={
+                        <>
+                            {/* Search */}
+                            <div className="relative w-full sm:w-auto">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search licenses..."
+                                    className="w-full sm:w-56 pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
                             </div>
-                        </div>
 
-                        <Button
-                            variant="primary"
-                            leftIcon={<Plus className="h-4 w-4" />}
-                            onClick={() => setIsModalOpen(true)}
-                            className="shadow-lg shadow-indigo-500/20"
-                        >
-                            Add License
-                        </Button>
-                    </div>
-                </div>
+                            {/* Org Filter */}
+                            <div className="relative">
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                                <select
+                                    value={selectedCompanyId}
+                                    onChange={(e) => setSelectedCompanyId(e.target.value)}
+                                    className="w-full sm:w-48 appearance-none pl-9 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                                >
+                                    <option value="">All Organizations</option>
+                                    {companies.map((company) => (
+                                        <option key={company.id} value={company.id}>
+                                            {company.companyName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                leftIcon={<Plus className="h-3.5 w-3.5" />}
+                                onClick={() => setIsModalOpen(true)}
+                                className="shadow-lg shadow-indigo-500/20"
+                            >
+                                Add License
+                            </Button>
+                        </>
+                    }
+                />
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -170,69 +161,69 @@ export default function LicensesPage() {
                     <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div></div>
                 ) : filteredLicenses.length === 0 ? (
                     <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-                            <Key className="h-8 w-8 text-slate-400" />
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
+                            <Key className="h-6 w-6 text-slate-400" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">No licenses found</h3>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">No licenses found</h3>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {filteredLicenses.map((license) => {
                             const daysLeft = getDaysRemaining(license.expiryDate);
                             const isExpiring = daysLeft !== null && daysLeft <= 30;
 
-
                             return (
-                                <Card key={license.id} className="group relative overflow-hidden border-slate-200 dark:border-slate-700 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 rounded-2xl bg-white dark:bg-slate-800">
-                                    <div className="p-6">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                                                <Smartphone className="h-6 w-6" />
+                                <Card key={license.id} className="group relative overflow-hidden border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 rounded-xl bg-white dark:bg-slate-800">
+                                    <div className="p-3.5">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                                    <Smartphone className="h-4.5 w-4.5" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">
+                                                        {license.application?.name || 'Unknown App'}
+                                                    </h3>
+                                                    <p className="text-[10px] text-slate-500 font-medium">{license.company?.companyName}</p>
+                                                </div>
                                             </div>
                                             {isExpiring && (
-                                                <span className="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">
+                                                <span className="bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-rose-100 dark:border-rose-900/30 uppercase tracking-wide">
                                                     Expiring
                                                 </span>
                                             )}
                                         </div>
 
-                                        <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">
-                                            {license.application?.name || 'Unknown App'}
-                                        </h3>
-                                        <p className="text-sm text-slate-500 mb-2">{license.company?.companyName}</p>
-
                                         {/* Assigned User Display */}
-                                        {license.assignedEmployee ? (
-                                            <div className="flex items-center gap-2 mb-4 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-lg">
-                                                <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-800 flex items-center justify-center text-xs font-bold text-indigo-700 dark:text-indigo-300">
-                                                    {license.assignedEmployee.firstName[0]}
-                                                </div>
-                                                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                                    {license.assignedEmployee.firstName} {license.assignedEmployee.lastName}
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div className="mb-4 text-xs text-slate-400 italic">No user assigned</div>
-                                        )}
-
-
-                                        <div className="space-y-4">
-                                            <div className="pt-4 border-t border-slate-100 dark:border-slate-700/50 flex flex-col gap-2 text-sm">
-                                                <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                                    <span className="text-xs font-medium">Assigned:</span>
-                                                    <span className="font-mono text-slate-900 dark:text-white">
-                                                        {license.assignedDate ? new Date(license.assignedDate).toLocaleDateString() : '-'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Calendar className="h-3.5 w-3.5" />
-                                                        <span className="text-xs font-medium">Expires:</span>
+                                        <div className="mb-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700/50">
+                                            {license.assignedEmployee ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-[9px] font-bold text-indigo-700 dark:text-indigo-300">
+                                                        {license.assignedEmployee.firstName[0]}
                                                     </div>
-                                                    <span className={`font-mono ${isExpiring ? 'text-rose-600 font-bold' : 'text-slate-900 dark:text-white'}`}>
-                                                        {license.expiryDate ? new Date(license.expiryDate).toLocaleDateString() : 'N/A'}
-                                                    </span>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 leading-none">
+                                                            {license.assignedEmployee.firstName} {license.assignedEmployee.lastName}
+                                                        </span>
+                                                        <span className="text-[9px] text-slate-400 leading-none mt-0.5">
+                                                            Assigned: {license.assignedDate ? new Date(license.assignedDate).toLocaleDateString() : '-'}
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                            ) : (
+                                                <div className="text-[10px] text-slate-400 italic flex items-center gap-1.5">
+                                                    <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-600" />
+                                                    No user assigned
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                                            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                                                Expires
+                                            </div>
+                                            <div className={`text-[10px] font-mono font-semibold ${isExpiring ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
+                                                {license.expiryDate ? new Date(license.expiryDate).toLocaleDateString() : 'N/A'}
                                             </div>
                                         </div>
                                     </div>
@@ -246,8 +237,19 @@ export default function LicensesPage() {
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     onSuccess={async (data) => {
-                        const success = await createLicense(data);
-                        return success;
+                        try {
+                            const result = await createLicense(data);
+                            if (result) {
+                                success('Success', 'License created successfully');
+                                return true;
+                            } else {
+                                toastError('Error', 'Failed to create license');
+                                return false;
+                            }
+                        } catch (err: any) {
+                            toastError('Error', err.message || 'An error occurred');
+                            return false;
+                        }
                     }}
                     companies={companies}
                     applications={applications}
@@ -256,4 +258,6 @@ export default function LicensesPage() {
             </div>
         </RouteGuard>
     );
-}
+};
+
+export default LicensesPage;

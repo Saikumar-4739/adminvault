@@ -126,7 +126,7 @@ export function useMasters() {
         try {
             const storedUser = localStorage.getItem('auth_user');
             const user = storedUser ? JSON.parse(storedUser) : null;
-            if (!user) throw new Error('User not authenticated');
+            if (!user) return { success: false, message: 'User not authenticated' };
 
             const model = new CreateDepartmentModel(
                 user.id,
@@ -140,11 +140,11 @@ export function useMasters() {
             const res = await mastersService.createDepartment(model);
             if (res.status) {
                 fetchDepartments();
-                return true;
+                return { success: true, message: res.message || 'Department created successfully' };
             }
-            return false;
-        } catch (e) {
-            return false;
+            return { success: false, message: res.message || 'Failed to create department' };
+        } catch (e: any) {
+            return { success: false, message: e.message || 'Failed to create department' };
         } finally { setIsLoading(false); }
     };
 
@@ -154,10 +154,12 @@ export function useMasters() {
             const res = await mastersService.deleteDepartment(id);
             if (res.status) {
                 fetchDepartments();
-                return true;
+                return { success: true, message: res.message || 'Department deleted successfully' };
             }
-            return false;
-        } catch (e) { return false; } finally { setIsLoading(false); }
+            return { success: false, message: res.message || 'Failed to delete department' };
+        } catch (e: any) {
+            return { success: false, message: e.message || 'Failed to delete department' };
+        } finally { setIsLoading(false); }
     };
 
     const updateDepartment = async (data: any) => {
@@ -167,11 +169,11 @@ export function useMasters() {
             const res = await mastersService.createDepartment(data);
             if (res.status) {
                 fetchDepartments();
-                return true;
+                return { success: true, message: res.message || 'Department updated successfully' };
             }
-            return false;
-        } catch (e) {
-            return false;
+            return { success: false, message: res.message || 'Failed to update department' };
+        } catch (e: any) {
+            return { success: false, message: e.message || 'Failed to update department' };
         } finally {
             setIsLoading(false);
         }

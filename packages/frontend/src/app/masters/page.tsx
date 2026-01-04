@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Building2, Users, Package, Smartphone, Tag, Receipt, Store, AppWindow, MessageSquare, UserCircle } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, Tag, Store, AppWindow, MessageSquare } from 'lucide-react';
 import CompaniesMasterView from './components/companies-master-view';
 import DepartmentsMasterView from './components/departments-master-view';
 import AssetTypesMasterView from './components/asset-types-master-view';
@@ -11,7 +11,6 @@ import DeviceBrandsMasterView from './components/device-brands-master-view';
 import VendorsMasterView from './components/vendors-master-view';
 import ApplicationsMasterView from './components/applications-master-view';
 import TicketCategoriesMasterView from './components/ticket-categories-master-view';
-import ExpenseCategoriesMasterView from './components/expense-categories-master-view';
 
 interface MasterItem {
     id: string;
@@ -87,22 +86,6 @@ export default function MastersPage() {
         },
 
         {
-            id: 'expense-categories',
-            title: 'Expense Categories',
-            description: 'Manage expense categories',
-            icon: Receipt,
-            color: 'from-amber-500 to-amber-600',
-            component: ExpenseCategoriesMasterView
-        },
-        {
-            id: 'employees_nav',
-            title: 'Employees',
-            description: 'Manage workforce and roles',
-            icon: UserCircle,
-            color: 'from-indigo-500 to-indigo-600',
-            href: '/employees'
-        },
-        {
             id: 'slack_users_nav',
             title: 'Slack Users',
             description: 'Manage slack integration users',
@@ -140,7 +123,7 @@ export default function MastersPage() {
             {/* Fixed Page Header */}
             <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">System Configuration</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">System Configuration</h1>
                     <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1">
                         Manage all master data for your organization
                     </p>
@@ -193,4 +176,6 @@ export default function MastersPage() {
             </div>
         </div>
     );
-}
+};
+
+export default MastersPage;

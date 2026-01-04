@@ -1,7 +1,6 @@
 import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { CommonBaseEntity } from './common-base.entity';
 import { EmployeeStatusEnum } from '@adminvault/shared-models';
-import { DepartmentsMasterEntity } from './masters/department.entity';
 
 @Entity('employees')
 @Index('idx_emp_email', ['email'])
@@ -27,10 +26,6 @@ export class EmployeesEntity extends CommonBaseEntity {
 
   @Column('int', { name: 'department_id', nullable: false, comment: 'Department ID from departments master table' })
   departmentId: number;
-
-  @ManyToOne(() => DepartmentsMasterEntity, { nullable: false })
-  @JoinColumn({ name: 'department_id' })
-  department: DepartmentsMasterEntity;
 
   @Column('text', { name: 'remarks', nullable: true, comment: 'Additional remarks about employee' })
   remarks: string;

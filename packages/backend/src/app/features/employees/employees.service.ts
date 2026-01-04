@@ -111,8 +111,7 @@ export class EmployeesService {
             }
 
             const employee = await this.employeesRepo.findOne({
-                where: { id: reqModel.id },
-                relations: ['department']
+                where: { id: reqModel.id }
             });
             if (!employee) {
                 throw new ErrorResponse(0, "Employee not found");
@@ -129,7 +128,7 @@ export class EmployeesService {
                 employee.phNumber,
                 employee.billingAmount,
                 employee.remarks,
-                employee.department?.name
+                `Dept ID: ${employee.departmentId}` // Placeholder name
             );
             return new GetEmployeeByIdModel(true, 0, "Employee retrieved successfully", employeeResponse);
         } catch (error) {
@@ -151,13 +150,10 @@ export class EmployeesService {
 
             if (companyId) {
                 employees = await this.employeesRepo.find({
-                    where: { companyId },
-                    relations: ['department']
+                    where: { companyId }
                 });
             } else {
-                employees = await this.employeesRepo.find({
-                    relations: ['department']
-                });
+                employees = await this.employeesRepo.find();
             }
 
             const employeeResponses = employees.map(emp => new EmployeeResponseModel(
@@ -171,7 +167,7 @@ export class EmployeesService {
                 emp.phNumber,
                 emp.billingAmount,
                 emp.remarks,
-                emp.department?.name
+                `Dept ID: ${emp.departmentId}` // Placeholder name
             ));
             return new GetAllEmployeesModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {

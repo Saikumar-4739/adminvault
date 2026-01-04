@@ -455,4 +455,6 @@ export default function CreateTicketPage() {
             )}
         </div>
     );
-}
+};
+
+export default CreateTicketPage;

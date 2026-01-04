@@ -395,4 +395,6 @@ export default function DocumentsPage() {
             </div>
         </RouteGuard>
     );
-}
+};
+
+export default DocumentsPage;

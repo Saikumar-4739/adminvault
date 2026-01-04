@@ -5,8 +5,13 @@ import { EmailInfoService } from './email-info.service';
 import { EmailInfoController } from './email-info.controller';
 import { EmailInfoRepository } from '../../repository/email-info.repository';
 
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+
 @Module({
-    imports: [TypeOrmModule.forFeature([EmailInfoEntity])],
+    imports: [
+        TypeOrmModule.forFeature([EmailInfoEntity]),
+        AuditLogsModule
+    ],
     controllers: [EmailInfoController],
     providers: [EmailInfoService, EmailInfoRepository],
     exports: [EmailInfoService],

@@ -5,12 +5,14 @@ import { AssetInfoEntity } from '../../entities/asset-info.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, AssetWithAssignmentModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum } from '@adminvault/shared-models';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class AssetInfoService {
     constructor(
         private dataSource: DataSource,
-        private assetInfoRepo: AssetInfoRepository
+        private assetInfoRepo: AssetInfoRepository,
+        private auditLogsService: AuditLogsService
     ) { }
 
     /**
@@ -21,7 +23,7 @@ export class AssetInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if validation fails or serial number already exists
      */
-    async createAsset(reqModel: CreateAssetModel): Promise<GlobalResponse> {
+    async createAsset(reqModel: CreateAssetModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.companyId) {
@@ -65,8 +67,21 @@ export class AssetInfoService {
             if (reqModel.warrantyExpiry) entity.warrantyExpiry = new Date(reqModel.warrantyExpiry);
             if (reqModel.userAssignedDate) entity.userAssignedDate = new Date(reqModel.userAssignedDate);
             if (reqModel.lastReturnDate) entity.lastReturnDate = new Date(reqModel.lastReturnDate);
+
             await transManager.getRepository(AssetInfoEntity).save(entity);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_ASSET',
+                resource: 'Asset',
+                details: `Asset ${entity.serialNumber} created`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: entity.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Asset created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -82,7 +97,7 @@ export class AssetInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if asset not found or update fails
      */
-    async updateAsset(reqModel: UpdateAssetModel): Promise<GlobalResponse> {
+    async updateAsset(reqModel: UpdateAssetModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -120,8 +135,21 @@ export class AssetInfoService {
             if (reqModel.warrantyExpiry) entity.warrantyExpiry = new Date(reqModel.warrantyExpiry);
             if (reqModel.userAssignedDate) entity.userAssignedDate = new Date(reqModel.userAssignedDate);
             if (reqModel.lastReturnDate) entity.lastReturnDate = new Date(reqModel.lastReturnDate);
+
             await transManager.getRepository(AssetInfoEntity).update(reqModel.id, entity);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_ASSET',
+                resource: 'Asset',
+                details: `Asset ${entity.serialNumber || reqModel.id} updated`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: entity.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Asset updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -181,7 +209,7 @@ export class AssetInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if asset not found or deletion fails
      */
-    async deleteAsset(reqModel: DeleteAssetModel): Promise<GlobalResponse> {
+    async deleteAsset(reqModel: DeleteAssetModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -196,6 +224,18 @@ export class AssetInfoService {
             await transManager.startTransaction();
             await transManager.getRepository(AssetInfoEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'DELETE_ASSET',
+                resource: 'Asset',
+                details: `Asset ${reqModel.id} deleted`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Asset deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();

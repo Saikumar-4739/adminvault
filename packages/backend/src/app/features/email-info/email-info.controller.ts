@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { EmailInfoService } from './email-info.service';
@@ -18,9 +18,11 @@ export class EmailInfoController {
      */
     @Post('createEmailInfo')
     @ApiBody({ type: CreateEmailInfoModel })
-    async createEmailInfo(@Body() reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
+    async createEmailInfo(@Body() reqModel: CreateEmailInfoModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.createEmailInfo(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.createEmailInfo(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -33,9 +35,11 @@ export class EmailInfoController {
      */
     @Post('updateEmailInfo')
     @ApiBody({ type: UpdateEmailInfoModel })
-    async updateEmailInfo(@Body() reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
+    async updateEmailInfo(@Body() reqModel: UpdateEmailInfoModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.updateEmailInfo(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.updateEmailInfo(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -78,9 +82,11 @@ export class EmailInfoController {
      */
     @Post('deleteEmailInfo')
     @ApiBody({ type: DeleteEmailInfoModel })
-    async deleteEmailInfo(@Body() reqModel: DeleteEmailInfoModel): Promise<GlobalResponse> {
+    async deleteEmailInfo(@Body() reqModel: DeleteEmailInfoModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.deleteEmailInfo(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.deleteEmailInfo(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req } from '@nestjs/common';
 import { MastersService } from './masters.service';
 import {
     CreateAssetTypeModel, CreateBrandModel, CreateDepartmentModel, CreateVendorModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel,
@@ -25,27 +25,33 @@ export class MastersController {
     }
 
     @Post('departments')
-    async createDepartment(@Body() data: CreateDepartmentModel): Promise<CreateDepartmentResponseModel> {
+    async createDepartment(@Body() data: CreateDepartmentModel, @Req() req: any): Promise<CreateDepartmentResponseModel> {
         try {
-            return await this.mastersService.createDepartment(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createDepartment(data, userId, ipAddress);
         } catch (error) {
             return returnException(CreateDepartmentResponseModel, error);
         }
     }
 
     @Post('updateDepartment')
-    async updateDepartment(@Body() data: UpdateDepartmentModel): Promise<UpdateDepartmentResponseModel> {
+    async updateDepartment(@Body() data: UpdateDepartmentModel, @Req() req: any): Promise<UpdateDepartmentResponseModel> {
         try {
-            return await this.mastersService.updateDepartment(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updateDepartment(data, userId, ipAddress);
         } catch (error) {
             return returnException(UpdateDepartmentResponseModel, error);
         }
     }
 
     @Post('deleteDepartment')
-    async deleteDepartment(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteDepartment(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.mastersService.deleteDepartment(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deleteDepartment(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -62,27 +68,33 @@ export class MastersController {
     }
 
     @Post('asset-types')
-    async createAssetType(@Body() data: CreateAssetTypeModel): Promise<CreateAssetTypeResponseModel> {
+    async createAssetType(@Body() data: CreateAssetTypeModel, @Req() req: any): Promise<CreateAssetTypeResponseModel> {
         try {
-            return await this.mastersService.createAssetType(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createAssetType(data, userId, ipAddress);
         } catch (error) {
             return returnException(CreateAssetTypeResponseModel, error);
         }
     }
 
     @Post('updateAssetType')
-    async updateAssetType(@Body() data: UpdateAssetTypeModel): Promise<UpdateAssetTypeResponseModel> {
+    async updateAssetType(@Body() data: UpdateAssetTypeModel, @Req() req: any): Promise<UpdateAssetTypeResponseModel> {
         try {
-            return await this.mastersService.updateAssetType(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updateAssetType(data, userId, ipAddress);
         } catch (error) {
             return returnException(UpdateAssetTypeResponseModel, error);
         }
     }
 
     @Post('deleteAssetType')
-    async deleteAssetType(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteAssetType(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.mastersService.deleteAssetType(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deleteAssetType(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -99,27 +111,33 @@ export class MastersController {
     }
 
     @Post('brands')
-    async createBrand(@Body() data: CreateBrandModel): Promise<CreateBrandResponseModel> {
+    async createBrand(@Body() data: CreateBrandModel, @Req() req: any): Promise<CreateBrandResponseModel> {
         try {
-            return await this.mastersService.createBrand(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createBrand(data, userId, ipAddress);
         } catch (error) {
             return returnException(CreateBrandResponseModel, error);
         }
     }
 
     @Post('updateBrand')
-    async updateBrand(@Body() data: UpdateBrandModel): Promise<UpdateBrandResponseModel> {
+    async updateBrand(@Body() data: UpdateBrandModel, @Req() req: any): Promise<UpdateBrandResponseModel> {
         try {
-            return await this.mastersService.updateBrand(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updateBrand(data, userId, ipAddress);
         } catch (error) {
             return returnException(UpdateBrandResponseModel, error);
         }
     }
 
     @Post('deleteBrand')
-    async deleteBrand(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteBrand(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.mastersService.deleteBrand(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deleteBrand(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -136,27 +154,33 @@ export class MastersController {
     }
 
     @Post('vendors')
-    async createVendor(@Body() data: CreateVendorModel): Promise<CreateVendorResponseModel> {
+    async createVendor(@Body() data: CreateVendorModel, @Req() req: any): Promise<CreateVendorResponseModel> {
         try {
-            return await this.mastersService.createVendor(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createVendor(data, userId, ipAddress);
         } catch (error) {
             return returnException(CreateVendorResponseModel, error);
         }
     }
 
     @Post('updateVendor')
-    async updateVendor(@Body() data: UpdateVendorModel): Promise<UpdateVendorResponseModel> {
+    async updateVendor(@Body() data: UpdateVendorModel, @Req() req: any): Promise<UpdateVendorResponseModel> {
         try {
-            return await this.mastersService.updateVendor(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updateVendor(data, userId, ipAddress);
         } catch (error) {
             return returnException(UpdateVendorResponseModel, error);
         }
     }
 
     @Post('deleteVendor')
-    async deleteVendor(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteVendor(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.mastersService.deleteVendor(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deleteVendor(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -173,27 +197,33 @@ export class MastersController {
     }
 
     @Post('applications')
-    async createApplication(@Body() data: CreateApplicationModel): Promise<CreateApplicationResponseModel> {
+    async createApplication(@Body() data: CreateApplicationModel, @Req() req: any): Promise<CreateApplicationResponseModel> {
         try {
-            return await this.mastersService.createApplication(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createApplication(data, userId, ipAddress);
         } catch (error) {
             return returnException(CreateApplicationResponseModel, error);
         }
     }
 
     @Post('updateApplication')
-    async updateApplication(@Body() data: UpdateApplicationModel): Promise<UpdateApplicationResponseModel> {
+    async updateApplication(@Body() data: UpdateApplicationModel, @Req() req: any): Promise<UpdateApplicationResponseModel> {
         try {
-            return await this.mastersService.updateApplication(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updateApplication(data, userId, ipAddress);
         } catch (error) {
             return returnException(UpdateApplicationResponseModel, error);
         }
     }
 
     @Post('deleteApplication')
-    async deleteApplication(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteApplication(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.mastersService.deleteApplication(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deleteApplication(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -210,27 +240,33 @@ export class MastersController {
     }
 
     @Post('ticket-categories')
-    async createTicketCategory(@Body() data: CreateTicketCategoryModel): Promise<CreateTicketCategoryResponseModel> {
+    async createTicketCategory(@Body() data: CreateTicketCategoryModel, @Req() req: any): Promise<CreateTicketCategoryResponseModel> {
         try {
-            return await this.mastersService.createTicketCategory(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createTicketCategory(data, userId, ipAddress);
         } catch (error) {
             return returnException(CreateTicketCategoryResponseModel, error);
         }
     }
 
     @Post('updateTicketCategory')
-    async updateTicketCategory(@Body() data: UpdateTicketCategoryModel): Promise<UpdateTicketCategoryResponseModel> {
+    async updateTicketCategory(@Body() data: UpdateTicketCategoryModel, @Req() req: any): Promise<UpdateTicketCategoryResponseModel> {
         try {
-            return await this.mastersService.updateTicketCategory(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updateTicketCategory(data, userId, ipAddress);
         } catch (error) {
             return returnException(UpdateTicketCategoryResponseModel, error);
         }
     }
 
     @Post('deleteTicketCategory')
-    async deleteTicketCategory(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteTicketCategory(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.mastersService.deleteTicketCategory(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deleteTicketCategory(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -247,27 +283,33 @@ export class MastersController {
     }
 
     @Post('expense-categories')
-    async createExpenseCategory(@Body() data: CreateExpenseCategoryModel): Promise<CreateExpenseCategoryResponseModel> {
+    async createExpenseCategory(@Body() data: CreateExpenseCategoryModel, @Req() req: any): Promise<CreateExpenseCategoryResponseModel> {
         try {
-            return await this.mastersService.createExpenseCategory(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createExpenseCategory(data, userId, ipAddress);
         } catch (error) {
             return returnException(CreateExpenseCategoryResponseModel, error);
         }
     }
 
     @Post('updateExpenseCategory')
-    async updateExpenseCategory(@Body() data: UpdateExpenseCategoryModel): Promise<UpdateExpenseCategoryResponseModel> {
+    async updateExpenseCategory(@Body() data: UpdateExpenseCategoryModel, @Req() req: any): Promise<UpdateExpenseCategoryResponseModel> {
         try {
-            return await this.mastersService.updateExpenseCategory(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updateExpenseCategory(data, userId, ipAddress);
         } catch (error) {
             return returnException(UpdateExpenseCategoryResponseModel, error);
         }
     }
 
     @Post('deleteExpenseCategory')
-    async deleteExpenseCategory(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteExpenseCategory(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.mastersService.deleteExpenseCategory(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deleteExpenseCategory(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -284,27 +326,33 @@ export class MastersController {
     }
 
     @Post('password-vaults')
-    async createPasswordVault(@Body() data: CreatePasswordVaultModel): Promise<CreatePasswordVaultResponseModel> {
+    async createPasswordVault(@Body() data: CreatePasswordVaultModel, @Req() req: any): Promise<CreatePasswordVaultResponseModel> {
         try {
-            return await this.mastersService.createPasswordVault(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createPasswordVault(data, userId, ipAddress);
         } catch (error) {
             return returnException(CreatePasswordVaultResponseModel, error);
         }
     }
 
     @Post('updatePasswordVault')
-    async updatePasswordVault(@Body() data: UpdatePasswordVaultModel): Promise<UpdatePasswordVaultResponseModel> {
+    async updatePasswordVault(@Body() data: UpdatePasswordVaultModel, @Req() req: any): Promise<UpdatePasswordVaultResponseModel> {
         try {
-            return await this.mastersService.updatePasswordVault(data);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updatePasswordVault(data, userId, ipAddress);
         } catch (error) {
             return returnException(UpdatePasswordVaultResponseModel, error);
         }
     }
 
     @Post('deletePasswordVault')
-    async deletePasswordVault(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deletePasswordVault(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.mastersService.deletePasswordVault(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deletePasswordVault(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

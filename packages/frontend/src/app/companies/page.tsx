@@ -8,9 +8,11 @@ import Card from '@/components/ui/Card';
 import { Modal } from '@/components/ui/modal';
 import PageHeader from '@/components/ui/PageHeader';
 import { Plus, Search, Edit, Trash2, Building2 } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function CompaniesPage() {
     const { companies, isLoading, createCompany, updateCompany, deleteCompany } = useCompanies();
+    const { success, error: toastError } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCompany, setEditingCompany] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -20,20 +22,36 @@ export default function CompaniesPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (editingCompany) {
-            await updateCompany({
-                id: editingCompany.id,
-                ...formData,
-                estDate: new Date(formData.estDate).toISOString()
-            } as any);
-        } else {
-            await createCompany({
-                ...formData,
-                estDate: new Date(formData.estDate).toISOString()
-            } as any);
-        }
+        try {
+            if (editingCompany) {
+                const result = await updateCompany({
+                    id: editingCompany.id,
+                    ...formData,
+                    estDate: new Date(formData.estDate).toISOString()
+                } as any);
 
-        handleCloseModal();
+                if (result.success) {
+                    success('Success', result.message);
+                    handleCloseModal();
+                } else {
+                    toastError('Error', result.message);
+                }
+            } else {
+                const result = await createCompany({
+                    ...formData,
+                    estDate: new Date(formData.estDate).toISOString()
+                } as any);
+
+                if (result.success) {
+                    success('Success', result.message);
+                    handleCloseModal();
+                } else {
+                    toastError('Error', result.message);
+                }
+            }
+        } catch (err: any) {
+            toastError('Error', err.message || 'An error occurred');
+        }
     };
 
     const handleEdit = (company: any) => {
@@ -50,7 +68,16 @@ export default function CompaniesPage() {
 
     const handleDelete = async (company: any) => {
         if (confirm(`Are you sure you want to delete ${company.companyName}?`)) {
-            await deleteCompany({ id: company.id });
+            try {
+                const result = await deleteCompany({ id: company.id });
+                if (result.success) {
+                    success('Success', result.message);
+                } else {
+                    toastError('Error', result.message);
+                }
+            } catch (err: any) {
+                toastError('Error', err.message || 'Failed to delete company');
+            }
         }
     };
 
@@ -78,6 +105,13 @@ export default function CompaniesPage() {
                                 leftIcon={<Search className="h-3.5 w-3.5 text-slate-400" />}
                             />
                         </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => success('Test', 'Toast system is working!')}
+                        >
+                            Test Toast
+                        </Button>
                         <Button
                             variant="primary"
                             size="sm"
@@ -237,4 +271,6 @@ export default function CompaniesPage() {
             </Modal>
         </div>
     );
-}
+};
+
+export default CompaniesPage;

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UploadedFile, UseInterceptors, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiTags, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -6,6 +6,7 @@ import { AssetInfoService } from './asset-info.service';
 import { AssetTabsService } from './asset-tabs.service';
 import { AssetBulkService } from './asset-bulk.service';
 import { AssetHistoryService } from './asset-history.service';
+import { Request } from 'express';
 import {
     CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel,
     AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel,
@@ -70,9 +71,11 @@ export class AssetInfoController {
 
     @Post('createAsset')
     @ApiBody({ type: CreateAssetModel })
-    async createAsset(@Body() reqModel: CreateAssetModel): Promise<GlobalResponse> {
+    async createAsset(@Body() reqModel: CreateAssetModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.createAsset(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.createAsset(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -80,9 +83,11 @@ export class AssetInfoController {
 
     @Post('updateAsset')
     @ApiBody({ type: UpdateAssetModel })
-    async updateAsset(@Body() reqModel: UpdateAssetModel): Promise<GlobalResponse> {
+    async updateAsset(@Body() reqModel: UpdateAssetModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.updateAsset(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.updateAsset(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -110,9 +115,11 @@ export class AssetInfoController {
 
     @Post('deleteAsset')
     @ApiBody({ type: DeleteAssetModel })
-    async deleteAsset(@Body() reqModel: DeleteAssetModel): Promise<GlobalResponse> {
+    async deleteAsset(@Body() reqModel: DeleteAssetModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.deleteAsset(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.deleteAsset(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

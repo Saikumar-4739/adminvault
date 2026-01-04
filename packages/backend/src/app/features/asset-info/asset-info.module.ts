@@ -13,8 +13,13 @@ import { AssetInfoRepository } from '../../repository/asset-info.repository';
 import { AssetReturnHistoryRepository } from '../../repository/asset-return-history.repository';
 import { AssetNextAssignmentRepository } from '../../repository/asset-next-assignment.repository';
 
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+
 @Module({
-    imports: [TypeOrmModule.forFeature([AssetInfoEntity, AssetReturnHistoryEntity, AssetNextAssignmentEntity, EmployeesEntity])],
+    imports: [
+        TypeOrmModule.forFeature([AssetInfoEntity, AssetReturnHistoryEntity, AssetNextAssignmentEntity, EmployeesEntity]),
+        AuditLogsModule
+    ],
     controllers: [AssetInfoController],
     providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository],
     exports: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService],

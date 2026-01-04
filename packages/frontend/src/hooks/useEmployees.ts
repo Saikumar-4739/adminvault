@@ -69,19 +69,17 @@ export function useEmployees(companyId?: number) {
 
                 if (response.status) {
                     await fetchEmployees();
-                    return true;
+                    return { success: true, message: response.message || 'Employee created successfully' };
                 } else {
-                    throw new Error(response.message || 'Failed to create employee');
+                    return { success: false, message: response.message || 'Failed to create employee' };
                 }
             } catch (err: any) {
-                const errorMessage = err.message || 'Failed to create employee';
-                toast.error('Error', errorMessage);
-                return false;
+                return { success: false, message: err.message || 'Failed to create employee' };
             } finally {
                 setIsLoading(false);
             }
         },
-        [toast, fetchEmployees]
+        [fetchEmployees]
     );
 
     const updateEmployee = useCallback(
@@ -92,19 +90,17 @@ export function useEmployees(companyId?: number) {
 
                 if (response.status) {
                     await fetchEmployees();
-                    return true;
+                    return { success: true, message: response.message || 'Employee updated successfully' };
                 } else {
-                    throw new Error(response.message || 'Failed to update employee');
+                    return { success: false, message: response.message || 'Failed to update employee' };
                 }
             } catch (err: any) {
-                const errorMessage = err.message || 'Failed to update employee';
-                toast.error('Error', errorMessage);
-                return false;
+                return { success: false, message: err.message || 'Failed to update employee' };
             } finally {
                 setIsLoading(false);
             }
         },
-        [toast, fetchEmployees]
+        [fetchEmployees]
     );
 
     const deleteEmployee = useCallback(
@@ -115,19 +111,17 @@ export function useEmployees(companyId?: number) {
 
                 if (response.status) {
                     await fetchEmployees();
-                    return true;
+                    return { success: true, message: response.message || 'Employee deleted successfully' };
                 } else {
-                    throw new Error(response.message || 'Failed to delete employee');
+                    return { success: false, message: response.message || 'Failed to delete employee' };
                 }
             } catch (err: any) {
-                const errorMessage = err.message || 'Failed to delete employee';
-                toast.error('Error', errorMessage);
-                return false;
+                return { success: false, message: err.message || 'Failed to delete employee' };
             } finally {
                 setIsLoading(false);
             }
         },
-        [toast, fetchEmployees]
+        [fetchEmployees]
     );
 
     const getEmployee = useCallback(

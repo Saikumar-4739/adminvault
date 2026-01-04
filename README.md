@@ -31,7 +31,16 @@ JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 # Server Configuration
 PORT=3001
 NODE_ENV=development
+
+# Kafka Configuration (Optional - disabled by default)
+# To enable event-driven features:
+# 1. Start Kafka: docker-compose -f docker-compose.kafka.yml up -d
+# 2. Set KAFKA_ENABLED=true
+KAFKA_BROKERS=localhost:9092
+KAFKA_CLIENT_ID=adminvault-backend
+KAFKA_ENABLED=false
 ```
+
 
 ### 3. Run the Backend
 
@@ -58,7 +67,37 @@ The frontend will start on `http://localhost:3000`
 
 ---
 
-## 📝 Available Scripts
+## � Kafka Setup (Optional - For Event-Driven Features)
+
+AdminVault includes Kafka integration for real-time event processing, audit logging, and notifications.
+
+### Start Kafka with Docker
+
+```bash
+# Start Kafka, Zookeeper, and Kafka UI
+docker-compose -f docker-compose.kafka.yml up -d
+
+# Verify Kafka is running
+docker ps | grep kafka
+```
+
+Services:
+- **Kafka**: `localhost:9092`
+- **Kafka UI**: `http://localhost:8080` (Web interface to manage topics and messages)
+- **Zookeeper**: `localhost:2181`
+
+### Stop Kafka
+
+```bash
+docker-compose -f docker-compose.kafka.yml down
+```
+
+📖 **For detailed Kafka integration documentation**, see [`packages/backend/KAFKA_INTEGRATION.md`](packages/backend/KAFKA_INTEGRATION.md)
+
+---
+
+## �📝 Available Scripts
+
 
 ### Backend
 

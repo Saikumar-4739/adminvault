@@ -20,6 +20,7 @@ import { ApplicationsMasterEntity } from '../../entities/masters/application.ent
 import { ExpenseCategoriesMasterEntity } from '../../entities/masters/expense-category.entity';
 import { PasswordVaultMasterEntity } from '../../entities/masters/password-vault.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class MastersService {
@@ -33,6 +34,7 @@ export class MastersService {
         private ticketCatRepo: TicketCategoryRepository,
         private companyRepo: CompanyInfoRepository,
         private passwordVaultRepo: PasswordVaultRepository,
+        private auditLogsService: AuditLogsService
     ) { }
 
     // Departments
@@ -48,7 +50,6 @@ export class MastersService {
                 name: dept.name,
                 description: dept.description,
                 isActive: dept.isActive,
-                status: dept.status,
                 code: dept.code,
             }));
             return new GetAllDepartmentsResponseModel(true, 200, 'Departments retrieved successfully', departmentsWithCompanyName);
@@ -58,14 +59,28 @@ export class MastersService {
         }
     }
 
-    async createDepartment(data: CreateDepartmentModel): Promise<CreateDepartmentResponseModel> {
+    async createDepartment(data: CreateDepartmentModel, userId?: number, ipAddress?: string): Promise<CreateDepartmentResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
             const repo = transManager.getRepository(DepartmentsMasterEntity);
-            const newItem = repo.create(data);
+            // Ensure ID is not passed to let DB auto-increment
+            const { id, ...createData } = data;
+            const newItem = repo.create(createData);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_DEPARTMENT',
+                resource: 'Masters',
+                details: `Department ${savedItem.name} created`,
+                status: 'SUCCESS',
+                userId: userId || savedItem.userId,
+                companyId: savedItem.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new CreateDepartmentResponseModel(true, 201, 'Department created successfully', savedItem);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -73,7 +88,7 @@ export class MastersService {
         }
     }
 
-    async updateDepartment(data: UpdateDepartmentModel): Promise<UpdateDepartmentResponseModel> {
+    async updateDepartment(data: UpdateDepartmentModel, userId?: number, ipAddress?: string): Promise<UpdateDepartmentResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const existing = await this.deptRepo.findOne({ where: { id: data.id } });
@@ -87,7 +102,6 @@ export class MastersService {
                 name: data.name,
                 description: data.description,
                 code: data.code,
-                status: data.status,
                 isActive: data.isActive
             });
             const updated = await repo.findOne({ where: { id: data.id } });
@@ -95,6 +109,18 @@ export class MastersService {
                 throw new ErrorResponse(500, 'Failed to retrieve updated department');
             }
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_DEPARTMENT',
+                resource: 'Masters',
+                details: `Department ${updated.name} updated`,
+                status: 'SUCCESS',
+                userId: userId || existing.userId,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new UpdateDepartmentResponseModel(true, 200, 'Department updated successfully', updated);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -102,13 +128,29 @@ export class MastersService {
         }
     }
 
-    async deleteDepartment(reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteDepartment(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            const existing = await this.deptRepo.findOne({ where: { id: reqModel.id } });
+
             await transManager.startTransaction();
             const repo = transManager.getRepository(DepartmentsMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
+
+            if (existing) {
+                // AUDIT LOG
+                await this.auditLogsService.create({
+                    action: 'DELETE_DEPARTMENT',
+                    resource: 'Masters',
+                    details: `Department ${existing.name} deleted`,
+                    status: 'SUCCESS',
+                    userId: userId || existing.userId,
+                    companyId: existing.companyId,
+                    ipAddress: ipAddress || '0.0.0.0'
+                });
+            }
+
             return new GlobalResponse(true, 200, 'Department deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -140,7 +182,7 @@ export class MastersService {
         }
     }
 
-    async createAssetType(data: CreateAssetTypeModel): Promise<CreateAssetTypeResponseModel> {
+    async createAssetType(data: CreateAssetTypeModel, userId?: number, ipAddress?: string): Promise<CreateAssetTypeResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -148,6 +190,18 @@ export class MastersService {
             const newItem = repo.create(data);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_ASSET_TYPE',
+                resource: 'Masters',
+                details: `Asset Type ${savedItem.name} created`,
+                status: 'SUCCESS',
+                userId: userId || savedItem.userId,
+                companyId: savedItem.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new CreateAssetTypeResponseModel(true, 201, 'Asset Type created successfully', savedItem);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -155,7 +209,7 @@ export class MastersService {
         }
     }
 
-    async updateAssetType(data: UpdateAssetTypeModel): Promise<UpdateAssetTypeResponseModel> {
+    async updateAssetType(data: UpdateAssetTypeModel, userId?: number, ipAddress?: string): Promise<UpdateAssetTypeResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const existing = await this.assetTypeRepo.findOne({ where: { id: data.id } });
@@ -171,6 +225,18 @@ export class MastersService {
                 throw new ErrorResponse(500, 'Failed to retrieve updated asset type');
             }
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_ASSET_TYPE',
+                resource: 'Masters',
+                details: `Asset Type ${updated.name} updated`,
+                status: 'SUCCESS',
+                userId: userId || existing.userId,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new UpdateAssetTypeResponseModel(true, 200, 'Asset Type updated successfully', updated);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -178,13 +244,29 @@ export class MastersService {
         }
     }
 
-    async deleteAssetType(reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteAssetType(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            const existing = await this.assetTypeRepo.findOne({ where: { id: reqModel.id } });
+
             await transManager.startTransaction();
             const repo = transManager.getRepository(AssetTypeMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
+
+            if (existing) {
+                // AUDIT LOG
+                await this.auditLogsService.create({
+                    action: 'DELETE_ASSET_TYPE',
+                    resource: 'Masters',
+                    details: `Asset Type ${existing.name} deleted`,
+                    status: 'SUCCESS',
+                    userId: userId || existing.userId,
+                    companyId: existing.companyId,
+                    ipAddress: ipAddress || '0.0.0.0'
+                });
+            }
+
             return new GlobalResponse(true, 200, 'Asset Type deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -202,7 +284,7 @@ export class MastersService {
         }
     }
 
-    async createBrand(data: CreateBrandModel): Promise<CreateBrandResponseModel> {
+    async createBrand(data: CreateBrandModel, userId?: number, ipAddress?: string): Promise<CreateBrandResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -210,6 +292,18 @@ export class MastersService {
             const newItem = repo.create(data);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_BRAND',
+                resource: 'Masters',
+                details: `Brand ${savedItem.name} created`,
+                status: 'SUCCESS',
+                userId: userId || savedItem.userId,
+                companyId: savedItem.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new CreateBrandResponseModel(true, 201, 'Brand created successfully', savedItem);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -217,7 +311,7 @@ export class MastersService {
         }
     }
 
-    async updateBrand(data: UpdateBrandModel): Promise<UpdateBrandResponseModel> {
+    async updateBrand(data: UpdateBrandModel, userId?: number, ipAddress?: string): Promise<UpdateBrandResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const existing = await this.brandRepo.findOne({ where: { id: data.id } });
@@ -239,6 +333,18 @@ export class MastersService {
                 throw new ErrorResponse(500, 'Failed to retrieve updated brand');
             }
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_BRAND',
+                resource: 'Masters',
+                details: `Brand ${updated.name} updated`,
+                status: 'SUCCESS',
+                userId: userId || existing.userId,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new UpdateBrandResponseModel(true, 200, 'Brand updated successfully', updated);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -246,13 +352,29 @@ export class MastersService {
         }
     }
 
-    async deleteBrand(reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteBrand(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            const existing = await this.brandRepo.findOne({ where: { id: reqModel.id } });
+
             await transManager.startTransaction();
             const repo = transManager.getRepository(BrandsMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
+
+            if (existing) {
+                // AUDIT LOG
+                await this.auditLogsService.create({
+                    action: 'DELETE_BRAND',
+                    resource: 'Masters',
+                    details: `Brand ${existing.name} deleted`,
+                    status: 'SUCCESS',
+                    userId: userId || existing.userId,
+                    companyId: existing.companyId,
+                    ipAddress: ipAddress || '0.0.0.0'
+                });
+            }
+
             return new GlobalResponse(true, 200, 'Brand deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -270,7 +392,7 @@ export class MastersService {
         }
     }
 
-    async createVendor(data: CreateVendorModel): Promise<CreateVendorResponseModel> {
+    async createVendor(data: CreateVendorModel, userId?: number, ipAddress?: string): Promise<CreateVendorResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -278,6 +400,18 @@ export class MastersService {
             const newItem = repo.create(data);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_VENDOR',
+                resource: 'Masters',
+                details: `Vendor ${savedItem.name} created`,
+                status: 'SUCCESS',
+                userId: userId || savedItem.userId,
+                companyId: savedItem.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new CreateVendorResponseModel(true, 201, 'Vendor created successfully', savedItem);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -285,7 +419,7 @@ export class MastersService {
         }
     }
 
-    async updateVendor(data: UpdateVendorModel): Promise<UpdateVendorResponseModel> {
+    async updateVendor(data: UpdateVendorModel, userId?: number, ipAddress?: string): Promise<UpdateVendorResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const existing = await this.vendorRepo.findOne({ where: { id: data.id } });
@@ -309,6 +443,18 @@ export class MastersService {
                 throw new ErrorResponse(500, 'Failed to retrieve updated vendor');
             }
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_VENDOR',
+                resource: 'Masters',
+                details: `Vendor ${updated.name} updated`,
+                status: 'SUCCESS',
+                userId: userId || existing.userId,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new UpdateVendorResponseModel(true, 200, 'Vendor updated successfully', updated);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -316,13 +462,29 @@ export class MastersService {
         }
     }
 
-    async deleteVendor(reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteVendor(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            const existing = await this.vendorRepo.findOne({ where: { id: reqModel.id } });
+
             await transManager.startTransaction();
             const repo = transManager.getRepository(VendorsMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
+
+            if (existing) {
+                // AUDIT LOG
+                await this.auditLogsService.create({
+                    action: 'DELETE_VENDOR',
+                    resource: 'Masters',
+                    details: `Vendor ${existing.name} deleted`,
+                    status: 'SUCCESS',
+                    userId: userId || existing.userId,
+                    companyId: existing.companyId,
+                    ipAddress: ipAddress || '0.0.0.0'
+                });
+            }
+
             return new GlobalResponse(true, 200, 'Vendor deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -340,7 +502,7 @@ export class MastersService {
         }
     }
 
-    async createApplication(data: CreateApplicationModel): Promise<CreateApplicationResponseModel> {
+    async createApplication(data: CreateApplicationModel, userId?: number, ipAddress?: string): Promise<CreateApplicationResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -362,6 +524,18 @@ export class MastersService {
             });
             const saved = await repo.save(newApp);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_APPLICATION',
+                resource: 'Masters',
+                details: `Application ${saved.name} created`,
+                status: 'SUCCESS',
+                userId: userId || saved.userId,
+                companyId: saved.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new CreateApplicationResponseModel(true, 201, 'Application created successfully', saved);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -370,7 +544,7 @@ export class MastersService {
         }
     }
 
-    async updateApplication(data: UpdateApplicationModel): Promise<UpdateApplicationResponseModel> {
+    async updateApplication(data: UpdateApplicationModel, userId?: number, ipAddress?: string): Promise<UpdateApplicationResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const repo = this.dataSource.getRepository(ApplicationsMasterEntity);
@@ -399,6 +573,18 @@ export class MastersService {
                 throw new ErrorResponse(500, 'Failed to retrieve updated application');
             }
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_APPLICATION',
+                resource: 'Masters',
+                details: `Application ${updated.name} updated`,
+                status: 'SUCCESS',
+                userId: userId || existing.userId,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new UpdateApplicationResponseModel(true, 200, 'Application updated successfully', updated);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -406,13 +592,29 @@ export class MastersService {
         }
     }
 
-    async deleteApplication(reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteApplication(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            await transManager.startTransaction();
             const repo = transManager.getRepository(ApplicationsMasterEntity);
+            const existing = await repo.findOne({ where: { id: reqModel.id } });
+
+            await transManager.startTransaction();
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
+
+            if (existing) {
+                // AUDIT LOG
+                await this.auditLogsService.create({
+                    action: 'DELETE_APPLICATION',
+                    resource: 'Masters',
+                    details: `Application ${existing.name} deleted`,
+                    status: 'SUCCESS',
+                    userId: userId || existing.userId,
+                    companyId: existing.companyId,
+                    ipAddress: ipAddress || '0.0.0.0'
+                });
+            }
+
             return new GlobalResponse(true, 200, 'Application deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -430,7 +632,7 @@ export class MastersService {
         }
     }
 
-    async createTicketCategory(data: CreateTicketCategoryModel): Promise<CreateTicketCategoryResponseModel> {
+    async createTicketCategory(data: CreateTicketCategoryModel, userId?: number, ipAddress?: string): Promise<CreateTicketCategoryResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -445,6 +647,18 @@ export class MastersService {
             });
             const saved = await repo.save(newCategory);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_TICKET_CATEGORY',
+                resource: 'Masters',
+                details: `Ticket Category ${saved.name} created`,
+                status: 'SUCCESS',
+                userId: userId || saved.userId,
+                companyId: saved.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new CreateTicketCategoryResponseModel(true, 201, 'Ticket Category created successfully', saved);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -453,7 +667,7 @@ export class MastersService {
         }
     }
 
-    async updateTicketCategory(data: UpdateTicketCategoryModel): Promise<UpdateTicketCategoryResponseModel> {
+    async updateTicketCategory(data: UpdateTicketCategoryModel, userId?: number, ipAddress?: string): Promise<UpdateTicketCategoryResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const repo = this.dataSource.getRepository(TicketCategoriesMasterEntity);
@@ -475,6 +689,18 @@ export class MastersService {
                 throw new ErrorResponse(500, 'Failed to retrieve updated ticket category');
             }
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_TICKET_CATEGORY',
+                resource: 'Masters',
+                details: `Ticket Category ${updated.name} updated`,
+                status: 'SUCCESS',
+                userId: userId || existing.userId,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new UpdateTicketCategoryResponseModel(true, 200, 'Ticket Category updated successfully', updated);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -482,13 +708,29 @@ export class MastersService {
         }
     }
 
-    async deleteTicketCategory(reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteTicketCategory(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            await transManager.startTransaction();
             const repo = transManager.getRepository(TicketCategoriesMasterEntity);
+            const existing = await repo.findOne({ where: { id: reqModel.id } });
+
+            await transManager.startTransaction();
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
+
+            if (existing) {
+                // AUDIT LOG
+                await this.auditLogsService.create({
+                    action: 'DELETE_TICKET_CATEGORY',
+                    resource: 'Masters',
+                    details: `Ticket Category ${existing.name} deleted`,
+                    status: 'SUCCESS',
+                    userId: userId || existing.userId,
+                    companyId: existing.companyId,
+                    ipAddress: ipAddress || '0.0.0.0'
+                });
+            }
+
             return new GlobalResponse(true, 200, 'Ticket Category deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -506,7 +748,7 @@ export class MastersService {
         }
     }
 
-    async createExpenseCategory(data: CreateExpenseCategoryModel): Promise<CreateExpenseCategoryResponseModel> {
+    async createExpenseCategory(data: CreateExpenseCategoryModel, userId?: number, ipAddress?: string): Promise<CreateExpenseCategoryResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -522,6 +764,18 @@ export class MastersService {
             });
             const saved = await repo.save(newCategory);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_EXPENSE_CATEGORY',
+                resource: 'Masters',
+                details: `Expense Category ${saved.name} created`,
+                status: 'SUCCESS',
+                userId: userId || saved.userId,
+                companyId: saved.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new CreateExpenseCategoryResponseModel(true, 201, 'Expense Category created successfully', saved as any);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -530,7 +784,7 @@ export class MastersService {
         }
     }
 
-    async updateExpenseCategory(data: UpdateExpenseCategoryModel): Promise<UpdateExpenseCategoryResponseModel> {
+    async updateExpenseCategory(data: UpdateExpenseCategoryModel, userId?: number, ipAddress?: string): Promise<UpdateExpenseCategoryResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const repo = this.dataSource.getRepository(ExpenseCategoriesMasterEntity);
@@ -553,6 +807,18 @@ export class MastersService {
                 throw new ErrorResponse(500, 'Failed to retrieve updated expense category');
             }
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_EXPENSE_CATEGORY',
+                resource: 'Masters',
+                details: `Expense Category ${updated.name} updated`,
+                status: 'SUCCESS',
+                userId: userId || existing.userId,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new UpdateExpenseCategoryResponseModel(true, 200, 'Expense Category updated successfully', updated as any);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -560,13 +826,29 @@ export class MastersService {
         }
     }
 
-    async deleteExpenseCategory(reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteExpenseCategory(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            await transManager.startTransaction();
             const repo = transManager.getRepository(ExpenseCategoriesMasterEntity);
+            const existing = await repo.findOne({ where: { id: reqModel.id } });
+
+            await transManager.startTransaction();
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
+
+            if (existing) {
+                // AUDIT LOG
+                await this.auditLogsService.create({
+                    action: 'DELETE_EXPENSE_CATEGORY',
+                    resource: 'Masters',
+                    details: `Expense Category ${existing.name} deleted`,
+                    status: 'SUCCESS',
+                    userId: userId || existing.userId,
+                    companyId: existing.companyId,
+                    ipAddress: ipAddress || '0.0.0.0'
+                });
+            }
+
             return new GlobalResponse(true, 200, 'Expense Category deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -584,7 +866,7 @@ export class MastersService {
         }
     }
 
-    async createPasswordVault(data: CreatePasswordVaultModel): Promise<CreatePasswordVaultResponseModel> {
+    async createPasswordVault(data: CreatePasswordVaultModel, userId?: number, ipAddress?: string): Promise<CreatePasswordVaultResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -592,6 +874,18 @@ export class MastersService {
             const newItem = repo.create(data);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_PASSWORD_VAULT',
+                resource: 'Masters',
+                details: `Password Vault ${savedItem.name} created`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: savedItem.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new CreatePasswordVaultResponseModel(true, 201, 'Password Vault created successfully', savedItem);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -599,7 +893,7 @@ export class MastersService {
         }
     }
 
-    async updatePasswordVault(data: UpdatePasswordVaultModel): Promise<UpdatePasswordVaultResponseModel> {
+    async updatePasswordVault(data: UpdatePasswordVaultModel, userId?: number, ipAddress?: string): Promise<UpdatePasswordVaultResponseModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const existing = await this.passwordVaultRepo.findOne({ where: { id: data.id } });
@@ -623,6 +917,18 @@ export class MastersService {
                 throw new ErrorResponse(500, 'Failed to retrieve updated password vault');
             }
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_PASSWORD_VAULT',
+                resource: 'Masters',
+                details: `Password Vault ${updated.name} updated`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new UpdatePasswordVaultResponseModel(true, 200, 'Password Vault updated successfully', updated);
         } catch (error) {
             await transManager.releaseTransaction();
@@ -630,13 +936,29 @@ export class MastersService {
         }
     }
 
-    async deletePasswordVault(reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deletePasswordVault(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            const existing = await this.passwordVaultRepo.findOne({ where: { id: reqModel.id } });
+
             await transManager.startTransaction();
             const repo = transManager.getRepository(PasswordVaultMasterEntity);
             await repo.delete(reqModel.id);
             await transManager.completeTransaction();
+
+            if (existing) {
+                // AUDIT LOG
+                await this.auditLogsService.create({
+                    action: 'DELETE_PASSWORD_VAULT',
+                    resource: 'Masters',
+                    details: `Password Vault ${existing.name} deleted`,
+                    status: 'SUCCESS',
+                    userId: userId || undefined,
+                    companyId: existing.companyId,
+                    ipAddress: ipAddress || '0.0.0.0'
+                });
+            }
+
             return new GlobalResponse(true, 200, 'Password Vault deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();

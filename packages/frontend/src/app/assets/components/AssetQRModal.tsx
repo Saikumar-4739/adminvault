@@ -4,17 +4,26 @@ import { useRef } from 'react';
 import { Printer } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Modal } from '@/components/ui/modal'
+import { QRCodeSVG } from 'qrcode.react';
+
 
 interface AssetQRModalProps {
     isOpen: boolean;
     onClose: () => void;
     asset: any;
+    onPrint?: () => void;
 }
 
-export default function AssetQRModal({ isOpen, onClose, asset }: AssetQRModalProps) {
+export default function AssetQRModal({ isOpen, onClose, asset, onPrint }: AssetQRModalProps) {
     const componentRef = useRef<HTMLDivElement>(null);
 
     if (!asset) return null;
+
+    const qrValue = JSON.stringify({
+        id: asset.id,
+        sn: asset.serialNumber,
+        model: asset.model
+    });
 
     return (
         <Modal
@@ -26,24 +35,19 @@ export default function AssetQRModal({ isOpen, onClose, asset }: AssetQRModalPro
             <div className="flex flex-col items-center space-y-6 p-4">
 
                 {/* Printable Area */}
-                <div ref={componentRef} className="border-4 border-slate-900 p-4 rounded-lg bg-white w-64 h-auto text-center print:border-2 print:shadow-none print:m-0 print:w-full">
-                    <div className="flex flex-col items-center gap-2">
-                        <div className="font-bold text-lg uppercase tracking-wider mb-2">property of</div>
-                        <h3 className="font-bold text-xl text-slate-900 mb-1">COMPANY ASSET</h3>
-
-                        <div className="my-2">
-                            {/* <QRCodeSVG
+                <div ref={componentRef} className="border-4 border-slate-900 p-4 rounded-lg bg-white w-64 h-auto text-center print:border-2 print:shadow-none print:m-0 print:w-full flex flex-col items-center justify-center">
+                    <div className="flex flex-col items-center gap-2 w-full">
+                        <div className="my-2 p-2 bg-white">
+                            <QRCodeSVG
                                 value={qrValue}
                                 size={128}
                                 level="H"
                                 includeMargin={false}
-                            /> */}
-                            <div className="text-sm text-red-500">QR Code Disabled (Missing Dependency)</div>
+                            />
                         </div>
 
-                        <div className="text-sm font-mono font-bold mt-2">{asset.serialNumber}</div>
+                        <div className="text-sm font-mono font-bold mt-2 text-slate-900">{asset.serialNumber}</div>
                         <div className="text-xs text-slate-500 font-medium">{asset.model}</div>
-                        <div className="text-[10px] text-slate-400 mt-1">ID: {asset.id}</div>
                     </div>
                 </div>
 
@@ -55,8 +59,14 @@ export default function AssetQRModal({ isOpen, onClose, asset }: AssetQRModalPro
                     <Button variant="outline" className="flex-1" onClick={onClose}>
                         Close
                     </Button>
-                    <Button variant="primary" className="flex-1" leftIcon={<Printer className="h-4 w-4" />} disabled>
-                        Print (Disabled)
+                    <Button
+                        variant="primary"
+                        className="flex-1"
+                        leftIcon={<Printer className="h-4 w-4" />}
+                        onClick={onPrint}
+                        disabled={!onPrint}
+                    >
+                        Print QR
                     </Button>
                 </div>
             </div>

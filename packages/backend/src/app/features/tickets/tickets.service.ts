@@ -1,17 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { TicketsRepository, EmployeesRepository } from '../../repository'; // Correct import path assumption
+import { TicketsRepository, EmployeesRepository } from '../../repository';
 import { TicketsEntity } from '../../entities/tickets.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel } from '@adminvault/shared-models';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class TicketsService {
     constructor(
         private dataSource: DataSource,
         private ticketsRepo: TicketsRepository,
-        private employeesRepo: EmployeesRepository
+        private employeesRepo: EmployeesRepository,
+        private auditLogsService: AuditLogsService
     ) { }
 
     /**
@@ -23,7 +25,7 @@ export class TicketsService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if required fields are missing, employee profile not found, or ticket code already exists
      */
-    async createTicket(reqModel: CreateTicketModel, userEmail: string): Promise<GlobalResponse> {
+    async createTicket(reqModel: CreateTicketModel, userEmail: string, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
 
@@ -65,6 +67,18 @@ export class TicketsService {
 
             await transManager.getRepository(TicketsEntity).save(entity);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_TICKET',
+                resource: 'Ticket',
+                details: `Ticket ${entity.ticketCode} created by ${userEmail}`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: employee.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Ticket created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -110,7 +124,7 @@ export class TicketsService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if ticket ID is missing or ticket not found
      */
-    async updateTicket(reqModel: UpdateTicketModel): Promise<GlobalResponse> {
+    async updateTicket(reqModel: UpdateTicketModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -124,6 +138,18 @@ export class TicketsService {
             await transManager.startTransaction();
             await transManager.getRepository(TicketsEntity).update(reqModel.id, reqModel);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_TICKET',
+                resource: 'Ticket',
+                details: `Ticket ${existing.ticketCode} updated`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Ticket updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -167,7 +193,6 @@ export class TicketsService {
         try {
             const tickets = await this.ticketsRepo
                 .createQueryBuilder('ticket')
-                .leftJoinAndSelect('ticket.raisedByEmployee', 'employee')
                 .orderBy('ticket.createdAt', 'DESC')
                 .getMany();
 
@@ -181,8 +206,8 @@ export class TicketsService {
                 t.ticketStatus,
                 t.assignAdminId,
                 t.resolvedAt,
-                t.raisedByEmployee ? `${t.raisedByEmployee.firstName} ${t.raisedByEmployee.lastName}` : undefined,
-                t.raisedByEmployee?.email,
+                `User ID: ${t.employeeId}`, // Placeholder name
+                `User ID: ${t.employeeId}`, // Placeholder email
                 t.createdAt,
                 t.updatedAt
             ));
@@ -200,7 +225,7 @@ export class TicketsService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if ticket ID is missing or ticket not found
      */
-    async deleteTicket(reqModel: DeleteTicketModel): Promise<GlobalResponse> {
+    async deleteTicket(reqModel: DeleteTicketModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -214,6 +239,18 @@ export class TicketsService {
             await transManager.startTransaction();
             await transManager.getRepository(TicketsEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'DELETE_TICKET',
+                resource: 'Ticket',
+                details: `Ticket ${existing.ticketCode} deleted`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: existing.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Ticket deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -242,12 +279,11 @@ export class TicketsService {
 
             const tickets = await this.ticketsRepo
                 .createQueryBuilder('ticket')
-                .leftJoinAndSelect('ticket.raisedByEmployee', 'employee')
                 .where('ticket.employeeId = :employeeId', { employeeId: employee.id })
                 .orderBy('ticket.createdAt', 'DESC')
                 .getMany();
 
-            const responses = tickets.map(t => new TicketResponseModel(t.id, t.ticketCode, t.employeeId, t.categoryEnum, t.priorityEnum, t.subject, t.ticketStatus, t.assignAdminId, t.resolvedAt, t.raisedByEmployee ? `${t.raisedByEmployee.firstName} ${t.raisedByEmployee.lastName}` : undefined, t.raisedByEmployee?.email, t.createdAt, t.updatedAt));
+            const responses = tickets.map(t => new TicketResponseModel(t.id, t.ticketCode, t.employeeId, t.categoryEnum, t.priorityEnum, t.subject, t.ticketStatus, t.assignAdminId, t.resolvedAt, `User ID: ${t.employeeId}`, `User ID: ${t.employeeId}`, t.createdAt, t.updatedAt));
             return new GetAllTicketsModel(true, 0, "User tickets retrieved successfully", responses);
         } catch (error) {
             throw error;

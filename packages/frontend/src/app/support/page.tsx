@@ -146,4 +146,6 @@ export default function SupportChatPage() {
             </div>
         </div>
     );
-}
+};
+
+export default SupportPage;

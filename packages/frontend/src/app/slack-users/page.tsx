@@ -342,4 +342,6 @@ export default function SlackUsersPage() {
             </div>
         </RouteGuard>
     );
-}
+};
+
+export default SlackUsersPage;

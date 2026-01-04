@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, In, MoreThan, Not } from 'typeorm';
 import { AssetInfoEntity } from '../../entities/asset-info.entity';
 import { EmployeesEntity } from '../../entities/employees.entity';
 import { TicketsEntity } from '../../entities/tickets.entity';
@@ -26,7 +26,8 @@ export class DashboardService {
             totalEmployees,
             employeesByDept,
             totalLicenses,
-            expiringLicenses
+            expiringLicenses,
+            openCriticalTickets
         ] = await Promise.all([
             // Assets
             assetRepo.count(),
@@ -47,24 +48,45 @@ export class DashboardService {
                 .getRawMany(),
             ticketRepo.find({
                 order: { createdAt: 'DESC' },
-                take: 5,
-                relations: ['raisedByEmployee']
+                take: 5
             }),
 
             // Employees
             empRepo.count(),
             empRepo.createQueryBuilder('emp')
-                .select('emp.department as department, COUNT(emp.id) as count')
-                .groupBy('emp.department')
+                .select('emp.departmentId as departmentId, COUNT(emp.id) as count')
+                .groupBy('emp.departmentId')
                 .getRawMany(),
 
             // Licenses
             licenseRepo.count(),
-            licenseRepo.count({
-                // Simple check for now, ideally date comparison
-                where: {}
+            licenseRepo.find({
+                where: {
+                    expiryDate: MoreThan(new Date())
+                },
+                order: {
+                    expiryDate: 'ASC'
+                },
+                take: 5
+            }),
+
+            // Open Critical Tickets
+            ticketRepo.count({
+                where: {
+                    priorityEnum: In([TicketPriorityEnum.HIGH, TicketPriorityEnum.URGENT]), // Updated to URGENT
+                    ticketStatus: Not(In([TicketStatusEnum.CLOSED, TicketStatusEnum.RESOLVED]))
+                }
             })
         ]);
+
+        // Calculate System Health Metrics
+        const inUseCount = assetsByStatus.find((s: any) => s.status === AssetStatusEnum.IN_USE)?.count || 0;
+        const assetUtilization = totalAssets > 0 ? (Number(inUseCount) / totalAssets) * 100 : 0;
+
+        const closedResolvedCount = ticketsByStatus
+            .filter((s: any) => s.status === TicketStatusEnum.CLOSED || s.status === TicketStatusEnum.RESOLVED)
+            .reduce((sum: number, item: any) => sum + Number(item.count), 0);
+        const ticketResolutionRate = totalTickets > 0 ? (closedResolvedCount / totalTickets) * 100 : 0;
 
         const stats: DashboardStats = {
             assets: {
@@ -83,7 +105,17 @@ export class DashboardService {
             },
             licenses: {
                 total: totalLicenses,
-                // expiringSoon: expiringLicenses // Placeholder logic
+                expiringSoon: expiringLicenses.map(l => ({
+                    id: l.id,
+                    applicationName: `App ID: ${l.applicationId}`, // Placeholder until we fetch actual names
+                    expiryDate: l.expiryDate || new Date(),
+                    assignedTo: l.assignedEmployeeId ? `Emp ID: ${l.assignedEmployeeId}` : 'Unassigned'
+                }))
+            },
+            systemHealth: {
+                assetUtilization: Math.round(assetUtilization),
+                ticketResolutionRate: Math.round(ticketResolutionRate),
+                openCriticalTickets: openCriticalTickets
             }
         };
 

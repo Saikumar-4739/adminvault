@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { DeviceInfoService } from './device-info.service';
@@ -13,9 +13,11 @@ export class DeviceInfoController {
 
     @Post('createDevice')
     @ApiBody({ type: CreateDeviceModel })
-    async createDevice(@Body() reqModel: CreateDeviceModel): Promise<GlobalResponse> {
+    async createDevice(@Body() reqModel: CreateDeviceModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.createDevice(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.createDevice(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -23,9 +25,11 @@ export class DeviceInfoController {
 
     @Post('updateDevice')
     @ApiBody({ type: UpdateDeviceModel })
-    async updateDevice(@Body() reqModel: UpdateDeviceModel): Promise<GlobalResponse> {
+    async updateDevice(@Body() reqModel: UpdateDeviceModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.updateDevice(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.updateDevice(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -52,9 +56,11 @@ export class DeviceInfoController {
 
     @Post('deleteDevice')
     @ApiBody({ type: DeleteDeviceModel })
-    async deleteDevice(@Body() reqModel: DeleteDeviceModel): Promise<GlobalResponse> {
+    async deleteDevice(@Body() reqModel: DeleteDeviceModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.deleteDevice(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.deleteDevice(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

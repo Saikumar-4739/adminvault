@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post, Req } from '@nestjs/common';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { EmailAccountsService } from './email-accounts.service';
@@ -33,9 +33,11 @@ export class EmailAccountsController {
      */
     @Post('create')
     @ApiBody({ type: CreateEmailAccountModel })
-    async create(@Body() reqModel: CreateEmailAccountModel): Promise<GlobalResponse> {
+    async create(@Body() reqModel: CreateEmailAccountModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.create(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.create(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -48,9 +50,11 @@ export class EmailAccountsController {
      */
     @Post('delete')
     @ApiBody({ type: DeleteEmailAccountModel })
-    async remove(@Body() reqModel: DeleteEmailAccountModel): Promise<GlobalResponse> {
+    async remove(@Body() reqModel: DeleteEmailAccountModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.delete(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.delete(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

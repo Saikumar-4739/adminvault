@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Req } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { CompanyInfoService } from './company-info.service';
@@ -13,9 +13,11 @@ export class CompanyInfoController {
 
     @Post('createCompany')
     @ApiBody({ type: CreateCompanyModel })
-    async createCompany(@Body() reqModel: CreateCompanyModel): Promise<GlobalResponse> {
+    async createCompany(@Body() reqModel: CreateCompanyModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.createCompany(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.createCompany(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -23,9 +25,11 @@ export class CompanyInfoController {
 
     @Post('updateCompany')
     @ApiBody({ type: UpdateCompanyModel })
-    async updateCompany(@Body() reqModel: UpdateCompanyModel): Promise<GlobalResponse> {
+    async updateCompany(@Body() reqModel: UpdateCompanyModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.updateCompany(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.updateCompany(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -52,9 +56,11 @@ export class CompanyInfoController {
 
     @Post('deleteCompany')
     @ApiBody({ type: DeleteCompanyModel })
-    async deleteCompany(@Body() reqModel: DeleteCompanyModel): Promise<GlobalResponse> {
+    async deleteCompany(@Body() reqModel: DeleteCompanyModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.deleteCompany(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.deleteCompany(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

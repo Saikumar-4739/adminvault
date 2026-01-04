@@ -169,28 +169,51 @@ export default function PasswordVaultPage() {
                 {/* Clean Header */}
                 <PageHeader
                     icon={Lock}
-                    title="Employee Vault"
+                    title="Password Vault"
                     subtitle="Office-wide application access manager"
                     actions={
                         <>
-                            <div className="flex bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            {/* Search */}
+                            <div className="relative w-full sm:w-56">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search vault..."
+                                    className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+
+                            {/* View Toggle */}
+                            <div className="flex bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
                                 >
-                                    <LayoutGrid className="w-4 h-4" />
+                                    <LayoutGrid className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
                                 >
-                                    <List className="w-4 h-4" />
+                                    <List className="w-3.5 h-3.5" />
                                 </button>
                             </div>
+
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsGeneratorOpen(true)}
+                                leftIcon={<Wand2 className="w-4 h-4" />}
+                                size="sm"
+                            >
+                                Entropy Engine
+                            </Button>
                             <Button
                                 variant="primary"
                                 onClick={handleOpenCreate}
                                 leftIcon={<Plus className="w-4 h-4" />}
+                                size="sm"
                             >
                                 New Entry
                             </Button>
@@ -201,45 +224,32 @@ export default function PasswordVaultPage() {
                 {/* Stats Dashboard */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {adminStats.map((stat, idx) => (
-                        <div key={idx} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:border-indigo-500 transition-colors">
-                            <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
-                                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                        <div key={idx} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:border-indigo-500 transition-colors">
+                            <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
+                                <stat.icon className={`w-5 h-5 ${stat.color}`} />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{stat.label}</p>
-                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stat.value}</p>
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                                <p className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{stat.value}</p>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Category Filters & Search */}
-                <div className="flex flex-col lg:flex-row gap-4">
-                    <div className="flex flex-wrap gap-2">
-                        {categories.map(cat => (
-                            <button
-                                key={cat}
-                                onClick={() => setActiveCategory(cat)}
-                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${activeCategory === cat
-                                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
-                                    : 'bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
-                                    }`}
-                            >
-                                {cat}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search by Employee or Service..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
+                {/* Category Filters */}
+                <div className="flex flex-wrap gap-2">
+                    {categories.map(cat => (
+                        <button
+                            key={cat}
+                            onClick={() => setActiveCategory(cat)}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeCategory === cat
+                                ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
+                                : 'bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                                }`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Vault Grid/List */}
@@ -269,24 +279,24 @@ export default function PasswordVaultPage() {
                             return (
                                 <div
                                     key={vault.id}
-                                    className={`group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1.5 rounded-[40px] overflow-hidden ${viewMode === 'list' ? 'p-6 flex items-center gap-6' : 'p-8 flex flex-col'}`}
+                                    className={`group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 rounded-2xl overflow-hidden ${viewMode === 'list' ? 'p-4 flex items-center gap-4' : 'p-5 flex flex-col'}`}
                                 >
                                     {/* Employee Badge (Corner Floating) */}
-                                    <div className="absolute top-4 right-8">
-                                        <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100/50 dark:border-indigo-800/50">
-                                            <User className="w-3 h-3 text-indigo-600" />
-                                            <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-400 tracking-wider truncate max-w-[100px]">
+                                    <div className="absolute top-3 right-5">
+                                        <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100/50 dark:border-indigo-800/50">
+                                            <User className="w-2.5 h-2.5 text-indigo-600" />
+                                            <span className="text-[9px] font-black text-indigo-700 dark:text-indigo-400 tracking-wider truncate max-w-[80px]">
                                                 {empName || 'Shared'}
                                             </span>
                                         </div>
                                     </div>
 
                                     {/* Card Header / Icon */}
-                                    <div className={`shrink-0 flex items-center justify-between mb-8 ${viewMode === 'list' ? 'mb-0' : ''}`}>
-                                        <div className="w-16 h-16 rounded-[22px] bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
+                                    <div className={`shrink-0 flex items-center justify-between mb-4 ${viewMode === 'list' ? 'mb-0' : ''}`}>
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-lg font-black shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
                                             {appInitial}
                                         </div>
-                                        <div className="flex items-center gap-2 pt-8">
+                                        <div className="flex items-center gap-2 pt-4">
                                             <StrengthRing pwd={vault.password} />
                                         </div>
                                     </div>
@@ -295,46 +305,46 @@ export default function PasswordVaultPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between">
                                             <div>
-                                                <h3 className="text-2xl font-black text-slate-900 dark:text-white truncate tracking-tight">{vault.name}</h3>
-                                                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 mt-1">
-                                                    <Globe className="w-3.5 h-3.5" />
+                                                <h3 className="text-lg font-black text-slate-900 dark:text-white truncate tracking-tight">{vault.name}</h3>
+                                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 mt-0.5">
+                                                    <Globe className="w-3 h-3" />
                                                     <span className="truncate">{vault.url || 'Internal Application'}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Identity Detail */}
-                                        <div className="mt-6 flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                                        <div className="mt-4 flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/50">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Access Identity</p>
-                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">{vault.username || '—'}</p>
+                                                <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Access Identity</p>
+                                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{vault.username || '—'}</p>
                                             </div>
                                             <button
                                                 onClick={() => copyToClipboard(vault.username || '', vault.id)}
-                                                className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
+                                                className="p-1.5 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
                                             >
-                                                <Copy className="w-4 h-4" />
+                                                <Copy className="w-3 h-3" />
                                             </button>
                                         </div>
 
                                         {/* Secret Zone */}
-                                        <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 relative overflow-hidden group/pass shadow-sm">
+                                        <div className="mt-2.5 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 relative overflow-hidden group/pass shadow-sm">
                                             <div className="flex items-center justify-between">
-                                                <div className="font-mono text-sm tracking-[0.2em] text-slate-900 dark:text-slate-200">
+                                                <div className="font-mono text-xs tracking-[0.2em] text-slate-900 dark:text-slate-200">
                                                     {visiblePasswords.has(vault.id) ? vault.password : '••••••••••••'}
                                                 </div>
                                                 <div className="flex gap-1 opacity-0 group-hover/pass:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); togglePasswordVisibility(vault.id); }}
-                                                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400"
+                                                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-400"
                                                     >
-                                                        {visiblePasswords.has(vault.id) ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        {visiblePasswords.has(vault.id) ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                                     </button>
                                                     <button
                                                         onClick={() => copyToClipboard(vault.password, vault.id)}
-                                                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400"
+                                                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-400"
                                                     >
-                                                        {copiedId === vault.id ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                                                        {copiedId === vault.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                                                     </button>
                                                 </div>
                                             </div>
@@ -342,22 +352,22 @@ export default function PasswordVaultPage() {
                                     </div>
 
                                     {/* Hover Actions */}
-                                    <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
-                                        <div className="flex gap-2">
+                                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                                        <div className="flex gap-1.5">
                                             <button
                                                 onClick={() => handleOpenEdit(vault)}
-                                                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all"
+                                                className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all"
                                             >
                                                 Maintain
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(vault.id)}
-                                                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all"
+                                                className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all"
                                             >
                                                 Revoke
                                             </button>
                                         </div>
-                                        <ArrowUpRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                                        <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                                     </div>
                                 </div>
                             );
@@ -365,16 +375,7 @@ export default function PasswordVaultPage() {
                     </div>
                 )}
 
-                {/* Quick Generator Fab */}
-                <button
-                    onClick={() => setIsGeneratorOpen(true)}
-                    className="fixed bottom-10 right-10 w-20 h-20 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[28px] shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30 group"
-                >
-                    <Wand2 className="w-8 h-8" />
-                    <span className="absolute right-full mr-6 px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black rounded-xl opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest shadow-2xl">
-                        Entropy Engine
-                    </span>
-                </button>
+
 
                 {/* Modals */}
                 <Modal
@@ -426,7 +427,7 @@ export default function PasswordVaultPage() {
                                 <button
                                     type="button"
                                     onClick={() => setIsGeneratorOpen(true)}
-                                    className="absolute right-3 top-9 text-[10px] font-black text-indigo-600 uppercase tracking-widest opacity-0 group-hover/mpy:opacity-100 transition-opacity"
+                                    className="absolute right-3 top-9 text-[9px] font-bold text-indigo-600 uppercase tracking-widest opacity-0 group-hover/mpy:opacity-100 transition-opacity"
                                 >
                                     Gen
                                 </button>
@@ -476,4 +477,6 @@ export default function PasswordVaultPage() {
             </div>
         </RouteGuard>
     );
-}
+};
+
+export default PasswordVaultPage;

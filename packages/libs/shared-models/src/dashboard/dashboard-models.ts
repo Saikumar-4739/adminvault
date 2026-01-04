@@ -17,6 +17,17 @@ export interface DashboardStats {
     };
     licenses: {
         total: number;
+        expiringSoon: {
+            id: number;
+            applicationName: string;
+            expiryDate: Date | string; // Allow string for serialization
+            assignedTo: string;
+        }[];
+    };
+    systemHealth: {
+        assetUtilization: number;
+        ticketResolutionRate: number;
+        openCriticalTickets: number;
     };
 }
 

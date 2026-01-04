@@ -57,18 +57,17 @@ export function useCompanies() {
 
                 if (response.status) {
                     await fetchCompanies();
-                    return true;
+                    return { success: true, message: response.message || 'Company created successfully' };
                 } else {
-                    throw new Error(response.message || 'Failed to create company');
+                    return { success: false, message: response.message || 'Failed to create company' };
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to create company');
-                return false;
+                return { success: false, message: err.message || 'Failed to create company' };
             } finally {
                 setIsLoading(false);
             }
         },
-        [toast, fetchCompanies]
+        [fetchCompanies]
     );
 
     const updateCompany = useCallback(
@@ -79,18 +78,17 @@ export function useCompanies() {
 
                 if (response.status) {
                     await fetchCompanies();
-                    return true;
+                    return { success: true, message: response.message || 'Company updated successfully' };
                 } else {
-                    throw new Error(response.message || 'Failed to update company');
+                    return { success: false, message: response.message || 'Failed to update company' };
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to update company');
-                return false;
+                return { success: false, message: err.message || 'Failed to update company' };
             } finally {
                 setIsLoading(false);
             }
         },
-        [toast, fetchCompanies]
+        [fetchCompanies]
     );
 
     const deleteCompany = useCallback(
@@ -101,18 +99,17 @@ export function useCompanies() {
 
                 if (response.status) {
                     await fetchCompanies();
-                    return true;
+                    return { success: true, message: response.message || 'Company deleted successfully' };
                 } else {
-                    throw new Error(response.message || 'Failed to delete company');
+                    return { success: false, message: response.message || 'Failed to delete company' };
                 }
             } catch (err: any) {
-                // toast.error('Error', err.message || 'Failed to delete company');
-                return false;
+                return { success: false, message: err.message || 'Failed to delete company' };
             } finally {
                 setIsLoading(false);
             }
         },
-        [toast, fetchCompanies]
+        [fetchCompanies]
     );
 
     const getCompany = useCallback(

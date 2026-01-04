@@ -6,12 +6,14 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel, GetAssetAssignModel, GetAssetAssignByIdModel, AssetAssignResponseModel, GetAllAssetAssignsModel, AssetStatusEnum } from '@adminvault/shared-models';
 import { AssetInfoEntity } from '../../entities/asset-info.entity';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class AssetAssignService {
     constructor(
         private dataSource: DataSource,
-        private assetAssignRepo: AssetAssignRepository
+        private assetAssignRepo: AssetAssignRepository,
+        private auditLogsService: AuditLogsService
     ) { }
 
     /**
@@ -22,7 +24,7 @@ export class AssetAssignService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if validation fails or assignment creation fails
      */
-    async createAssignment(reqModel: CreateAssetAssignModel): Promise<GlobalResponse> {
+    async createAssignment(reqModel: CreateAssetAssignModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             // Validate required fields
@@ -59,6 +61,18 @@ export class AssetAssignService {
             });
 
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'ASSIGN_ASSET',
+                resource: 'AssetAssign',
+                details: `Asset ${reqModel.assetId} assigned to Employee ${reqModel.employeeId}`,
+                status: 'SUCCESS',
+                userId: userId || reqModel.assignedById || undefined,
+                companyId: 0, // Ideally fetch from user context
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Asset assigned successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -74,7 +88,7 @@ export class AssetAssignService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if assignment not found or update fails
      */
-    async updateAssignment(reqModel: UpdateAssetAssignModel): Promise<GlobalResponse> {
+    async updateAssignment(reqModel: UpdateAssetAssignModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             // Validate assignment exists
@@ -106,6 +120,18 @@ export class AssetAssignService {
             }
 
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_ASSIGNMENT',
+                resource: 'AssetAssign',
+                details: `Assignment ${reqModel.id} updated`,
+                status: 'SUCCESS',
+                userId: userId || reqModel.assignedById || undefined,
+                companyId: 0,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Assignment updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -164,7 +190,7 @@ export class AssetAssignService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if assignment not found or deletion fails
      */
-    async deleteAssignment(reqModel: DeleteAssetAssignModel): Promise<GlobalResponse> {
+    async deleteAssignment(reqModel: DeleteAssetAssignModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -192,6 +218,18 @@ export class AssetAssignService {
 
             await transManager.getRepository(AssetAssignEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'DELETE_ASSIGNMENT',
+                resource: 'AssetAssign',
+                details: `Assignment ${reqModel.id} deleted (Returned)`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: 0,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Assignment deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();

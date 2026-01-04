@@ -9,12 +9,14 @@ import {
     GetAllEmailAccountsModel,
     EmailAccountResponseModel
 } from '@adminvault/shared-models';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class EmailAccountsService {
     constructor(
         @InjectRepository(EmailAccountsEntity)
-        private readonly repo: Repository<EmailAccountsEntity>
+        private readonly repo: Repository<EmailAccountsEntity>,
+        private auditLogsService: AuditLogsService
     ) { }
 
     /**
@@ -46,9 +48,21 @@ export class EmailAccountsService {
      * @param reqModel - Email account creation data
      * @returns GlobalResponse indicating success with 201 status code
      */
-    async create(reqModel: CreateEmailAccountModel): Promise<GlobalResponse> {
+    async create(reqModel: CreateEmailAccountModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const entity = this.repo.create(reqModel);
         await this.repo.save(entity);
+
+        // AUDIT LOG
+        await this.auditLogsService.create({
+            action: 'CREATE_EMAIL_ACCOUNT',
+            resource: 'EmailAccount',
+            details: `Email Account ${reqModel.email} created`,
+            status: 'SUCCESS',
+            userId: userId || reqModel.employeeId || undefined, // Fallback if 0
+            companyId: 0,
+            ipAddress: ipAddress || '0.0.0.0'
+        });
+
         return new GlobalResponse(true, 201, 'Email account created successfully');
     }
 
@@ -59,8 +73,23 @@ export class EmailAccountsService {
      * @param reqModel - Delete request with email account ID
      * @returns GlobalResponse indicating success with 200 status code
      */
-    async delete(reqModel: DeleteEmailAccountModel): Promise<GlobalResponse> {
+    async delete(reqModel: DeleteEmailAccountModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+        const existing = await this.repo.findOne({ where: { id: reqModel.id } });
         await this.repo.delete(reqModel.id);
+
+        if (existing) {
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'DELETE_EMAIL_ACCOUNT',
+                resource: 'EmailAccount',
+                details: `Email Account ${existing.email} deleted`,
+                status: 'SUCCESS',
+                userId: userId || existing.employeeId || undefined,
+                companyId: 0,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+        }
+
         return new GlobalResponse(true, 200, 'Email account deleted successfully');
     }
 }

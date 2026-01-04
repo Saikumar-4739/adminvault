@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AssetAssignService } from './asset-assign.service';
@@ -16,9 +16,11 @@ export class AssetAssignController {
      */
     @Post('createAssignment')
     @ApiBody({ type: CreateAssetAssignModel })
-    async createAssignment(@Body() reqModel: CreateAssetAssignModel): Promise<GlobalResponse> {
+    async createAssignment(@Body() reqModel: CreateAssetAssignModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.createAssignment(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.createAssignment(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -31,9 +33,11 @@ export class AssetAssignController {
      */
     @Post('updateAssignment')
     @ApiBody({ type: UpdateAssetAssignModel })
-    async updateAssignment(@Body() reqModel: UpdateAssetAssignModel): Promise<GlobalResponse> {
+    async updateAssignment(@Body() reqModel: UpdateAssetAssignModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.updateAssignment(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.updateAssignment(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -74,9 +78,11 @@ export class AssetAssignController {
      */
     @Post('deleteAssignment')
     @ApiBody({ type: DeleteAssetAssignModel })
-    async deleteAssignment(@Body() reqModel: DeleteAssetAssignModel): Promise<GlobalResponse> {
+    async deleteAssignment(@Body() reqModel: DeleteAssetAssignModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.deleteAssignment(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.deleteAssignment(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

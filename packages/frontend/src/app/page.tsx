@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
-export default function HomePage() {
+export const HomePage: React.FC = () => {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
 
@@ -35,4 +35,6 @@ export default function HomePage() {
       </div>
     </div>
   );
-}
+};
+
+export default HomePage;

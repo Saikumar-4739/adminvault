@@ -58,7 +58,7 @@ export function useAssets(companyId?: number) {
                     brandId: item.brandId,
                     model: item.model,
                     configuration: item.configuration,
-                    status: item.assetStatusEnum || item.status,
+                    status: (item.assetStatusEnum || item.status || 'available').toString().toLowerCase(),
                     purchaseDate: item.purchaseDate,
                     warrantyExpiry: item.warrantyExpiry,
                     userAssignedDate: item.userAssignedDate,
@@ -98,7 +98,7 @@ export function useAssets(companyId?: number) {
                     brandId: item.brandId,
                     model: item.model,
                     configuration: item.configuration,
-                    status: item.assetStatusEnum || item.status,
+                    status: (item.assetStatusEnum || item.status || 'available').toString().toLowerCase(),
                     purchaseDate: item.purchaseDate,
                     warrantyExpiry: item.warrantyExpiry,
                     createdAt: item.createdAt || item.created_at,
@@ -160,7 +160,7 @@ export function useAssets(companyId?: number) {
                     brandId: item.brandId,
                     model: item.model,
                     configuration: item.configuration,
-                    status: item.assetStatusEnum || item.status,
+                    status: (item.assetStatusEnum || item.status || 'available').toString().toLowerCase(),
                     purchaseDate: item.purchaseDate,
                     warrantyExpiry: item.warrantyExpiry,
                     createdAt: item.createdAt || item.created_at,
@@ -189,12 +189,12 @@ export function useAssets(companyId?: number) {
                 if (response.status) {
                     await fetchAssetsWithAssignments();
                     await fetchStatistics();
-                    return true;
+                    return { success: true, message: response.message || 'Asset created successfully' };
                 } else {
-                    throw new Error(response.message || 'Failed to create asset');
+                    return { success: false, message: response.message || 'Failed to create asset' };
                 }
             } catch (err: any) {
-                return false;
+                return { success: false, message: err.message || 'Failed to create asset' };
             } finally {
                 setIsLoading(false);
             }
@@ -211,12 +211,12 @@ export function useAssets(companyId?: number) {
                 if (response.status) {
                     await fetchAssetsWithAssignments();
                     await fetchStatistics();
-                    return true;
+                    return { success: true, message: response.message || 'Asset updated successfully' };
                 } else {
-                    throw new Error(response.message || 'Failed to update asset');
+                    return { success: false, message: response.message || 'Failed to update asset' };
                 }
             } catch (err: any) {
-                return false;
+                return { success: false, message: err.message || 'Failed to update asset' };
             } finally {
                 setIsLoading(false);
             }
@@ -233,12 +233,12 @@ export function useAssets(companyId?: number) {
                 if (response.status) {
                     await fetchAssetsWithAssignments();
                     await fetchStatistics();
-                    return true;
+                    return { success: true, message: response.message || 'Asset deleted successfully' };
                 } else {
-                    throw new Error(response.message || 'Failed to delete asset');
+                    return { success: false, message: response.message || 'Failed to delete asset' };
                 }
             } catch (err: any) {
-                return false;
+                return { success: false, message: err.message || 'Failed to delete asset' };
             } finally {
                 setIsLoading(false);
             }
@@ -247,6 +247,13 @@ export function useAssets(companyId?: number) {
     );
 
     useEffect(() => {
+        if (companyId) {
+            fetchAssetsWithAssignments();
+            fetchStatistics();
+        }
+    }, [companyId, fetchAssetsWithAssignments, fetchStatistics]);
+
+    const refresh = useCallback(() => {
         if (companyId) {
             fetchAssetsWithAssignments();
             fetchStatistics();
@@ -265,5 +272,6 @@ export function useAssets(companyId?: number) {
         createAsset,
         updateAsset,
         deleteAsset,
+        refresh
     };
 }

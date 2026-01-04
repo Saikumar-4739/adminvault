@@ -42,7 +42,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             const id = Math.random().toString(36).substring(7);
             const toast: Toast = { id, type, title, message, duration };
 
-            setToasts((prev) => [...prev, toast]);
+            console.log('🔔 Toast triggered:', { type, title, message });
+            setToasts((prev) => {
+                const newToasts = [...prev, toast];
+                console.log('📋 Current toasts:', newToasts.length);
+                return newToasts;
+            });
 
             if (duration > 0) {
                 setTimeout(() => removeToast(id), duration);
@@ -81,7 +86,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             {children}
             {mounted &&
                 createPortal(
-                    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-3 w-full max-w-md px-4 pointer-events-none">
+                    <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 w-full max-w-md px-4 pointer-events-none">
                         {toasts.map((toast) => (
                             <div key={toast.id} className="pointer-events-auto">
                                 <ToastItem toast={toast} onClose={() => removeToast(toast.id)} />
@@ -126,7 +131,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
     return (
         <div
             className={cn(
-                'flex items-start gap-4 p-4 pr-3 rounded-xl border-l-4 shadow-2xl animate-slide-in transform transition-all duration-300 hover:scale-105',
+                'flex items-start gap-4 p-4 pr-3 rounded-xl border-l-4 shadow-2xl animate-slide-down transform transition-all duration-300 hover:scale-105',
                 styles[toast.type],
                 textColors[toast.type]
             )}

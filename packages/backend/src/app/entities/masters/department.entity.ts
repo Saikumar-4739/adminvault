@@ -1,6 +1,5 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, Index } from 'typeorm';
 import { CommonBaseEntity } from '../common-base.entity';
-import { CompanyInfoEntity } from '../company-info.entity';
 
 @Entity('departments')
 @Index('idx_dept_name', ['name'])
@@ -14,8 +13,6 @@ export class DepartmentsMasterEntity extends CommonBaseEntity {
 
     @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether department is active' })
     isActive: boolean;
-
-
 
     @Column('varchar', { name: 'code', length: 50, nullable: true, comment: 'Department code' })
     code: string;

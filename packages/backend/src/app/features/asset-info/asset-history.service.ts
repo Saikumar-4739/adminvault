@@ -74,18 +74,20 @@ export class AssetHistoryService {
                     }
                 });
 
-                // Original Allocation Event (if date exists)
-                if (record.allocationDate) {
-                    events.push({
-                        id: `alloc-historic-${record.id}`,
-                        date: record.allocationDate,
-                        type: AssetTimelineEventType.ASSIGNED,
-                        title: `Assigned to ${empName}`,
-                        description: 'Historical assignment record',
-                        employeeName: empName,
-                        employeeId: Number(record.employeeId)
-                    });
-                }
+                // Original Allocation Event
+                // Even if allocationDate is missing, we record that it WAS assigned to this user
+                const allocDate = record.allocationDate || new Date(new Date(record.returnDate).getTime() - 1000); // Fallback to slightly before return if missing
+                const isDateEstimated = !record.allocationDate;
+
+                events.push({
+                    id: `alloc-historic-${record.id}`,
+                    date: allocDate,
+                    type: AssetTimelineEventType.ASSIGNED,
+                    title: `Assigned to ${empName}`,
+                    description: isDateEstimated ? 'Historical assignment' : 'Historical assignment',
+                    employeeName: empName,
+                    employeeId: Number(record.employeeId)
+                });
             }
 
             // 3. Current Assignment

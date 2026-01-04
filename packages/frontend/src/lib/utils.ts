@@ -9,29 +9,36 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format date to readable string
+ * Format date to readable string (DD MMM YYYY)
  */
-export function formatDate(date: Date | string): string {
+export function formatDate(date: Date | string | null | undefined): string {
+    if (!date) return '-';
     const d = typeof date === 'string' ? new Date(date) : date;
-    return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
+    if (isNaN(d.getTime())) return '-';
+
+    return d.toLocaleDateString('en-GB', {
+        day: '2-digit',
         month: 'short',
-        day: 'numeric',
-    }).format(d);
+        year: 'numeric',
+    });
 }
 
 /**
- * Format date with time
+ * Format date with time (DD MMM YYYY, HH:MM)
  */
-export function formatDateTime(date: Date | string): string {
+export function formatDateTime(date: Date | string | null | undefined): string {
+    if (!date) return '-';
     const d = typeof date === 'string' ? new Date(date) : date;
-    return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
+    if (isNaN(d.getTime())) return '-';
+
+    return d.toLocaleString('en-GB', {
+        day: '2-digit',
         month: 'short',
-        day: 'numeric',
+        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-    }).format(d);
+        hour12: true
+    });
 }
 
 /**

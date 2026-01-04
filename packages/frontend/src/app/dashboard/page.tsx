@@ -5,61 +5,57 @@ import dynamic from 'next/dynamic';
 import { useDashboard } from '@/hooks/useDashboard';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import { Users, Package, Ticket, AlertCircle, Lock, RefreshCcw, TrendingUp, Plus, FileText, Activity, PieChart as PieChartIcon, BarChart2 } from 'lucide-react';
+import { Users, Package, Ticket, AlertCircle, Lock, RefreshCcw, TrendingUp, Activity, PieChart as PieChartIcon, BarChart2 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
-import Link from 'next/link';
 
-// Lazy load chart components to reduce initial bundle size
-const PieChart = dynamic(() => import('recharts').then(mod => mod.PieChart), { ssr: false });
-const Pie = dynamic(() => import('recharts').then(mod => mod.Pie), { ssr: false });
-const Cell = dynamic(() => import('recharts').then(mod => mod.Cell), { ssr: false });
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
-const BarChart = dynamic(() => import('recharts').then(mod => mod.BarChart), { ssr: false });
-const Bar = dynamic(() => import('recharts').then(mod => mod.Bar), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
-const Legend = dynamic(() => import('recharts').then(mod => mod.Legend), { ssr: false });
-const AreaChart = dynamic(() => import('recharts').then(mod => mod.AreaChart), { ssr: false });
-const Area = dynamic(() => import('recharts').then(mod => mod.Area), { ssr: false });
-const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
+// Lazy load chart components
+const AssetDistributionChart = dynamic(() => import('./components/AssetDistributionChart'), {
+    ssr: false,
+    loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
+});
+const TicketPriorityChart = dynamic(() => import('./components/TicketPriorityChart'), {
+    ssr: false,
+    loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
+});
+const EmployeeDeptChart = dynamic(() => import('./components/EmployeeDeptChart'), {
+    ssr: false,
+    loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
+});
+const TicketStatusChart = dynamic(() => import('./components/TicketStatusChart'), {
+    ssr: false,
+    loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
+});
 
-// Color constants (moved outside component to prevent recreation)
-const COLORS = {
-    emerald: '#10B981',
-    teal: '#14B8A6',
-    cyan: '#06B6D4',
-    sky: '#0EA5E9',
-    blue: '#3B82F6',
-    indigo: '#6366F1',
-    violet: '#8B5CF6',
-    purple: '#A855F7',
-    fuchsia: '#D946EF',
-    pink: '#EC4899',
-    rose: '#F43F5E',
-    orange: '#F97316',
-    amber: '#F59E0B',
-    yellow: '#EAB308',
-    lime: '#84CC16',
-    green: '#22C55E'
-};
+// Lazy load new Enterprise Widgets
+const SystemHealthWidget = dynamic(() => import('./components/SystemHealthWidget'), {
+    ssr: false,
+    loading: () => <div className="h-full animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg p-4"></div>
+});
+const RenewalsWidget = dynamic(() => import('./components/RenewalsWidget'), {
+    ssr: false,
+    loading: () => <div className="h-full animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg p-4"></div>
+});
 
-const CHART_COLORS = [
-    COLORS.emerald,
-    COLORS.violet,
-    COLORS.amber,
-    COLORS.rose,
-    COLORS.cyan,
-    COLORS.fuchsia,
-    COLORS.orange,
-    COLORS.blue
-];
+const SecurityScoreCard = dynamic(() => import('./components/SecurityScoreCard'), {
+    ssr: false,
+    loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
+});
 
-export default function DashboardPage() {
+export const DashboardPage: React.FC = () => {
     const { stats, isLoading, refresh } = useDashboard();
+
+    // Mock security metrics for demonstration
+    const securityMetrics = {
+        score: 87,
+        metrics: {
+            identity: 95,
+            devices: 78,
+            compliance: 92
+        }
+    };
 
     // Memoize data transformations to prevent unnecessary recalculations
     const assetData = useMemo(() =>
@@ -132,7 +128,7 @@ export default function DashboardPage() {
                 {/* Compact Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">System Overview</h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Real-time system overview</p>
                     </div>
                     <Button
@@ -167,32 +163,45 @@ export default function DashboardPage() {
                     ))}
                 </div>
 
-                {/* Quick Actions */}
-                <Card className="p-3 border-none shadow-md">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 mr-2">Quick Actions:</span>
-                        <Link href="/create-ticket">
-                            <Button variant="outline" size="sm" leftIcon={<Plus className="h-3.5 w-3.5" />} className="text-xs py-1 px-2.5">
-                                New Ticket
-                            </Button>
-                        </Link>
-                        <Link href="/assets">
-                            <Button variant="outline" size="sm" leftIcon={<Package className="h-3.5 w-3.5" />} className="text-xs py-1 px-2.5">
-                                Add Asset
-                            </Button>
-                        </Link>
-                        <Link href="/documents">
-                            <Button variant="outline" size="sm" leftIcon={<FileText className="h-3.5 w-3.5" />} className="text-xs py-1 px-2.5">
-                                Documents
-                            </Button>
-                        </Link>
-                    </div>
-                </Card>
 
-                {/* Compact Charts Section - 4 Different Chart Types */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Asset Distribution - Donut Chart */}
-                    <Card className="p-4 border-none shadow-md bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-900 dark:to-slate-800">
+
+                {/* Multi-Column Grid for Core Analytics & Risk */}
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                    {/* Security Score Card (High Priority) */}
+                    <div className="lg:col-span-1">
+                        <SecurityScoreCard score={securityMetrics.score} metrics={securityMetrics.metrics} />
+                    </div>
+
+                    {/* System Health Widget */}
+                    <div className="lg:col-span-1">
+                        <SystemHealthWidget stats={stats} />
+                    </div>
+
+                    {/* Ticket Priority Distribution */}
+                    <div className="lg:col-span-1">
+                        <Card className="p-4 border-none shadow-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl h-full flex flex-col">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                                    <AlertCircle className="h-3.5 w-3.5 text-orange-600" />
+                                </div>
+                                Ticket Priorities
+                            </h3>
+                            <div className="flex-1 w-full min-h-[160px]">
+                                <TicketPriorityChart data={ticketPriorityData} />
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Renewal & Compliance Alerts */}
+                    <div className="lg:col-span-1 border-l-2 border-dashed border-slate-200 dark:border-slate-800 pl-4">
+                        <RenewalsWidget stats={stats} />
+                    </div>
+                </div>
+
+                {/* Dashboard Grid - Unified 3-Column Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+                    {/* Asset Distribution */}
+                    <Card className="p-4 border-none shadow-md bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-900 dark:to-slate-800 h-full flex flex-col">
                         <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                             <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
                                 <PieChartIcon className="h-3.5 w-3.5 text-white" />
@@ -202,116 +211,14 @@ export default function DashboardPage() {
                         {isLoading ? (
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
-                            <div className="h-56 w-full">
-                                <ResponsiveContainer width="100%" height="100%" minHeight={224}>
-                                    <PieChart>
-                                        <defs>
-                                            <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor={COLORS.emerald} stopOpacity={1} />
-                                                <stop offset="100%" stopColor={COLORS.teal} stopOpacity={0.8} />
-                                            </linearGradient>
-                                        </defs>
-                                        <Pie
-                                            data={assetData}
-                                            cx="50%"
-                                            cy="45%"
-                                            innerRadius={50}
-                                            outerRadius={70}
-                                            paddingAngle={4}
-                                            dataKey="value"
-                                        >
-                                            {assetData.map((entry, index) => (
-                                                <Cell
-                                                    key={`cell-${index}`}
-                                                    fill={CHART_COLORS[index % CHART_COLORS.length]}
-                                                    stroke="#fff"
-                                                    strokeWidth={2}
-                                                />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: '#1e293b',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                color: '#fff',
-                                                fontSize: '12px',
-                                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                            }}
-                                        />
-                                        <Legend
-                                            verticalAlign="bottom"
-                                            height={24}
-                                            iconSize={10}
-                                            wrapperStyle={{ fontSize: '11px', fontWeight: '500' }}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                            <div className="flex-1 w-full min-h-[200px]">
+                                <AssetDistributionChart data={assetData} />
                             </div>
                         )}
                     </Card>
 
-                    {/* Ticket Priority - Vertical Bar Chart with Gradient */}
-                    <Card className="p-4 border-none shadow-md bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800">
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                            <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600">
-                                <AlertCircle className="h-3.5 w-3.5 text-white" />
-                            </div>
-                            Tickets by Priority
-                        </h3>
-                        {isLoading ? (
-                            <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
-                        ) : (
-                            <div className="h-56 w-full">
-                                <ResponsiveContainer width="100%" height="100%" minHeight={224}>
-                                    <BarChart data={ticketPriorityData}>
-                                        <defs>
-                                            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor={COLORS.amber} stopOpacity={1} />
-                                                <stop offset="100%" stopColor={COLORS.orange} stopOpacity={0.7} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.3} />
-                                        <XAxis
-                                            dataKey="name"
-                                            stroke="#94a3b8"
-                                            fontSize={11}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            fontWeight={500}
-                                        />
-                                        <YAxis
-                                            stroke="#94a3b8"
-                                            fontSize={11}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            fontWeight={500}
-                                        />
-                                        <Tooltip
-                                            cursor={{ fill: 'rgba(251, 191, 36, 0.1)' }}
-                                            contentStyle={{
-                                                backgroundColor: '#1e293b',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                color: '#fff',
-                                                fontSize: '12px',
-                                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                            }}
-                                        />
-                                        <Bar
-                                            dataKey="value"
-                                            fill="url(#barGradient)"
-                                            radius={[6, 6, 0, 0]}
-                                            barSize={35}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        )}
-                    </Card>
-
-                    {/* Employee Department - Area Chart */}
-                    <Card className="p-4 border-none shadow-md bg-gradient-to-br from-violet-50 to-purple-50 dark:from-slate-900 dark:to-slate-800">
+                    {/* Employee Department (Moved down) */}
+                    <Card className="p-4 border-none shadow-md bg-gradient-to-br from-violet-50 to-purple-50 dark:from-slate-900 dark:to-slate-800 h-full flex flex-col">
                         <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                             <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
                                 <Activity className="h-3.5 w-3.5 text-white" />
@@ -321,59 +228,14 @@ export default function DashboardPage() {
                         {isLoading ? (
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
-                            <div className="h-56 w-full">
-                                <ResponsiveContainer width="100%" height="100%" minHeight={224}>
-                                    <AreaChart data={employeeDeptData}>
-                                        <defs>
-                                            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor={COLORS.violet} stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor={COLORS.purple} stopOpacity={0.1} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.3} />
-                                        <XAxis
-                                            dataKey="name"
-                                            stroke="#94a3b8"
-                                            fontSize={10}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            fontWeight={500}
-                                            angle={-15}
-                                            textAnchor="end"
-                                            height={50}
-                                        />
-                                        <YAxis
-                                            stroke="#94a3b8"
-                                            fontSize={11}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            fontWeight={500}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: '#1e293b',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                color: '#fff',
-                                                fontSize: '12px',
-                                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                            }}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="value"
-                                            stroke={COLORS.violet}
-                                            strokeWidth={3}
-                                            fill="url(#areaGradient)"
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
+                            <div className="flex-1 w-full min-h-[200px]">
+                                <EmployeeDeptChart data={employeeDeptData} />
                             </div>
                         )}
                     </Card>
 
-                    {/* Ticket Status - Horizontal Bar Chart */}
-                    <Card className="p-4 border-none shadow-md bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-slate-900 dark:to-slate-800">
+                    {/* Ticket Status */}
+                    <Card className="p-4 border-none shadow-md bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-slate-900 dark:to-slate-800 h-full flex flex-col">
                         <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                             <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600">
                                 <BarChart2 className="h-3.5 w-3.5 text-white" />
@@ -383,53 +245,8 @@ export default function DashboardPage() {
                         {isLoading ? (
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
-                            <div className="h-56 w-full">
-                                <ResponsiveContainer width="100%" height="100%" minHeight={224}>
-                                    <BarChart data={ticketStatusData} layout="vertical">
-                                        <defs>
-                                            <linearGradient id="horizontalGradient" x1="0" y1="0" x2="1" y2="0">
-                                                <stop offset="0%" stopColor={COLORS.blue} stopOpacity={1} />
-                                                <stop offset="100%" stopColor={COLORS.cyan} stopOpacity={0.7} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.3} />
-                                        <XAxis
-                                            type="number"
-                                            stroke="#94a3b8"
-                                            fontSize={11}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            fontWeight={500}
-                                        />
-                                        <YAxis
-                                            type="category"
-                                            dataKey="name"
-                                            stroke="#94a3b8"
-                                            fontSize={11}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            width={80}
-                                            fontWeight={500}
-                                        />
-                                        <Tooltip
-                                            cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
-                                            contentStyle={{
-                                                backgroundColor: '#1e293b',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                color: '#fff',
-                                                fontSize: '12px',
-                                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                            }}
-                                        />
-                                        <Bar
-                                            dataKey="value"
-                                            fill="url(#horizontalGradient)"
-                                            radius={[0, 6, 6, 0]}
-                                            barSize={22}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                            <div className="flex-1 w-full min-h-[200px]">
+                                <TicketStatusChart data={ticketStatusData} />
                             </div>
                         )}
                     </Card>
@@ -487,7 +304,9 @@ export default function DashboardPage() {
                         </table>
                     </div>
                 </Card>
-            </div>
-        </RouteGuard>
+            </div >
+        </RouteGuard >
     );
-}
+};
+
+export default DashboardPage;

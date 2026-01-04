@@ -5,12 +5,14 @@ import { CompanyInfoEntity } from '../../../entities/company-info.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateCompanyModel, DeleteCompanyModel, GetCompanyModel, UpdateCompanyModel, CompanyDocs } from '@adminvault/shared-models';
+import { AuditLogsService } from '../../audit-logs/audit-logs.service';
 
 @Injectable()
 export class CompanyInfoService {
     constructor(
         private dataSource: DataSource,
-        private companyInfoRepo: CompanyInfoRepository
+        private companyInfoRepo: CompanyInfoRepository,
+        private auditLogsService: AuditLogsService
     ) { }
 
     /**
@@ -21,7 +23,7 @@ export class CompanyInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if validation fails or company name already exists
      */
-    async createCompany(reqModel: CreateCompanyModel): Promise<GlobalResponse> {
+    async createCompany(reqModel: CreateCompanyModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.companyName) {
@@ -48,8 +50,20 @@ export class CompanyInfoService {
             newCompany.estDate = reqModel.estDate as any;
             newCompany.email = reqModel.email && reqModel.email.trim() !== '' ? reqModel.email : null;
             newCompany.phone = reqModel.phone && reqModel.phone.trim() !== '' ? reqModel.phone : null;
-            await transManager.getRepository(CompanyInfoEntity).save(newCompany);
+            const savedCompany = await transManager.getRepository(CompanyInfoEntity).save(newCompany);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_COMPANY',
+                resource: 'CompanyInfo',
+                details: `Company ${savedCompany.companyName} created`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: savedCompany.id,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Company created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -65,7 +79,7 @@ export class CompanyInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if company not found or update fails
      */
-    async updateCompany(reqModel: UpdateCompanyModel): Promise<GlobalResponse> {
+    async updateCompany(reqModel: UpdateCompanyModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -91,6 +105,18 @@ export class CompanyInfoService {
 
             await transManager.getRepository(CompanyInfoEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_COMPANY',
+                resource: 'CompanyInfo',
+                details: `Company ${existingCompany.companyName} updated`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: existingCompany.id,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Company updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -116,7 +142,7 @@ export class CompanyInfoService {
             if (!company) {
                 throw new ErrorResponse(0, "Company not found");
             }
-            const companyDoc = new CompanyDocs(company.id,company.companyName,company.location,company.estDate as any, company.email,company.phone);
+            const companyDoc = new CompanyDocs(company.id, company.companyName, company.location, company.estDate as any, company.email, company.phone);
             return new GlobalResponse(true, 0, "Company retrieved successfully", companyDoc);
         } catch (error) {
             throw error;
@@ -133,7 +159,7 @@ export class CompanyInfoService {
     async getAllCompanies(): Promise<GlobalResponse<CompanyDocs[]>> {
         try {
             const companies = await this.companyInfoRepo.find();
-            const companyDocs = companies.map(company => new CompanyDocs(company.id,company.companyName,company.location,company.estDate as any, company.email,company.phone));
+            const companyDocs = companies.map(company => new CompanyDocs(company.id, company.companyName, company.location, company.estDate as any, company.email, company.phone));
             return new GlobalResponse(true, 0, "Companies retrieved successfully", companyDocs);
         } catch (error) {
             throw error;
@@ -149,7 +175,7 @@ export class CompanyInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if company not found or deletion fails
      */
-    async deleteCompany(reqModel: DeleteCompanyModel): Promise<GlobalResponse> {
+    async deleteCompany(reqModel: DeleteCompanyModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -164,6 +190,18 @@ export class CompanyInfoService {
             await transManager.startTransaction();
             await transManager.getRepository(CompanyInfoEntity).delete(reqModel.id);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'DELETE_COMPANY',
+                resource: 'CompanyInfo',
+                details: `Company ${existingCompany.companyName} deleted`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: existingCompany.id,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Company deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();

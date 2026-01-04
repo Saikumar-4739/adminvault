@@ -21,9 +21,10 @@ export class AuthUsersController {
      */
     @Post('registerUser')
     @Public()
-    async registerUser(@Body() reqModel: RegisterUserModel): Promise<GlobalResponse> {
+    async registerUser(@Body() reqModel: RegisterUserModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.registerUser(reqModel);
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.registerUser(reqModel, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -52,9 +53,10 @@ export class AuthUsersController {
      * @returns GlobalResponse indicating logout success
      */
     @Post('logOutUser')
-    async logOutUser(@Body() reqModel: LogoutUserModel): Promise<GlobalResponse> {
+    async logOutUser(@Body() reqModel: LogoutUserModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.logOutUser(reqModel);
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.logOutUser(reqModel, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -66,9 +68,11 @@ export class AuthUsersController {
      * @returns GlobalResponse indicating update success
      */
     @Post('updateUser')
-    async updateUser(@Body() reqModel: UpdateUserModel): Promise<GlobalResponse> {
+    async updateUser(@Body() reqModel: UpdateUserModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.updateUser(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.updateUser(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -80,9 +84,11 @@ export class AuthUsersController {
      * @returns GlobalResponse indicating deletion success
      */
     @Post('deleteUser')
-    async deleteUser(@Body() reqModel: DeleteUserModel): Promise<GlobalResponse> {
+    async deleteUser(@Body() reqModel: DeleteUserModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            return await this.service.deleteUser(reqModel);
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.deleteUser(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

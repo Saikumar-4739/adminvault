@@ -3,6 +3,11 @@ import './globals.css';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { Inter } from 'next/font/google';
+import MainLayout from '@/components/layout/MainLayout';
+import { ReduxProvider } from '@/components/providers/ReduxProvider';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'AdminVault - Enterprise Management Platform',
@@ -26,14 +31,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
-        <ThemeProvider>
-          <ToastProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </ToastProvider>
-        </ThemeProvider>
+      <body className={`${inter.className} antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 selection:bg-blue-500 selection:text-white`}>
+        <ReduxProvider>
+          <ThemeProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <MainLayout>
+                  {children}
+                </MainLayout>
+              </AuthProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

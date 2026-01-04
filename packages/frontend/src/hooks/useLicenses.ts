@@ -1,8 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
-import { useToast } from '@/contexts/ToastContext';
-
 // Define types locally for now, should ideally be in shared-models
 export interface CompanyLicense {
     id: number;
@@ -45,7 +43,6 @@ export function useLicenses(companyId?: number) {
     const [stats, setStats] = useState<LicensesStats>({ totalLicenses: 0, usedLicenses: 0, totalCost: 0, expiringSoon: 0 });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const toast = useToast();
 
     // Fetch Licenses
     const fetchLicenses = useCallback(async () => {
@@ -80,15 +77,13 @@ export function useLicenses(companyId?: number) {
         try {
             const response = await licensesService.create(data);
             if (response.status) {
-                toast.success('License assigned successfully');
                 fetchLicenses();
                 fetchStats();
-                return true;
+                return { success: true, message: response.message || 'License assigned successfully' };
             }
-            return false;
+            return { success: false, message: response.message || 'Failed to assign license' };
         } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Failed to assign license');
-            return false;
+            return { success: false, message: err.response?.data?.message || err.message || 'Failed to assign license' };
         }
     };
 
@@ -96,15 +91,13 @@ export function useLicenses(companyId?: number) {
         try {
             const response = await licensesService.update(id, data);
             if (response.status) {
-                toast.success('License updated successfully');
                 fetchLicenses();
                 fetchStats();
-                return true;
+                return { success: true, message: response.message || 'License updated successfully' };
             }
-            return false;
+            return { success: false, message: response.message || 'Failed to update license' };
         } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Failed to update license');
-            return false;
+            return { success: false, message: err.response?.data?.message || err.message || 'Failed to update license' };
         }
     };
 
@@ -112,15 +105,13 @@ export function useLicenses(companyId?: number) {
         try {
             const response = await licensesService.remove(id);
             if (response.status) {
-                toast.success('License removed successfully');
                 fetchLicenses();
                 fetchStats();
-                return true;
+                return { success: true, message: response.message || 'License removed successfully' };
             }
-            return false;
+            return { success: false, message: response.message || 'Failed to remove license' };
         } catch (err: any) {
-            toast.error('Failed to remove license');
-            return false;
+            return { success: false, message: err.message || 'Failed to remove license' };
         }
     };
 

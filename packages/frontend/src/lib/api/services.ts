@@ -16,7 +16,12 @@ import {
     ReportsService,
     DashboardService,
     SlackUsersService,
-    DocumentsService
+    DocumentsService,
+    AuditLogsService,
+    IAMService,
+    PasswordVaultService,
+    SupportService,
+    SettingsService
 } from '@adminvault/shared-services';
 
 // Create singleton instances
@@ -38,6 +43,8 @@ export const emailAccountsService = new EmailAccountsService();
 export const reportsService = new ReportsService();
 export const slackUsersService = new SlackUsersService();
 export const documentsService = new DocumentsService();
+export const auditLogsService = new AuditLogsService();
+export const iamService = new IAMService();
 
 export const services = {
     auth: authService,
@@ -56,5 +63,7 @@ export const services = {
     emailAccounts: emailAccountsService,
     reports: reportsService,
     slackUsers: slackUsersService,
-    documents: documentsService
+    documents: documentsService,
+    auditLogs: auditLogsService,
+    iam: iamService
 };

@@ -5,12 +5,14 @@ import { EmailInfoEntity } from '../../entities/email-info.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetAllEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel } from '@adminvault/shared-models';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class EmailInfoService {
     constructor(
         private dataSource: DataSource,
-        private emailInfoRepo: EmailInfoRepository
+        private emailInfoRepo: EmailInfoRepository,
+        private auditLogsService: AuditLogsService
     ) { }
 
     /**
@@ -21,7 +23,7 @@ export class EmailInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if required fields are missing or email already exists
      */
-    async createEmailInfo(reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
+    async createEmailInfo(reqModel: CreateEmailInfoModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.companyId) {
@@ -52,6 +54,18 @@ export class EmailInfoService {
             newEmailInfo.email = reqModel.email;
             await transManager.getRepository(EmailInfoEntity).save(newEmailInfo);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'CREATE_EMAIL_INFO',
+                resource: 'EmailInfo',
+                details: `Email Info ${reqModel.email} created`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: reqModel.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Email info created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -67,7 +81,7 @@ export class EmailInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if email info ID is missing or record not found
      */
-    async updateEmailInfo(reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
+    async updateEmailInfo(reqModel: UpdateEmailInfoModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -88,6 +102,18 @@ export class EmailInfoService {
             updateData.employeeId = reqModel.employeeId;
             await transManager.getRepository(EmailInfoEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_EMAIL_INFO',
+                resource: 'EmailInfo',
+                details: `Email Info ${existingEmailInfo.email} updated`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: existingEmailInfo.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Email info updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -154,7 +180,7 @@ export class EmailInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if email info ID is missing or record not found
      */
-    async deleteEmailInfo(reqModel: DeleteEmailInfoModel): Promise<GlobalResponse> {
+    async deleteEmailInfo(reqModel: DeleteEmailInfoModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -170,6 +196,18 @@ export class EmailInfoService {
             await transManager.startTransaction();
             await transManager.getRepository(EmailInfoEntity).delete(reqModel.id);
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'DELETE_EMAIL_INFO',
+                resource: 'EmailInfo',
+                details: `Email Info ${existingEmailInfo.email} deleted`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: existingEmailInfo.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "Email info deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();

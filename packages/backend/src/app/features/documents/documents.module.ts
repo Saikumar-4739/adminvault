@@ -5,11 +5,13 @@ import { DocumentEntity } from '../../entities/document.entity';
 import { DocumentsService } from './documents.service';
 import { DocumentsController } from './documents.controller';
 import { DocumentRepository } from '../../repository/document.repository';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([DocumentEntity]),
         MulterModule.register({}),
+        AuditLogsModule
     ],
     controllers: [DocumentsController],
     providers: [DocumentsService, DocumentRepository],

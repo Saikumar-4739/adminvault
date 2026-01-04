@@ -49,9 +49,17 @@ export default defineConfig({
                 'apollo-server-express',
                 '@apollo/server',
                 'graphql',
+                'xlsx',
+                'pdf-lib',
+                'otplib',
+                'qrcode',
+                'kafkajs',
             ],
         },
         target: 'node18',
         ssr: true,
+    },
+    ssr: {
+        external: ['otplib', 'qrcode', 'kafkajs'],
     },
 });

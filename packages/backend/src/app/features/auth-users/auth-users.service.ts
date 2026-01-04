@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginSessionService } from './login-session.service';
 import { MailService } from '../mail/mail.service';
 import { RequestAccessModel } from '@adminvault/shared-models';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 
 const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
@@ -23,7 +24,8 @@ export class AuthUsersService {
         private authUsersRepo: AuthUsersRepository,
         private loginSessionService: LoginSessionService,
         private mailService: MailService,
-        private jwtService: JwtService
+        private jwtService: JwtService,
+        private auditLogsService: AuditLogsService
     ) { }
 
 
@@ -35,7 +37,7 @@ export class AuthUsersService {
      * @returns GlobalResponse indicating success or failure of user creation
      * @throws ErrorResponse if email already exists, company ID is missing, or password is less than 8 characters
      */
-    async registerUser(reqModel: RegisterUserModel): Promise<GlobalResponse> {
+    async registerUser(reqModel: RegisterUserModel, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource)
         try {
             const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } })
@@ -66,6 +68,18 @@ export class AuthUsersService {
             newUser.updatedAt = new Date()
             const save = await transManager.getRepository(AuthUsersEntity).save(newUser)
             await transManager.completeTransaction()
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'REGISTER_USER',
+                resource: 'Auth',
+                details: `User ${newUser.email} registered`,
+                status: 'SUCCESS',
+                userId: save.id,
+                companyId: newUser.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "User Created Successfully")
         } catch (err) {
             await transManager.releaseTransaction()
@@ -141,6 +155,18 @@ export class AuthUsersService {
                     const userAgent = req.headers['user-agent'];
                     const loginSessionModel = new CreateLoginSessionModel(user.id, user.companyId, ipAddress, userAgent, 'email_password', accessToken, reqModel.latitude, reqModel.longitude);
                     await this.loginSessionService.createLoginSession(loginSessionModel);
+
+                    // AUDIT LOG
+                    await this.auditLogsService.create({
+                        action: 'LOGIN_SUCCESS',
+                        resource: 'Auth',
+                        details: `User ${user.email} logged in successfully`,
+                        status: 'SUCCESS',
+                        ipAddress: ipAddress,
+                        userId: user.id,
+                        companyId: user.companyId
+                    });
+
                 } catch (sessionError) {
                     throw sessionError;
                 }
@@ -201,7 +227,7 @@ export class AuthUsersService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if user email doesn't exist
      */
-    async logOutUser(reqModel: LogoutUserModel): Promise<GlobalResponse> {
+    async logOutUser(reqModel: LogoutUserModel, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
@@ -211,6 +237,18 @@ export class AuthUsersService {
             await transManager.startTransaction();
             await this.authUsersRepo.update({ email: reqModel.email }, { lastLogin: new Date() })
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'LOGOUT',
+                resource: 'Auth',
+                details: `User ${reqModel.email} logged out`,
+                status: 'SUCCESS',
+                userId: existingUser.id,
+                companyId: existingUser.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "User Logged Out Successfully");
         } catch (err) {
             await transManager.releaseTransaction();
@@ -226,7 +264,7 @@ export class AuthUsersService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if user email doesn't exist
      */
-    async updateUser(reqModel: UpdateUserModel): Promise<GlobalResponse> {
+    async updateUser(reqModel: UpdateUserModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
@@ -236,6 +274,18 @@ export class AuthUsersService {
             await transManager.startTransaction();
             await this.authUsersRepo.update({ email: reqModel.email }, { fullName: reqModel.fullName, phNumber: reqModel.phNumber })
             await transManager.completeTransaction();
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'UPDATE_USER',
+                resource: 'Auth',
+                details: `User ${reqModel.email} profile updated`,
+                status: 'SUCCESS',
+                userId: userId || existingUser.id,
+                companyId: existingUser.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
             return new GlobalResponse(true, 0, "User Logged Out Successfully");
         } catch (err) {
             await transManager.releaseTransaction();
@@ -251,7 +301,7 @@ export class AuthUsersService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if user email doesn't exist
      */
-    async deleteUser(reqModel: DeleteUserModel): Promise<GlobalResponse> {
+    async deleteUser(reqModel: DeleteUserModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
@@ -261,7 +311,19 @@ export class AuthUsersService {
             await transManager.startTransaction();
             await this.authUsersRepo.delete({ email: reqModel.email })
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 0, "User Logged Out Successfully");
+
+            // AUDIT LOG
+            await this.auditLogsService.create({
+                action: 'DELETE_USER',
+                resource: 'Auth',
+                details: `User ${reqModel.email} deleted`,
+                status: 'SUCCESS',
+                userId: userId || undefined,
+                companyId: existingUser.companyId,
+                ipAddress: ipAddress || '0.0.0.0'
+            });
+
+            return new GlobalResponse(true, 0, "User Deleted Successfully");
         } catch (err) {
             await transManager.releaseTransaction();
             throw err;
@@ -281,11 +343,12 @@ export class AuthUsersService {
         try {
             const existingUser = await this.authUsersRepo.find({ where: { companyId: reqModel.id } });
             if (!existingUser) {
-                throw new ErrorResponse(0, "Email does not exist");
+                // This seems like it should just return empty list, but keeping existing check logic pattern (though 'existingUser' is array)
+                throw new ErrorResponse(0, "No users found");
             }
 
             const users = existingUser.map(user => new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole));
-            return new GetAllUsersModel(true, 0, "User Logged Out Successfully", users);
+            return new GetAllUsersModel(true, 0, "Users Retrieved Successfully", users);
         } catch (err) {
             await transManager.releaseTransaction();
             throw err;

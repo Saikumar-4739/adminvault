@@ -244,4 +244,6 @@ export default function InfoEmailsPage() {
             </div>
         </RouteGuard>
     );
-}
+};
+
+export default EmailsPage;

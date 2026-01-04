@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui/modal';
 import { services } from '@/lib/api/services';
 import { AssetTimelineEvent, AssetTimelineEventType } from '@adminvault/shared-models';
 import { PageLoader } from '@/components/ui/Spinner';
+import { formatDateTime } from '@/lib/utils';
 
 interface AssetTimelineModalProps {
     isOpen: boolean;
@@ -113,10 +114,7 @@ export default function AssetTimelineModal({ isOpen, onClose, asset, companyId }
                                         </span>
                                         <span className="text-xs text-slate-400 flex items-center gap-1">
                                             <Calendar className="h-3 w-3" />
-                                            {new Date(event.date).toLocaleDateString()}
-                                            <span className="ml-1 text-[10px] opacity-70">
-                                                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
+                                            {formatDateTime(event.date)}
                                         </span>
                                     </div>
 

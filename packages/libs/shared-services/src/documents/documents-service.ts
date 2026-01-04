@@ -38,7 +38,7 @@ export class DocumentsService extends CommonAxiosService {
         if (companyId) params.push(`companyId=${companyId}`);
         if (category) params.push(`category=${category}`);
         if (params.length > 0) url += `?${params.join('&')}`;
-        return await this.axiosPostCall(url);
+        return await this.axiosPostCall(url, {});
     }
 
     getDownloadUrl(id: number): string {

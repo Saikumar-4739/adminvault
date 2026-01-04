@@ -22,4 +22,6 @@ export * from './reports/reports.service';
 export * from './dashboard/dashboard.service';
 export * from './slack-users/slack-users-service';
 export * from './documents/documents-service';
+export * from './audit-logs/audit-logs.service';
+export * from './iam/iam-service';
 
