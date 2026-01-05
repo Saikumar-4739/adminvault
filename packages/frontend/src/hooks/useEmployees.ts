@@ -20,9 +20,13 @@ interface Employee {
     createdAt?: string;
 }
 
+// Simple global cache for SWR-like behavior
+const employeesCache: Record<string, Employee[]> = {};
+
 export function useEmployees(companyId?: number) {
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const cacheKey = `employees_${companyId || 'all'}`;
+    const [employees, setEmployees] = useState<Employee[]>(employeesCache[cacheKey] || []);
+    const [isLoading, setIsLoading] = useState(!employeesCache[cacheKey]);
     const [error, setError] = useState<string | null>(null);
     const toast = useToast();
 
@@ -30,7 +34,7 @@ export function useEmployees(companyId?: number) {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await employeeService.getAllEmployees(companyId);
+            const response = await employeeService.getAllEmployees(companyId as any);
 
             if (response.status) {
                 const data = (response as any).employees || response.data || [];
@@ -48,6 +52,7 @@ export function useEmployees(companyId?: number) {
                     remarks: item.remarks,
                     createdAt: item.createdAt || new Date().toISOString()
                 }));
+                employeesCache[cacheKey] = mappedEmployees;
                 setEmployees(mappedEmployees);
             } else {
                 throw new Error(response.message || 'Failed to fetch employees');

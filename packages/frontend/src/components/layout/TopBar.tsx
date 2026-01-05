@@ -1,17 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, ChevronDown, LogOut, CalendarClock, Settings, Moon, Sun } from 'lucide-react';
+import { ChevronDown, LogOut, CalendarClock, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const TopBar: React.FC = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const { user, logout } = useAuth();
     const { isDarkMode, toggleDarkMode } = useTheme();
-    const router = useRouter();
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Close menu when clicking outside
@@ -29,7 +26,8 @@ const TopBar: React.FC = () => {
 
     const handleLogout = async () => {
         await logout();
-        router.push('/login');
+        // Use window.location.href for logout to clear all memory states/caches
+        window.location.href = '/login';
     };
 
     return (
@@ -70,26 +68,12 @@ const TopBar: React.FC = () => {
                         </div>
                         <div className="text-left hidden md:block mr-2">
                             <p className="text-sm font-extrabold text-slate-800 dark:text-slate-100 leading-none">{user?.fullName || 'User'}</p>
-                            <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-500 mt-0.5">{user?.role || 'Admin'}</p>
                         </div>
                         <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
                     </button>
 
                     {showUserMenu && (
                         <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 mb-1">
-                                <p className="text-sm font-semibold text-slate-900 dark:text-white">{user?.fullName || 'User'}</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email || 'email@example.com'}</p>
-                            </div>
-                            <Link href="/profile" className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                <User className="h-4 w-4" />
-                                Profile
-                            </Link>
-                            <Link href="/settings" className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                <Settings className="h-4 w-4" />
-                                Settings
-                            </Link>
-                            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
                             <button
                                 onClick={handleLogout}
                                 className="w-full text-left flex items-center gap-2 px-4 py-2.5 text-sm text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors"

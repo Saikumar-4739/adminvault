@@ -20,7 +20,7 @@ Shared services library for AdminVault application providing API service classes
 This package is part of the AdminVault monorepo and is automatically available to other packages.
 
 ```bash
-npm install
+yarn install
 ```
 
 ## Configuration
@@ -293,13 +293,13 @@ The services are built using TypeScript and use models from `@adminvault/shared-
 ### Building
 
 ```bash
-npm run build
+yarn build
 ```
 
 ### Type Checking
 
 ```bash
-npm run type-check
+yarn type-check
 ```
 
 ## License

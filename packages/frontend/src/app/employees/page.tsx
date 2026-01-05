@@ -10,7 +10,8 @@ import {
     Plus, Users, Edit, Trash2, Mail, Phone,
     LayoutGrid, List, Search, Building2, Upload
 } from 'lucide-react';
-import EmployeeBulkImportModal from './components/EmployeeBulkImportModal';
+import dynamic from 'next/dynamic';
+const EmployeeBulkImportModal = dynamic(() => import('./components/EmployeeBulkImportModal'), { ssr: false });
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { useMasters } from '@/hooks/useMasters';

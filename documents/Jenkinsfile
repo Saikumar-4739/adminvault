@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+
+    environment {
+        // Define environment variables
+        REGISTRY = 'your-docker-registry'
+        APP_NAME = 'adminvault'
+        BUILD_NUMBER = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Environment Audit') {
+            steps {
+                sh 'node -v'
+                sh 'yarn -v'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'yarn install --frozen-lockfile'
+            }
+        }
+
+        stage('Lint & Quality') {
+            steps {
+                // If there were lint scripts
+                // sh 'yarn lint'
+                echo 'Skipping lint for now...'
+            }
+        }
+
+        stage('Build Workspace') {
+            steps {
+                // Build all packages in the monorepo
+                sh 'yarn build:all'
+            }
+        }
+
+        stage('Docker Build & Push') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    def image = docker.build("${REGISTRY}/${APP_NAME}:${BUILD_NUMBER}")
+                    image.push()
+                    image.push('latest')
+                }
+            }
+        }
+
+        stage('Deploy to Staging') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                // Example deployment trigger
+                echo 'Deploying to staging environment...'
+                // sh 'kubectl apply -f k8s/production.yaml'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check build logs.'
+        }
+        always {
+            // Clean up workspace
+            cleanWs()
+        }
+    }
+}

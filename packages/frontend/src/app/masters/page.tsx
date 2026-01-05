@@ -4,13 +4,15 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Building2, Users, Package, Smartphone, Tag, Store, AppWindow, MessageSquare } from 'lucide-react';
-import CompaniesMasterView from './components/companies-master-view';
-import DepartmentsMasterView from './components/departments-master-view';
-import AssetTypesMasterView from './components/asset-types-master-view';
-import DeviceBrandsMasterView from './components/device-brands-master-view';
-import VendorsMasterView from './components/vendors-master-view';
-import ApplicationsMasterView from './components/applications-master-view';
-import TicketCategoriesMasterView from './components/ticket-categories-master-view';
+import dynamic from 'next/dynamic';
+
+const CompaniesMasterView = dynamic(() => import('./components/companies-master-view'), { loading: () => <p>Loading Companies...</p> });
+const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view'), { loading: () => <p>Loading Departments...</p> });
+const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view'), { loading: () => <p>Loading Asset Types...</p> });
+const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view'), { loading: () => <p>Loading Device Brands...</p> });
+const VendorsMasterView = dynamic(() => import('./components/vendors-master-view'), { loading: () => <p>Loading Vendors...</p> });
+const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view'), { loading: () => <p>Loading Applications...</p> });
+const TicketCategoriesMasterView = dynamic(() => import('./components/ticket-categories-master-view'), { loading: () => <p>Loading Categories...</p> });
 
 interface MasterItem {
     id: string;

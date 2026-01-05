@@ -1,11 +1,11 @@
 
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { TicketCategoryEntity } from '../entities/masters/ticket-category.entity';
+import { TicketCategoriesMasterEntity } from '../../masters/entities/ticket-category.entity';
 
 @Injectable()
-export class TicketCategoryRepository extends Repository<TicketCategoryEntity> {
+export class TicketCategoryRepository extends Repository<TicketCategoriesMasterEntity> {
     constructor(private dataSource: DataSource) {
-        super(TicketCategoryEntity, dataSource.createEntityManager());
+        super(TicketCategoriesMasterEntity, dataSource.createEntityManager());
     }
 }

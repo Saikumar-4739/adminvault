@@ -9,7 +9,7 @@ export * from './assets/asset-info-service';
 export * from './assets/asset-tabs-service';
 export * from './documents/documents-service';
 export * from './tickets/tickets-service';
-export * from './masters/masters-service';
+export * from './masters';
 export * from './licenses/licenses-service';
 export * from './reports/reports.service';
 export * from './dashboard/dashboard.service';

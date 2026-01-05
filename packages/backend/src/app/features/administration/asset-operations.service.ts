@@ -3,15 +3,7 @@ import { DataSource, Repository, LessThan } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AssetInfoEntity } from '../asset-info/entities/asset-info.entity';
 import { AssetAssignEntity } from '../asset-info/entities/asset-assign.entity';
-import {
-    AssetStatusEnum,
-    CompanyIdRequestModel,
-    GetAllAssetsModel,
-    AssetResponseModel,
-    CreateAssetModel,
-    UpdateAssetModel,
-    GlobalResponse
-} from '@adminvault/shared-models';
+import { AssetStatusEnum, CompanyIdRequestModel, GetAllAssetsModel, AssetResponseModel, CreateAssetModel, UpdateAssetModel, GlobalResponse } from '@adminvault/shared-models';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 
 @Injectable()
@@ -96,7 +88,7 @@ export class AssetOperationsService {
             assignment.assetId = assetId;
             assignment.employeeId = employeeId;
             assignment.assignedDate = new Date();
-            assignment.assignedByUserId = userId;
+            assignment.assignedById = userId;
             assignment.isCurrent = true;
             assignment.remarks = remarks || '';
             await transManager.getRepository(AssetAssignEntity).save(assignment);

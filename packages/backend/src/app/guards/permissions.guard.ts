@@ -28,7 +28,6 @@ export class PermissionsGuard implements CanActivate {
             return false;
         }
 
-        // Fetch user with roles and permissions if not already loaded
         const userRepo = this.dataSource.getRepository(AuthUsersEntity);
         const userWithDetails = await userRepo.findOne({
             where: { id: user.id },
@@ -39,12 +38,12 @@ export class PermissionsGuard implements CanActivate {
             return false;
         }
 
-        const hasPermission = userWithDetails.roles.some(role =>
-            role.permissions.some(permission =>
+        const hasPermission = (userWithDetails as any).roles?.some((role: any) =>
+            role.permissions?.some((permission: any) =>
                 permission.resource === requiredPermission.resource &&
                 permission.action === requiredPermission.action
             )
-        );
+        ) || false;
 
         if (!hasPermission) {
             throw new ForbiddenException(`You do not have permission to ${requiredPermission.action} ${requiredPermission.resource}`);

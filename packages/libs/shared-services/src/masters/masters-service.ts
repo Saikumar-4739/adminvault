@@ -1,8 +1,4 @@
-import {
-    CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, CreateApplicationModel, CreateApplicationResponseModel, CreateExpenseCategoryModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultModel, CreatePasswordVaultResponseModel,
-    GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel,
-    GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateBrandModel, UpdateBrandResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, UpdateLocationModel, UpdateLocationResponseModel, UpdateTicketCategoryModel, UpdateTicketCategoryResponseModel, UpdateVendorModel, UpdateVendorResponseModel, UpdateApplicationModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultModel, UpdatePasswordVaultResponseModel
-} from '@adminvault/shared-models';
+import { CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, CreateApplicationModel, CreateApplicationResponseModel, CreateExpenseCategoryModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultModel, CreatePasswordVaultResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateBrandModel, UpdateBrandResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, UpdateLocationModel, UpdateLocationResponseModel, UpdateTicketCategoryModel, UpdateTicketCategoryResponseModel, UpdateVendorModel, UpdateVendorResponseModel, UpdateApplicationModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultModel, UpdatePasswordVaultResponseModel } from '@adminvault/shared-models';
 import { CommonAxiosService } from '../common-axios-service';
 import { AxiosRequestConfig } from 'axios';
 
@@ -11,7 +7,6 @@ export class MastersService extends CommonAxiosService {
         return '/masters/' + childUrl;
     }
 
-    // Departments
     async getAllDepartments(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllDepartmentsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllDepartments'), reqObj, config);
     }
@@ -25,7 +20,6 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteDepartment'), { id }, config);
     }
 
-    // Asset Types
     async getAllAssetTypes(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetTypesResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllAssetTypes'), reqObj, config);
     }
@@ -39,7 +33,6 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteAssetType'), { id }, config);
     }
 
-    // Brands
     async getAllBrands(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllBrandsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllBrands'), reqObj, config);
     }
@@ -53,7 +46,6 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteBrand'), { id }, config);
     }
 
-    // Vendors
     async getAllVendors(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllVendorsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllVendors'), reqObj, config);
     }
@@ -67,7 +59,6 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteVendor'), { id }, config);
     }
 
-    // Applications
     async getAllApplications(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllApplicationsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllApplications'), reqObj, config);
     }
@@ -81,7 +72,6 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteApplication'), { id }, config);
     }
 
-    // Ticket Categories
     async getAllTicketCategories(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllTicketCategoriesResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllTicketCategories'), reqObj, config);
     }
@@ -95,7 +85,6 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteTicketCategory'), { id }, config);
     }
 
-    // Expense Categories
     async getAllExpenseCategories(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllExpenseCategoriesResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllExpenseCategories'), reqObj, config);
     }
@@ -109,7 +98,6 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteExpenseCategory'), { id }, config);
     }
 
-    // Password Vault (Master)
     async getAllPasswordVaults(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllPasswordVaultsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllPasswordVaults'), reqObj, config);
     }
@@ -123,7 +111,6 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deletePasswordVault'), { id }, config);
     }
 
-    // Locations
     async getAllLocations(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllLocationsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllLocations'), reqObj, config);
     }

@@ -43,11 +43,11 @@ export class AssetInfoService {
             entity.configuration = reqModel.configuration;
             entity.assignedToEmployeeId = reqModel.assignedToEmployeeId;
             entity.previousUserEmployeeId = reqModel.previousUserEmployeeId;
-            entity.purchaseDate = reqModel.purchaseDate;
-            entity.warrantyExpiry = reqModel.warrantyExpiry;
-            entity.userAssignedDate = reqModel.userAssignedDate;
-            entity.lastReturnDate = reqModel.lastReturnDate;
-            entity.assetStatusEnum = reqModel.assignedToEmployeeId? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE): (reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE);
+            entity.purchaseDate = reqModel.purchaseDate ? new Date(reqModel.purchaseDate) : null;
+            entity.warrantyExpiry = reqModel.warrantyExpiry ? new Date(reqModel.warrantyExpiry) : null;
+            entity.userAssignedDate = reqModel.userAssignedDate ? new Date(reqModel.userAssignedDate) : null;
+            entity.lastReturnDate = reqModel.lastReturnDate ? new Date(reqModel.lastReturnDate) : null;
+            entity.assetStatusEnum = reqModel.assignedToEmployeeId ? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE) : (reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE);
             await transManager.getRepository(AssetInfoEntity).save(entity);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Asset created successfully");
@@ -91,7 +91,7 @@ export class AssetInfoService {
             existing.userAssignedDate = reqModel.userAssignedDate ? new Date(reqModel.userAssignedDate) : null;
             existing.lastReturnDate = reqModel.lastReturnDate ? new Date(reqModel.lastReturnDate) : null;
             existing.userId = userId || existing.userId;
-            existing.assetStatusEnum = reqModel.assignedToEmployeeId? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE): (reqModel.assetStatusEnum || existing.assetStatusEnum || AssetStatusEnum.AVAILABLE);
+            existing.assetStatusEnum = reqModel.assignedToEmployeeId ? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE) : (reqModel.assetStatusEnum || existing.assetStatusEnum || AssetStatusEnum.AVAILABLE);
             await transManager.getRepository(AssetInfoEntity).save(existing);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Asset updated successfully");

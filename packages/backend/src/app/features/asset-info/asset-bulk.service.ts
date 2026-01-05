@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as XLSX from 'xlsx';
 import { AssetStatusEnum, BulkImportRequestModel, BulkImportResponseModel } from '@adminvault/shared-models';
+import { ErrorResponse } from '@adminvault/backend-utils';
 import { AssetInfoEntity } from './entities/asset-info.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
@@ -17,14 +16,13 @@ export function RouteGuard({
     fallbackPath = '/tickets'
 }: RouteGuardProps) {
     const { user, isLoading, isAuthenticated } = useAuth();
-    const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(false);
 
     useEffect(() => {
         if (!isLoading) {
             // Check if user is authenticated
             if (!isAuthenticated) {
-                router.push('/login');
+                window.location.href = '/login';
                 return;
             }
 
@@ -39,13 +37,13 @@ export function RouteGuard({
             const hasPermission = requiredRoles.includes(userRole);
 
             if (!hasPermission) {
-                router.push(fallbackPath);
+                window.location.href = fallbackPath;
                 return;
             }
 
             setIsAuthorized(true);
         }
-    }, [isLoading, isAuthenticated, user, requiredRoles, fallbackPath, router]);
+    }, [isLoading, isAuthenticated, user, requiredRoles, fallbackPath]);
 
     // Show loading state
     if (isLoading) {

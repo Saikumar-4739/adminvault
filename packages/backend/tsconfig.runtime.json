@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig.app.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@adminvault/shared-models": [
+                "../libs/shared-models/dist"
+            ],
+            "@adminvault/backend-utils": [
+                "../libs/backend-utils/dist"
+            ]
+        }
+    }
+}

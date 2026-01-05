@@ -35,14 +35,6 @@ export class AuthUsersRepository extends Repository<AuthUsersEntity> {
             .execute();
     }
 
-    async removeRoleFromUser(userId: number, roleId: number): Promise<void> {
-        await this.dataSource.createQueryBuilder()
-            .delete()
-            .from('user_roles')
-            .where('user_id = :userId AND role_id = :roleId', { userId, roleId })
-            .execute();
-    }
-
     async syncUserRoles(userId: number, roleIds: number[]): Promise<void> {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();

@@ -10,7 +10,7 @@
 ### 1. Install Dependencies
 
 ```bash
-npm install
+yarn install
 ```
 
 ### 2. Set Up Environment Variables
@@ -47,7 +47,7 @@ KAFKA_ENABLED=false
 **Important:** The backend depends on shared libraries that must be built first.
 
 ```bash
-npm run dev:backend
+yarn dev:backend
 ```
 
 This command will:
@@ -60,7 +60,7 @@ This command will:
 In a **new terminal**:
 
 ```bash
-npm run dev:frontend
+yarn dev:frontend
 ```
 
 The frontend will start on `http://localhost:3000`
@@ -103,18 +103,18 @@ docker-compose -f docker-compose.kafka.yml down
 
 ```bash
 # Build shared libraries only
-npm run build:shared
+yarn build:shared
 
 # Build backend (includes building shared libraries)
-npm run build:backend
+yarn build:backend
 
 # Run backend in development mode (includes building shared libraries)
-npm run serve:backend
+yarn serve:backend
 ```
 
 ### Frontend
 
 ```bash
 # Run frontend in development mode
-npm run dev:frontend
+yarn dev:frontend
 ```

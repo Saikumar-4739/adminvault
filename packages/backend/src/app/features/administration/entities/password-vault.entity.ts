@@ -32,13 +32,14 @@ export class PasswordVaultEntity {
     @Column({ name: 'is_favorite', type: 'boolean', default: false, comment: 'Is this a favorite entry' })
     isFavorite: boolean;
 
+    @Column({ name: 'is_active', type: 'boolean', default: true, comment: 'Is this entry active' })
+    isActive: boolean;
+
     @Column({ name: 'company_id', type: 'bigint', comment: 'Company ID' })
     companyId: number;
 
-
     @Column({ name: 'created_by', type: 'bigint', comment: 'User who created this entry' })
     createdBy: number;
-
 
     @Column({ name: 'last_accessed', type: 'timestamp', nullable: true, comment: 'Last time password was accessed' })
     lastAccessed: Date;

@@ -51,17 +51,6 @@ export class CompanyInfoService {
             const savedCompany = await transManager.getRepository(CompanyInfoEntity).save(newCompany);
             await transManager.completeTransaction();
 
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_COMPANY',
-                resource: 'CompanyInfo',
-                details: `Company ${savedCompany.companyName} created`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: savedCompany.id,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "Company created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -105,15 +94,15 @@ export class CompanyInfoService {
             await transManager.completeTransaction();
 
             // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_COMPANY',
-                resource: 'CompanyInfo',
-                details: `Company ${existingCompany.companyName} updated`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: existingCompany.id,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
+            // await this.auditLogsService.create({
+            //     action: 'UPDATE_COMPANY',
+            //     resource: 'CompanyInfo',
+            //     details: `Company ${existingCompany.companyName} updated`,
+            //     status: 'SUCCESS',
+            //     userId: userId || undefined,
+            //     companyId: existingCompany.id,
+            //     ipAddress: ipAddress || '0.0.0.0'
+            // });
 
             return new GlobalResponse(true, 0, "Company updated successfully");
         } catch (error) {
@@ -190,15 +179,15 @@ export class CompanyInfoService {
             await transManager.completeTransaction();
 
             // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'DELETE_COMPANY',
-                resource: 'CompanyInfo',
-                details: `Company ${existingCompany.companyName} deleted`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: existingCompany.id,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
+            // await this.auditLogsService.create({
+            //     action: 'DELETE_COMPANY',
+            //     resource: 'CompanyInfo',
+            //     details: `Company ${existingCompany.companyName} deleted`,
+            //     status: 'SUCCESS',
+            //     userId: userId || undefined,
+            //     companyId: existingCompany.id,
+            //     ipAddress: ipAddress || '0.0.0.0'
+            // });
 
             return new GlobalResponse(true, 0, "Company deleted successfully");
         } catch (error) {

@@ -59,9 +59,9 @@ export class PasswordVaultService {
     async createVaultEntry(model: CreatePasswordVaultModel): Promise<GlobalResponse> {
         const entity = new PasswordVaultEntity();
         entity.companyId = model.companyId;
-        entity.name = model.name;
+        entity.title = model.name;
         entity.username = model.username || '';
-        entity.password = this.vaultEncrypt(model.password);
+        entity.encryptedPassword = this.vaultEncrypt(model.password);
         entity.url = model.url || '';
         entity.category = model.description || 'General';
         entity.notes = model.notes || '';
@@ -76,9 +76,9 @@ export class PasswordVaultService {
         const entry = await this.passwordVaultRepo.findOne({ where: { id: model.id } });
         if (!entry) throw new NotFoundException('Vault entry not found');
 
-        entry.name = model.name;
+        entry.title = model.name;
         entry.username = model.username || entry.username;
-        if (model.password) entry.password = this.vaultEncrypt(model.password);
+        if (model.password) entry.encryptedPassword = this.vaultEncrypt(model.password);
         entry.url = model.url || entry.url;
         entry.notes = model.notes || entry.notes;
         entry.isActive = model.isActive;
@@ -97,7 +97,7 @@ export class PasswordVaultService {
     async getDecryptedVaultPassword(id: number, userId: number): Promise<string> {
         const entry = await this.passwordVaultRepo.findOne({ where: { id, createdBy: userId } });
         if (!entry) throw new NotFoundException('Vault entry not found');
-        return this.vaultDecrypt(entry.password);
+        return this.vaultDecrypt(entry.encryptedPassword);
     }
 
     async searchVaultByCategory(category: string, companyId: number, userId: number): Promise<GetAllPasswordVaultsResponseModel> {
@@ -129,7 +129,7 @@ export class PasswordVaultService {
             id: Number(entity.id),
             userId: entity.createdBy,
             companyId: entity.companyId,
-            name: entity.name,
+            name: entity.title,
             description: entity.category,
             isActive: entity.isActive,
             username: entity.username,

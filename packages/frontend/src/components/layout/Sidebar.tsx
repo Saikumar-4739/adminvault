@@ -40,36 +40,41 @@ const allNavigation: NavigationItem[] = [
     { name: 'Settings', href: '/settings', icon: SettingsIcon, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER] },
 ];
 
+const navigationGroups = [
+    {
+        title: 'System',
+        items: allNavigation.filter(item => ['Dashboard', 'Configuration', 'System Reports'].includes(item.name))
+    },
+    {
+        title: 'Operations',
+        items: allNavigation.filter(item => ['IT Asset Inventory', 'License Manager', 'Employee Directory'].includes(item.name))
+    },
+    {
+        title: 'Support & Comms',
+        items: allNavigation.filter(item => ['Support Tickets', 'Email Accounts', 'Document Center'].includes(item.name))
+    },
+    {
+        title: 'Security & Access',
+        items: allNavigation.filter(item => ['Password Vault', 'IAM & SSO'].includes(item.name))
+    },
+    {
+        title: 'Account',
+        items: allNavigation.filter(item => ['Profile', 'Settings'].includes(item.name))
+    }
+];
+
 export default function Sidebar() {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const permissions = usePermissions();
 
-    const navigationGroups = [
-        {
-            title: 'System',
-            items: allNavigation.filter(item => ['Dashboard', 'Configuration', 'System Reports'].includes(item.name))
-        },
-        {
-            title: 'Operations',
-            items: allNavigation.filter(item => ['IT Asset Inventory', 'License Manager', 'Employee Directory'].includes(item.name))
-        },
-        {
-            title: 'Support & Comms',
-            items: allNavigation.filter(item => ['Support Tickets', 'Email Accounts', 'Document Center'].includes(item.name))
-        },
-        {
-            title: 'Security & Access',
-            items: allNavigation.filter(item => ['Password Vault', 'IAM & SSO'].includes(item.name))
-        },
-        {
-            title: 'Account',
-            items: allNavigation.filter(item => ['Profile', 'Settings'].includes(item.name))
-        }
-    ];
-
-    const SidebarContent = ({ collapsed }: { collapsed: boolean }) => (
+    const SidebarContent = ({ collapsed, pathname, permissions, setIsMobileMenuOpen }: {
+        collapsed: boolean,
+        pathname: string | null,
+        permissions: any,
+        setIsMobileMenuOpen: (val: boolean) => void
+    }) => (
         <>
             {/* Logo */}
             <div className={`flex items-center gap-3 px-6 py-6 mb-2 ${collapsed ? 'justify-center px-2' : ''}`}>
@@ -113,6 +118,7 @@ export default function Sidebar() {
                                         <Link
                                             key={item.name}
                                             href={item.href}
+                                            prefetch={true}
                                             className={`relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 group font-medium text-xs ${isActive
                                                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30'
                                                 : 'text-slate-400 hover:bg-white/5 hover:text-white'
@@ -131,17 +137,6 @@ export default function Sidebar() {
                         </div>
                     );
                 })}
-            </div>
-
-            {/* Collapse Toggle Button (Desktop Only) */}
-            <div className={`hidden lg:flex p-4 border-t border-slate-800 ${collapsed ? 'justify-center' : 'justify-end'}`}>
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-                    title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                >
-                    {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-                </button>
             </div>
         </>
     );
@@ -171,7 +166,12 @@ export default function Sidebar() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Always expanded on mobile */}
-                        <SidebarContent collapsed={false} />
+                        <SidebarContent
+                            collapsed={false}
+                            pathname={pathname}
+                            permissions={permissions}
+                            setIsMobileMenuOpen={setIsMobileMenuOpen}
+                        />
                     </div>
                 </div>
             )}
@@ -180,7 +180,23 @@ export default function Sidebar() {
             <aside
                 className={`hidden lg:flex lg:flex-col bg-slate-900 border-r border-slate-800 h-screen sticky top-0 shadow-2xl z-40 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-72'}`}
             >
-                <SidebarContent collapsed={isCollapsed} />
+                <SidebarContent
+                    collapsed={isCollapsed}
+                    pathname={pathname}
+                    permissions={permissions}
+                    setIsMobileMenuOpen={setIsMobileMenuOpen}
+                />
+
+                {/* Collapse Toggle Button (Desktop Only) */}
+                <div className={`hidden lg:flex p-4 border-t border-slate-800 ${isCollapsed ? 'justify-center' : 'justify-end'}`}>
+                    <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                    >
+                        {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+                    </button>
+                </div>
             </aside>
 
             {/* Scroll to Top Button */}

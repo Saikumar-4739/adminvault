@@ -1,18 +1,38 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "../../dist/packages/backend",
     "types": [
       "node",
       "multer"
     ],
     "rootDir": "src",
-    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+    "tsBuildInfoFile": "../../dist/packages/backend/tsconfig.app.tsbuildinfo",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "target": "es2021",
     "strictPropertyInitialization": false,
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "composite": true,
+    "declaration": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": [
+      "es2022"
+    ],
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "importHelpers": true,
+    "paths": {
+      "@adminvault/shared-models": [
+        "../libs/shared-models/src/index.ts"
+      ],
+      "@adminvault/backend-utils": [
+        "../libs/backend-utils/src/index.ts"
+      ]
+    }
   },
   "include": [
     "src/**/*.ts"

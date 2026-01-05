@@ -9,11 +9,13 @@ import Card, { CardContent } from '@/components/ui/Card';
 import { useAssets } from '@/hooks/useAssets';
 import ModernTabs from './components/ModernTabs';
 import AllAssetsTab from './components/AllAssetsTab';
-import AssetQRModal from './components/AssetQRModal';
-import AssetTimelineModal from './components/AssetTimelineModal';
-import BulkImportModal from './components/BulkImportModal';
-import AdvancedFilterModal from './components/AdvancedFilterModal';
-import AssetFormModal from './components/AssetFormModal';
+import dynamic from 'next/dynamic';
+
+const AssetQRModal = dynamic(() => import('./components/AssetQRModal'), { ssr: false });
+const AssetTimelineModal = dynamic(() => import('./components/AssetTimelineModal'), { ssr: false });
+const BulkImportModal = dynamic(() => import('./components/BulkImportModal'), { ssr: false });
+const AdvancedFilterModal = dynamic(() => import('./components/AdvancedFilterModal'), { ssr: false });
+const AssetFormModal = dynamic(() => import('./components/AssetFormModal'), { ssr: false });
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { assetService } from '@/lib/api/services';

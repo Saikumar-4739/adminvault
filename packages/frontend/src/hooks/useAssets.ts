@@ -34,17 +34,22 @@ interface AssetStatistics {
     retired: number;
 }
 
+// Simple global cache for SWR-like behavior
+const assetsCache: Record<string, Asset[]> = {};
+const statsCache: Record<string, AssetStatistics> = {};
+
 export function useAssets(companyId?: number) {
-    const [assets, setAssets] = useState<Asset[]>([]);
-    const [statistics, setStatistics] = useState<AssetStatistics | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const cacheKey = `assets_${companyId || 'all'}`;
+    const [assets, setAssets] = useState<Asset[]>(assetsCache[cacheKey] || []);
+    const [statistics, setStatistics] = useState<AssetStatistics | null>(statsCache[cacheKey] || null);
+    const [isLoading, setIsLoading] = useState(!assetsCache[cacheKey]);
     const [error, setError] = useState<string | null>(null);
 
     const fetchAssets = useCallback(async () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await assetService.getAllAssets(companyId);
+            const response = await assetService.getAllAssets(companyId as number);
 
             if (response.status) {
                 const data = (response as any).assets || response.data || [];
@@ -67,6 +72,7 @@ export function useAssets(companyId?: number) {
                     previousUserEmployeeId: item.previousUserEmployeeId,
                     createdAt: item.createdAt || item.created_at
                 }));
+                assetsCache[cacheKey] = mappedAssets;
                 setAssets(mappedAssets);
             } else {
                 throw new Error(response.message || 'Failed to fetch assets');
@@ -84,7 +90,7 @@ export function useAssets(companyId?: number) {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await assetService.getAssetsWithAssignments(companyId);
+            const response = await assetService.getAssetsWithAssignments(companyId as number);
 
             if (response.status) {
                 const data = (response as any).assets || [];
@@ -109,6 +115,7 @@ export function useAssets(companyId?: number) {
                     assignedToEmployeeId: item.assignedToEmployeeId,
                     previousUserEmployeeId: item.previousUserEmployeeId
                 }));
+                assetsCache[cacheKey] = mappedAssets;
                 setAssets(mappedAssets);
             }
         } catch (err: any) {
@@ -123,6 +130,7 @@ export function useAssets(companyId?: number) {
         try {
             const response = await assetService.getAssetStatistics(companyId);
             if (response.status) {
+                statsCache[cacheKey] = response.statistics;
                 setStatistics(response.statistics);
             }
         } catch (err: any) {

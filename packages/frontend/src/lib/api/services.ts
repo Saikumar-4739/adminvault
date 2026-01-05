@@ -9,7 +9,8 @@ import {
     LicensesService,
     ReportsService,
     DashboardService,
-    DocumentsService
+    DocumentsService,
+    CompanyService
 } from '@adminvault/shared-services';
 
 // Create singleton instances
@@ -24,6 +25,7 @@ export const dashboardService = new DashboardService();
 export const licensesService = new LicensesService();
 export const reportsService = new ReportsService();
 export const documentsService = new DocumentsService();
+export const companyService = new CompanyService();
 
 // Aliases for compatibility/migration (if needed) or distinct logical groupings
 // You should prefer using the specific services above.
@@ -37,5 +39,6 @@ export const services = {
     masters: mastersService,
     licenses: licensesService,
     reports: reportsService,
-    documents: documentsService
+    documents: documentsService,
+    company: companyService
 };

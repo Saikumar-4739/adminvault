@@ -29,18 +29,6 @@ export class DeviceInfoService {
             newDevice.deviceName = reqModel.deviceName;
             const savedDevice = await transManager.getRepository(DeviceInfoEntity).save(newDevice);
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'CREATE_DEVICE',
-                resource: 'DeviceInfo',
-                details: `Device ${savedDevice.deviceName} created`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: 0,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "Device created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -71,18 +59,6 @@ export class DeviceInfoService {
             updateData.configuration = reqModel.configuration;
             await transManager.getRepository(DeviceInfoEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'UPDATE_DEVICE',
-                resource: 'DeviceInfo',
-                details: `Device ${existingDevice.deviceName} updated`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: 0,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "Device updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -138,18 +114,6 @@ export class DeviceInfoService {
             await transManager.startTransaction();
             await transManager.getRepository(DeviceInfoEntity).delete(reqModel.id);
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            await this.auditLogsService.create({
-                action: 'DELETE_DEVICE',
-                resource: 'DeviceInfo',
-                details: `Device ${existingDevice.deviceName} deleted`,
-                status: 'SUCCESS',
-                userId: userId || undefined,
-                companyId: existingDevice.id,
-                ipAddress: ipAddress || '0.0.0.0'
-            });
-
             return new GlobalResponse(true, 0, "Device deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();

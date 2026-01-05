@@ -23,6 +23,12 @@ export class AssetAssignEntity extends CommonBaseEntity {
     @Column('date', { name: 'return_date', nullable: true, comment: 'Date when asset was returned' })
     returnDate: Date;
 
+    @Column('boolean', { name: 'is_current', default: true, comment: 'Whether this is the current assignment' })
+    isCurrent: boolean;
+
     @Column('text', { name: 'remarks', nullable: true, comment: 'Additional remarks about assignment' })
     remarks: string;
+
+    @Column('text', { name: 'return_remarks', nullable: true, comment: 'Remarks when asset was returned' })
+    returnRemarks: string;
 }
