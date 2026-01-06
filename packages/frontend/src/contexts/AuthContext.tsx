@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '@/lib/api/services';
-import { LoginUserModel, RegisterUserModel, LoginResponseModel } from '@adminvault/shared-models';
+import { LoginUserModel, LoginResponseModel } from '@adminvault/shared-models';
 import { useToast } from './ToastContext';
 
 interface User {
@@ -19,7 +19,6 @@ interface AuthContextType {
     isLoading: boolean;
     isAuthenticated: boolean;
     login: (credentials: LoginUserModel) => Promise<User | undefined>;
-    register: (data: RegisterUserModel) => Promise<void>;
     logout: () => Promise<void>;
 }
 
@@ -31,12 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
     const toast = useToast();
 
-    // Load user from localStorage on mount
     useEffect(() => {
         try {
             const storedToken = localStorage.getItem('auth_token');
             const storedUser = localStorage.getItem('auth_user');
-
             if (storedToken && storedUser) {
                 const parsedUser = JSON.parse(storedUser);
                 setToken(storedToken);
@@ -49,8 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setToken(null);
             }
         } catch (error) {
-            console.error('Failed to restore session:', error);
-            // Optional: Clear invalid storage
             localStorage.removeItem('auth_user');
             localStorage.removeItem('auth_token');
         } finally {
@@ -58,86 +53,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    const login = useCallback(
-        async (credentials: LoginUserModel) => {
-            try {
-                setIsLoading(true);
-
-                const loginData = new LoginUserModel(
-                    credentials.email,
-                    credentials.password,
-                    undefined,
-                    undefined
-                );
-
-                const response: LoginResponseModel = await authService.loginUser(loginData);
-
-                if (response.status && (response.accessToken || (response as any).access_token)) {
-                    const tokenToSave = response.accessToken || (response as any).access_token;
-
-                    const userData: User = {
-                        id: (response.userInfo as any).id || response.userInfo.companyId,
-                        fullName: response.userInfo.fullName,
-                        email: response.userInfo.email,
-                        companyId: response.userInfo.companyId,
-                        role: response.userInfo.role,
-                    };
-
-                    setUser(userData);
-                    setToken(tokenToSave);
-
-                    // Store in localStorage
-                    try {
-                        localStorage.setItem('auth_token', tokenToSave);
-                        localStorage.setItem('auth_user', JSON.stringify(userData));
-                        localStorage.setItem('refresh_token', response.refreshToken);
-                    } catch (storageErr) {
-                        console.error('LocalStorage Save Error:', storageErr);
+    const login = async (credentials: LoginUserModel): Promise<User | undefined> => {
+        try {
+            const loginData = new LoginUserModel(credentials.email, credentials.password, undefined, undefined);
+            const response: LoginResponseModel = await authService.loginUser(loginData);
+            const tokenToSave = response.accessToken || (response as any)?.access_token;
+            if (response.status && tokenToSave) {
+                const userData: User = {
+                    id:
+                        (response.userInfo as any)?.id ??
+                        response.userInfo.companyId,
+                    fullName: response.userInfo.fullName,
+                    email: response.userInfo.email,
+                    companyId: response.userInfo.companyId,
+                    role: response.userInfo.role,
+                };
+                setUser(userData);
+                setToken(tokenToSave);
+                try {
+                    localStorage.setItem("auth_token", tokenToSave);
+                    localStorage.setItem("auth_user", JSON.stringify(userData));
+                    if (response.refreshToken) {
+                        localStorage.setItem("refresh_token", response.refreshToken);
                     }
-
-                    return userData;
-                } else {
-                    console.error('Login failed, status false or token missing', response);
-                    throw new Error(response.message || 'Login failed');
+                } catch (error: any) {
+                    toast.error(error.message);
                 }
-            } catch (error: any) {
-                console.error('Login error in context:', error);
-                throw error;
-            } finally {
-                setIsLoading(false);
+                return userData;
             }
-        },
-        [toast]
-    );
-
-    const register = useCallback(
-        async (data: RegisterUserModel) => {
-            try {
-                setIsLoading(true);
-                const response = await authService.registerUser(data);
-
-                if (response.status) {
-                    // Registration successful
-                } else {
-                    throw new Error(response.message || 'Registration failed');
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [toast]
-    );
+            toast.error(response.message);
+            return undefined;
+        } catch (error: any) {
+            toast.error(error?.message);
+            return undefined;
+        }
+    };
 
     const logout = useCallback(async () => {
         try {
             if (user && token) {
-                await authService.logOutUser({
-                    email: user.email,
-                    token: token,
-                });
+                await authService.logOutUser({ email: user.email, token: token, });
             }
-        } catch (error) {
-            // Silent error handling
+        } catch (error: any) {
+            toast.error(error?.message);
         } finally {
             setUser(null);
             setToken(null);
@@ -149,17 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [user, token, toast]);
 
     return (
-        <AuthContext.Provider
-            value={{
-                user,
-                token,
-                isLoading,
-                isAuthenticated: !!user && !!token,
-                login,
-                register,
-                logout,
-            }}
-        >
+        <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated: !!user && !!token, login, logout, }}>
             {children}
         </AuthContext.Provider>
     );

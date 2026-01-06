@@ -4,7 +4,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { EmployeesService } from './employees.service';
 import { EmployeesBulkService } from './employees-bulk.service';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesModel, GetEmployeeByIdModel, BulkImportResponseModel, CompanyIdRequestModel, CreateSlackUserModel, UpdateSlackUserModel, DeleteSlackUserModel, GetSlackUserModel, GetSlackUserByIdModel, GetAllSlackUsersModel } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesModel, GetEmployeeByIdModel, BulkImportResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Employees')
 @Controller('employees')
@@ -120,54 +120,4 @@ export class EmployeesController {
         }
     }
 
-    // Slack User Endpoints
-    @Post('createSlackUser')
-    @ApiBody({ type: CreateSlackUserModel })
-    async createSlackUser(@Body() reqModel: CreateSlackUserModel): Promise<GlobalResponse> {
-        try {
-            return await this.service.createSlackUser(reqModel);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('updateSlackUser')
-    @ApiBody({ type: UpdateSlackUserModel })
-    async updateSlackUser(@Body() reqModel: UpdateSlackUserModel): Promise<GlobalResponse> {
-        try {
-            return await this.service.updateSlackUser(reqModel);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('deleteSlackUser')
-    @ApiBody({ type: DeleteSlackUserModel })
-    async deleteSlackUser(@Body() reqModel: DeleteSlackUserModel): Promise<GlobalResponse> {
-        try {
-            return await this.service.deleteSlackUser(reqModel);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('getSlackUser')
-    @ApiBody({ type: GetSlackUserModel })
-    async getSlackUser(@Body() reqModel: GetSlackUserModel): Promise<GetSlackUserByIdModel> {
-        try {
-            return await this.service.getSlackUser(reqModel);
-        } catch (error) {
-            return returnException(GetSlackUserByIdModel, error);
-        }
-    }
-
-    @Post('getAllSlackUsers')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllSlackUsers(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllSlackUsersModel> {
-        try {
-            return await this.service.getAllSlackUsers(reqModel.id);
-        } catch (error) {
-            return returnException(GetAllSlackUsersModel, error);
-        }
-    }
 }

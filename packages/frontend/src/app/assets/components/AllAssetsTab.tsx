@@ -12,9 +12,10 @@ interface AllAssetsTabProps {
     onDelete: (asset: any) => void;
     onPrint: (asset: any) => void;
     onHistory: (asset: any) => void;
+    onAssign: (asset: any) => void;
 }
 
-export default function AllAssetsTab({ assets, isLoading, status, onEdit, onDelete, onPrint, onHistory }: AllAssetsTabProps) {
+export default function AllAssetsTab({ assets, isLoading, status, onEdit, onDelete, onPrint, onHistory, onAssign }: AllAssetsTabProps) {
 
     const filteredAssets = status
         ? assets.filter(a => {
@@ -52,6 +53,7 @@ export default function AllAssetsTab({ assets, isLoading, status, onEdit, onDele
                     onDelete={onDelete}
                     onQRCode={onPrint}
                     onHistory={onHistory}
+                    onAssign={onAssign}
                 />
             ))}
         </div>

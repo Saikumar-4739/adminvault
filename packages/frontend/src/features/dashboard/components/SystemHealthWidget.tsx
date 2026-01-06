@@ -2,7 +2,7 @@
 
 import { Activity, Server, Database, Cloud } from 'lucide-react';
 import Card from '@/components/ui/Card';
-import { DashboardStats } from '@/hooks/useDashboard';
+import { DashboardStats } from '@adminvault/shared-models';
 
 interface SystemHealthWidgetProps {
     stats: DashboardStats | null;

@@ -1,36 +1,11 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    BulkSetSettingsModel,
-    CompanyIdRequestModel,
-    CreateAPIKeyModel,
-    CreateAssetModel,
-    CreateEmailInfoModel,
-    CreatePasswordVaultModel,
-    CreateRoleModel,
-    CreateSSOProviderModel,
-    CreateSettingModel,
-    DeleteEmailInfoModel,
-    EmailStatsResponseModel,
-    EnableMFAModel,
-    GetAllAssetsModel,
-    GetAllEmailInfoModel,
-    GetAllPasswordVaultsResponseModel,
-    GetAllRolesResponseModel,
-    GetAllSettingsResponseModel,
-    GetEmailInfoByIdModel,
-    GetEmailInfoModel,
-    GlobalResponse,
-    UpdateEmailInfoModel,
-    UpdatePasswordVaultModel,
-} from '@adminvault/shared-models';
+import { BulkSetSettingsModel, CompanyIdRequestModel, CreateAPIKeyModel, CreateAssetModel, CreateEmailInfoModel, CreatePasswordVaultModel, CreateRoleModel, CreateSSOProviderModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, EnableMFAModel, GetAllAssetsModel, GetAllEmailInfoModel, GetAllPasswordVaultsResponseModel, GetAllRolesResponseModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UpdatePasswordVaultModel, } from '@adminvault/shared-models';
 
 export class AdministrationService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
         return '/administration/' + childUrl;
     }
-
-    // --- SETTINGS ---
 
     async getUserSettings(config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/get-all-user-settings'), {}, config);
@@ -52,8 +27,6 @@ export class AdministrationService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/bulk-set'), reqObj, config);
     }
 
-    // --- PASSWORD VAULT ---
-
     async findAllVaultEntries(config?: AxiosRequestConfig): Promise<GetAllPasswordVaultsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/get-all'), {}, config);
     }
@@ -70,8 +43,6 @@ export class AdministrationService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/reveal-password'), { id }, config);
     }
 
-    // --- OPERATIONS (ASSETS) ---
-
     async findAssets(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetsModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('operations/assets/findAll'), reqObj, config);
     }
@@ -83,8 +54,6 @@ export class AdministrationService extends CommonAxiosService {
     async assignAssetOp(assetId: number, employeeId: number, remarks?: string, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('operations/assets/assign'), { assetId, employeeId, remarks }, config);
     }
-
-    // --- IAM ---
 
     async findAllRoles(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllRolesResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/roles/findAll'), reqObj, config);
@@ -121,8 +90,6 @@ export class AdministrationService extends CommonAxiosService {
     async createSSOProvider(reqObj: CreateSSOProviderModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/sso/create'), reqObj, config);
     }
-
-    // --- EMAIL INFO ---
 
     async createEmailInfo(reqObj: CreateEmailInfoModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('email-info/createEmailInfo'), reqObj, config);

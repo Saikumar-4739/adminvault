@@ -6,7 +6,7 @@ import {
     Activity, CheckCircle2, AlertCircle, User, AlertTriangle
 } from 'lucide-react';
 import Card, { CardContent } from '@/components/ui/Card';
-import { useAssets } from '@/hooks/useAssets';
+
 import ModernTabs from './components/ModernTabs';
 import AllAssetsTab from './components/AllAssetsTab';
 import dynamic from 'next/dynamic';
@@ -16,10 +16,44 @@ const AssetTimelineModal = dynamic(() => import('./components/AssetTimelineModal
 const BulkImportModal = dynamic(() => import('./components/BulkImportModal'), { ssr: false });
 const AdvancedFilterModal = dynamic(() => import('./components/AdvancedFilterModal'), { ssr: false });
 const AssetFormModal = dynamic(() => import('./components/AssetFormModal'), { ssr: false });
+const AssignAssetModal = dynamic(() => import('./components/AssignAssetModal'), { ssr: false });
+
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { assetService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
+import { AssetSearchRequestModel } from '@adminvault/shared-models';
+
+interface Asset {
+    id: number;
+    assetName: string;
+    assetType?: string;
+    serialNumber?: string;
+    companyId: number;
+    deviceId?: number;
+    brandId?: number;
+    model?: string;
+    configuration?: string;
+    status?: string;
+    purchaseDate?: string;
+    warrantyExpiry?: string;
+    createdAt?: string;
+    assignedTo?: string;
+    assignedDate?: string;
+    userAssignedDate?: string;
+    lastReturnDate?: string;
+    assignedToEmployeeId?: number;
+    previousUserEmployeeId?: number;
+    previousUser?: string;
+}
+
+interface AssetStatistics {
+    total: number;
+    available: number;
+    inUse: number;
+    maintenance: number;
+    retired: number;
+}
 
 export default function AssetsPage() {
     const { user } = useAuth();
@@ -32,7 +66,129 @@ export default function AssetsPage() {
     const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState<any>(null);
+
+    const [assets, setAssets] = useState<Asset[]>([]);
+    const [statistics, setStatistics] = useState<AssetStatistics | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+
+    const fetchAssets = React.useCallback(async () => {
+        if (!companyId) return;
+        setIsLoading(true);
+        try {
+            const response = await assetService.getAssetsWithAssignments(companyId);
+            if (response.status) {
+                const data = (response as any).assets || [];
+                const mappedAssets: Asset[] = data.map((item: any) => ({
+                    id: item.id,
+                    assetName: item.deviceName || `Asset ${item.serialNumber}`,
+                    assetType: item.deviceType || 'Unknown',
+                    serialNumber: item.serialNumber,
+                    companyId: item.companyId,
+                    deviceId: item.deviceId,
+                    brandId: item.brandId,
+                    model: item.model,
+                    configuration: item.configuration,
+                    status: (item.assetStatusEnum || item.status || 'available').toString().toLowerCase(),
+                    purchaseDate: item.purchaseDate,
+                    warrantyExpiry: item.warrantyExpiry,
+                    createdAt: item.createdAt || item.created_at,
+                    assignedTo: item.assignedTo,
+                    assignedDate: item.assignedDate,
+                    userAssignedDate: item.userAssignedDate,
+                    lastReturnDate: item.lastReturnDate,
+                    assignedToEmployeeId: item.assignedToEmployeeId,
+                    previousUserEmployeeId: item.previousUserEmployeeId,
+                    previousUser: item.previousUser
+                }));
+                setAssets(mappedAssets);
+            } else {
+                setFetchError(response.message || 'Failed to fetch assets');
+            }
+        } catch (err: any) {
+            setFetchError(err.message || 'An error occurred while fetching assets');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [companyId]);
+
+    const fetchStatistics = React.useCallback(async () => {
+        if (!companyId) return;
+        try {
+            const response = await assetService.getAssetStatistics(companyId);
+            if (response.status) {
+                setStatistics(response.statistics);
+            }
+        } catch (err: any) {
+            console.error('Failed to fetch statistics:', err);
+        }
+    }, [companyId]);
+
+    const refresh = React.useCallback(() => {
+        fetchAssets();
+        fetchStatistics();
+    }, [fetchAssets, fetchStatistics]);
+
+    React.useEffect(() => {
+        refresh();
+    }, [refresh]);
+
+    React.useEffect(() => {
+        if (fetchError) {
+            toastError('Error', fetchError);
+            setFetchError(null);
+        }
+    }, [fetchError, toastError]);
+
+    const searchAssets = React.useCallback(async (filters: any) => {
+        if (!companyId) return;
+        setIsLoading(true);
+        try {
+            const request = new AssetSearchRequestModel(
+                companyId,
+                filters.searchQuery,
+                filters.statusFilter,
+                filters.brandIds,
+                filters.assetTypeIds,
+                filters.employeeId,
+                filters.purchaseDateFrom,
+                filters.purchaseDateTo
+            );
+            const response = await assetService.searchAssets(request);
+            if (response.status) {
+                const data = (response as any).assets || [];
+                const mappedAssets: Asset[] = data.map((item: any) => ({
+                    id: item.id,
+                    assetName: item.deviceName || `Asset ${item.serialNumber}`,
+                    assetType: item.deviceType || 'Unknown',
+                    serialNumber: item.serialNumber,
+                    companyId: item.companyId,
+                    deviceId: item.deviceId,
+                    brandId: item.brandId,
+                    model: item.model,
+                    configuration: item.configuration,
+                    status: (item.assetStatusEnum || item.status || 'available').toString().toLowerCase(),
+                    purchaseDate: item.purchaseDate,
+                    warrantyExpiry: item.warrantyExpiry,
+                    createdAt: item.createdAt || item.created_at,
+                    assignedTo: item.assignedTo,
+                    assignedDate: item.assignedDate,
+                    userAssignedDate: item.userAssignedDate,
+                    lastReturnDate: item.lastReturnDate,
+                    assignedToEmployeeId: item.assignedToEmployeeId,
+                    previousUserEmployeeId: item.previousUserEmployeeId,
+                    previousUser: item.previousUser
+                }));
+                setAssets(mappedAssets);
+            }
+        } catch (err: any) {
+            setFetchError(err.message || 'Failed to search assets');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [companyId]);
 
     const tabs = [
         { id: 'store', label: 'Store Assets', icon: Warehouse, gradient: 'from-emerald-500 to-teal-500' },
@@ -49,6 +205,11 @@ export default function AssetsPage() {
     const handleAddAsset = () => {
         setSelectedAsset(null);
         setIsAssetFormOpen(true);
+    };
+
+    const handleAssign = (asset: any) => {
+        setSelectedAsset(asset);
+        setIsAssignModalOpen(true);
     };
 
     const handleDelete = async (asset: any) => {
@@ -74,15 +235,6 @@ export default function AssetsPage() {
         setSelectedAsset(asset);
         setIsTimelineModalOpen(true);
     };
-
-    const { assets, statistics, refresh, isLoading, error } = useAssets(companyId);
-
-    // Show toast on fetch error
-    React.useEffect(() => {
-        if (error) {
-            toastError('Error', error);
-        }
-    }, [error, toastError]);
 
     const StatCard = ({ label, value, icon, gradient }: any) => (
         <Card className="overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-900">
@@ -159,6 +311,7 @@ export default function AssetsPage() {
                             onDelete={handleDelete}
                             onPrint={handlePrint}
                             onHistory={handleHistory}
+                            onAssign={handleAssign}
                         />
                     )}
                     {activeTab === 'assigned' && (
@@ -170,6 +323,7 @@ export default function AssetsPage() {
                             onDelete={handleDelete}
                             onPrint={handlePrint}
                             onHistory={handleHistory}
+                            onAssign={handleAssign}
                         />
                     )}
                     {activeTab === 'maintenance' && (
@@ -181,6 +335,7 @@ export default function AssetsPage() {
                             onDelete={handleDelete}
                             onPrint={handlePrint}
                             onHistory={handleHistory}
+                            onAssign={handleAssign}
                         />
                     )}
                     {activeTab === 'not_used' && (
@@ -192,6 +347,7 @@ export default function AssetsPage() {
                             onDelete={handleDelete}
                             onPrint={handlePrint}
                             onHistory={handleHistory}
+                            onAssign={handleAssign}
                         />
                     )}
                 </div>
@@ -227,7 +383,7 @@ export default function AssetsPage() {
                     initialFilters={{}}
                     onClose={() => setIsFilterModalOpen(false)}
                     onApply={(filters) => {
-                        // TODO: Implement filter logic
+                        searchAssets(filters);
                         setIsFilterModalOpen(false);
                     }}
                 />
@@ -237,6 +393,16 @@ export default function AssetsPage() {
                     isOpen={isAssetFormOpen}
                     asset={selectedAsset}
                     onClose={() => setIsAssetFormOpen(false)}
+                    onSuccess={() => {
+                        refresh();
+                    }}
+                />
+            )}
+            {isAssignModalOpen && (
+                <AssignAssetModal
+                    isOpen={isAssignModalOpen}
+                    asset={selectedAsset}
+                    onClose={() => setIsAssignModalOpen(false)}
                     onSuccess={() => {
                         refresh();
                     }}

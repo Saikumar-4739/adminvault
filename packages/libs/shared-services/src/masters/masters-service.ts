@@ -1,4 +1,4 @@
-import { CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, CreateApplicationModel, CreateApplicationResponseModel, CreateExpenseCategoryModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultModel, CreatePasswordVaultResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateBrandModel, UpdateBrandResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, UpdateLocationModel, UpdateLocationResponseModel, UpdateTicketCategoryModel, UpdateTicketCategoryResponseModel, UpdateVendorModel, UpdateVendorResponseModel, UpdateApplicationModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultModel, UpdatePasswordVaultResponseModel } from '@adminvault/shared-models';
+import { CompanyIdRequestModel, CreateAssetTypeModel, CreateAssetTypeResponseModel, CreateBrandModel, CreateBrandResponseModel, CreateDepartmentModel, CreateDepartmentResponseModel, CreateLocationModel, CreateLocationResponseModel, CreateTicketCategoryModel, CreateTicketCategoryResponseModel, CreateVendorModel, CreateVendorResponseModel, CreateApplicationModel, CreateApplicationResponseModel, CreateExpenseCategoryModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultModel, CreatePasswordVaultResponseModel, CreateSlackUserModel, CreateSlackUserResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllDepartmentsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, GetAllSlackUsersResponseModel, GlobalResponse, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, UpdateBrandModel, UpdateBrandResponseModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, UpdateLocationModel, UpdateLocationResponseModel, UpdateTicketCategoryModel, UpdateTicketCategoryResponseModel, UpdateVendorModel, UpdateVendorResponseModel, UpdateApplicationModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultModel, UpdatePasswordVaultResponseModel, UpdateSlackUserModel, UpdateSlackUserResponseModel } from '@adminvault/shared-models';
 import { CommonAxiosService } from '../common-axios-service';
 import { AxiosRequestConfig } from 'axios';
 
@@ -122,5 +122,18 @@ export class MastersService extends CommonAxiosService {
     }
     async deleteLocation(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteLocation'), { id }, config);
+    }
+
+    async getAllSlackUsers(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllSlackUsersResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllSlackUsers'), reqObj, config);
+    }
+    async createSlackUser(data: CreateSlackUserModel, config?: AxiosRequestConfig): Promise<CreateSlackUserResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('createSlackUser'), data, config);
+    }
+    async updateSlackUser(data: UpdateSlackUserModel, config?: AxiosRequestConfig): Promise<UpdateSlackUserResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateSlackUser'), data, config);
+    }
+    async deleteSlackUser(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteSlackUser'), { id }, config);
     }
 }

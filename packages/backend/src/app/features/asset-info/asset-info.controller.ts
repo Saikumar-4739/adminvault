@@ -6,8 +6,7 @@ import { AssetInfoService } from './asset-info.service';
 import { AssetTabsService } from './asset-tabs.service';
 import { AssetBulkService } from './asset-bulk.service';
 import { AssetHistoryService } from './asset-history.service';
-import { AssetAssignService } from './asset-assign.service';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Asset Info')
 @Controller('asset-info')
@@ -16,8 +15,7 @@ export class AssetInfoController {
         private service: AssetInfoService,
         private assetTabsService: AssetTabsService,
         private assetBulkService: AssetBulkService,
-        private assetHistoryService: AssetHistoryService,
-        private assetAssignService: AssetAssignService
+        private assetHistoryService: AssetHistoryService
     ) { }
 
     @Post('timeline')
@@ -185,56 +183,6 @@ export class AssetInfoController {
             return await this.assetTabsService.assignFromQueue(reqModel);
         } catch (error) {
             return returnException(AssignFromQueueResponseModel, error);
-        }
-    }
-
-    @Post('createAssignment')
-    @ApiBody({ type: CreateAssetAssignModel })
-    async createAssignment(@Body() reqModel: CreateAssetAssignModel): Promise<GlobalResponse> {
-        try {
-            return await this.assetAssignService.createAssignment(reqModel);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('updateAssignment')
-    @ApiBody({ type: UpdateAssetAssignModel })
-    async updateAssignment(@Body() reqModel: UpdateAssetAssignModel): Promise<GlobalResponse> {
-        try {
-            return await this.assetAssignService.updateAssignment(reqModel);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('getAssignment')
-    @ApiBody({ type: GetAssetAssignModel })
-    async getAssignment(@Body() reqModel: GetAssetAssignModel): Promise<GetAssetAssignByIdModel> {
-        try {
-            return await this.assetAssignService.getAssignment(reqModel);
-        } catch (error) {
-            return returnException(GetAssetAssignByIdModel, error);
-        }
-    }
-
-    @Post('getAllAssignments')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllAssignments(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllAssetAssignsModel> {
-        try {
-            return await this.assetAssignService.getAllAssignments(reqModel.id);
-        } catch (error) {
-            return returnException(GetAllAssetAssignsModel, error);
-        }
-    }
-
-    @Post('deleteAssignment')
-    @ApiBody({ type: DeleteAssetAssignModel })
-    async deleteAssignment(@Body() reqModel: DeleteAssetAssignModel): Promise<GlobalResponse> {
-        try {
-            return await this.assetAssignService.deleteAssignment(reqModel);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
         }
     }
 }

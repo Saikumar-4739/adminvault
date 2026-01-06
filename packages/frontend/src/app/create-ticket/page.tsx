@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTickets } from '@/hooks/useTickets';
+import { ticketService } from '@/lib/api/services';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PageHeader from '@/components/ui/PageHeader';
@@ -51,30 +52,65 @@ const PriorityColors: Record<string, { bg: string, text: string, border: string 
     },
 };
 
+interface TicketData {
+    id: number;
+    subject: string;
+    ticketCode: string;
+    priorityEnum: TicketPriorityEnum;
+    categoryEnum: TicketCategoryEnum;
+    ticketStatus: TicketStatusEnum;
+    createdAt?: string;
+}
+
 export default function CreateTicketPage() {
     const router = useRouter();
     const { logout } = useAuth();
-    const { tickets, createTicket, isLoading, fetchMyTickets } = useTickets();
+    const { success, error: toastError } = useToast();
+
+    const [tickets, setTickets] = useState<TicketData[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [activeTab, setActiveTab] = useState<'tickets' | 'create'>('tickets');
-    const [formData, setFormData] = useState({ subject: '', categoryEnum: TicketCategoryEnum.OTHER, priorityEnum: TicketPriorityEnum.MEDIUM, ticketStatus: TicketStatusEnum.OPEN, ticketCode: '' });
+    const [formData, setFormData] = useState({
+        subject: '',
+        categoryEnum: TicketCategoryEnum.OTHER,
+        priorityEnum: TicketPriorityEnum.MEDIUM,
+        ticketStatus: TicketStatusEnum.OPEN,
+        ticketCode: ''
+    });
+
+    const fetchMyTickets = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await ticketService.getMyTickets();
+            if (response.status) {
+                setTickets(response.data || []);
+            }
+        } catch (error: any) {
+            console.error('Failed to fetch tickets:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         fetchMyTickets();
-    }, []);
+    }, [fetchMyTickets]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
-            const success = await createTicket({
+            const response = await ticketService.createTicket({
                 subject: formData.subject,
                 categoryEnum: formData.categoryEnum,
                 priorityEnum: formData.priorityEnum,
                 ticketStatus: TicketStatusEnum.OPEN,
             } as any);
 
-            if (success) {
+            if (response.status) {
                 setIsSuccess(true);
+                success(response.message || 'Ticket created successfully');
                 setFormData({
                     subject: '',
                     categoryEnum: TicketCategoryEnum.OTHER,
@@ -82,15 +118,20 @@ export default function CreateTicketPage() {
                     ticketStatus: TicketStatusEnum.OPEN,
                     ticketCode: '',
                 });
+
                 // Refresh tickets list
                 setTimeout(() => {
                     fetchMyTickets();
                     setIsSuccess(false);
                     setActiveTab('tickets');
                 }, 2000);
+            } else {
+                toastError(response.message || 'Failed to create ticket');
             }
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            toastError(error.message || 'An error occurred');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -202,7 +243,7 @@ export default function CreateTicketPage() {
                         </p>
                     </div>
 
-                    {isLoading ? (
+                    {isLoading && tickets.length === 0 ? (
                         <div className="p-12 text-center">
                             <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mx-auto"></div>
                             <p className="mt-4 text-slate-600 dark:text-slate-400 font-medium">Loading your tickets...</p>
@@ -250,9 +291,9 @@ export default function CreateTicketPage() {
                                 </thead>
                                 <tbody className="divide-y-2 divide-slate-200 dark:divide-slate-700">
                                     {tickets.map((ticket) => {
-                                        const Config = CategoryConfig[ticket.categoryEnum];
-                                        const Icon = CategoryIcons[ticket.categoryEnum];
-                                        const priorityColor = PriorityColors[ticket.priorityEnum];
+                                        const Config = CategoryConfig[ticket.categoryEnum] || CategoryConfig[TicketCategoryEnum.OTHER];
+                                        const Icon = CategoryIcons[ticket.categoryEnum] || HelpCircle;
+                                        const priorityColor = PriorityColors[ticket.priorityEnum] || PriorityColors[TicketPriorityEnum.MEDIUM];
 
                                         return (
                                             <tr key={ticket.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
@@ -456,6 +497,4 @@ export default function CreateTicketPage() {
             )}
         </div>
     );
-};
-
-
+}

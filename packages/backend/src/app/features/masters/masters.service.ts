@@ -8,8 +8,9 @@ import { LocationRepository } from './repositories/location.repository';
 import { TicketCategoryRepository } from './repositories/ticket-category.repository';
 import { CompanyInfoRepository } from './repositories/company-info.repository';
 import { PasswordVaultRepository } from './repositories/password-vault.repository';
+import { SlackUsersRepository } from './repositories/slack-user.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
-import { CreateDepartmentModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel, CreateAssetTypeModel, CreateBrandModel, CreateApplicationModel, CreateExpenseCategoryModel, CreatePasswordVaultModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel, UpdateLocationModel, UpdateTicketCategoryModel, UpdateApplicationModel, UpdateExpenseCategoryModel, UpdatePasswordVaultModel, GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateLocationResponseModel, CreateTicketCategoryResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultResponseModel, UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateLocationResponseModel, UpdateTicketCategoryResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateDepartmentModel, CreateVendorModel, CreateLocationModel, CreateTicketCategoryModel, CreateAssetTypeModel, CreateBrandModel, CreateApplicationModel, CreateExpenseCategoryModel, CreatePasswordVaultModel, CreateSlackUserModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel, UpdateLocationModel, UpdateTicketCategoryModel, UpdateApplicationModel, UpdateExpenseCategoryModel, UpdatePasswordVaultModel, UpdateSlackUserModel, GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllLocationsResponseModel, GetAllTicketCategoriesResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, GetAllSlackUsersResponseModel, CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateLocationResponseModel, CreateTicketCategoryResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultResponseModel, CreateSlackUserResponseModel, UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateLocationResponseModel, UpdateTicketCategoryResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultResponseModel, UpdateSlackUserResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { DepartmentsMasterEntity } from './entities/department.entity';
 import { AssetTypeMasterEntity } from './entities/asset-type.entity';
 import { BrandsMasterEntity } from './entities/brand.entity';
@@ -19,6 +20,7 @@ import { TicketCategoriesMasterEntity } from './entities/ticket-category.entity'
 import { ApplicationsMasterEntity } from './entities/application.entity';
 import { ExpenseCategoriesMasterEntity } from './entities/expense-category.entity';
 import { PasswordVaultMasterEntity } from './entities/password-vault.entity';
+import { SlackUsersMasterEntity } from './entities/slack-user.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 
 @Injectable()
@@ -32,7 +34,8 @@ export class MastersService {
         private locationRepo: LocationRepository,
         private ticketCatRepo: TicketCategoryRepository,
         private companyRepo: CompanyInfoRepository,
-        private passwordVaultRepo: PasswordVaultRepository
+        private passwordVaultRepo: PasswordVaultRepository,
+        private slackUserRepo: SlackUsersRepository
     ) { }
 
     // Departments
@@ -142,6 +145,7 @@ export class MastersService {
                 name: asset.name,
                 description: asset.description,
                 isActive: asset.isActive,
+                code: asset.code,
                 companyName: company?.companyName
             }));
             return new GetAllAssetTypesResponseModel(true, 200, 'Asset Types retrieved successfully', assetTypesWithCompanyName);
@@ -177,7 +181,13 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(AssetTypeMasterEntity);
-            await repo.update(data.id, { name: data.name, description: data.description, isActive: data.isActive });
+            await repo.update(data.id, {
+                name: data.name,
+                description: data.description,
+                isActive: data.isActive,
+                code: data.code,
+                companyId: data.companyId
+            });
             const updated = await repo.findOne({ where: { id: data.id } });
             if (!updated) {
                 throw new ErrorResponse(500, 'Failed to retrieve updated asset type');
@@ -216,7 +226,24 @@ export class MastersService {
     async getAllBrands(reqModel: CompanyIdRequestModel): Promise<GetAllBrandsResponseModel> {
         try {
             const brands = await this.brandRepo.find({ where: { companyId: reqModel.id } });
-            return new GetAllBrandsResponseModel(true, 200, 'Brands retrieved successfully', brands);
+            // Fetch company information from company repository
+            const company = await this.companyRepo.findOne({ where: { id: reqModel.id } });
+            // Map company name to each brand
+            const brandsWithCompanyName = brands.map(brand => ({
+                id: brand.id,
+                userId: brand.userId,
+                companyId: brand.companyId,
+                createdAt: brand.createdAt,
+                updatedAt: brand.updatedAt,
+                name: brand.name,
+                description: brand.description,
+                isActive: brand.isActive,
+                website: brand.website,
+                rating: brand.rating,
+                code: brand.code,
+                companyName: company?.companyName
+            }));
+            return new GetAllBrandsResponseModel(true, 200, 'Brands retrieved successfully', brandsWithCompanyName);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Brands');
         }
@@ -254,7 +281,9 @@ export class MastersService {
                 description: data.description,
                 isActive: data.isActive,
                 website: data.website,
-                rating: data.rating
+                rating: data.rating,
+                code: data.code,
+                companyId: data.companyId
             });
             const updated = await repo.findOne({ where: { id: data.id } });
             if (!updated) {
@@ -294,7 +323,26 @@ export class MastersService {
     async getAllVendors(reqModel: CompanyIdRequestModel): Promise<GetAllVendorsResponseModel> {
         try {
             const vendors = await this.vendorRepo.find({ where: { companyId: reqModel.id } });
-            return new GetAllVendorsResponseModel(true, 200, 'Vendors retrieved successfully', vendors);
+            // Fetch company information from company repository
+            const company = await this.companyRepo.findOne({ where: { id: reqModel.id } });
+            // Map company name to each vendor
+            const vendorsWithCompanyName = vendors.map(vendor => ({
+                id: vendor.id,
+                userId: vendor.userId,
+                companyId: vendor.companyId,
+                createdAt: vendor.createdAt,
+                updatedAt: vendor.updatedAt,
+                name: vendor.name,
+                description: vendor.description,
+                isActive: vendor.isActive,
+                contactPerson: vendor.contactPerson,
+                email: vendor.email,
+                phone: vendor.phone,
+                address: vendor.address,
+                code: vendor.code,
+                companyName: company?.companyName
+            }));
+            return new GetAllVendorsResponseModel(true, 200, 'Vendors retrieved successfully', vendorsWithCompanyName);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Vendors');
         }
@@ -334,7 +382,9 @@ export class MastersService {
                 contactPerson: data.contactPerson,
                 email: data.email,
                 phone: data.phone,
-                address: data.address
+                address: data.address,
+                code: data.code,
+                companyId: data.companyId
             });
             const updated = await repo.findOne({ where: { id: data.id } });
             if (!updated) {
@@ -810,4 +860,86 @@ export class MastersService {
         }
     }
 
+
+    // Slack Users
+    async getAllSlackUsers(reqModel: CompanyIdRequestModel): Promise<GetAllSlackUsersResponseModel> {
+        try {
+            const users = await this.slackUserRepo.find({ where: { companyId: reqModel.id } });
+            return new GetAllSlackUsersResponseModel(true, 200, 'Slack Users retrieved successfully', users as any);
+        } catch (error) {
+            throw new ErrorResponse(500, 'Failed to fetch Slack Users');
+        }
+    }
+
+    async createSlackUser(data: CreateSlackUserModel, userId?: number, ipAddress?: string): Promise<CreateSlackUserResponseModel> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(SlackUsersMasterEntity);
+            const newItem = repo.create({
+                ...data,
+                isActive: true
+            });
+            const savedItem = await repo.save(newItem);
+            await transManager.completeTransaction();
+            return new CreateSlackUserResponseModel(true, 201, 'Slack User created successfully', savedItem as any);
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw new ErrorResponse(500, 'Failed to create Slack User');
+        }
+    }
+
+    async updateSlackUser(data: UpdateSlackUserModel, userId?: number, ipAddress?: string): Promise<UpdateSlackUserResponseModel> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            const existing = await this.slackUserRepo.findOne({ where: { id: data.id } });
+            if (!existing) {
+                throw new ErrorResponse(404, 'Slack User not found');
+            }
+
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(SlackUsersMasterEntity);
+            await repo.update(data.id, {
+                name: data.name,
+                email: data.email,
+                slackUserId: data.slackUserId,
+                displayName: data.displayName,
+                role: data.role,
+                department: data.department,
+                phone: data.phone,
+                notes: data.notes,
+                isActive: data.isActive,
+                companyId: data.companyId
+            });
+            const updated = await repo.findOne({ where: { id: data.id } });
+            await transManager.completeTransaction();
+
+            if (!updated) throw new Error('Failed to retrieve updated user');
+
+            return new UpdateSlackUserResponseModel(true, 200, 'Slack User updated successfully', updated as any);
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update Slack User');
+        }
+    }
+
+    async deleteSlackUser(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            const existing = await this.slackUserRepo.findOne({ where: { id: reqModel.id } });
+            if (!existing) {
+                throw new ErrorResponse(404, 'Slack User not found');
+            }
+
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(SlackUsersMasterEntity);
+            await repo.delete(reqModel.id);
+            await transManager.completeTransaction();
+
+            return new GlobalResponse(true, 200, 'Slack User deleted successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw new ErrorResponse(500, 'Failed to delete Slack User');
+        }
+    }
 }

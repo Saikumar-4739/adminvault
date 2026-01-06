@@ -3,7 +3,7 @@
 import { Calendar, AlertTriangle, ArrowRight, CheckCircle } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { DashboardStats } from '@/hooks/useDashboard';
+import { DashboardStats } from '@adminvault/shared-models';
 import Link from 'next/link';
 
 interface RenewalsWidgetProps {

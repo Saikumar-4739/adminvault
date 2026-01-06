@@ -1,15 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { useDashboard } from '@/hooks/useDashboard';
+import { dashboardService } from '@/lib/api/services';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import { Users, Package, Ticket, AlertCircle, Lock, RefreshCcw, TrendingUp, Activity, PieChart as PieChartIcon, BarChart2 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
-import Button from '@/components/ui/Button';
+import { useToast } from '@/contexts/ToastContext';
 
 // Lazy load chart components
 const AssetDistributionChart = dynamic(() => import('@/features/dashboard/components/AssetDistributionChart'), {
@@ -44,8 +44,60 @@ const SecurityScoreCard = dynamic(() => import('@/features/dashboard/components/
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
 
+export interface DashboardStats {
+    assets: {
+        total: number;
+        byStatus: { status: string; count: string }[];
+    };
+    tickets: {
+        total: number;
+        byStatus: { status: string; count: string }[];
+        byPriority: { priority: string; count: string }[];
+        recent: any[];
+    };
+    employees: {
+        total: number;
+        byDepartment: { department: string; count: string }[];
+    };
+    licenses: {
+        total: number;
+        expiringSoon: {
+            id: number;
+            applicationName: string;
+            expiryDate: Date | string;
+            assignedTo: string;
+        }[];
+    };
+    systemHealth: {
+        assetUtilization: number;
+        ticketResolutionRate: number;
+        openCriticalTickets: number;
+    };
+}
+
 export default function DashboardPage() {
-    const { stats, isLoading, refresh } = useDashboard();
+    const { error: toastError } = useToast();
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchStats = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const response = await dashboardService.getDashboardStats();
+            if (response && response.status && response.data) {
+                setStats(response.data);
+            }
+        } catch (err: any) {
+            console.error(err);
+            toastError('Failed to load dashboard data');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toastError]);
+
+    useEffect(() => {
+        fetchStats();
+    }, [fetchStats]);
 
     // Mock security metrics for demonstration
     const securityMetrics = {
@@ -145,8 +197,6 @@ export default function DashboardPage() {
                         </Card>
                     ))}
                 </div>
-
-
 
                 {/* Multi-Column Grid for Core Analytics & Risk */}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -290,6 +340,4 @@ export default function DashboardPage() {
             </div >
         </RouteGuard >
     );
-};
-
-
+}

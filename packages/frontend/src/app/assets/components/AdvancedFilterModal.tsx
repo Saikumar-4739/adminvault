@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Check } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { AssetStatusEnum } from '@adminvault/shared-models';
-import { useMasters } from '@/hooks/useMasters';
+import { mastersService } from '@/lib/api/services';
 
 interface AdvancedFilterModalProps {
     isOpen: boolean;
@@ -15,8 +15,43 @@ interface AdvancedFilterModalProps {
 }
 
 export default function AdvancedFilterModal({ isOpen, onClose, onApply, initialFilters }: AdvancedFilterModalProps) {
-    const { brands, fetchBrands, assetTypes, fetchAssetTypes } = useMasters();
-    const [localFilters, setLocalFilters] = useState<any>({ brandIds: [], assetTypeIds: [], statusFilter: [], purchaseDateFrom: '', purchaseDateTo: '' });
+    const [brands, setBrands] = useState<any[]>([]);
+    const [assetTypes, setAssetTypes] = useState<any[]>([]);
+    const [localFilters, setLocalFilters] = useState<any>({
+        brandIds: [],
+        assetTypeIds: [],
+        statusFilter: [],
+        purchaseDateFrom: '',
+        purchaseDateTo: ''
+    });
+
+    const getCompanyId = useCallback((): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.companyId || 1;
+    }, []);
+
+    const fetchBrands = useCallback(async () => {
+        try {
+            const response = await mastersService.getAllBrands(getCompanyId() as any);
+            if (response.status) {
+                setBrands(response.brands || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch brands:', error);
+        }
+    }, [getCompanyId]);
+
+    const fetchAssetTypes = useCallback(async () => {
+        try {
+            const response = await mastersService.getAllAssetTypes(getCompanyId() as any);
+            if (response.status) {
+                setAssetTypes(response.assetTypes || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch asset types:', error);
+        }
+    }, [getCompanyId]);
 
     useEffect(() => {
         if (isOpen) {
@@ -27,10 +62,10 @@ export default function AdvancedFilterModal({ isOpen, onClose, onApply, initialF
                 purchaseDateFrom: initialFilters.purchaseDateFrom || '',
                 purchaseDateTo: initialFilters.purchaseDateTo || ''
             });
-            if (brands.length === 0) fetchBrands();
-            if (assetTypes.length === 0) fetchAssetTypes();
+            fetchBrands();
+            fetchAssetTypes();
         }
-    }, [isOpen, initialFilters]);
+    }, [isOpen, initialFilters, fetchBrands, fetchAssetTypes]);
 
     const handleStatusToggle = (status: AssetStatusEnum) => {
         setLocalFilters((prev: any) => {
@@ -126,7 +161,7 @@ export default function AdvancedFilterModal({ isOpen, onClose, onApply, initialF
                                 `}
                             >
                                 {localFilters.assetTypeIds?.includes(type.id) && <Check className="h-3 w-3" />}
-                                {type.deviceName}
+                                {type.name || type.deviceName}
                             </button>
                         ))}
                     </div>
@@ -148,7 +183,7 @@ export default function AdvancedFilterModal({ isOpen, onClose, onApply, initialF
                                 `}
                             >
                                 {localFilters.brandIds?.includes(brand.id) && <Check className="h-3 w-3" />}
-                                {brand.brandName}
+                                {brand.name || brand.brandName}
                             </button>
                         ))}
                     </div>

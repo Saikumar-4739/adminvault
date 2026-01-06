@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users, Settings as SettingsIcon, UserCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
 interface NavigationItem {
@@ -67,7 +67,28 @@ export default function Sidebar() {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const permissions = usePermissions();
+    const { user } = useAuth();
+
+    // Persist collapsed state
+    useEffect(() => {
+        const stored = localStorage.getItem('sidebar_collapsed');
+        if (stored) {
+            setIsCollapsed(stored === 'true');
+        }
+    }, []);
+
+    const toggleCollapse = () => {
+        const newState = !isCollapsed;
+        setIsCollapsed(newState);
+        localStorage.setItem('sidebar_collapsed', String(newState));
+    };
+
+    const hasRole = (roles: UserRoleEnum[]): boolean => {
+        if (!user?.role) return false;
+        return roles.includes(user.role as UserRoleEnum);
+    };
+
+    const permissions = { hasRole };
 
     const SidebarContent = ({ collapsed, pathname, permissions, setIsMobileMenuOpen }: {
         collapsed: boolean,
@@ -190,7 +211,7 @@ export default function Sidebar() {
                 {/* Collapse Toggle Button (Desktop Only) */}
                 <div className={`hidden lg:flex p-4 border-t border-slate-800 ${isCollapsed ? 'justify-center' : 'justify-end'}`}>
                     <button
-                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        onClick={toggleCollapse}
                         className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                         title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                     >

@@ -11,10 +11,32 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginSessionService } from './login-session.service';
 import { EmailInfoService } from '../administration/email-info.service';
 import { RequestAccessModel } from '@adminvault/shared-models';
-
+import axios from 'axios';
+import { URLSearchParams } from 'url';
 
 const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
 const REFRESH_SECRET_KEY = "d9f8a1ec2d6826db2f24ea9f8a1d9bda26f054de88bb90b63934561f7225ab";
+
+// SSO Configuration - Should be in .env in production
+const SSO_CONFIG = {
+    microsoft: {
+        clientId: process.env.MICROSOFT_CLIENT_ID || 'YOUR_MS_CLIENT_ID',
+        clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'YOUR_MS_CLIENT_SECRET',
+        tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
+        redirectUri: process.env.SSO_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
+        authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+        tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+        scope: 'user.read openid profile email'
+    },
+    zoho: {
+        clientId: process.env.ZOHO_CLIENT_ID || 'YOUR_ZOHO_CLIENT_ID',
+        clientSecret: process.env.ZOHO_CLIENT_SECRET || 'YOUR_ZOHO_CLIENT_SECRET',
+        redirectUri: process.env.SSO_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
+        authUrl: 'https://accounts.zoho.com/oauth/v2/auth',
+        tokenUrl: 'https://accounts.zoho.com/oauth/v2/token',
+        scope: 'Aaaserver.profile.Read email' // 'email' might need specific Zoho scope like ZohoMail.accounts.READ depending on needs, sticking to profile read
+    }
+};
 
 @Injectable()
 export class AuthUsersService {
@@ -320,6 +342,107 @@ export class AuthUsersService {
         } catch (err) {
             await transManager.releaseTransaction();
             throw err;
+        }
+    }
+
+    async getSSOAuthUrl(provider: 'microsoft' | 'zoho'): Promise<string> {
+        const config = SSO_CONFIG[provider];
+        if (!config) throw new ErrorResponse(0, 'Invalid Provider');
+
+        const params = new URLSearchParams({
+            client_id: config.clientId,
+            response_type: 'code',
+            redirect_uri: config.redirectUri,
+            scope: config.scope,
+            state: provider // Pass provider as state to identify during callback
+        });
+
+        if (provider === 'zoho') {
+            params.append('access_type', 'offline');
+            params.append('prompt', 'Consent');
+        }
+
+        return `${config.authUrl}?${params.toString()}`;
+    }
+
+    async handleSSOCallback(provider: string, code: string, ipAddress: string, userAgent: string): Promise<LoginResponseModel> {
+        const config = SSO_CONFIG[provider as 'microsoft' | 'zoho'];
+        if (!config) throw new ErrorResponse(0, 'Invalid Provider');
+
+        let email = '';
+        let name = '';
+
+        try {
+            // 1. Exchange Code for Token
+            const tokenParams = new URLSearchParams({
+                client_id: config.clientId,
+                client_secret: config.clientSecret,
+                code: code,
+                redirect_uri: config.redirectUri,
+                grant_type: 'authorization_code'
+            });
+
+            const tokenRes = await axios.post(config.tokenUrl, tokenParams.toString(), {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+
+            const accessToken = tokenRes.data.access_token;
+
+
+            // 2. Get User Profile
+            if (provider === 'microsoft') {
+                const profileRes = await axios.get('https://graph.microsoft.com/v1.0/me', {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
+                email = profileRes.data.mail || profileRes.data.userPrincipalName;
+                name = profileRes.data.displayName;
+            } else if (provider === 'zoho') {
+                const profileRes = await axios.get('https://accounts.zoho.com/oauth/user/info', {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
+                // Zoho structure might vary, generally:
+                email = profileRes.data.Email;
+                name = profileRes.data.First_Name + ' ' + profileRes.data.Last_Name;
+            }
+
+            if (!email) throw new Error('Could not retrieve email from provider');
+
+            // 3. Login or Auto-Register
+            let user = await this.authUsersRepo.findOne({ where: { email } });
+
+            // If user doesn't exist, we could auto-register or reject. 
+            // For now, let's reject to ensure security unless they are invited.
+            if (!user) {
+                throw new ErrorResponse(0, `User with email ${email} not found. Please request access first.`);
+            }
+
+            // 4. Create Session (similar to loginUser)
+            const payload = {
+                username: user.email,
+                email: user.email,
+                sub: user.id,
+                companyId: user.companyId
+            };
+            const appAccessToken = this.generateAccessToken(payload);
+            const appRefreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
+
+            if (ipAddress) { // Only if IP is provided (which implies we are in a valid request context)
+                try {
+                    const loginSessionModel = new CreateLoginSessionModel(user.id, user.companyId, ipAddress, userAgent, provider, appAccessToken, 0, 0); // No GPS for SSO for now
+                    await this.loginSessionService.createLoginSession(loginSessionModel);
+                } catch (sessionError) {
+                    // Log error but continue
+                    console.error('SSO Session Error:', sessionError);
+                }
+            }
+
+            const userInfo = new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole);
+            (userInfo as any).id = user.id;
+            return new LoginResponseModel(true, 0, "SSO Login Successful", userInfo, appAccessToken, appRefreshToken);
+
+        } catch (error: any) {
+            console.error('SSO Error:', error.response?.data || error.message);
+            throw new ErrorResponse(0, 'SSO Authentication Failed: ' + (error.response?.data?.error_description || error.message));
         }
     }
 

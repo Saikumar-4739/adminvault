@@ -1,17 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CompanyIdRequestModel,
-    DeleteUserModel,
-    GetAllUsersModel,
-    GlobalResponse,
-    LoginResponseModel,
-    LoginUserModel,
-    LogoutUserModel,
-    RegisterUserModel,
-    RequestAccessModel,
-    UpdateUserModel
-} from '@adminvault/shared-models';
+import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, GlobalResponse, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, RequestAccessModel, UpdateUserModel } from '@adminvault/shared-models';
 
 export class AuthUsersService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {

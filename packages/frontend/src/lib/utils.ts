@@ -9,18 +9,19 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format date to readable string (DD MMM YYYY)
+ * Format date to readable string (DD-MM-YYYY)
  */
 export function formatDate(date: Date | string | null | undefined): string {
     if (!date) return '-';
     const d = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(d.getTime())) return '-';
 
-    return d.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
+    // Format as DD-MM-YYYY
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+
+    return `${day}-${month}-${year}`;
 }
 
 /**

@@ -1,30 +1,19 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAssetByIdModel, GetAllAssetsModel, GlobalResponse,
-    AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel,
-    GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel,
-    ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel,
-    CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel,
-    BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel,
-    CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel
-} from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAssetByIdModel, GetAllAssetsModel, GlobalResponse, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, AssetTimelineResponseModel, CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
 
 export class AssetInfoService extends CommonAxiosService {
     private readonly BASE_PATH = '/asset-info';
 
-    // --- TIMELINE ---
     async getTimeline(assetId: number, companyId: number, config?: AxiosRequestConfig): Promise<AssetTimelineResponseModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/timeline`, { id: assetId, companyId }, config);
     }
 
-    // --- BULK IMPORT ---
     async bulkImport(file: File, companyId: number, userId: number, config?: AxiosRequestConfig): Promise<BulkImportResponseModel> {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('companyId', String(companyId));
         formData.append('userId', String(userId));
-
         return await this.axiosPostCall(`${this.BASE_PATH}/bulk-import`, formData, {
             ...config,
             headers: {
@@ -34,7 +23,6 @@ export class AssetInfoService extends CommonAxiosService {
         });
     }
 
-    // --- ASSET CRUD ---
     async createAsset(reqObj: CreateAssetModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(`${this.BASE_PATH}/createAsset`, reqObj, config);
     }
@@ -68,7 +56,6 @@ export class AssetInfoService extends CommonAxiosService {
         return await this.axiosPostCall(`${this.BASE_PATH}/with-assignments`, { id: companyId }, config);
     }
 
-    // --- STORE & RETURNS ---
     async getStoreAssets(reqObj: GetStoreAssetsRequestModel, config?: AxiosRequestConfig): Promise<GetStoreAssetsResponseModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/store-assets`, reqObj, config);
     }
@@ -81,7 +68,6 @@ export class AssetInfoService extends CommonAxiosService {
         return await this.axiosPostCall(`${this.BASE_PATH}/process-return`, reqObj, config);
     }
 
-    // --- NEXT ASSIGNMENTS & QUEUE ---
     async getNextAssignments(reqObj: GetNextAssignmentsRequestModel, config?: AxiosRequestConfig): Promise<GetNextAssignmentsResponseModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/next-assignments`, reqObj, config);
     }
@@ -94,7 +80,6 @@ export class AssetInfoService extends CommonAxiosService {
         return await this.axiosPostCall(`${this.BASE_PATH}/assign-from-queue`, reqObj, config);
     }
 
-    // --- ASSIGNMENTS ---
     async createAssignment(reqObj: CreateAssetAssignModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(`${this.BASE_PATH}/createAssignment`, reqObj, config);
     }

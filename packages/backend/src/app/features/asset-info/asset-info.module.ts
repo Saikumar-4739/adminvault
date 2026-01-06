@@ -9,7 +9,6 @@ import { AssetInfoService } from './asset-info.service';
 import { AssetTabsService } from './asset-tabs.service';
 import { AssetBulkService } from './asset-bulk.service';
 import { AssetHistoryService } from './asset-history.service';
-import { AssetAssignService } from './asset-assign.service';
 import { AssetInfoController } from './asset-info.controller';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
 import { AssetReturnHistoryRepository } from './repositories/asset-return-history.repository';
@@ -20,7 +19,7 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 @Module({
     imports: [TypeOrmModule.forFeature([AssetInfoEntity, AssetReturnHistoryEntity, AssetNextAssignmentEntity, AssetAssignEntity, EmployeesEntity])],
     controllers: [AssetInfoController],
-    providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetAssignService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository, AssetAssignRepository, EmployeesRepository],
-    exports: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetAssignService]
+    providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository, AssetAssignRepository, EmployeesRepository],
+    exports: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService]
 })
 export class AssetInfoModule { }

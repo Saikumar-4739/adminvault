@@ -16,12 +16,6 @@ export class BrandsMasterEntity extends CommonBaseEntity {
     @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether brand is active' })
     isActive: boolean;
 
-    @Column('varchar', { name: 'status', length: 100, nullable: true, comment: 'Brand status' })
-    status: string;
-
-    @Column('varchar', { name: 'logo', length: 500, nullable: true, comment: 'Brand logo URL' })
-    logo: string;
-
     @Column('varchar', { name: 'code', length: 50, nullable: true, comment: 'Brand code' })
     code: string;
 

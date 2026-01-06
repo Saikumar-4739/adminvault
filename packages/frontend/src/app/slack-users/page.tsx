@@ -41,7 +41,7 @@ export default function SlackUsersPage() {
             const companyId = 1; // Default companyId
             const [empRes, deptRes] = await Promise.all([
                 employeeService.getAllEmployees(companyId),
-                mastersService.getAllDepartments()
+                mastersService.getAllDepartments({ companyId: 1 } as any)
             ]);
 
             if (empRes.status) setEmployees(empRes.employees);

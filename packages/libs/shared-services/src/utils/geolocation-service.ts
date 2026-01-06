@@ -1,4 +1,4 @@
-import { GeolocationPosition } from '../types/geolocation.types';
+import { GeolocationPosition } from '@adminvault/shared-models';
 
 /**
  * Geolocation Service

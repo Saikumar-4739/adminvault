@@ -13,11 +13,9 @@ export class CompanyInfoController {
 
     @Post('createCompany')
     @ApiBody({ type: CreateCompanyModel })
-    async createCompany(@Body() reqModel: CreateCompanyModel, @Req() req: any): Promise<GlobalResponse> {
+    async createCompany(@Body() reqModel: CreateCompanyModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.service.createCompany(reqModel, userId, ipAddress);
+            return await this.service.createCompany(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -25,11 +23,9 @@ export class CompanyInfoController {
 
     @Post('updateCompany')
     @ApiBody({ type: UpdateCompanyModel })
-    async updateCompany(@Body() reqModel: UpdateCompanyModel, @Req() req: any): Promise<GlobalResponse> {
+    async updateCompany(@Body() reqModel: UpdateCompanyModel,): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.service.updateCompany(reqModel, userId, ipAddress);
+            return await this.service.updateCompany(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -56,11 +52,9 @@ export class CompanyInfoController {
 
     @Post('deleteCompany')
     @ApiBody({ type: DeleteCompanyModel })
-    async deleteCompany(@Body() reqModel: DeleteCompanyModel, @Req() req: any): Promise<GlobalResponse> {
+    async deleteCompany(@Body() reqModel: DeleteCompanyModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.service.deleteCompany(reqModel, userId, ipAddress);
+            return await this.service.deleteCompany(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

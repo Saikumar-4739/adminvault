@@ -1,72 +1,129 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMasters } from '@/hooks/useMasters';
+import { mastersService, companyService } from '@/lib/api/services';
+import { CreateDepartmentModel, UpdateDepartmentModel } from '@adminvault/shared-models';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
+
+interface Department {
+    id: number;
+    name: string;
+    description?: string;
+    code?: string;
+    status?: string;
+    isActive: boolean;
+    companyId: number;
+}
 
 export default function DepartmentsMasterView({ onBack }: { onBack?: () => void }) {
-    const { departments, isLoading, createDepartment, updateDepartment, deleteDepartment, fetchDepartments } = useMasters();
+    const { success: toastSuccess, error: toastError } = useToast();
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [companies, setCompanies] = useState<any[]>([]);
+    const [isLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingDepartmentId, setEditingDepartmentId] = useState<number | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [departmentToDelete, setDepartmentToDelete] = useState<{ id: number; name: string } | null>(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        description: '',
-        code: '',
-        companyId: '',
-        status: '',
-        isActive: true
-    });
+    const [formData, setFormData] = useState({ name: '', description: '', code: '', companyId: '', status: '', isActive: true });
 
     useEffect(() => {
-        fetchDepartments();
-    }, [fetchDepartments]);
+        getAllDepartments();
+        getAllCompanies();
+    }, []);
+
+    const getCompanyId = (): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.companyId || 1;
+    };
+
+    const getUserId = (): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.id || 1;
+    };
+
+    const getAllCompanies = async () => {
+        try {
+            const response = await companyService.getAllCompanies();
+            if (response.status) {
+                setCompanies(response.data);
+            } else {
+                toastError(response.message);
+            }
+        } catch (error: any) {
+            toastError(error.message);
+        }
+    };
+
+    const getAllDepartments = async () => {
+        try {
+            const response = await mastersService.getAllDepartments(getCompanyId() as any);
+            if (response.status) {
+                setDepartments(response.departments || []);
+            } else {
+                toastError(response.message);
+            }
+        } catch (error: any) {
+            toastError(error.message);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        let success = false;
-
-        if (isEditMode && editingDepartmentId) {
-            success = await updateDepartment({
-                id: editingDepartmentId,
-                name: formData.name,
-                description: formData.description,
-                code: formData.code,
-                status: formData.status,
-                isActive: formData.isActive
-            });
-        } else {
-            success = await createDepartment({
-                name: formData.name,
-                description: formData.description,
-                code: formData.code,
-                status: formData.status
-            });
-        }
-
-        if (success) {
-            handleCloseModal();
+        try {
+            if (isEditMode && editingDepartmentId) {
+                const model = new UpdateDepartmentModel(
+                    editingDepartmentId,
+                    formData.name,
+                    formData.description,
+                    formData.isActive,
+                    formData.code
+                );
+                const response = await mastersService.updateDepartment(model);
+                if (response.status) {
+                    toastSuccess(response.message || 'Department Updated Successfully');
+                    handleCloseModal();
+                    getAllDepartments();
+                } else {
+                    toastError(response.message || 'Failed to Update Department');
+                }
+            } else {
+                const model = new CreateDepartmentModel(
+                    getUserId(),
+                    Number(formData.companyId) || getCompanyId(),
+                    formData.name,
+                    formData.description,
+                    formData.isActive,
+                    formData.code,
+                    formData.status as any
+                );
+                const response = await mastersService.createDepartment(model);
+                if (response.status) {
+                    toastSuccess(response.message);
+                    handleCloseModal();
+                    getAllDepartments();
+                } else {
+                    toastError(response.message);
+                }
+            }
+        } catch (error: any) {
+            toastError(error.message);
         }
     };
 
     const handleEdit = (dept: any) => {
         setIsEditMode(true);
         setEditingDepartmentId(dept.id);
-        setFormData({
-            name: dept.name,
-            description: dept.description || '',
-            code: dept.code || '',
-            companyId: dept.companyId || '',
-            status: dept.status || 'Active', // Default status
-            isActive: dept.isActive ?? true
-        });
+        setFormData({ name: dept.name, description: dept.description, code: dept.code, companyId: dept.companyId, status: dept.status, isActive: dept.isActive });
         setIsModalOpen(true);
     };
 
@@ -77,9 +134,19 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
 
     const confirmDelete = async () => {
         if (departmentToDelete) {
-            await deleteDepartment(departmentToDelete.id);
-            setIsDeleteModalOpen(false);
-            setDepartmentToDelete(null);
+            try {
+                const response = await mastersService.deleteDepartment(departmentToDelete.id);
+                if (response.status) {
+                    toastSuccess(response.message);
+                    setIsDeleteModalOpen(false);
+                    setDepartmentToDelete(null);
+                    getAllDepartments();
+                } else {
+                    toastError(response.message);
+                }
+            } catch (error: any) {
+                toastError(error.message);
+            }
         }
     };
 
@@ -97,11 +164,11 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Departments</h3>
                     <div className="flex items-center gap-3">
                         {onBack && (
-                            <Button size="sm" variant="outline" onClick={onBack}>
-                                â† Back to Masters
+                            <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
+                                Back to Masters
                             </Button>
                         )}
-                        <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
+                        <Button size="xs" variant="success" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
                             Add Department
                         </Button>
                     </div>
@@ -115,6 +182,7 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                                 <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                     <tr>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Name</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Code</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
@@ -124,9 +192,12 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                                     {departments?.length === 0 ? (
                                         <tr><td colSpan={7} className="p-8 text-center text-slate-500">No departments found</td></tr>
                                     ) : (
-                                        departments?.map((d: any, index: number) => (
+                                        departments?.map((d: any) => (
                                             <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{d.name}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
+                                                    {companies.find(c => c.id === d.companyId)?.companyName || '-'}
+                                                </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{d.code || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${d.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
@@ -135,10 +206,10 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                                                 </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleEdit(d)} className="p-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
+                                                        <button onClick={() => handleEdit(d)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
-                                                        <button onClick={() => handleDelete(d)} className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <button onClick={() => handleDelete(d)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>
@@ -158,6 +229,22 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                     <Input label="Department Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
                     <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
                     <Input label="Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Company</label>
+                        <select
+                            value={formData.companyId}
+                            onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                        >
+                            <option value="">Select Company</option>
+                            {companies.map((company) => (
+                                <option key={company.id} value={company.id}>
+                                    {company.companyName}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
                     <div className="flex items-center gap-2">
                         <input
@@ -179,29 +266,7 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                 </form>
             </Modal>
 
-            {/* Delete Confirmation Modal */}
-            <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Delete Department" size="sm">
-                <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/20 flex items-center justify-center">
-                            <Trash2 className="h-5 w-5 text-rose-600 dark:text-rose-400" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1">Are you sure?</h3>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                Do you really want to delete <span className="font-semibold text-slate-900 dark:text-white">{departmentToDelete?.name}</span>? This action cannot be undone.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-2">
-                        <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
-                        <Button variant="danger" onClick={confirmDelete} leftIcon={<Trash2 className="h-4 w-4" />}>
-                            Delete Department
-                        </Button>
-                    </div>
-                </div>
-            </Modal>
+            <ConfirmDialog isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={confirmDelete} title="Delete Department" message={`Are you sure you want to delete ${departmentToDelete?.name}? This action cannot be undone.`} confirmText="Delete" cancelText="Cancel" variant="danger" />
         </>
     );
 }

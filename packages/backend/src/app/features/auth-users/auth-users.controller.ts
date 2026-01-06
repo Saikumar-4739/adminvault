@@ -1,9 +1,9 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Post, Req, Get, Query, Res } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel } from '@adminvault/shared-models';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
 
 @ApiTags('Auth Users')
@@ -91,6 +91,47 @@ export class AuthUsersController {
             return returnException(GlobalResponse, error);
         }
     }
+
+    @Get('sso/login')
+    @Public()
+    async ssoLogin(@Query('provider') provider: string, @Res() res: Response) {
+        try {
+            if (provider !== 'microsoft' && provider !== 'zoho') {
+                return res.redirect('http://localhost:3000/login?error=Invalid_Provider');
+            }
+            const authUrl = await this.service.getSSOAuthUrl(provider);
+            return res.redirect(authUrl);
+        } catch (error: any) {
+            return res.redirect(`http://localhost:3000/login?error=${encodeURIComponent(error.message)}`);
+        }
+    }
+
+    @Get('sso/callback')
+    @Public()
+    async ssoCallback(@Query('code') code: string, @Query('state') state: string, @Req() req: any, @Res() res: Response) {
+        try {
+            if (!code || !state) {
+                return res.redirect('http://localhost:3000/login?error=Invalid_Callback_Params');
+            }
+
+            const ipAddress = this.extractIp(req);
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            const loginResponse = await this.service.handleSSOCallback(state, code, ipAddress, userAgent);
+
+            // Redirect to frontend with token
+            // Ideally, we should set a secure cookie, but query param is common for simple OAuth handoffs
+            // or we render a page that posts the token to the parent window if it was a popup.
+            // Here, straightforward redirect:
+            const userJson = JSON.stringify(loginResponse.userInfo);
+            const redirectUrl = `http://localhost:3000/login/callback?token=${loginResponse.accessToken}&refreshToken=${loginResponse.refreshToken}&user=${encodeURIComponent(userJson)}`;
+            return res.redirect(redirectUrl);
+
+        } catch (error: any) {
+            const message = error?.message || 'SSO_Login_Failed';
+            return res.redirect(`http://localhost:3000/login?error=${encodeURIComponent(message)}`);
+        }
+    }
+
     private extractIp(req: any): string {
         let ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || '127.0.0.1';
         if (typeof ip === 'string' && ip.includes(',')) {

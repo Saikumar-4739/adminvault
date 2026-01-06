@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { useMasters } from '@/hooks/useMasters';
-import { useCompanies } from '@/hooks/useCompanies';
 import { AssetStatusEnum } from '@adminvault/shared-models';
-import { assetService } from '@/lib/api/services';
+import { assetService, companyService, mastersService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 
 interface AssetFormModalProps {
@@ -19,10 +17,11 @@ interface AssetFormModalProps {
 }
 
 export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: AssetFormModalProps) {
-    const { brands, fetchBrands, assetTypes, fetchAssetTypes } = useMasters();
-    const { companies, fetchCompanies } = useCompanies();
     const { success, error: toastError } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const [companies, setCompanies] = useState<any[]>([]);
+    const [brands, setBrands] = useState<any[]>([]);
+    const [assetTypes, setAssetTypes] = useState<any[]>([]);
 
     const [formData, setFormData] = useState({
         deviceId: '',
@@ -37,6 +36,46 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
         expressCode: '',
         boxNo: ''
     });
+
+    const getCompanyId = useCallback((): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.companyId || 1;
+    }, []);
+
+    const fetchBrands = useCallback(async () => {
+        try {
+            const response = await mastersService.getAllBrands(getCompanyId() as any);
+            if (response.status) {
+                setBrands(response.brands || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch brands:', error);
+        }
+    }, [getCompanyId]);
+
+    const fetchAssetTypes = useCallback(async () => {
+        try {
+            const response = await mastersService.getAllAssetTypes(getCompanyId() as any);
+            if (response.status) {
+                setAssetTypes(response.assetTypes || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch asset types:', error);
+        }
+    }, [getCompanyId]);
+
+    const fetchCompanies = useCallback(async () => {
+        try {
+            const response: any = await companyService.getAllCompanies();
+            if (response.status) {
+                // FIXED: API returns 'data' array, not 'companies'
+                setCompanies(response.data || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch companies:', error);
+        }
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
@@ -74,7 +113,7 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                 });
             }
         }
-    }, [isOpen, asset]);
+    }, [isOpen, asset, fetchBrands, fetchAssetTypes, fetchCompanies]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -160,7 +199,6 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                         name="model"
                         value={formData.model}
                         onChange={handleChange}
-                        placeholder="e.g. Latitude 5420"
                     />
                 </div>
 
@@ -170,7 +208,6 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                         name="serialNumber"
                         value={formData.serialNumber}
                         onChange={handleChange}
-                        placeholder="S/N or Service Tag"
                         required
                     />
                     <Select
@@ -226,7 +263,6 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                         value={formData.configuration}
                         onChange={handleChange}
                         className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm min-h-[80px] focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
-                        placeholder="RAM, Processor, Storage, etc."
                     />
                 </div>
 

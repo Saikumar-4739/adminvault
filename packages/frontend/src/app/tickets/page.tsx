@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTickets } from '@/hooks/useTickets';
+import { ticketService } from '@/lib/api/services';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import StatCard from '@/components/ui/StatCard';
@@ -15,10 +15,10 @@ import {
     AlertTriangle, CheckCircle, User, Users, Filter,
     Tag
 } from 'lucide-react';
-import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
+import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, UserRoleEnum } from '@adminvault/shared-models';
 import Input from '@/components/ui/Input';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRoleEnum } from '@adminvault/shared-models';
+import { useToast } from '@/contexts/ToastContext';
 
 const CategoryConfig: Record<string, { icon: any, color: string, bg: string, gradient: string }> = {
     [TicketCategoryEnum.HARDWARE]: {
@@ -59,11 +59,27 @@ const CategoryConfig: Record<string, { icon: any, color: string, bg: string, gra
     },
 };
 
+interface TicketData {
+    id: number;
+    subject: string;
+    ticketCode: string;
+    description?: string;
+    priorityEnum: TicketPriorityEnum;
+    categoryEnum: TicketCategoryEnum;
+    ticketStatus: TicketStatusEnum;
+    employeeName?: string;
+    employeeEmail?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 export default function TicketsPage() {
     const router = useRouter();
     const { user } = useAuth();
-    const { tickets, isLoading, fetchTickets, fetchMyTickets, createTicket, updateTicket, deleteTicket } = useTickets();
+    const { success, error: toastError } = useToast();
 
+    const [tickets, setTickets] = useState<TicketData[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTicket, setEditingTicket] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -83,14 +99,35 @@ export default function TicketsPage() {
     // Check if user is admin
     const isAdmin = user && (user.role === UserRoleEnum.ADMIN || user.role === UserRoleEnum.SUPER_ADMIN);
 
-    // Fetch tickets based on view mode
-    useEffect(() => {
-        if (viewMode === 'my') {
-            fetchMyTickets();
-        } else {
-            fetchTickets();
+    const getCompanyId = useCallback((): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.companyId || 1;
+    }, []);
+
+    const fetchTickets = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            let response: any;
+            if (viewMode === 'my') {
+                response = await ticketService.getMyTickets();
+            } else {
+                response = await ticketService.findAll(getCompanyId() as any);
+            }
+
+            if (response.status) {
+                setTickets(response.data || []);
+            }
+        } catch (error: any) {
+            toastError(error.message || 'Failed to fetch tickets');
+        } finally {
+            setIsLoading(false);
         }
-    }, [viewMode]);
+    }, [viewMode, getCompanyId, toastError]);
+
+    useEffect(() => {
+        fetchTickets();
+    }, [fetchTickets]);
 
     const filteredTickets = tickets.filter((ticket) => {
         const matchesSearch = ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -104,20 +141,31 @@ export default function TicketsPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
+            let response: any;
             if (editingTicket) {
-                await updateTicket({ ...formData, id: editingTicket.id } as any);
+                response = await ticketService.updateTicket({ ...formData, id: editingTicket.id } as any);
             } else {
-                await createTicket({
+                response = await ticketService.createTicket({
                     subject: formData.subject,
                     categoryEnum: formData.categoryEnum,
                     priorityEnum: formData.priorityEnum,
                     ticketStatus: TicketStatusEnum.OPEN,
                 } as any);
             }
-            handleCloseModal();
-        } catch (error) {
-            // Error handled by hook
+
+            if (response.status) {
+                success(response.message || `Ticket ${editingTicket ? 'updated' : 'created'} successfully`);
+                handleCloseModal();
+                fetchTickets();
+            } else {
+                toastError(response.message || 'Operation failed');
+            }
+        } catch (error: any) {
+            toastError(error.message || 'An error occurred');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -135,7 +183,20 @@ export default function TicketsPage() {
 
     const handleDelete = async (ticket: any) => {
         if (confirm(`Are you sure you want to delete ticket "${ticket.subject}"?`)) {
-            await deleteTicket({ id: ticket.id });
+            setIsLoading(true);
+            try {
+                const response = await ticketService.deleteTicket({ id: ticket.id });
+                if (response.status) {
+                    success(response.message || 'Ticket deleted successfully');
+                    fetchTickets();
+                } else {
+                    toastError(response.message || 'Delete failed');
+                }
+            } catch (error: any) {
+                toastError(error.message || 'An error occurred');
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -234,17 +295,6 @@ export default function TicketsPage() {
                                 </button>
                             </div>
                         )}
-
-                        {/* {isAdmin && (
-                            <Button
-                                variant="primary"
-                                onClick={() => setIsModalOpen(true)}
-                                leftIcon={<Plus className="h-4 w-4" />}
-                                size="sm"
-                            >
-                                New Ticket
-                            </Button>
-                        )} */}
                     </>
                 }
             />
@@ -357,7 +407,7 @@ export default function TicketsPage() {
 
             {/* Tickets Grid with Premium Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
-                {isLoading ? (
+                {isLoading && tickets.length === 0 ? (
                     <div className="col-span-full py-12 flex justify-center"><PageLoader /></div>
                 ) : filteredTickets.length === 0 ? (
                     <div className="col-span-full py-20 text-center">
@@ -590,6 +640,4 @@ export default function TicketsPage() {
             </Modal>
         </div>
     );
-};
-
-
+}

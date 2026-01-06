@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-    size?: 'sm' | 'md' | 'lg';
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
+    size?: 'xs' | 'sm' | 'md' | 'lg';
     isLoading?: boolean;
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
@@ -33,9 +33,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             outline: 'border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
             ghost: 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
             danger: 'bg-gradient-to-r from-rose-600 to-rose-700 text-white hover:from-rose-700 hover:to-rose-800 shadow-md shadow-rose-500/25 dark:shadow-rose-900/20',
+            success: 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white hover:from-emerald-700 hover:to-emerald-800 shadow-md shadow-emerald-500/25 dark:shadow-emerald-900/20',
         };
 
         const sizes = {
+            xs: 'h-7 px-2 text-xs',
             sm: 'h-9 px-3 text-sm',  // 36px - acceptable for secondary actions
             md: 'h-11 px-4 text-base',  // 44px - meets touch target minimum
             lg: 'h-12 px-6 text-lg',  // 48px - exceeds minimum

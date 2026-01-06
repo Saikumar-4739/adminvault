@@ -22,11 +22,16 @@ import { SSOProviderEntity } from './entities/sso-provider.entity';
 import { UserLoginSessionsEntity } from './entities/user-login-sessions.entity';
 import { EmailInfoEntity } from './entities/email-info.entity';
 import { RolePermissionEntity } from './entities/role-permission.entity';
+import { MenuEntity } from './entities/menu.entity';
+import { RoleMenuAccessEntity } from './entities/role-menu-access.entity';
+import { UserPermissionEntity } from './entities/user-permission.entity';
+import { UserRoleEntity } from './entities/user-role.entity';
 
 // Cross-feature entities
 import { AssetInfoEntity } from '../asset-info/entities/asset-info.entity';
 import { AssetAssignEntity } from '../asset-info/entities/asset-assign.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { EmployeesEntity } from '../employees/entities/employees.entity';
 
 // Repositories
 import { UserLoginSessionRepository } from './repositories/user-login-session.repository';
@@ -39,9 +44,14 @@ import { MFASettingsRepository } from './repositories/mfa-settings.repository';
 import { APIKeyRepository } from './repositories/api-key.repository';
 import { SSOProviderRepository } from './repositories/sso-provider.repository';
 import { RolePermissionRepository } from './repositories/role-permission.repository';
+import { MenuRepository } from './repositories/menu.repository';
+import { RoleMenuAccessRepository } from './repositories/role-menu-access.repository';
+import { UserPermissionRepository } from './repositories/user-permission.repository';
+import { UserRoleRepository } from './repositories/user-role.repository';
 
 // External Modules
 import { AuthUsersModule } from '../auth-users/auth-users.module';
+import { EmployeesRepository } from '../employees/repositories/employees.repository';
 
 @Module({
     imports: [
@@ -58,7 +68,12 @@ import { AuthUsersModule } from '../auth-users/auth-users.module';
             AssetAssignEntity,
             AuthUsersEntity,
             EmailInfoEntity,
-            RolePermissionEntity
+            RolePermissionEntity,
+            EmployeesEntity,
+            MenuEntity,
+            RoleMenuAccessEntity,
+            UserPermissionEntity,
+            UserRoleEntity
         ]),
         forwardRef(() => AuthUsersModule)
     ],
@@ -80,7 +95,14 @@ import { AuthUsersModule } from '../auth-users/auth-users.module';
         MFASettingsRepository,
         APIKeyRepository,
         SSOProviderRepository,
-        RolePermissionRepository
+        SSOProviderRepository,
+        RolePermissionRepository,
+        RolePermissionRepository,
+        EmployeesRepository,
+        MenuRepository,
+        RoleMenuAccessRepository,
+        UserPermissionRepository,
+        UserRoleRepository
     ],
     exports: [
         SettingsService,

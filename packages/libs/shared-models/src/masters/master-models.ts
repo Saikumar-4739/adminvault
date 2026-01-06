@@ -24,7 +24,9 @@ export interface Designation extends MasterBase {
 }
 
 export interface AssetType extends MasterBase {
+    code?: string;
     companyName?: string;
+    status?: string;
 }
 
 export interface DeviceBrand extends MasterBase {
@@ -67,6 +69,17 @@ export interface PasswordVault extends MasterBase {
     notes?: string;
 }
 
+export interface SlackUserModel extends MasterBase {
+    email: string;
+    slackUserId?: string;
+    displayName?: string;
+    role?: string;
+    department?: string;
+    phone?: string;
+    notes?: string;
+    avatar?: string;
+}
+
 // ============================================
 // REQUEST MODELS - CREATE
 // ============================================
@@ -107,19 +120,49 @@ export class CreateDesignationModel extends CreateMasterModel {
 }
 
 export class CreateAssetTypeModel extends CreateMasterModel {
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, id?: number) {
+    code?: string;
+    status?: string;
+
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, status?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
+        this.code = code;
+        this.status = status;
     }
 }
 
 export class CreateBrandModel extends CreateMasterModel {
     website?: string;
     rating?: number;
+    code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.website = website;
         this.rating = rating;
+        this.code = code;
+    }
+}
+
+export class CreateSlackUserModel extends CreateMasterModel {
+    email: string;
+    slackUserId?: string;
+    displayName?: string;
+    role?: string;
+    department?: string;
+    phone?: string;
+    notes?: string;
+    avatar?: string;
+
+    constructor(userId: number, companyId: number, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatar?: string, id?: number) {
+        super(userId, companyId, name, description, isActive, id);
+        this.email = email;
+        this.slackUserId = slackUserId;
+        this.displayName = displayName;
+        this.role = role;
+        this.department = department;
+        this.phone = phone;
+        this.notes = notes;
+        this.avatar = avatar;
     }
 }
 
@@ -128,13 +171,15 @@ export class CreateVendorModel extends CreateMasterModel {
     email?: string;
     phone?: string;
     address?: string;
+    code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.contactPerson = contactPerson;
         this.email = email;
         this.phone = phone;
         this.address = address;
+        this.code = code;
     }
 }
 
@@ -221,12 +266,16 @@ export class UpdateAssetTypeModel {
     name: string;
     description?: string;
     isActive: boolean;
+    code?: string;
+    companyId?: number;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string, companyId?: number) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
+        this.code = code;
+        this.companyId = companyId;
     }
 }
 
@@ -237,14 +286,18 @@ export class UpdateBrandModel {
     isActive: boolean;
     website?: string;
     rating?: number;
+    code?: string;
+    companyId?: number;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string, companyId?: number) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
         this.website = website;
         this.rating = rating;
+        this.code = code;
+        this.companyId = companyId;
     }
 }
 
@@ -257,8 +310,10 @@ export class UpdateVendorModel {
     email?: string;
     phone?: string;
     address?: string;
+    code?: string;
+    companyId?: number;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, code?: string, companyId?: number) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -267,6 +322,8 @@ export class UpdateVendorModel {
         this.email = email;
         this.phone = phone;
         this.address = address;
+        this.code = code;
+        this.companyId = companyId;
     }
 }
 
@@ -457,6 +514,15 @@ export class GetAllPasswordVaultsResponseModel extends GlobalResponse {
     }
 }
 
+export class GetAllSlackUsersResponseModel extends GlobalResponse {
+    slackUsers: SlackUserModel[];
+
+    constructor(status: boolean, code: number, message: string, slackUsers: SlackUserModel[]) {
+        super(status, code, message);
+        this.slackUsers = slackUsers;
+    }
+}
+
 // ============================================
 // RESPONSE MODELS - CREATE (Single Item)
 // ============================================
@@ -631,6 +697,56 @@ export class UpdatePasswordVaultResponseModel extends GlobalResponse {
     constructor(status: boolean, code: number, message: string, passwordVault: PasswordVault) {
         super(status, code, message);
         this.passwordVault = passwordVault;
+    }
+}
+
+export class CreateSlackUserResponseModel extends GlobalResponse {
+    slackUser: SlackUserModel;
+
+    constructor(status: boolean, code: number, message: string, slackUser: SlackUserModel) {
+        super(status, code, message);
+        this.slackUser = slackUser;
+    }
+}
+
+export class UpdateSlackUserResponseModel extends GlobalResponse {
+    slackUser: SlackUserModel;
+
+    constructor(status: boolean, code: number, message: string, slackUser: SlackUserModel) {
+        super(status, code, message);
+        this.slackUser = slackUser;
+    }
+}
+
+export class UpdateSlackUserModel {
+    id: number;
+    name: string;
+    email: string;
+    description?: string;
+    isActive: boolean;
+    slackUserId?: string;
+    displayName?: string;
+    role?: string;
+    department?: string;
+    phone?: string;
+    notes?: string;
+    companyId?: number;
+    avatar?: string;
+
+    constructor(id: number, name: string, email: string, description?: string, isActive: boolean = true, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, companyId?: number, avatar?: string) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.description = description;
+        this.isActive = isActive;
+        this.slackUserId = slackUserId;
+        this.displayName = displayName;
+        this.role = role;
+        this.department = department;
+        this.phone = phone;
+        this.notes = notes;
+        this.companyId = companyId;
+        this.avatar = avatar;
     }
 }
 

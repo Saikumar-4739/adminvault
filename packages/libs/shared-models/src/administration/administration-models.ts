@@ -139,15 +139,29 @@ export class APIKeyResponseModel {
 
 export class CreateSSOProviderModel {
     companyId!: number;
-    providerName!: string;
+    name!: string;
+    type!: string;
     clientId!: string;
     clientSecret!: string;
-    issuerUrl!: string;
+    issuerUrl?: string; // Optional for some types
+    authorizationUrl?: string;
+    tokenUrl?: string;
+    userInfoUrl?: string;
     isActive!: boolean;
 }
 
-export class UpdateSSOProviderModel extends CreateSSOProviderModel {
+export class UpdateSSOProviderModel {
     id!: number;
+    companyId?: number;
+    name?: string;
+    type?: string;
+    clientId?: string;
+    clientSecret?: string;
+    issuerUrl?: string;
+    authorizationUrl?: string;
+    tokenUrl?: string;
+    userInfoUrl?: string;
+    isActive?: boolean;
 }
 
 // --- Interfaces for UI ---

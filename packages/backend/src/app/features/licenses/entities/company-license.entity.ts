@@ -23,5 +23,4 @@ export class CompanyLicenseEntity extends CommonBaseEntity {
 
     @Column({ name: 'assigned_employee_id', nullable: true })
     assignedEmployeeId: number;
-
 }

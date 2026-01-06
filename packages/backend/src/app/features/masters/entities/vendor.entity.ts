@@ -26,4 +26,7 @@ export class VendorsMasterEntity extends CommonBaseEntity {
 
     @Column('text', { name: 'address', nullable: true, comment: 'Vendor address' })
     address: string;
+
+    @Column('varchar', { name: 'code', length: 50, nullable: true, comment: 'Vendor code' })
+    code: string;
 }

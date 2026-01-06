@@ -1,7 +1,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { GlobalResponse } from '@adminvault/backend-utils';
 import {
     CreateLicenseModel,
@@ -13,6 +13,9 @@ import {
     LicenseResponseModel
 } from '@adminvault/shared-models';
 import { CompanyLicenseEntity } from './entities/company-license.entity';
+import { CompanyInfoEntity } from '../masters/entities/company-info.entity';
+import { ApplicationsMasterEntity } from '../masters/entities/application.entity';
+import { EmployeesEntity } from '../employees/entities/employees.entity';
 
 @Injectable()
 export class LicensesService {
@@ -23,7 +26,7 @@ export class LicensesService {
 
     /**
      * Retrieve all license assignments, optionally filtered by company
-     * Fetches licenses with related company, application, and employee information
+     * Fetches licenses with related company, application, and employee information manually
      * 
      * @param companyId - Optional company ID to filter licenses
      * @returns GetAllLicensesModel with array of license data including relations
@@ -38,22 +41,51 @@ export class LicensesService {
 
         const licenses = await query.getMany();
 
-        const licenseResponses = licenses.map(l => new LicenseResponseModel(
-            l.id,
-            l.companyId,
-            l.applicationId,
-            l.createdAt,
-            l.updatedAt,
-            l.assignedEmployeeId,
-            undefined, // licenseKey
-            undefined, // purchaseDate
-            l.expiryDate,
-            undefined, // seats
-            l.remarks,
-            undefined, // company (removed relation)
-            undefined, // application (removed relation)
-            undefined  // assignedEmployee (removed relation)
-        ));
+        if (licenses.length === 0) {
+            return new GetAllLicensesModel(true, 200, 'Licenses retrieved successfully', []);
+        }
+
+        // Collect IDs for manual fetching
+        const uniqueCompanyIds = [...new Set(licenses.map(l => l.companyId).filter(id => !!id))];
+        const uniqueAppIds = [...new Set(licenses.map(l => l.applicationId).filter(id => !!id))];
+        const uniqueEmpIds = [...new Set(licenses.map(l => l.assignedEmployeeId).filter(id => !!id))];
+
+        // Fetch related entities using EntityManager
+        const manager = this.repo.manager;
+
+        const [companies, applications, employees] = await Promise.all([
+            uniqueCompanyIds.length > 0 ? manager.getRepository(CompanyInfoEntity).find({ where: { id: In(uniqueCompanyIds) } }) : [],
+            uniqueAppIds.length > 0 ? manager.getRepository(ApplicationsMasterEntity).find({ where: { id: In(uniqueAppIds) } }) : [],
+            uniqueEmpIds.length > 0 ? manager.getRepository(EmployeesEntity).find({ where: { id: In(uniqueEmpIds) } }) : []
+        ]);
+
+        // Create Lookup Maps
+        const companyMap = new Map<number, CompanyInfoEntity>(companies.map(c => [c.id, c]));
+        const appMap = new Map<number, ApplicationsMasterEntity>(applications.map(a => [a.id, a]));
+        const empMap = new Map<number, EmployeesEntity>(employees.map(e => [e.id, e]));
+
+        const licenseResponses = licenses.map(l => {
+            const company = companyMap.get(l.companyId);
+            const app = appMap.get(l.applicationId);
+            const emp = l.assignedEmployeeId ? empMap.get(l.assignedEmployeeId) : undefined;
+
+            return new LicenseResponseModel(
+                l.id,
+                l.companyId,
+                l.applicationId,
+                l.createdAt,
+                l.updatedAt,
+                l.assignedEmployeeId,
+                undefined, // licenseKey
+                undefined, // purchaseDate
+                l.expiryDate,
+                undefined, // seats
+                l.remarks,
+                company ? { id: company.id, companyName: company.companyName } : undefined,
+                app ? { id: app.id, name: app.name, logo: '' } : undefined,
+                emp ? { id: emp.id, firstName: emp.firstName, lastName: emp.lastName, avatar: emp.slackAvatar } : undefined
+            );
+        });
 
         return new GetAllLicensesModel(true, 200, 'Licenses retrieved successfully', licenseResponses);
     }

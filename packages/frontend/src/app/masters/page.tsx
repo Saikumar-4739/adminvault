@@ -3,16 +3,17 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Building2, Users, Package, Smartphone, Tag, Store, AppWindow, MessageSquare } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const CompaniesMasterView = dynamic(() => import('./components/companies-master-view'), { loading: () => <p>Loading Companies...</p> });
 const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view'), { loading: () => <p>Loading Departments...</p> });
 const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view'), { loading: () => <p>Loading Asset Types...</p> });
 const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view'), { loading: () => <p>Loading Device Brands...</p> });
-const VendorsMasterView = dynamic(() => import('./components/vendors-master-view'), { loading: () => <p>Loading Vendors...</p> });
 const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view'), { loading: () => <p>Loading Applications...</p> });
 const TicketCategoriesMasterView = dynamic(() => import('./components/ticket-categories-master-view'), { loading: () => <p>Loading Categories...</p> });
+const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view'), { loading: () => <p>Loading Slack Users...</p> });
+const VendorsMasterView = dynamic(() => import('./components/vendors-master-view'), { loading: () => <p>Loading Vendors...</p> });
+import { Building2, Users, Package, Smartphone, Tag, AppWindow, MessageSquare, Store } from 'lucide-react';
 
 interface MasterItem {
     id: string;
@@ -63,14 +64,6 @@ export default function MastersPage() {
             component: DeviceBrandsMasterView
         },
         {
-            id: 'vendors',
-            title: 'Vendors',
-            description: 'Manage vendors',
-            icon: Store,
-            color: 'from-pink-500 to-pink-600',
-            component: VendorsMasterView
-        },
-        {
             id: 'applications',
             title: 'Applications',
             description: 'Manage applications',
@@ -86,14 +79,21 @@ export default function MastersPage() {
             color: 'from-rose-500 to-rose-600',
             component: TicketCategoriesMasterView
         },
-
         {
-            id: 'slack_users_nav',
+            id: 'slack-users',
             title: 'Slack Users',
             description: 'Manage slack integration users',
             icon: MessageSquare,
             color: 'from-sky-500 to-sky-600',
-            href: '/slack-users'
+            component: SlackUsersMasterView
+        },
+        {
+            id: 'vendors',
+            title: 'Vendors',
+            description: 'Manage vendors and suppliers',
+            icon: Store,
+            color: 'from-pink-500 to-pink-600',
+            component: VendorsMasterView
         },
     ];
 

@@ -5,7 +5,7 @@ import {
     Laptop, Monitor, Smartphone, Tablet, HardDrive,
     User, Calendar, Shield, Package, History,
     QrCode, Pencil, Trash2, ChevronDown, ChevronUp,
-    AlertTriangle, CheckCircle2
+    AlertTriangle, CheckCircle2, UserPlus
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -15,6 +15,7 @@ interface AssetCardProps {
     onDelete: (asset: any) => void;
     onQRCode: (asset: any) => void;
     onHistory: (asset: any) => void;
+    onAssign: (asset: any) => void;
 }
 
 const getAssetIcon = (name: string) => {
@@ -76,13 +77,15 @@ const isWarrantyExpired = (warrantyDate?: string) => {
     return new Date(warrantyDate) < new Date();
 };
 
-export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory }: AssetCardProps) {
+export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory, onAssign }: AssetCardProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const AssetIcon = getAssetIcon(asset.assetName || 'Device');
     const statusConfig = getStatusConfig(asset.status);
     const StatusIcon = statusConfig.icon;
     const warrantyExpiring = isWarrantyExpiring(asset.warrantyExpiry);
     const warrantyExpired = isWarrantyExpired(asset.warrantyExpiry);
+    // Explicitly check for available status
+    const isAvailable = (asset.status || '').toUpperCase() === 'AVAILABLE';
 
     return (
         <div className="group relative">
@@ -119,7 +122,7 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
 
                         {/* Status Badge */}
                         <div className={`px-2 py-1 rounded-md ${statusConfig.bg} ${statusConfig.color} text-[10px] font-black uppercase tracking-wider whitespace-nowrap border border-current/10`}>
-                            {asset.status === 'IN_USE' || asset.status === 'InUse' ? 'In Use' : asset.status || 'Unknown'}
+                            {['IN_USE', 'INUSE'].includes((asset.status || '').toUpperCase()) ? 'In Use' : asset.status || 'Unknown'}
                         </div>
                     </div>
 
@@ -129,6 +132,19 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
                             <div className="flex items-center gap-2">
                                 <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{asset.assignedTo}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Previous User Info (if available and exists) */}
+                    {isAvailable && asset.previousUser && (
+                        <div className="mb-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+                            <div className="flex items-center gap-2">
+                                <History className="h-3.5 w-3.5 text-slate-400" />
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide leading-none mb-0.5">Previous User</p>
+                                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 truncate block">{asset.previousUser}</span>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -168,21 +184,30 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
                     <div className="flex items-center gap-1.5">
                         <button
                             onClick={() => onHistory(asset)}
-                            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all font-bold"
+                            className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all font-bold"
                             title="History"
                         >
                             <History className="h-3.5 w-3.5" />
-                            <span className="text-[10px]">Log</span>
                         </button>
 
                         <button
                             onClick={() => onQRCode(asset)}
-                            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 transition-all font-bold"
+                            className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all font-bold"
                             title="QR Code"
                         >
                             <QrCode className="h-3.5 w-3.5" />
-                            <span className="text-[10px]">QR</span>
                         </button>
+
+                        {isAvailable && (
+                            <button
+                                onClick={() => onAssign(asset)}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 transition-all font-bold"
+                                title="Assign Asset"
+                            >
+                                <UserPlus className="h-3.5 w-3.5" />
+                                <span className="text-[10px]">Assign</span>
+                            </button>
+                        )}
 
                         <div className="flex items-center gap-1 ml-auto">
                             <button

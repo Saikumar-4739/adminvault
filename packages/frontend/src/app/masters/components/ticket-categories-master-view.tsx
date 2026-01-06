@@ -1,19 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useMasters } from '@/hooks/useMasters';
+import { useState, useEffect, useCallback } from 'react';
+import { mastersService } from '@/lib/api/services';
+import { CreateTicketCategoryModel } from '@adminvault/shared-models';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
 
+interface TicketCategory {
+    id: number;
+    name: string;
+    description?: string;
+    defaultPriority?: 'Low' | 'Medium' | 'High' | null;
+    isActive: boolean;
+}
+
 export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => void }) {
-    const { ticketCategories, isLoading, createTicketCategory, updateTicketCategory, deleteTicketCategory, fetchTicketCategories } = useMasters();
-    const { success, error } = useToast();
+    const { success: toastSuccess, error: toastError } = useToast();
+    const [ticketCategories, setTicketCategories] = useState<TicketCategory[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -21,32 +31,77 @@ export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
+    const getCompanyId = (): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.companyId || 1;
+    };
+
+    const getUserId = (): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.id || 1;
+    };
+
+    const getAllTicketCategories = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response: any = await mastersService.getAllTicketCategories(getCompanyId() as any);
+            if (response.status) {
+                setTicketCategories(response.ticketCategories || []);
+            } else {
+                toastError(response.message || 'Failed to fetch ticket categories');
+            }
+        } catch (error: any) {
+            toastError(error.message || 'Failed to fetch ticket categories');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toastError]);
+
     useEffect(() => {
-        fetchTicketCategories();
-    }, [fetchTicketCategories]);
+        getAllTicketCategories();
+    }, [getAllTicketCategories]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
             if (isEditMode && editingId) {
-                const result = await updateTicketCategory({ ...formData, id: editingId, isActive: true });
-                if (result) {
-                    success('Ticket Category Updated Successfully');
+                const response = await mastersService.updateTicketCategory({
+                    ...formData,
+                    id: editingId,
+                    isActive: true
+                } as any);
+                if (response.status) {
+                    toastSuccess(response.message || 'Ticket Category Updated Successfully');
                     handleCloseModal();
+                    getAllTicketCategories();
                 } else {
-                    error('Failed to Update Ticket Category');
+                    toastError(response.message || 'Failed to Update Ticket Category');
                 }
             } else {
-                const result = await createTicketCategory(formData);
-                if (result) {
-                    success('Ticket Category Created Successfully');
+                const model = new CreateTicketCategoryModel(
+                    getUserId(),
+                    getCompanyId(),
+                    formData.name,
+                    formData.description,
+                    true,
+                    formData.defaultPriority
+                );
+                const response = await mastersService.createTicketCategory(model);
+                if (response.status) {
+                    toastSuccess(response.message || 'Ticket Category Created Successfully');
                     handleCloseModal();
+                    getAllTicketCategories();
                 } else {
-                    error('Failed to Create Ticket Category');
+                    toastError(response.message || 'Failed to Create Ticket Category');
                 }
             }
-        } catch (err) {
-            error('An error occurred');
+        } catch (err: any) {
+            toastError(err.message || 'An error occurred');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -68,18 +123,22 @@ export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => 
 
     const handleConfirmDelete = async () => {
         if (deletingId) {
+            setIsLoading(true);
             try {
-                const result = await deleteTicketCategory(deletingId);
-                if (result) {
-                    success('Ticket Category Deleted Successfully');
+                const response = await mastersService.deleteTicketCategory(deletingId);
+                if (response.status) {
+                    toastSuccess(response.message || 'Ticket Category Deleted Successfully');
+                    getAllTicketCategories();
                 } else {
-                    error('Failed to Delete Ticket Category');
+                    toastError(response.message || 'Failed to Delete Ticket Category');
                 }
-            } catch (err) {
-                error('An error occurred');
+            } catch (err: any) {
+                toastError(err.message || 'An error occurred');
+            } finally {
+                setIsLoading(false);
+                setIsDeleteDialogOpen(false);
+                setDeletingId(null);
             }
-            setIsDeleteDialogOpen(false);
-            setDeletingId(null);
         }
     };
 
@@ -97,11 +156,11 @@ export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => 
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Ticket Categories</h3>
                     <div className="flex items-center gap-3">
                         {onBack && (
-                            <Button size="sm" variant="outline" onClick={onBack}>
-                                â† Back to Masters
+                            <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
+                                Back to Masters
                             </Button>
                         )}
-                        <Button size="sm" variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
+                        <Button size="xs" variant="success" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
                             Add Category
                         </Button>
                     </div>
@@ -130,20 +189,20 @@ export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => 
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.description || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.defaultPriority === 'High'
-                                                            ? 'bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400'
-                                                            : item.defaultPriority === 'Medium'
-                                                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
-                                                                : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
+                                                        ? 'bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400'
+                                                        : item.defaultPriority === 'Medium'
+                                                            ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+                                                            : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
                                                         }`}>
                                                         {item.defaultPriority || 'Low'}
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleEdit(item)} className="p-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
+                                                        <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
-                                                        <button onClick={() => handleDeleteClick(item.id)} className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>

@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useCompanies } from '@/hooks/useCompanies';
-import { useEmailInfo } from '@/hooks/useEmailInfo';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { companyService, emailService } from '@/lib/api/services';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, DepartmentEnum, EmailTypeEnum } from '@adminvault/shared-models';
+import { UserRoleEnum, DepartmentEnum, EmailTypeEnum, EmailInfoResponseModel, CreateEmailInfoModel, DeleteEmailInfoModel } from '@adminvault/shared-models';
 import {
     Mail, Building2, Plus, Trash2, Search,
     Headphones, ShieldCheck, Landmark, Settings,
@@ -14,6 +13,7 @@ import {
     User, Users, Globe
 } from 'lucide-react';
 import AddEmailModal from './AddEmailModal';
+import { useToast } from '@/contexts/ToastContext';
 
 // Category Definitions
 type EmailCategory = 'COMPANY' | 'USER' | 'GROUP';
@@ -51,20 +51,102 @@ const DeptConfig: Record<string, { icon: any, color: string, bg: string, label: 
 };
 
 export default function InfoEmailsPage() {
-    const { companies } = useCompanies();
+    const { success, error: toastError } = useToast();
+    const [companies, setCompanies] = useState<any[]>([]);
+    const [emailInfoList, setEmailInfoList] = useState<EmailInfoResponseModel[]>([]);
     const [selectedOrg, setSelectedOrg] = useState<string>('');
     const [activeTab, setActiveTab] = useState<EmailCategory>('COMPANY');
-    const { emailInfoList, isLoading, createEmailInfo, deleteEmailInfo } = useEmailInfo(selectedOrg ? Number(selectedOrg) : undefined);
-
+    const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const fetchCompanies = useCallback(async () => {
+        try {
+            const response = await companyService.getAllCompanies();
+            if (response.status && response.data) {
+                setCompanies(response.data as any[]);
+            }
+        } catch (err: any) {
+            toastError(err.message || 'Failed to fetch companies');
+        }
+    }, [toastError]);
+
+    const fetchEmailInfo = useCallback(async () => {
+        if (!selectedOrg) return;
+        setIsLoading(true);
+        try {
+            const response = await emailService.getAllEmailInfo(Number(selectedOrg));
+            if (response.status) {
+                setEmailInfoList(response.data || []);
+            } else {
+                toastError(response.message || 'Failed to fetch email info');
+            }
+        } catch (err: any) {
+            toastError(err.message || 'An error occurred while fetching email info');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [selectedOrg, toastError]);
+
+    useEffect(() => {
+        fetchCompanies();
+    }, [fetchCompanies]);
+
+    useEffect(() => {
+        if (selectedOrg) {
+            fetchEmailInfo();
+        } else {
+            setEmailInfoList([]);
+        }
+    }, [selectedOrg, fetchEmailInfo]);
+
     // Auto-select first organization if none selected
-    useMemo(() => {
+    useEffect(() => {
         if (companies.length > 0 && !selectedOrg) {
             setSelectedOrg(companies[0].id.toString());
         }
     }, [companies, selectedOrg]);
+
+    const handleCreateEmailInfo = async (data: CreateEmailInfoModel) => {
+        setIsLoading(true);
+        try {
+            const response = await emailService.createEmailInfo(data);
+            if (response.status) {
+                success(response.message || 'Email info record created successfully');
+                await fetchEmailInfo();
+                return true;
+            } else {
+                toastError(response.message || 'Failed to create email info');
+                return false;
+            }
+        } catch (err: any) {
+            toastError(err.message || 'Failed to create email info');
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDeleteEmailInfo = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this record?')) return;
+        setIsLoading(true);
+        try {
+            const response = await emailService.deleteEmailInfo({ id } as DeleteEmailInfoModel);
+            if (response.status) {
+                success(response.message || 'Email info record removed');
+                await fetchEmailInfo();
+                return true;
+            } else {
+                toastError(response.message || 'Failed to delete record');
+                return false;
+            }
+        } catch (err: any) {
+            toastError(err.message || 'Failed to delete record');
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Filtered and Grouped Data
     const filteredEmails = useMemo(() => {
@@ -107,7 +189,7 @@ export default function InfoEmailsPage() {
                                 >
                                     <option value="">Select Organization</option>
                                     {companies.map(c => (
-                                        <option key={c.id} value={c.id}>{c.companyName}</option>
+                                        <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -196,7 +278,7 @@ export default function InfoEmailsPage() {
                                     </div>
 
                                     <div className="space-y-3 min-h-[100px]">
-                                        {isLoading ? (
+                                        {isLoading && emailInfoList.length === 0 ? (
                                             <div className="p-8 flex flex-col items-center justify-center space-y-3">
                                                 <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading...</p>
@@ -218,7 +300,7 @@ export default function InfoEmailsPage() {
                                                             <p className="font-bold truncate text-sm">{acc.email}</p>
                                                         </div>
                                                         <button
-                                                            onClick={() => deleteEmailInfo(acc.id)}
+                                                            onClick={() => handleDeleteEmailInfo(acc.id)}
                                                             className="p-2 opacity-0 group-hover:opacity-100 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all"
                                                         >
                                                             <Trash2 className="h-4 w-4" />
@@ -238,12 +320,10 @@ export default function InfoEmailsPage() {
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     companyId={Number(selectedOrg)}
-                    onSuccess={createEmailInfo}
+                    onSuccess={handleCreateEmailInfo}
                     initialTab={activeTab}
                 />
             </div>
         </RouteGuard>
     );
-};
-
-
+}

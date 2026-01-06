@@ -49,6 +49,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .leftJoin('device_info', 'device', 'asset.device_id = device.id')
             .leftJoin('asset_assign', 'assignment', 'asset.id = assignment.asset_id AND assignment.return_date IS NULL')
             .leftJoin('employees', 'employee', 'assignment.employee_id = employee.id')
+            .leftJoin('employees', 'previousUser', 'asset.previous_user_employee_id = previousUser.id')
             .select([
                 'asset.id as id',
                 'asset.company_id as companyId',
@@ -70,6 +71,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'device.device_type as deviceType',
             ])
             .addSelect('CONCAT(employee.first_name, \' \', employee.last_name)', 'assignedTo')
+            .addSelect('CONCAT(previousUser.first_name, \' \', previousUser.last_name)', 'previousUser')
             .addSelect('assignment.assigned_date', 'assignedDate')
             .addSelect('assignment.assigned_by_id', 'assignedById')
             .where('asset.company_id = :companyId', { companyId })

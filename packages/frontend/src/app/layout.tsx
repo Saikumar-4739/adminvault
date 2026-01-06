@@ -5,7 +5,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Inter } from 'next/font/google';
 import MainLayout from '@/components/layout/MainLayout';
-import { ReduxProvider } from '@/components/providers/ReduxProvider';
+
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -32,17 +32,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 selection:bg-blue-500 selection:text-white`}>
-        <ReduxProvider>
-          <ThemeProvider>
-            <ToastProvider>
-              <AuthProvider>
-                <MainLayout>
-                  {children}
-                </MainLayout>
-              </AuthProvider>
-            </ToastProvider>
-          </ThemeProvider>
-        </ReduxProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <MainLayout>
+                {children}
+              </MainLayout>
+            </AuthProvider>
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

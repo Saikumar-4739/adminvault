@@ -1,25 +1,41 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { useMasters } from '@/hooks/useMasters';
-import { useEmployees } from '@/hooks/useEmployees';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { mastersService, employeeService } from '@/lib/api/services';
+import { UserRoleEnum, CreatePasswordVaultModel } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import PageHeader from '@/components/ui/PageHeader';
 import { Search, Plus, Lock, Eye, EyeOff, Copy, Check, ShieldCheck, Globe, User, Wand2, LayoutGrid, List, ArrowUpRight, Users, Activity } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum } from '@adminvault/shared-models';
 import { useToast } from '@/contexts/ToastContext';
 import PasswordGenerator from '@/components/vault/PasswordGenerator';
 
+interface PasswordVault {
+    id: number;
+    name: string;
+    password: string;
+    description?: string;
+    username?: string;
+    url?: string;
+    notes?: string;
+    isActive: boolean;
+}
+
+interface Employee {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+}
+
 export default function PasswordVaultPage() {
-    const {
-        passwordVaults, isLoading: isVaultLoading, createPasswordVault,
-        updatePasswordVault, deletePasswordVault, fetchPasswordVaults
-    } = useMasters();
-    const { employees, isLoading: isEmployeesLoading } = useEmployees();
     const { success, error: toastError } = useToast();
+    const [passwordVaults, setPasswordVaults] = useState<PasswordVault[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [isVaultLoading, setIsVaultLoading] = useState(false);
+    const [isEmployeesLoading, setIsEmployeesLoading] = useState(false);
 
     // UI State
     const [searchQuery, setSearchQuery] = useState('');
@@ -37,9 +53,50 @@ export default function PasswordVaultPage() {
         name: '', password: '', username: '', url: '', notes: '', description: '', employeeId: ''
     });
 
+    const getCompanyId = (): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.companyId || 1;
+    };
+
+    const getUserId = (): number => {
+        const storedUser = localStorage.getItem('auth_user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        return user?.id || 1;
+    };
+
+    const fetchPasswordVaults = useCallback(async () => {
+        setIsVaultLoading(true);
+        try {
+            const response: any = await mastersService.getAllPasswordVaults(getCompanyId() as any);
+            if (response.status) {
+                setPasswordVaults(response.passwordVaults || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch password vaults:', error);
+        } finally {
+            setIsVaultLoading(false);
+        }
+    }, []);
+
+    const fetchEmployees = useCallback(async () => {
+        setIsEmployeesLoading(true);
+        try {
+            const response = await employeeService.getAllEmployees(getCompanyId() as any);
+            if (response.status) {
+                setEmployees(response.employees || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch employees:', error);
+        } finally {
+            setIsEmployeesLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         fetchPasswordVaults();
-    }, [fetchPasswordVaults]);
+        fetchEmployees();
+    }, [fetchPasswordVaults, fetchEmployees]);
 
     const categories = ['All', 'Work', 'Social', 'Personal', 'Finance'];
 
@@ -49,7 +106,7 @@ export default function PasswordVaultPage() {
     }, [employees]);
 
     const filteredVaults = useMemo(() => {
-        return passwordVaults.filter(vault => {
+        return (passwordVaults || []).filter(vault => {
             const employeeName = vault.description ? employeeMap.get(vault.description) || '' : '';
             const matchesSearch = vault.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 vault.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -87,34 +144,67 @@ export default function PasswordVaultPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsVaultLoading(true);
         try {
             // We store the employeeId in the description field for the office purpose
             const payload = { ...formData, description: formData.employeeId };
-            let result;
-            if (modalMode === 'edit' && editingItem) {
-                result = await updatePasswordVault({ ...payload, id: editingItem.id, isActive: true });
-                if (result) success('Vault record updated');
-            } else {
-                result = await createPasswordVault(payload);
-                if (result) success('Added to vault successfully');
-            }
 
-            if (result) {
-                setIsModalOpen(false);
-                fetchPasswordVaults();
+            if (modalMode === 'edit' && editingItem) {
+                const response = await mastersService.updatePasswordVault({
+                    ...payload,
+                    id: editingItem.id,
+                    isActive: true
+                } as any);
+                if (response.status) {
+                    success('Vault record updated');
+                    setIsModalOpen(false);
+                    fetchPasswordVaults();
+                } else {
+                    toastError(response.message || 'Operation failed');
+                }
+            } else {
+                const model = new CreatePasswordVaultModel(
+                    getUserId(),
+                    getCompanyId(),
+                    payload.name,
+                    payload.password,
+                    payload.description,
+                    true,
+                    payload.username,
+                    payload.url,
+                    payload.notes
+                );
+                const response = await mastersService.createPasswordVault(model);
+                if (response.status) {
+                    success('Added to vault successfully');
+                    setIsModalOpen(false);
+                    fetchPasswordVaults();
+                } else {
+                    toastError(response.message || 'Operation failed');
+                }
             }
-        } catch (err) {
-            toastError('Operation failed');
+        } catch (err: any) {
+            toastError(err.message || 'Operation failed');
+        } finally {
+            setIsVaultLoading(false);
         }
     };
 
     const handleDelete = async (id: number) => {
         if (confirm('Are you sure you want to permanently remove this from your vault?')) {
+            setIsVaultLoading(true);
             try {
-                const result = await deletePasswordVault(id);
-                if (result) success('Removed from vault');
-            } catch (err) {
-                toastError('Delete failed');
+                const response = await mastersService.deletePasswordVault(id);
+                if (response.status) {
+                    success('Removed from vault');
+                    fetchPasswordVaults();
+                } else {
+                    toastError(response.message || 'Delete failed');
+                }
+            } catch (err: any) {
+                toastError(err.message || 'Delete failed');
+            } finally {
+                setIsVaultLoading(false);
             }
         }
     };

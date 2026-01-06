@@ -1,8 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetEmployeeByIdModel, GetAllEmployeesModel, GlobalResponse, CreateSlackUserModel, UpdateSlackUserModel, DeleteSlackUserModel, GetSlackUserModel, GetSlackUserByIdModel, GetAllSlackUsersModel
-} from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetEmployeeByIdModel, GetAllEmployeesModel, GlobalResponse, CreateSlackUserModel, UpdateSlackUserModel, DeleteSlackUserModel, GetSlackUserModel, GetSlackUserByIdModel, GetAllSlackUsersModel } from '@adminvault/shared-models';
 
 export class EmployeesService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -44,7 +42,6 @@ export class EmployeesService extends CommonAxiosService {
         });
     }
 
-    // Slack related methods
     async createSlackUser(reqObj: CreateSlackUserModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('createSlackUser'), reqObj, config);
     }

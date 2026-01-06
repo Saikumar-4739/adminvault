@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { EmailTypeEnum, DepartmentEnum } from '@adminvault/shared-models';
-import { useEmployees } from '@/hooks/useEmployees';
+import { employeeService } from '@/lib/api/services';
 import { User, Mail, Shield, Building } from 'lucide-react';
-import { useMemo } from 'react';
 
 interface AddEmailModalProps {
     isOpen: boolean;
@@ -18,13 +17,13 @@ interface AddEmailModalProps {
 }
 
 export default function AddEmailModal({ isOpen, onClose, onSuccess, companyId, initialTab }: AddEmailModalProps) {
-    const { employees } = useEmployees(companyId);
+    const [employees, setEmployees] = useState<any[]>([]);
 
-    const getDefaultType = () => {
+    const getDefaultType = useCallback(() => {
         if (initialTab === 'USER') return EmailTypeEnum.USER;
         if (initialTab === 'GROUP') return EmailTypeEnum.GROUP;
         return EmailTypeEnum.COMPANY;
-    };
+    }, [initialTab]);
 
     const [formData, setFormData] = useState({
         email: '',
@@ -33,12 +32,23 @@ export default function AddEmailModal({ isOpen, onClose, onSuccess, companyId, i
         employeeId: '',
     });
 
-    // Sync default type when tab changes
-    useMemo(() => {
+    const fetchEmployees = useCallback(async () => {
+        try {
+            const response = await employeeService.getAllEmployees({ companyId } as any);
+            if (response.status) {
+                setEmployees(response.employees || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch employees:', error);
+        }
+    }, [companyId]);
+
+    useEffect(() => {
         if (isOpen) {
+            fetchEmployees();
             setFormData(prev => ({ ...prev, emailType: getDefaultType() }));
         }
-    }, [initialTab, isOpen]);
+    }, [isOpen, fetchEmployees, getDefaultType]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

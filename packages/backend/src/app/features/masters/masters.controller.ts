@@ -3,9 +3,10 @@ import { MastersService } from './masters.service';
 import {
     CreateAssetTypeModel, CreateBrandModel, CreateDepartmentModel, CreateVendorModel, UpdateDepartmentModel, UpdateAssetTypeModel, UpdateBrandModel, UpdateVendorModel,
     CreateApplicationModel, UpdateApplicationModel, CreateExpenseCategoryModel, CreatePasswordVaultModel, UpdatePasswordVaultModel, CreateTicketCategoryModel, UpdateTicketCategoryModel, CreateLocationModel, UpdateLocationModel,
-    GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, GetAllTicketCategoriesResponseModel, GetAllLocationsResponseModel,
-    CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultResponseModel, CreateTicketCategoryResponseModel, CreateLocationResponseModel,
-    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultResponseModel, UpdateTicketCategoryResponseModel, UpdateLocationResponseModel,
+    CreateSlackUserModel, UpdateSlackUserModel,
+    GetAllDepartmentsResponseModel, GetAllAssetTypesResponseModel, GetAllBrandsResponseModel, GetAllVendorsResponseModel, GetAllApplicationsResponseModel, GetAllExpenseCategoriesResponseModel, GetAllPasswordVaultsResponseModel, GetAllTicketCategoriesResponseModel, GetAllLocationsResponseModel, GetAllSlackUsersResponseModel,
+    CreateDepartmentResponseModel, CreateAssetTypeResponseModel, CreateBrandResponseModel, CreateVendorResponseModel, CreateApplicationResponseModel, CreateExpenseCategoryResponseModel, CreatePasswordVaultResponseModel, CreateTicketCategoryResponseModel, CreateLocationResponseModel, CreateSlackUserResponseModel,
+    UpdateDepartmentResponseModel, UpdateAssetTypeResponseModel, UpdateBrandResponseModel, UpdateVendorResponseModel, UpdateApplicationResponseModel, UpdateExpenseCategoryModel, UpdateExpenseCategoryResponseModel, UpdatePasswordVaultResponseModel, UpdateTicketCategoryResponseModel, UpdateLocationResponseModel, UpdateSlackUserResponseModel,
     IdRequestModel, CompanyIdRequestModel
 } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -469,6 +470,56 @@ export class MastersController {
             const userId = req.user?.id || req.user?.userId;
             const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
             return await this.mastersService.deletePasswordVault(reqModel, userId, ipAddress);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    // Slack Users
+    @Post('getAllSlackUsers')
+    @ApiOperation({ summary: 'Get all slack users' })
+    async getAllSlackUsers(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllSlackUsersResponseModel> {
+        try {
+            return await this.mastersService.getAllSlackUsers(reqModel);
+        } catch (error) {
+            return returnException(GetAllSlackUsersResponseModel, error);
+        }
+    }
+
+    @Post('createSlackUser')
+    @ApiOperation({ summary: 'Create slack user' })
+    @ApiBody({ type: CreateSlackUserModel })
+    async createSlackUser(@Body() data: CreateSlackUserModel, @Req() req: any): Promise<CreateSlackUserResponseModel> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.createSlackUser(data, userId, ipAddress);
+        } catch (error) {
+            return returnException(CreateSlackUserResponseModel, error);
+        }
+    }
+
+    @Post('updateSlackUser')
+    @ApiOperation({ summary: 'Update slack user' })
+    @ApiBody({ type: UpdateSlackUserModel })
+    async updateSlackUser(@Body() data: UpdateSlackUserModel, @Req() req: any): Promise<UpdateSlackUserResponseModel> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.updateSlackUser(data, userId, ipAddress);
+        } catch (error) {
+            return returnException(UpdateSlackUserResponseModel, error);
+        }
+    }
+
+    @Post('deleteSlackUser')
+    @ApiOperation({ summary: 'Delete slack user' })
+    @ApiBody({ type: IdRequestModel })
+    async deleteSlackUser(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.mastersService.deleteSlackUser(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

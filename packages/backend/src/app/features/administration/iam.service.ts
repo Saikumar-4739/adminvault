@@ -9,14 +9,19 @@ import { PermissionEntity } from './entities/permission.entity';
 import { MFASettingsEntity } from './entities/mfa-settings.entity';
 import { APIKeyEntity } from './entities/api-key.entity';
 import { SSOProviderEntity } from './entities/sso-provider.entity';
-import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
-import { RoleRepository } from './repositories/role.repository';
 import { PermissionRepository } from './repositories/permission.repository';
 import { MFASettingsRepository } from './repositories/mfa-settings.repository';
 import { APIKeyRepository } from './repositories/api-key.repository';
 import { SSOProviderRepository } from './repositories/sso-provider.repository';
+import { RoleRepository } from './repositories/role.repository';
 import { RolePermissionRepository } from './repositories/role-permission.repository';
 import { RolePermissionEntity } from './entities/role-permission.entity';
+import { EmployeesRepository } from '../employees/repositories/employees.repository';
+import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { MenuRepository } from './repositories/menu.repository';
+import { RoleMenuAccessRepository } from './repositories/role-menu-access.repository';
+import { UserPermissionRepository } from './repositories/user-permission.repository';
+import { UserRoleRepository } from './repositories/user-role.repository';
 import {
     CreateRoleModel,
     UpdateRoleModel,
@@ -28,7 +33,8 @@ import {
     APIKeyResponseModel,
     CreateSSOProviderModel,
     UpdateSSOProviderModel,
-    GlobalResponse
+    GlobalResponse,
+    EmployeeStatusEnum
 } from '@adminvault/shared-models';
 
 @Injectable()
@@ -40,9 +46,58 @@ export class IAMService implements OnModuleInit {
         private readonly apiKeyRepo: APIKeyRepository,
         private readonly ssoRepo: SSOProviderRepository,
         private readonly rolePermRepo: RolePermissionRepository,
+        private readonly employeesRepo: EmployeesRepository,
+        private readonly menuRepo: MenuRepository,
+        private readonly roleMenuRepo: RoleMenuAccessRepository,
+        private readonly userPermRepo: UserPermissionRepository,
+        private readonly userRoleRepo: UserRoleRepository,
         @InjectRepository(AuthUsersEntity)
         private readonly userRepo: Repository<AuthUsersEntity>
     ) { }
+
+    async findAllPrincipals(companyId?: number): Promise<any[]> {
+        const employees = await this.employeesRepo.find({ where: companyId ? { companyId } : {} });
+        const users = await this.userRepo.find({ where: companyId ? { companyId } : {} });
+
+        // Fetch all user roles assignments
+        const allUserRoles = await this.userRoleRepo.find();
+
+        // Fetch SSO Providers for mapping names
+        const ssoProviders = await this.ssoRepo.find({ where: companyId ? { companyId } : {} });
+        const ssoMap = new Map(ssoProviders.map(p => [Number(p.id), p.name]));
+
+        // Map users by email for faster lookup
+        const userMap = new Map(users.map(u => [u.email.toLowerCase(), u]));
+
+        // Map roleIds by userId
+        const userRolesMap = new Map<number, number[]>();
+        allUserRoles.forEach(ur => {
+            const current = userRolesMap.get(Number(ur.userId)) || [];
+            current.push(Number(ur.roleId));
+            userRolesMap.set(Number(ur.userId), current);
+        });
+
+        return employees.map(emp => {
+            const user = userMap.get(emp.email.toLowerCase());
+            const roleIds = user ? (userRolesMap.get(Number(user.id)) || []) : [];
+
+            return {
+                id: emp.id, // Employee ID
+                userId: user?.id || null, // Linked Auth User ID
+                firstName: emp.firstName,
+                lastName: emp.lastName,
+                email: emp.email,
+                role: user?.userRole || 'No Access', // Legacy single role display
+                roleIds: roleIds, // New multi-role IDs
+                departmentId: emp.departmentId,
+                status: emp.empStatus === EmployeeStatusEnum.ACTIVE,
+                phNumber: emp.phNumber,
+                isUserActive: user?.status || false,
+                authType: user?.authType || 'NONE',
+                ssoProviderName: user?.ssoProviderId ? ssoMap.get(Number(user.ssoProviderId)) : null
+            };
+        });
+    }
 
     async onModuleInit() {
         await this.seedPermissions();
@@ -212,6 +267,52 @@ export class IAMService implements OnModuleInit {
         return { isEnabled: mfa?.isEnabled || false };
     }
 
+    // SSO
+    async getSSOProviders(companyId: number): Promise<SSOProviderEntity[]> {
+        return this.ssoRepo.find({ where: { companyId } });
+    }
+
+    async createSSOProvider(model: CreateSSOProviderModel): Promise<GlobalResponse> {
+        const entity = new SSOProviderEntity();
+        entity.name = model.name;
+        entity.companyId = model.companyId;
+        entity.type = model.type;
+        entity.clientId = model.clientId;
+        entity.clientSecret = model.clientSecret;
+        entity.issuerUrl = model.issuerUrl;
+        entity.authorizationUrl = model.authorizationUrl;
+        entity.tokenUrl = model.tokenUrl;
+        entity.userInfoUrl = model.userInfoUrl;
+        entity.isActive = true;
+
+        await this.ssoRepo.save(entity);
+        return new GlobalResponse(true, 201, 'SSO Provider created successfully');
+    }
+
+    async updateSSOProvider(model: UpdateSSOProviderModel): Promise<GlobalResponse> {
+        const entity = await this.ssoRepo.findOne({ where: { id: model.id } });
+        if (!entity) throw new NotFoundException('SSO Provider not found');
+
+        entity.name = model.name || entity.name;
+        entity.type = model.type || entity.type;
+        entity.clientId = model.clientId || entity.clientId;
+        if (model.clientSecret) entity.clientSecret = model.clientSecret;
+        entity.issuerUrl = model.issuerUrl || entity.issuerUrl;
+        entity.authorizationUrl = model.authorizationUrl || entity.authorizationUrl;
+        entity.tokenUrl = model.tokenUrl || entity.tokenUrl;
+        entity.userInfoUrl = model.userInfoUrl || entity.userInfoUrl;
+
+        await this.ssoRepo.save(entity);
+        return new GlobalResponse(true, 200, 'SSO Provider updated successfully');
+    }
+
+    async deleteSSOProvider(id: number): Promise<GlobalResponse> {
+        const entity = await this.ssoRepo.findOne({ where: { id } });
+        if (!entity) throw new NotFoundException('SSO Provider not found');
+        await this.ssoRepo.remove(entity);
+        return new GlobalResponse(true, 200, 'SSO Provider deleted successfully');
+    }
+
     // API Keys
     async findAllAPIKeys(companyId: number): Promise<APIKeyResponseModel[]> {
         const keys = await this.apiKeyRepo.find({ where: { companyId, isActive: true } });
@@ -259,30 +360,77 @@ export class IAMService implements OnModuleInit {
         return entity;
     }
 
-    // SSO
-    async getSSOProviders(companyId: number): Promise<SSOProviderEntity[]> {
-        return this.ssoRepo.find({ where: { companyId, isActive: true } });
+
+    // User Roles & Permissions
+    async assignRolesToUser(userId: number, roleIds: number[], companyId: number): Promise<GlobalResponse> {
+        // Clear existing roles
+        await this.userRoleRepo.delete({ userId });
+
+        // Assign new roles
+        for (const roleId of roleIds) {
+            await this.userRoleRepo.save(this.userRoleRepo.create({ userId, roleId }));
+        }
+
+        // Legacy Support: Update the single 'userRole' column based on highest privilege
+        try {
+            const roles = await this.roleRepo.findByIds(roleIds);
+            let legacyRole = 'USER';
+            if (roles.some(r => r.code === 'ADMIN' || r.name.toUpperCase() === 'ADMIN')) legacyRole = 'ADMIN';
+            else if (roles.some(r => r.code === 'MANAGER' || r.name.toUpperCase() === 'MANAGER')) legacyRole = 'MANAGER';
+
+            await this.userRepo.update(userId, { userRole: legacyRole as any });
+        } catch (e) {
+            console.warn('Failed to update legacy user role', e);
+        }
+
+        return new GlobalResponse(true, 200, 'Roles assigned successfully');
     }
 
-    async createSSOProvider(model: CreateSSOProviderModel): Promise<GlobalResponse> {
-        const provider = new SSOProviderEntity();
-        Object.assign(provider, model);
-        await this.ssoRepo.save(provider);
-        return new GlobalResponse(true, 201, 'SSO Provider created successfully');
-    }
+    async getUserAuthorizedMenus(userId: number): Promise<any[]> {
+        // 1. Get user roles
+        const userRoles = await this.userRoleRepo.find({ where: { userId } });
+        const roleIds = userRoles.map(ur => ur.roleId);
 
-    async updateSSOProvider(model: UpdateSSOProviderModel): Promise<GlobalResponse> {
-        const provider = await this.ssoRepo.findOne({ where: { id: model.id } });
-        if (!provider) throw new NotFoundException('SSO Provider not found');
-        Object.assign(provider, model);
-        await this.ssoRepo.save(provider);
-        return new GlobalResponse(true, 200, 'SSO Provider updated successfully');
-    }
+        if (roleIds.length === 0) return [];
 
-    async deleteSSOProvider(id: number): Promise<GlobalResponse> {
-        const provider = await this.ssoRepo.findOne({ where: { id } });
-        if (!provider) throw new NotFoundException('SSO Provider not found');
-        await this.ssoRepo.remove(provider);
-        return new GlobalResponse(true, 200, 'SSO Provider deleted successfully');
+        // 2. Get menu access for these roles
+        // We use query builder to get distinct authorized menus
+        const menuAccess = await this.roleMenuRepo
+            .createQueryBuilder('rma')
+            .where('rma.roleId IN (:...roleIds)', { roleIds })
+            .andWhere('rma.canRead = :canRead', { canRead: true })
+            .leftJoinAndSelect('rma.menu', 'menu')
+            .getMany();
+
+        const allowedMenuIds = new Set(menuAccess.map(ma => ma.menuId));
+
+        // 3. Fetch full menu tree structure (all menus)
+        // Optimization: fetching all and filtering in memory is usually fine for menu size < 1000
+        const allMenus = await this.menuRepo.find({ order: { sortOrder: 'ASC' } });
+
+        // 4. Filter and build tree
+        const buildTree = (parentId: number | null): any[] => {
+            return allMenus
+                .filter(m => m.parentId === (parentId ? Number(parentId) : null)) // Get children of current parent (handle null vs 0 mismatch if any)
+                .filter(m => allowedMenuIds.has(Number(m.id))) // Authorization check
+                .map(m => {
+                    // Aggregate permissions for this menu across all user's roles
+                    const relevantAccess = menuAccess.filter(ma => Number(ma.menuId) === Number(m.id));
+                    const permissions = {
+                        canCreate: relevantAccess.some(a => a.canCreate),
+                        canUpdate: relevantAccess.some(a => a.canUpdate),
+                        canDelete: relevantAccess.some(a => a.canDelete),
+                        canApprove: relevantAccess.some(a => a.canApprove),
+                    };
+
+                    return {
+                        ...m,
+                        permissions,
+                        children: buildTree(Number(m.id)) // Recursion
+                    };
+                });
+        };
+
+        return buildTree(null);
     }
 }

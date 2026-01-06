@@ -21,19 +21,11 @@ export class CompanyInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if validation fails or company name already exists
      */
-    async createCompany(reqModel: CreateCompanyModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async createCompany(reqModel: CreateCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            if (!reqModel.companyName) {
-                throw new ErrorResponse(0, "Company name is required");
-            }
-
-            if (!reqModel.location) {
-                throw new ErrorResponse(0, "Location is required");
-            }
-
-            if (!reqModel.estDate) {
-                throw new ErrorResponse(0, "Establishment date is required");
+            if (!reqModel.companyName || !reqModel.location || !reqModel.estDate) {
+                throw new ErrorResponse(0, "Company name, Location and Establishment date are required");
             }
 
             const existingCompany = await this.companyInfoRepo.findOne({ where: { companyName: reqModel.companyName } });
@@ -45,12 +37,12 @@ export class CompanyInfoService {
             const newCompany = new CompanyInfoEntity();
             newCompany.companyName = reqModel.companyName;
             newCompany.location = reqModel.location;
-            newCompany.estDate = reqModel.estDate as any;
+            newCompany.estDate = reqModel.estDate;
             newCompany.email = reqModel.email && reqModel.email.trim() !== '' ? reqModel.email : null;
             newCompany.phone = reqModel.phone && reqModel.phone.trim() !== '' ? reqModel.phone : null;
-            const savedCompany = await transManager.getRepository(CompanyInfoEntity).save(newCompany);
+            newCompany.userId = reqModel.userId;
+            await transManager.getRepository(CompanyInfoEntity).save(newCompany);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 0, "Company created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -66,7 +58,7 @@ export class CompanyInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if company not found or update fails
      */
-    async updateCompany(reqModel: UpdateCompanyModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async updateCompany(reqModel: UpdateCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -82,6 +74,7 @@ export class CompanyInfoService {
             const updateData: Partial<CompanyInfoEntity> = {};
             updateData.companyName = reqModel.companyName;
             updateData.location = reqModel.location;
+            updateData.userId = reqModel.userId;
             if (reqModel.estDate) updateData.estDate = reqModel.estDate as any;
             if (reqModel.email !== undefined) {
                 updateData.email = reqModel.email && reqModel.email.trim() !== '' ? reqModel.email : null;
@@ -92,18 +85,6 @@ export class CompanyInfoService {
 
             await transManager.getRepository(CompanyInfoEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            // await this.auditLogsService.create({
-            //     action: 'UPDATE_COMPANY',
-            //     resource: 'CompanyInfo',
-            //     details: `Company ${existingCompany.companyName} updated`,
-            //     status: 'SUCCESS',
-            //     userId: userId || undefined,
-            //     companyId: existingCompany.id,
-            //     ipAddress: ipAddress || '0.0.0.0'
-            // });
-
             return new GlobalResponse(true, 0, "Company updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -162,7 +143,7 @@ export class CompanyInfoService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if company not found or deletion fails
      */
-    async deleteCompany(reqModel: DeleteCompanyModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async deleteCompany(reqModel: DeleteCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
@@ -177,18 +158,6 @@ export class CompanyInfoService {
             await transManager.startTransaction();
             await transManager.getRepository(CompanyInfoEntity).delete(reqModel.id);
             await transManager.completeTransaction();
-
-            // AUDIT LOG
-            // await this.auditLogsService.create({
-            //     action: 'DELETE_COMPANY',
-            //     resource: 'CompanyInfo',
-            //     details: `Company ${existingCompany.companyName} deleted`,
-            //     status: 'SUCCESS',
-            //     userId: userId || undefined,
-            //     companyId: existingCompany.id,
-            //     ipAddress: ipAddress || '0.0.0.0'
-            // });
-
             return new GlobalResponse(true, 0, "Company deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();

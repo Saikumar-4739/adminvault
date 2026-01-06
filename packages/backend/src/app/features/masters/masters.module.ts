@@ -19,6 +19,8 @@ import { PasswordVaultRepository } from './repositories/password-vault.repositor
 import { CompanyInfoRepository } from './repositories/company-info.repository';
 import { LocationsMasterEntity } from './entities/location.entity';
 import { LocationRepository } from './repositories/location.repository';
+import { SlackUsersMasterEntity } from './entities/slack-user.entity';
+import { SlackUsersRepository } from './repositories/slack-user.repository';
 
 @Module({
     imports: [
@@ -31,7 +33,9 @@ import { LocationRepository } from './repositories/location.repository';
             ApplicationsMasterEntity,
             ExpenseCategoriesMasterEntity,
             PasswordVaultMasterEntity,
-            LocationsMasterEntity
+            PasswordVaultMasterEntity,
+            LocationsMasterEntity,
+            SlackUsersMasterEntity
         ])
     ],
     controllers: [MastersController],
@@ -44,7 +48,9 @@ import { LocationRepository } from './repositories/location.repository';
         TicketCategoryRepository,
         CompanyInfoRepository,
         PasswordVaultRepository,
-        LocationRepository
+        PasswordVaultRepository,
+        LocationRepository,
+        SlackUsersRepository
     ],
     exports: [MastersService]
 })

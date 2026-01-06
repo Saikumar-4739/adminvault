@@ -9,7 +9,7 @@ import { PermissionsGuard } from '../../guards/permissions.guard';
 import { RequirePermission } from '../../decorators/permissions.decorator';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
-import { SettingType, CompanyIdRequestModel, CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetAllEmailInfoModel, GetEmailInfoByIdModel, EmailStatsResponseModel, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel, CreateRoleModel, GetAllRolesResponseModel, EnableMFAModel, CreateAPIKeyModel, CreateSSOProviderModel, CreateAssetModel, GetAllAssetsModel } from '@adminvault/shared-models';
+import { SettingType, CompanyIdRequestModel, CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetAllEmailInfoModel, GetEmailInfoByIdModel, EmailStatsResponseModel, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel, CreateRoleModel, UpdateRoleModel, GetAllRolesResponseModel, EnableMFAModel, CreateAPIKeyModel, CreateSSOProviderModel, UpdateSSOProviderModel, CreateAssetModel, GetAllAssetsModel } from '@adminvault/shared-models';
 
 @ApiTags('Administration')
 @Controller('administration')
@@ -159,6 +159,67 @@ export class AdministrationController {
         }
     }
 
+    @Post('iam/roles/update')
+    @ApiBody({ type: UpdateRoleModel })
+    async updateRole(@Body() model: UpdateRoleModel): Promise<GlobalResponse> {
+        try {
+            return await this.iamService.updateRole(model);
+        }
+        catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/roles/delete')
+    async deleteRole(@Body('id') id: number): Promise<GlobalResponse> {
+        try {
+            return await this.iamService.deleteRole(id);
+        }
+        catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/principals/findAll')
+    @ApiBody({ type: CompanyIdRequestModel })
+    async findAllPrincipals(@Body() reqModel: CompanyIdRequestModel) {
+        try {
+            const principals = await this.iamService.findAllPrincipals(reqModel.id);
+            return { success: true, statusCode: 200, message: 'Principals retrieved', data: principals };
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/permissions/findAll')
+    async findAllPermissions() {
+        try {
+            const permissions = await this.iamService.findAllPermissions();
+            return { success: true, statusCode: 200, message: 'Permissions retrieved', data: permissions };
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/users/assign-roles')
+    async assignRolesToUser(@Body() body: { userId: number, roleIds: number[], companyId: number }) {
+        try {
+            return await this.iamService.assignRolesToUser(body.userId, body.roleIds, body.companyId);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/menus/authorized')
+    async getUserAuthorizedMenus(@Req() req: any) {
+        try {
+            const menus = await this.iamService.getUserAuthorizedMenus(req.user.id);
+            return { success: true, statusCode: 200, message: 'Authorized menus retrieved', data: menus };
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
     @Post('iam/sessions/get-my-sessions')
     async getMySessions(@Req() req: any) {
         try {
@@ -227,6 +288,27 @@ export class AdministrationController {
     async createSSOProvider(@Body() model: CreateSSOProviderModel): Promise<GlobalResponse> {
         try {
             return await this.iamService.createSSOProvider(model);
+        }
+        catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/sso/update')
+    @ApiBody({ type: UpdateSSOProviderModel })
+    async updateSSOProvider(@Body() model: UpdateSSOProviderModel): Promise<GlobalResponse> {
+        try {
+            return await this.iamService.updateSSOProvider(model);
+        }
+        catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/sso/delete')
+    async deleteSSOProvider(@Body('id') id: number): Promise<GlobalResponse> {
+        try {
+            return await this.iamService.deleteSSOProvider(id);
         }
         catch (error) {
             return returnException(GlobalResponse, error);

@@ -10,6 +10,7 @@ import "reflect-metadata";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+  app.setGlobalPrefix('api');
   (app.getHttpAdapter().getInstance() as any).set('trust proxy', true);
 
   // Swagger Configuration (for REST API documentation)
