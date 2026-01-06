@@ -98,6 +98,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
         const query = this.createQueryBuilder('asset')
             .leftJoin('device_info', 'device', 'asset.device_id = device.id')
             .leftJoin('employees', 'employee', 'asset.assigned_to_employee_id = employee.id')
+            .leftJoin('employees', 'previousUser', 'asset.previous_user_employee_id = previousUser.id')
             .select([
                 'asset.id as id',
                 'asset.company_id as companyId',
@@ -118,6 +119,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'device.device_type as deviceType',
             ])
             .addSelect('CONCAT(employee.first_name, \' \', employee.last_name)', 'assignedTo')
+            .addSelect('CONCAT(previousUser.first_name, \' \', previousUser.last_name)', 'previousUser')
             .where('asset.company_id = :companyId', { companyId: reqModel.companyId });
 
         if (reqModel.searchQuery) {

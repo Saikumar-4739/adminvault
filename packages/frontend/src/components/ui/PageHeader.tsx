@@ -1,38 +1,62 @@
 'use client';
 
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import Button from './Button';
+
+interface Action {
+    label: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+    variant?: 'primary' | 'outline' | 'ghost';
+}
 
 interface PageHeaderProps {
-    icon: LucideIcon;
     title: string;
-    subtitle: string;
+    description?: string;
+    icon?: React.ReactNode;
     gradient?: string;
-    actions?: React.ReactNode;
+    actions?: Action[];
 }
 
 export default function PageHeader({
-    icon: Icon,
     title,
-    subtitle,
+    description,
+    icon,
     gradient = 'from-indigo-500 to-purple-600',
-    actions
+    actions = []
 }: PageHeaderProps) {
     return (
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-                <div className={`p-2 bg-gradient-to-br ${gradient} rounded-xl`}>
-                    <Icon className="h-6 w-6 text-white" />
-                </div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+                {icon && (
+                    <div className={`p-2 rounded-lg bg-gradient-to-br ${gradient} text-white shadow-md [&>svg]:h-5 [&>svg]:w-5`}>
+                        {icon}
+                    </div>
+                )}
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{title}</h1>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">{subtitle}</p>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                        {title}
+                    </h1>
+                    {description && (
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                            {description}
+                        </p>
+                    )}
                 </div>
             </div>
-
-            {actions && (
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    {actions}
+            {actions.length > 0 && (
+                <div className="flex items-center gap-2">
+                    {actions.map((action, index) => (
+                        <Button
+                            key={index}
+                            variant={action.variant || 'outline'}
+                            size="sm"
+                            onClick={action.onClick}
+                            leftIcon={action.icon}
+                        >
+                            {action.label}
+                        </Button>
+                    ))}
                 </div>
             )}
         </div>

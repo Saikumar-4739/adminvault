@@ -1,9 +1,7 @@
-'use client';
-
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users, Settings as SettingsIcon, UserCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
@@ -77,18 +75,19 @@ export default function Sidebar() {
         }
     }, []);
 
-    const toggleCollapse = () => {
+    const toggleCollapse = useCallback(() => {
         const newState = !isCollapsed;
         setIsCollapsed(newState);
         localStorage.setItem('sidebar_collapsed', String(newState));
-    };
+    }, [isCollapsed]);
 
-    const hasRole = (roles: UserRoleEnum[]): boolean => {
+    // Memoize hasRole function to prevent recreation on every render
+    const hasRole = useCallback((roles: UserRoleEnum[]): boolean => {
         if (!user?.role) return false;
         return roles.includes(user.role as UserRoleEnum);
-    };
+    }, [user?.role]);
 
-    const permissions = { hasRole };
+    const permissions = useMemo(() => ({ hasRole }), [hasRole]);
 
     const SidebarContent = ({ collapsed, pathname, permissions, setIsMobileMenuOpen }: {
         collapsed: boolean,

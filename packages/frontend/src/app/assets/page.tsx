@@ -18,7 +18,7 @@ const AdvancedFilterModal = dynamic(() => import('./components/AdvancedFilterMod
 const AssetFormModal = dynamic(() => import('./components/AssetFormModal'), { ssr: false });
 const AssignAssetModal = dynamic(() => import('./components/AssignAssetModal'), { ssr: false });
 
-import Button from '@/components/ui/Button';
+import PageHeader from '@/components/ui/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { assetService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
@@ -254,23 +254,32 @@ export default function AssetsPage() {
 
     return (
         <div className="p-6 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Asset Inventory</h1>
-                    <p className="text-slate-500 font-medium tracking-tight">Manage and track hardware assets across the organization.</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setIsFilterModalOpen(true)} leftIcon={<Filter className="h-4 w-4" />}>
-                        Filter
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setIsBulkImportOpen(true)} leftIcon={<FileUp className="h-4 w-4" />}>
-                        Bulk Import
-                    </Button>
-                    <Button variant="primary" size="sm" onClick={handleAddAsset} leftIcon={<Plus className="h-4 w-4" />}>
-                        Add Asset
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                title="IT Asset Inventory"
+                description="Manage and track hardware assets across the organization."
+                icon={<Package />}
+                gradient="from-emerald-500 to-teal-600"
+                actions={[
+                    {
+                        label: 'Filter',
+                        onClick: () => setIsFilterModalOpen(true),
+                        icon: <Filter className="h-4 w-4" />,
+                        variant: 'outline'
+                    },
+                    {
+                        label: 'Bulk Import',
+                        onClick: () => setIsBulkImportOpen(true),
+                        icon: <FileUp className="h-4 w-4" />,
+                        variant: 'outline'
+                    },
+                    {
+                        label: 'Add Asset',
+                        onClick: handleAddAsset,
+                        icon: <Plus className="h-4 w-4" />,
+                        variant: 'primary'
+                    }
+                ]}
+            />
 
             {/* Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

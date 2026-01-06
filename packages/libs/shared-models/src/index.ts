@@ -8,6 +8,7 @@ export * from './masters/master-models';
 export * from './email';
 export * from './asset';
 export * from './asset/asset-tabs-models';
+export * from './asset-assign/asset-assign-models';
 
 export * from './it-admin';
 

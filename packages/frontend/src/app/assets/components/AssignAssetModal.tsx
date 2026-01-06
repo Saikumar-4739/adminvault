@@ -1,13 +1,10 @@
-'use client';
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { assetService, employeeService } from '@/lib/api/services';
+import { administrationService, employeeService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
-import { CreateAssetAssignModel } from '@adminvault/shared-models';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface AssignAssetModalProps {
@@ -63,20 +60,16 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
 
         if (!user?.id) {
             toastError('Error', 'User session not found');
+            setIsLoading(false);
             return;
         }
 
         try {
-            const model = new CreateAssetAssignModel(
+            const response = await administrationService.assignAssetOp(
                 asset.id,
                 Number(formData.employeeId),
-                Number(user.id), // assignedById
-                new Date(formData.assignedDate),
-                undefined, // returnDate
                 formData.remarks
             );
-
-            const response = await assetService.createAssignment(model as any);
 
             if (response.status) {
                 success('Success', 'Asset assigned successfully');

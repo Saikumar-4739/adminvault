@@ -74,27 +74,49 @@ export class AssetOperationsService {
         try {
             await transManager.startTransaction();
             const assetRepo = transManager.getRepository(AssetInfoEntity);
+            const assignRepo = transManager.getRepository(AssetAssignEntity);
 
             const asset = await assetRepo.findOne({ where: { id: assetId } });
             if (!asset) throw new NotFoundException('Asset not found');
-            if (asset.assetStatusEnum !== AssetStatusEnum.AVAILABLE) throw new BadRequestException('Asset is not available for assignment');
 
+            // Check if asset is already assigned (IN_USE)
+            const isReassignment = asset.assetStatusEnum === AssetStatusEnum.IN_USE && asset.assignedToEmployeeId;
+
+            if (isReassignment) {
+                // Close current assignment
+                await assignRepo.update(
+                    { assetId, isCurrent: true },
+                    {
+                        isCurrent: false,
+                        returnDate: new Date(),
+                        returnRemarks: `Reassigned to another employee (ID: ${employeeId})`
+                    }
+                );
+
+                // Save previous user
+                asset.previousUserEmployeeId = asset.assignedToEmployeeId;
+            } else if (asset.assetStatusEnum !== AssetStatusEnum.AVAILABLE) {
+                throw new BadRequestException('Asset is not available for assignment');
+            }
+
+            // Update asset
             asset.assetStatusEnum = AssetStatusEnum.IN_USE;
             asset.assignedToEmployeeId = employeeId;
             asset.userAssignedDate = new Date();
             await assetRepo.save(asset);
 
+            // Create new assignment
             const assignment = new AssetAssignEntity();
             assignment.assetId = assetId;
             assignment.employeeId = employeeId;
             assignment.assignedDate = new Date();
             assignment.assignedById = userId;
             assignment.isCurrent = true;
-            assignment.remarks = remarks || '';
-            await transManager.getRepository(AssetAssignEntity).save(assignment);
+            assignment.remarks = remarks || (isReassignment ? 'Reassigned from previous user' : '');
+            await assignRepo.save(assignment);
 
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 200, 'Asset assigned successfully');
+            return new GlobalResponse(true, 200, isReassignment ? 'Asset reassigned successfully' : 'Asset assigned successfully');
         } catch (error) {
             await transManager.releaseTransaction();
             throw error;

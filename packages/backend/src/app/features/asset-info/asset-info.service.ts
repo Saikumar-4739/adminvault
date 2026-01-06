@@ -248,4 +248,31 @@ export class AssetInfoService {
             throw error;
         }
     }
+
+    /**
+     * Asset Assignment CRUD Operations
+     * Note: For actual assignment workflow, use AssetOperationsService.assignAssetOp
+     */
+
+    async createAssignment(reqModel: any, userId?: number): Promise<GlobalResponse> {
+        // This is a placeholder - actual assignment should use AssetOperationsService
+        return new GlobalResponse(false, 400, "Please use the asset operations endpoint for assignment");
+    }
+
+    async updateAssignment(reqModel: any, userId?: number): Promise<GlobalResponse> {
+        return new GlobalResponse(false, 400, "Assignment updates not supported through this endpoint");
+    }
+
+    async getAssignment(reqModel: any): Promise<any> {
+        return new GlobalResponse(false, 400, "Get assignment not implemented");
+    }
+
+    async getAllAssignments(companyId: number): Promise<any> {
+        return new GlobalResponse(false, 400, "Get all assignments not implemented");
+    }
+
+    async deleteAssignment(reqModel: any, userId?: number): Promise<GlobalResponse> {
+        return new GlobalResponse(false, 400, "Assignment deletion not supported");
+    }
 }
+

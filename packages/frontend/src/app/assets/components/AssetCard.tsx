@@ -128,20 +128,23 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
 
                     {/* Assignment Info (if assigned) */}
                     {asset.assignedTo && (
-                        <div className="mb-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+                        <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/50">
                             <div className="flex items-center gap-2">
                                 <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{asset.assignedTo}</span>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[10px] font-medium text-blue-500 dark:text-blue-400 uppercase tracking-wide leading-none mb-0.5">Assigned To</p>
+                                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300 truncate block">{asset.assignedTo}</span>
+                                </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Previous User Info (if available and exists) */}
-                    {isAvailable && asset.previousUser && (
+                    {/* Previous User Info (if available) */}
+                    {asset.previousUser && (
                         <div className="mb-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
                             <div className="flex items-center gap-2">
                                 <History className="h-3.5 w-3.5 text-slate-400" />
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                     <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide leading-none mb-0.5">Previous User</p>
                                     <span className="text-xs font-bold text-slate-600 dark:text-slate-400 truncate block">{asset.previousUser}</span>
                                 </div>
@@ -206,6 +209,18 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
                             >
                                 <UserPlus className="h-3.5 w-3.5" />
                                 <span className="text-[10px]">Assign</span>
+                            </button>
+                        )}
+
+                        {/* Reassign button for IN_USE assets */}
+                        {!isAvailable && ['IN_USE', 'INUSE'].includes((asset.status || '').toUpperCase()) && (
+                            <button
+                                onClick={() => onAssign(asset)}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/40 text-orange-600 dark:text-orange-400 transition-all font-bold"
+                                title="Reassign Asset"
+                            >
+                                <UserPlus className="h-3.5 w-3.5" />
+                                <span className="text-[10px]">Reassign</span>
                             </button>
                         )}
 

@@ -112,7 +112,7 @@ export default function TicketsPage() {
             if (viewMode === 'my') {
                 response = await ticketService.getMyTickets();
             } else {
-                response = await ticketService.findAll(getCompanyId() as any);
+                response = await ticketService.getAllTickets(getCompanyId());
             }
 
             if (response.status) {
@@ -238,66 +238,66 @@ export default function TicketsPage() {
 
     return (
         <div className="p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
-            {/* Clean Header */}
-            {/* Header with Search & Actions */}
+            {/* Header */}
             <PageHeader
-                icon={Ticket}
+                icon={<Ticket />}
                 title="Support Tickets"
-                subtitle={viewMode === 'my' ? 'Track your support requests' : 'Manage all support requests'}
-                actions={
-                    <>
-                        {/* Search */}
-                        <div className="relative w-full sm:w-auto">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Search tickets..."
-                                className="w-full sm:w-56 pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
+                description={viewMode === 'my' ? 'Track your support requests' : 'Manage all support requests'}
+                gradient="from-indigo-500 to-purple-600"
+            />
 
-                        {/* Filter Toggle */}
+            {/* Search & Filters Bar */}
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                {/* Search */}
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search tickets..."
+                        className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+
+                {/* Filter Toggle */}
+                <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all shadow-sm border ${showFilters
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        }`}
+                >
+                    <Filter className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Filters</span>
+                </button>
+
+                {/* View Mode Toggle (Only for Admins) */}
+                {isAdmin && (
+                    <div className="flex gap-1 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                         <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all shadow-sm border ${showFilters
-                                ? 'bg-indigo-600 text-white border-indigo-600'
-                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                            onClick={() => setViewMode('all')}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold text-xs transition-all ${viewMode === 'all'
+                                ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                         >
-                            <Filter className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">Filters</span>
+                            <Users className="h-3.5 w-3.5" />
+                            All
                         </button>
-
-                        {/* View Mode Toggle (Only for Admins) */}
-                        {isAdmin && (
-                            <div className="flex gap-1 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-                                <button
-                                    onClick={() => setViewMode('all')}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold text-xs transition-all ${viewMode === 'all'
-                                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
-                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                                        }`}
-                                >
-                                    <Users className="h-3.5 w-3.5" />
-                                    All
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('my')}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold text-xs transition-all ${viewMode === 'my'
-                                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
-                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                                        }`}
-                                >
-                                    <User className="h-3.5 w-3.5" />
-                                    My
-                                </button>
-                            </div>
-                        )}
-                    </>
-                }
-            />
+                        <button
+                            onClick={() => setViewMode('my')}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold text-xs transition-all ${viewMode === 'my'
+                                ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                        >
+                            <User className="h-3.5 w-3.5" />
+                            My
+                        </button>
+                    </div>
+                )}
+            </div>
 
             {/* Advanced Filters */}
             {showFilters && (

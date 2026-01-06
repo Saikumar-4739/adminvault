@@ -185,4 +185,53 @@ export class AssetInfoController {
             return returnException(AssignFromQueueResponseModel, error);
         }
     }
+
+    // Asset Assignment CRUD Operations
+    @Post('createAssignment')
+    async createAssignment(@Body() reqModel: any, @Req() req: any): Promise<GlobalResponse> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            return await this.service.createAssignment(reqModel, userId);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('updateAssignment')
+    async updateAssignment(@Body() reqModel: any, @Req() req: any): Promise<GlobalResponse> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            return await this.service.updateAssignment(reqModel, userId);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('getAssignment')
+    async getAssignment(@Body() reqModel: any): Promise<any> {
+        try {
+            return await this.service.getAssignment(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('getAllAssignments')
+    async getAllAssignments(@Body() reqModel: CompanyIdRequestModel): Promise<any> {
+        try {
+            return await this.service.getAllAssignments(reqModel.id);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('deleteAssignment')
+    async deleteAssignment(@Body() reqModel: any, @Req() req: any): Promise<GlobalResponse> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            return await this.service.deleteAssignment(reqModel, userId);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
 }

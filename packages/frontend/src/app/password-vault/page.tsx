@@ -68,7 +68,7 @@ export default function PasswordVaultPage() {
     const fetchPasswordVaults = useCallback(async () => {
         setIsVaultLoading(true);
         try {
-            const response: any = await mastersService.getAllPasswordVaults(getCompanyId() as any);
+            const response: any = await mastersService.getAllPasswordVaults({ id: getCompanyId() } as any);
             if (response.status) {
                 setPasswordVaults(response.passwordVaults || []);
             }
@@ -82,7 +82,7 @@ export default function PasswordVaultPage() {
     const fetchEmployees = useCallback(async () => {
         setIsEmployeesLoading(true);
         try {
-            const response = await employeeService.getAllEmployees(getCompanyId() as any);
+            const response = await employeeService.getAllEmployees({ id: getCompanyId() } as any);
             if (response.status) {
                 setEmployees(response.employees || []);
             }
@@ -256,60 +256,61 @@ export default function PasswordVaultPage() {
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
             <div className="p-6 space-y-6 max-w-[1800px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
-                {/* Clean Header */}
+                {/* Header */}
                 <PageHeader
-                    icon={Lock}
+                    icon={<Lock />}
                     title="Password Vault"
-                    subtitle="Office-wide application access manager"
-                    actions={
-                        <>
-                            {/* Search */}
-                            <div className="relative w-full sm:w-56">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search vault..."
-                                    className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-
-                            {/* View Toggle */}
-                            <div className="flex bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
-                                >
-                                    <LayoutGrid className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
-                                >
-                                    <List className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsGeneratorOpen(true)}
-                                leftIcon={<Wand2 className="w-4 h-4" />}
-                                size="sm"
-                            >
-                                Entropy Engine
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onClick={handleOpenCreate}
-                                leftIcon={<Plus className="w-4 h-4" />}
-                                size="sm"
-                            >
-                                New Entry
-                            </Button>
-                        </>
-                    }
+                    description="Office-wide application access manager"
+                    gradient="from-indigo-500 to-purple-600"
                 />
+
+                {/* Search & Controls */}
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                    {/* Search */}
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search vault..."
+                            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+
+                    {/* View Toggle */}
+                    <div className="flex bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            <LayoutGrid className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            <List className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsGeneratorOpen(true)}
+                        leftIcon={<Wand2 className="w-4 h-4" />}
+                        size="sm"
+                    >
+                        Entropy Engine
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={handleOpenCreate}
+                        leftIcon={<Plus className="w-4 h-4" />}
+                        size="sm"
+                    >
+                        New Entry
+                    </Button>
+                </div>
 
                 {/* Stats Dashboard */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

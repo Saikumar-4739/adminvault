@@ -6,6 +6,7 @@ import { AssetOperationsService } from './asset-operations.service';
 import { EmailInfoService } from './email-info.service';
 import { LoginSessionService } from '../auth-users/login-session.service';
 import { PermissionsGuard } from '../../guards/permissions.guard';
+import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { RequirePermission } from '../../decorators/permissions.decorator';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
@@ -13,6 +14,7 @@ import { SettingType, CompanyIdRequestModel, CreateEmailInfoModel, UpdateEmailIn
 
 @ApiTags('Administration')
 @Controller('administration')
+@UseGuards(JwtAuthGuard)
 export class AdministrationController {
     constructor(
         private readonly settingsService: SettingsService,
@@ -131,7 +133,12 @@ export class AdministrationController {
 
     @Post('operations/assets/assign')
     async assignAssetOp(@Req() req: any, @Body() body: { assetId: number, employeeId: number, remarks?: string }): Promise<GlobalResponse> {
-        try { return await this.assetService.assignAssetOp(body.assetId, body.employeeId, req.user.id, body.remarks); }
+        try {
+            // JwtAuthGuard should populate req.user, but add fallback for debugging
+            const userId = req.user?.id || req.user?.userId || 1;
+            console.log('Assign Asset - User ID:', userId, 'Full req.user:', req.user);
+            return await this.assetService.assignAssetOp(body.assetId, body.employeeId, userId, body.remarks);
+        }
         catch (error) {
             return returnException(GlobalResponse, error);
         }

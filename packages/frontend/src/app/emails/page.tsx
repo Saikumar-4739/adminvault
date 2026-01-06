@@ -75,7 +75,7 @@ export default function InfoEmailsPage() {
         if (!selectedOrg) return;
         setIsLoading(true);
         try {
-            const response = await emailService.getAllEmailInfo(Number(selectedOrg));
+            const response = await emailService.getAllEmailInfo({ id: Number(selectedOrg) } as any);
             if (response.status) {
                 setEmailInfoList(response.data || []);
             } else {
@@ -173,38 +173,39 @@ export default function InfoEmailsPage() {
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
             <div className="p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
-                {/* Clean Header */}
+                {/* Header */}
                 <PageHeader
-                    icon={Mail}
+                    icon={<Mail />}
                     title="Communicator Hub"
-                    subtitle="Global routing and identity management platform"
-                    actions={
-                        <>
-                            <div className="relative min-w-[240px]">
-                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                <select
-                                    value={selectedOrg}
-                                    onChange={(e) => setSelectedOrg(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-indigo-500 transition-all font-semibold text-sm appearance-none outline-none"
-                                >
-                                    <option value="">Select Organization</option>
-                                    {companies.map(c => (
-                                        <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <button
-                                onClick={() => setIsModalOpen(true)}
-                                disabled={!selectedOrg}
-                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50 disabled:scale-100 flex items-center gap-2"
-                            >
-                                <Plus className="w-4 h-4" />
-                                Add New
-                            </button>
-                        </>
-                    }
+                    description="Global routing and identity management platform"
+                    gradient="from-indigo-500 to-purple-600"
                 />
+
+                {/* Organization Selector & Add Button */}
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                    <div className="relative flex-1 max-w-md">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <select
+                            value={selectedOrg}
+                            onChange={(e) => setSelectedOrg(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-indigo-500 transition-all font-semibold text-sm appearance-none outline-none"
+                        >
+                            <option value="">Select Organization</option>
+                            {companies.map(c => (
+                                <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        disabled={!selectedOrg}
+                        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50 disabled:scale-100 flex items-center gap-2 justify-center"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add New
+                    </button>
+                </div>
 
                 {/* Search Bar */}
                 <div className="relative max-w-md">

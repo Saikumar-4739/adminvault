@@ -12,5 +12,6 @@ export const licensesService = new LicensesService();
 export const reportsService = new ReportsService();
 export const documentsService = new DocumentsService();
 export const companyService = new CompanyService();
+export const emailService = administrationService; // Email operations are handled by administration service
 
-export const services = { auth: authService, administration: administrationService, employee: employeeService, asset: assetService, assetTabs: assetTabsService, ticket: ticketService, masters: mastersService, licenses: licensesService, reports: reportsService, documents: documentsService, company: companyService };
+export const services = { auth: authService, administration: administrationService, employee: employeeService, asset: assetService, assetTabs: assetTabsService, ticket: ticketService, masters: mastersService, licenses: licensesService, reports: reportsService, documents: documentsService, company: companyService, email: emailService };
