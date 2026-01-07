@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { companyService, employeeService, mastersService, licensesService } from '@/lib/api/services';
 import { UserRoleEnum, CreateLicenseModel, DeleteLicenseModel } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
-import StatCard from '@/components/ui/StatCard';
-import { Plus, Search, Key, CreditCard, AlertTriangle, CheckCircle, Smartphone, Trash2, Calendar } from 'lucide-react';
+import { Plus, Search, Key, Trash2, Calendar, Shield, Pencil } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import AddLicenseModal from './AddLicenseModal';
 import { useToast } from '@/contexts/ToastContext';
@@ -13,6 +12,7 @@ import { PageLoader } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDate } from '@/lib/utils';
+import Card, { CardContent } from '@/components/ui/Card';
 
 interface License {
     id: number;
@@ -73,6 +73,7 @@ export default function LicensesPage() {
     const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [stats, setStats] = useState<LicenseStats>({
         totalLicenses: 0,
@@ -212,200 +213,186 @@ export default function LicensesPage() {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 space-y-8 max-w-[1800px] mx-auto min-h-screen">
-
-                {/* Header & Stats */}
-                <div className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Software Licenses</h1>
-                            <p className="text-sm text-slate-500 font-medium">Manage organization licenses and subscriptions</p>
+            <div className="p-6 space-y-6">
+                {/* Page Header with Filters */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
+                            <Key className="h-5 w-5 text-white" />
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search licenses..."
-                                    className="pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all w-64"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                            <select
-                                value={selectedCompanyId}
-                                onChange={(e) => setSelectedCompanyId(e.target.value)}
-                                className="pl-4 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all appearance-none cursor-pointer"
-                            >
-                                <option value="">Select Organization</option>
-                                {companies.map((company) => (
-                                    <option key={company.id} value={company.id}>{company.companyName}</option>
-                                ))}
-                            </select>
-                            <Button
-                                variant="primary"
-                                onClick={() => setIsModalOpen(true)}
-                                leftIcon={<Plus className="h-4 w-4" />}
-                                className="rounded-xl shadow-lg shadow-indigo-500/20"
-                            >
-                                Add License
-                            </Button>
+                        <div>
+                            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Software Licenses</h1>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Subscription Registry</p>
                         </div>
                     </div>
-
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <StatCard
-                            title="Total Licenses"
-                            value={stats.totalLicenses}
-                            icon={Key}
-                            iconBg="bg-indigo-50 dark:bg-indigo-900/20"
-                            iconColor="text-indigo-600 dark:text-indigo-400"
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                            isLoading={isLoading}
-                        />
-                        <StatCard
-                            title="Used"
-                            value={stats.usedLicenses}
-                            subText={`${Math.round((stats.usedLicenses / (stats.totalLicenses || 1)) * 100)}% Utilization`}
-                            icon={CheckCircle}
-                            iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-                            iconColor="text-emerald-600 dark:text-emerald-400"
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                            isLoading={isLoading}
-                        />
-                        <StatCard
-                            title="Expiring Soon"
-                            value={stats.expiringSoon}
-                            subText="Next 30 days"
-                            icon={AlertTriangle}
-                            iconBg="bg-rose-50 dark:bg-rose-900/20"
-                            iconColor="text-rose-600 dark:text-rose-400"
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                            isLoading={isLoading}
-                        />
-                        <StatCard
-                            title="Available"
-                            value={stats.totalLicenses - stats.usedLicenses}
-                            icon={CreditCard}
-                            iconBg="bg-blue-50 dark:bg-blue-900/20"
-                            iconColor="text-blue-600 dark:text-blue-400"
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                            isLoading={isLoading}
-                        />
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="relative group/search">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within/search:text-indigo-500 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Locate..."
+                                className="w-full sm:w-48 pl-9 pr-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <select
+                            value={selectedCompanyId}
+                            onChange={(e) => setSelectedCompanyId(e.target.value)}
+                            className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-sm min-w-[140px]"
+                        >
+                            <option value="">Organization</option>
+                            {companies.map((company) => (
+                                <option key={company.id} value={company.id}>{company.companyName}</option>
+                            ))}
+                        </select>
+                        <Button
+                            variant="primary"
+                            onClick={() => {
+                                setSelectedLicense(null);
+                                setIsModalOpen(true);
+                            }}
+                            leftIcon={<Plus className="h-3.5 w-3.5" />}
+                            className="h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest"
+                        >
+                            Add License
+                        </Button>
                     </div>
                 </div>
 
-                {/* Grid Content */}
-                {isLoading ? (
-                    <PageLoader />
-                ) : filteredLicenses.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-12 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700">
-                        <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-slate-400">
-                            <Key className="h-8 w-8" />
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">No licenses found</h3>
-                        <p className="text-slate-500 dark:text-slate-400">Try adjusting your filters or add a new license.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredLicenses.map((license) => {
-                            const daysLeft = getDaysRemaining(license.expiryDate);
-                            const isExpiring = daysLeft !== null && daysLeft <= 30;
-                            const isExpired = daysLeft !== null && daysLeft < 0;
-
-                            return (
-                                <div
-                                    key={license.id}
-                                    className="group relative bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300"
-                                >
-                                    {/* Action - Delete (Hidden by default, shown on hover) */}
-                                    <button
-                                        onClick={() => handleDeleteClick(license.id)}
-                                        className="absolute top-4 right-4 p-2 rounded-lg bg-red-50 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400"
-                                        title="Delete License"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
-
-                                    {/* App Info */}
-                                    <div className="flex items-start gap-4 mb-6">
-                                        <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
-                                            <Smartphone className="h-6 w-6" />
-                                        </div>
-                                        <div className="pt-0.5">
-                                            <h3 className="font-bold text-slate-900 dark:text-white text-base leading-tight">
-                                                {license.application?.name || 'Unknown App'}
-                                            </h3>
-                                            <p className="text-xs text-slate-500 mt-1">{license.company?.companyName}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Assignment Card */}
-                                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 mb-4 border border-slate-100 dark:border-slate-700/50">
-                                        {license.assignedEmployee ? (
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
-                                                    {license.assignedEmployee.firstName[0]}
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                                        {license.assignedEmployee.firstName} {license.assignedEmployee.lastName}
-                                                    </p>
-                                                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                                                        Since {license.assignedDate ? formatDate(license.assignedDate) : 'Unknown'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-2 text-slate-400 text-xs italic py-1">
-                                                <div className="w-6 h-6 rounded-full border border-dashed border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800" />
-                                                Unassigned License
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Footer Info */}
-                                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                                            <Calendar className="h-3.5 w-3.5" />
-                                            {license.expiryDate ? formatDate(license.expiryDate) : 'Lifetime'}
-                                        </div>
-
-                                        {isExpired ? (
-                                            <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide">
-                                                Expired
-                                            </span>
-                                        ) : isExpiring ? (
-                                            <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wide animate-pulse">
-                                                Expiring
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wide">
-                                                Active
-                                            </span>
-                                        )}
-                                    </div>
+                {/* Table Content */}
+                <Card className="border border-slate-200 dark:border-slate-700">
+                    <CardContent className="p-0">
+                        {isLoading ? (
+                            <div className="p-12">
+                                <PageLoader />
+                            </div>
+                        ) : filteredLicenses.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-12">
+                                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-slate-400">
+                                    <Key className="h-8 w-8" />
                                 </div>
-                            );
-                        })}
-                    </div>
-                )}
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">No licenses found</h3>
+                                <p className="text-slate-500 dark:text-slate-400">Try adjusting your filters or add a new license.</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                                        <tr>
+                                            <th className="px-6 py-2.5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Application Asset</th>
+                                            <th className="px-6 py-2.5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Assigned Context</th>
+                                            <th className="px-6 py-2.5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Deployment</th>
+                                            <th className="px-6 py-2.5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Lifecycle</th>
+                                            <th className="px-6 py-2.5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
+                                            <th className="px-6 py-2.5 text-right text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Management</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                        {filteredLicenses.map((license) => {
+                                            const daysLeft = getDaysRemaining(license.expiryDate);
+                                            const isExpiring = daysLeft !== null && daysLeft <= 30;
+                                            const isExpired = daysLeft !== null && daysLeft < 0;
+
+                                            return (
+                                                <tr key={license.id} className="group hover:bg-slate-50/50 dark:hover:bg-indigo-900/10 transition-colors">
+                                                    <td className="px-6 py-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                                                <Shield className="h-4 w-4" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-900 dark:text-white text-sm">{license.application?.name || 'Unknown App'}</p>
+                                                                <p className="text-xs text-slate-500">{license.company?.companyName}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {license.assignedEmployee ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
+                                                                    {license.assignedEmployee.firstName[0]}
+                                                                </div>
+                                                                <span className="text-sm font-medium text-slate-900 dark:text-white">
+                                                                    {license.assignedEmployee.firstName} {license.assignedEmployee.lastName}
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-sm text-slate-400 italic">Unassigned</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400">
+                                                            <Calendar className="h-3.5 w-3.5" />
+                                                            {license.assignedDate ? formatDate(license.assignedDate) : '-'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400">
+                                                            <Calendar className="h-3.5 w-3.5" />
+                                                            {license.expiryDate ? formatDate(license.expiryDate) : 'Lifetime'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {isExpired ? (
+                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide">
+                                                                Expired
+                                                            </span>
+                                                        ) : isExpiring ? (
+                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wide">
+                                                                Expiring
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wide">
+                                                                Active
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedLicense(license);
+                                                                    setIsModalOpen(true);
+                                                                }}
+                                                                className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-400 hover:text-blue-600 transition-colors"
+                                                                title="Edit License"
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteClick(license.id)}
+                                                                className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-600 transition-colors"
+                                                                title="Delete License"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 <AddLicenseModal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     onSuccess={async (data) => {
                         try {
-                            // Properly instantiate the CreateLicenseModel
                             const model = new CreateLicenseModel(
                                 data.companyId,
                                 data.applicationId,
                                 data.assignedEmployeeId || undefined,
-                                undefined, // licenseKey
-                                undefined, // purchaseDate
-                                data.assignedDate ? new Date(data.assignedDate) : undefined,
-                                data.expiryDate ? new Date(data.expiryDate) : undefined,
-                                undefined, // seats
+                                undefined,
+                                undefined,
+                                data.assignedDate || undefined,
+                                data.expiryDate || undefined,
+                                undefined,
                                 data.remarks || undefined
                             );
 

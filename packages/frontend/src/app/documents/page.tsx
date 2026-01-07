@@ -4,13 +4,16 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { documentsService } from '@/lib/api/services';
 import { DocumentModel, UploadDocumentModel } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import { FileText, Upload, Download, Trash2, Search, File, FolderOpen, HardDrive, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Plus } from 'lucide-react';
+import { FileText, Upload, Download, Trash2, Search, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Plus, File as FileIcon } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function DocumentsPage() {
+    const { user } = useAuth();
+    const { success, error: toastError } = useToast();
     const [documents, setDocuments] = useState<DocumentModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -19,24 +22,28 @@ export default function DocumentsPage() {
     const [description, setDescription] = useState('');
     const [tags, setTags] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeCategory, setActiveCategory] = useState<string>('All');
 
     const fetchDocuments = useCallback(async () => {
+        if (!user) return;
         try {
             setIsLoading(true);
-            const response = await documentsService.getAllDocuments();
+            const response = await documentsService.getAllDocuments(user.companyId);
             if (response.status) {
-                setDocuments(response.documents);
+                setDocuments(response.documents || []);
             }
         } catch (error) {
             console.error('Failed to fetch documents:', error);
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
-        fetchDocuments();
-    }, [fetchDocuments]);
+        if (user) {
+            fetchDocuments();
+        }
+    }, [fetchDocuments, user]);
 
     const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -45,31 +52,37 @@ export default function DocumentsPage() {
     }, []);
 
     const handleUpload = useCallback(async () => {
-        if (!selectedFile) return;
+        if (!selectedFile || !user) return;
+        setIsLoading(true);
 
         try {
             const uploadModel: UploadDocumentModel = {
                 originalName: selectedFile.name,
                 fileSize: selectedFile.size,
                 mimeType: selectedFile.type,
-                category: category || undefined,
+                category: category || 'General',
                 description: description || undefined,
                 tags: tags || undefined,
-                companyId: 1,
-                userId: 1
+                companyId: user.companyId,
+                userId: user.id
             };
 
-            await documentsService.uploadDocument(selectedFile, uploadModel);
-            setSelectedFile(null);
-            setCategory('');
-            setDescription('');
-            setTags('');
-            setIsUploadModalOpen(false);
-            fetchDocuments();
+            const response = await documentsService.uploadDocument(selectedFile, uploadModel);
+            if (response.status) {
+                success('Document integrated into vault successfully');
+                setSelectedFile(null);
+                setCategory('');
+                setDescription('');
+                setTags('');
+                setIsUploadModalOpen(false);
+                fetchDocuments();
+            }
         } catch (error) {
-            console.error('Failed to upload document:', error);
+            toastError('Failed to synchronize document with vault');
+        } finally {
+            setIsLoading(false);
         }
-    }, [selectedFile, category, description, tags, fetchDocuments]);
+    }, [selectedFile, category, description, tags, fetchDocuments, user, success, toastError]);
 
     const formatFileSize = useCallback((bytes: number) => {
         if (bytes === 0) return '0 Bytes';
@@ -80,15 +93,16 @@ export default function DocumentsPage() {
     }, []);
 
     const getFileIcon = useCallback((mimeType: string) => {
-        if (mimeType.includes('pdf')) return <FileText className="h-5 w-5 text-rose-500" />;
+        const size = "h-5 w-5";
+        if (mimeType.includes('pdf')) return <FileText className={`${size} text-rose-500`} />;
         if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType.includes('csv'))
-            return <FileSpreadsheet className="h-5 w-5 text-emerald-500" />;
-        if (mimeType.includes('image')) return <ImageIcon className="h-5 w-5 text-blue-500" />;
+            return <FileSpreadsheet className={`${size} text-emerald-500`} />;
+        if (mimeType.includes('image')) return <ImageIcon className={`${size} text-blue-500`} />;
         if (mimeType.includes('code') || mimeType.includes('javascript') || mimeType.includes('html'))
-            return <FileCode className="h-5 w-5 text-amber-500" />;
+            return <FileCode className={`${size} text-amber-500`} />;
         if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('archive'))
-            return <FileArchive className="h-5 w-5 text-purple-500" />;
-        return <File className="h-5 w-5 text-slate-400" />;
+            return <FileArchive className={`${size} text-purple-500`} />;
+        return <FileIcon className={`${size} text-slate-400`} />;
     }, []);
 
     const handleDelete = useCallback(async (id: number) => {
@@ -109,12 +123,15 @@ export default function DocumentsPage() {
 
     const filteredDocuments = useMemo(() => {
         return documents.filter(doc => {
-            return doc.originalName.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = doc.originalName.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCategory = activeCategory === 'All' || doc.category === activeCategory;
+            return matchesSearch && matchesCategory;
         });
-    }, [documents, searchQuery]);
+    }, [documents, searchQuery, activeCategory]);
 
     const categories = useMemo(() => {
-        return Array.from(new Set(documents.map(d => d.category).filter(Boolean)));
+        const cats = Array.from(new Set(documents.map(d => d.category).filter(Boolean)));
+        return ['All', ...cats];
     }, [documents]);
 
     const stats = useMemo(() => {
@@ -128,26 +145,26 @@ export default function DocumentsPage() {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 space-y-8 max-w-[1600px] mx-auto min-h-screen">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
+                {/* Header Section */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-1">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
-                            <FileText className="h-6 w-6 text-white" />
+                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
+                            <FileText className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Document Hub</h1>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">Manage your enterprise assets</p>
+                            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Document Repository</h1>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Global Knowledge Vault</p>
                         </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                        <div className="relative group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <div className="relative group/search">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within/search:text-indigo-500 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search repository..."
-                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm w-full sm:w-[220px]"
+                                placeholder="Locate document..."
+                                className="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all text-sm w-full sm:w-[240px] font-medium shadow-sm"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -155,131 +172,119 @@ export default function DocumentsPage() {
 
                         <Button
                             variant="primary"
-                            leftIcon={<Plus className="h-4 w-4" />}
                             onClick={() => setIsUploadModalOpen(true)}
+                            className="rounded-xl px-5 font-black uppercase tracking-widest text-[9px] h-9 shadow-md"
+                            leftIcon={<Plus className="w-3.5 h-3.5" />}
                         >
-                            Add New
+                            Upload Document
                         </Button>
                     </div>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-                        <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
-                            <File className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Assets</div>
-                            <div className="text-lg font-bold text-slate-900 dark:text-white leading-none">{stats.total}</div>
-                        </div>
+                {/* Categories & Stats Bar */}
+                <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 xl:pb-0 scrollbar-hide no-scrollbar">
+                        {categories.map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat || 'General')}
+                                className={`
+                                    px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap border
+                                    ${activeCategory === cat
+                                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-sm'
+                                        : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800 hover:border-indigo-500/50'
+                                    }
+                                `}
+                            >
+                                {cat || 'General'}
+                            </button>
+                        ))}
                     </div>
-                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-                        <div className="p-2.5 rounded-xl bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400">
-                            <HardDrive className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Storage Usage</div>
-                            <div className="text-lg font-bold text-slate-900 dark:text-white leading-none">{stats.totalSize} MB</div>
-                        </div>
-                    </div>
-                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-                        <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
-                            <FolderOpen className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Categories</div>
-                            <div className="text-lg font-bold text-slate-900 dark:text-white leading-none">{stats.categories}</div>
-                        </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                        {[
+                            { label: 'Total Files', val: stats.total, color: 'indigo' },
+                            { label: 'Storage Usage', val: `${stats.totalSize} MB`, color: 'emerald' },
+                            { label: 'Categories', val: stats.categories, color: 'amber' }
+                        ].map((stat, i) => (
+                            <div key={i} className="flex flex-col bg-white dark:bg-slate-900 px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm min-w-[120px]">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</span>
+                                <span className="text-lg font-black text-slate-900 dark:text-white leading-none">{stat.val}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Content */}
                 {isLoading ? (
-                    <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div></div>
+                    <div className="flex flex-col items-center justify-center py-32 space-y-4">
+                        <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">Synchronizing Secure Vault...</p>
+                    </div>
                 ) : filteredDocuments.length === 0 ? (
-                    <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-                            <FileText className="h-8 w-8 text-slate-400" />
+                    <div className="py-32 flex flex-col items-center justify-center text-center bg-white dark:bg-slate-900/40 rounded-[40px] border border-dashed border-slate-200 dark:border-slate-800">
+                        <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800/50 rounded-3xl flex items-center justify-center mb-6 text-slate-300">
+                            <FileText className="w-10 h-10" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">No documents found</h3>
-                        <p className="text-slate-500 text-sm mt-1">Upload your first document to get started.</p>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Documents Not Found</h3>
+                        <p className="text-xs font-medium text-slate-500 max-w-xs mt-2 uppercase tracking-widest">The requested document collection is currently empty or has been moved.</p>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsUploadModalOpen(true)}
+                            className="mt-8 rounded-xl"
+                        >
+                            Add First Document
+                        </Button>
                     </div>
                 ) : (
-                    <Card className="overflow-hidden border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm p-0">
+                    <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-50/50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-slate-700">
-                                        <th className="px-6 py-3">File Asset</th>
-                                        <th className="px-6 py-3">Details</th>
-                                        <th className="px-6 py-3">Storage</th>
-                                        <th className="px-6 py-3 text-right">Actions</th>
+                                    <tr className="bg-slate-50/50 dark:bg-slate-950/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
+                                        <th className="pl-8 pr-4 py-4">Document Asset</th>
+                                        <th className="px-4 py-4">Category</th>
+                                        <th className="px-4 py-4">Storage Details</th>
+                                        <th className="px-4 py-4 text-right pr-8">Management</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {filteredDocuments.map((doc) => (
-                                        <tr key={doc.id} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/5 transition-all group border-b border-slate-100 dark:border-slate-700 last:border-0">
-                                            <td className="px-6 py-3">
+                                        <tr key={doc.id} className="group hover:bg-indigo-50/20 dark:hover:bg-indigo-900/10 transition-colors">
+                                            <td className="pl-8 pr-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-700 group-hover:scale-105 transition-all duration-300">
+                                                    <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-950 flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm group-hover:scale-110 transition-transform duration-300">
                                                         {getFileIcon(doc.mimeType)}
                                                     </div>
-                                                    <div className="space-y-0.5">
-                                                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate max-w-xs text-sm tracking-tight">
-                                                            {doc.originalName}
-                                                        </div>
-                                                        <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium">
-                                                            <span>{formatFileSize(doc.fileSize)}</span>
-                                                            <span className="w-0.5 h-0.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-                                                            <span>{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</span>
-                                                        </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-bold text-[13px] text-slate-900 dark:text-white truncate max-w-md group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{doc.originalName}</p>
+                                                        <p className="text-[10px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">Vault ID: {doc.id.toString().padStart(4, '0')}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-3">
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {doc.category && (
-                                                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800/50">
-                                                            {doc.category}
-                                                        </span>
-                                                    )}
-                                                    {doc.tags?.split(',').slice(0, 2).map((tag, i) => (
-                                                        <span key={i} className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
-                                                            #{tag.trim()}
-                                                        </span>
-                                                    ))}
-                                                </div>
+                                            <td className="px-4 py-5">
+                                                <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+                                                    {doc.category || 'General'}
+                                                </span>
                                             </td>
-                                            <td className="px-6 py-3">
-                                                <div className="space-y-0.5">
-                                                    <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                                        {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString(undefined, {
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            year: 'numeric'
-                                                        }) : 'N/A'}
-                                                    </div>
-                                                    <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">
-                                                        Vault Entry
-                                                    </div>
-                                                </div>
+                                            <td className="px-4 py-5">
+                                                <p className="text-[13px] font-bold text-slate-700 dark:text-slate-300">{formatFileSize(doc.fileSize)}</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 tracking-tighter">{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</p>
                                             </td>
-                                            <td className="px-6 py-3 text-right">
-                                                <div className="flex items-center justify-end gap-2">
+                                            <td className="px-4 py-5 text-right pr-8">
+                                                <div className="flex justify-end gap-2">
                                                     <button
                                                         onClick={() => handleDownload(doc.id)}
-                                                        className="p-1.5 hover:bg-emerald-600 hover:text-white rounded-lg text-slate-400 transition-all"
-                                                        title="Download"
+                                                        className="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950 rounded-xl text-emerald-500 transition-all hover:scale-110 active:scale-95"
+                                                        title="Download Secure Copy"
                                                     >
-                                                        <Download className="h-4 w-4" />
+                                                        <Download className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(doc.id)}
-                                                        className="p-1.5 hover:bg-rose-600 hover:text-white rounded-lg text-slate-400 transition-all"
-                                                        title="Delete"
+                                                        className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-xl text-rose-500 transition-all hover:scale-110 active:scale-95"
+                                                        title="Remove from Vault"
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             </td>
@@ -288,7 +293,7 @@ export default function DocumentsPage() {
                                 </tbody>
                             </table>
                         </div>
-                    </Card>
+                    </div>
                 )}
 
                 {/* Upload Modal */}
@@ -384,7 +389,7 @@ export default function DocumentsPage() {
                                 disabled={!selectedFile}
                                 className="shadow-lg shadow-indigo-500/20 px-8"
                             >
-                                Start Upload
+                                Confirm Upload
                             </Button>
                         </div>
                     </div>

@@ -275,12 +275,17 @@ export default function IAMPage() {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
-            <div className="p-4 lg:p-6 space-y-6 max-w-[1920px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-900/50">
+            <div className="p-4 lg:p-6 space-y-6 max-w-[1920px] mx-auto min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/20 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950/20">
                 {/* Header Actions */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 border-b border-slate-200 dark:border-slate-800">
-                    <div>
-                        <h1 className="text-xl font-medium text-slate-900 dark:text-white">IAM & Admin</h1>
-                        <p className="text-sm text-slate-500">Manage access and permissions for your organization</p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            <Shield className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">IAM & Admin</h1>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage access control and permissions for your organization</p>
+                        </div>
                     </div>
                 </div>
 

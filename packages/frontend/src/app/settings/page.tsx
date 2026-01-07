@@ -14,14 +14,15 @@ export default function SettingsPage() {
     const { logout, user } = useAuth();
     const router = useRouter();
     const { success, error } = useToast();
-    
+
     // State management
-    const [sessionTimeout, setSessionTimeout] = useState('30');
-    const [language, setLanguage] = useState('en-US');
-    const [timezone, setTimezone] = useState('Asia/Kolkata');
-    const [emailNotifications, setEmailNotifications] = useState(true);
-    const [pushNotifications, setPushNotifications] = useState(false);
-    const [autoSave, setAutoSave] = useState(true);
+    // State management with operational persistence
+    const [sessionTimeout, setSessionTimeout] = useState(() => localStorage.getItem('pref_session_timeout') || '30');
+    const [language, setLanguage] = useState(() => localStorage.getItem('pref_language') || 'en-US');
+    const [timezone, setTimezone] = useState(() => localStorage.getItem('pref_timezone') || 'Asia/Kolkata');
+    const [emailNotifications, setEmailNotifications] = useState(() => localStorage.getItem('pref_email_notifications') === 'true');
+    const [pushNotifications, setPushNotifications] = useState(() => localStorage.getItem('pref_push_notifications') === 'true');
+    const [autoSave, setAutoSave] = useState(() => localStorage.getItem('pref_auto_save') !== 'false');
     const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
     const handleLogout = async () => {
@@ -63,50 +64,71 @@ export default function SettingsPage() {
     };
 
     const handleSavePreferences = () => {
-        success('Preferences saved successfully');
+        localStorage.setItem('pref_session_timeout', sessionTimeout);
+        localStorage.setItem('pref_language', language);
+        localStorage.setItem('pref_timezone', timezone);
+        localStorage.setItem('pref_email_notifications', emailNotifications.toString());
+        localStorage.setItem('pref_push_notifications', pushNotifications.toString());
+        localStorage.setItem('pref_auto_save', autoSave.toString());
+        success('Global configuration synchronized successfully');
     };
 
     return (
-        <div className="p-4 md:p-6 space-y-6">
-            
-            {/* Top Row - Theme, Language, Timezone */}
+        <div className="p-4 md:p-6 space-y-6 bg-slate-50/50 dark:bg-slate-900/50 min-h-screen">
+            {/* Page Header */}
+            <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-600 dark:to-slate-800 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
+                    <Shield className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                    <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Security & Preferences</h1>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                        System Configuration Hub
+                    </p>
+                </div>
+            </div>
+
+            {/* Top Row - Command Center Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Dark Mode */}
-                <Card className="border-slate-200 dark:border-slate-700">
+                {/* Theme Controller */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+                                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
                                     {isDarkMode ? <Moon className="h-4 w-4 text-white" /> : <Sun className="h-4 w-4 text-white" />}
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-sm text-slate-900 dark:text-white">Theme</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">{isDarkMode ? 'Dark' : 'Light'} mode</p>
+                                    <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Theme Interface</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{isDarkMode ? 'Dark Protocol' : 'Standard View'}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={toggleDarkMode}
-                                className={`relative w-12 h-6 rounded-full transition-colors ${isDarkMode ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                                className={`relative w-10 h-5 rounded-full transition-all duration-300 ${isDarkMode ? 'bg-indigo-600' : 'bg-slate-300'}`}
                             >
-                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
+                                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${isDarkMode ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
                             </button>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Language */}
-                <Card className="border-slate-200 dark:border-slate-700">
+                {/* Regional Interface */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
                     <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-md">
                                 <Languages className="h-4 w-4 text-white" />
                             </div>
-                            <p className="font-semibold text-sm text-slate-900 dark:text-white">Language</p>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">System Language</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Locale Selector</p>
+                            </div>
                         </div>
                         <select
                             value={language}
                             onChange={(e) => setLanguage(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-600 dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-600 dark:text-slate-400 outline-none focus:border-indigo-500 transition-all appearance-none cursor-pointer"
                         >
                             <option value="en-US">English (US)</option>
                             <option value="en-GB">English (UK)</option>
@@ -118,19 +140,22 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                {/* Timezone */}
-                <Card className="border-slate-200 dark:border-slate-700">
+                {/* Global Timezone */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
                     <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
                                 <Globe className="h-4 w-4 text-white" />
                             </div>
-                            <p className="font-semibold text-sm text-slate-900 dark:text-white">Timezone</p>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Temporal Zone</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Architecture Time</p>
+                            </div>
                         </div>
                         <select
                             value={timezone}
                             onChange={(e) => setTimezone(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-600 dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-600 dark:text-slate-400 outline-none focus:border-indigo-500 transition-all appearance-none cursor-pointer"
                         >
                             <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
                             <option value="America/New_York">America/New York (EST)</option>
@@ -142,125 +167,135 @@ export default function SettingsPage() {
                 </Card>
             </div>
 
-            {/* Middle Row - Session & Auto-Save */}
+            {/* Middle Row - Session & Persistence */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Session Timeout */}
-                <Card className="border-slate-200 dark:border-slate-700">
+                {/* Auth Session */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
                     <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-9 h-9 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md">
                                 <Clock className="h-4 w-4 text-white" />
                             </div>
-                            <p className="font-semibold text-sm text-slate-900 dark:text-white">Session Timeout</p>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Session Timeout</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Security Threshold</p>
+                            </div>
                         </div>
                         <select
                             value={sessionTimeout}
                             onChange={(e) => setSessionTimeout(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-600 dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-600 dark:text-slate-400 outline-none focus:border-indigo-500 transition-all appearance-none cursor-pointer"
                         >
                             <option value="15">15 minutes</option>
                             <option value="30">30 minutes</option>
                             <option value="60">1 hour</option>
                             <option value="120">2 hours</option>
-                            <option value="never">Never</option>
+                            <option value="never">Never (Bypass)</option>
                         </select>
                     </CardContent>
                 </Card>
 
-                {/* Auto-Save */}
-                <Card className="border-slate-200 dark:border-slate-700">
+                {/* Configuration Memory */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+                                <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
                                     <HardDrive className="h-4 w-4 text-white" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-sm text-slate-900 dark:text-white">Auto-Save</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">Save changes automatically</p>
+                                    <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Operational Memory</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Auto-Save State</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setAutoSave(!autoSave)}
-                                className={`relative w-12 h-6 rounded-full transition-colors ${autoSave ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                className={`relative w-10 h-5 rounded-full transition-all duration-300 ${autoSave ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
                             >
-                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${autoSave ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
+                                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${autoSave ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
                             </button>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Notifications */}
-            <Card className="border-slate-200 dark:border-slate-700">
-                <CardHeader className="pb-3">
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <Bell className="h-4 w-4 text-indigo-500" />
-                        Notifications
+            {/* Broadcast Preferences */}
+            <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+                <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800/50">
+                    <h3 className="text-[10px] font-black text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-tight">
+                        <Bell className="h-3.5 w-3.5 text-indigo-500" />
+                        Broadcast Engine
                     </h3>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-3">
-                                <Mail className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-                                <p className="text-sm font-medium text-slate-900 dark:text-white">Email Notifications</p>
+                                <Mail className="h-3.5 w-3.5 text-slate-400" />
+                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Email Channels</p>
                             </div>
                             <button
                                 onClick={() => setEmailNotifications(!emailNotifications)}
-                                className={`relative w-12 h-6 rounded-full transition-colors ${emailNotifications ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                className={`relative w-10 h-5 rounded-full transition-all duration-300 ${emailNotifications ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
                             >
-                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${emailNotifications ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
+                                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${emailNotifications ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
                             </button>
                         </div>
 
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-3">
-                                <Bell className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-                                <p className="text-sm font-medium text-slate-900 dark:text-white">Push Notifications</p>
+                                <Bell className="h-3.5 w-3.5 text-slate-400" />
+                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Direct Push</p>
                             </div>
                             <button
                                 onClick={() => setPushNotifications(!pushNotifications)}
-                                className={`relative w-12 h-6 rounded-full transition-colors ${pushNotifications ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                className={`relative w-10 h-5 rounded-full transition-all duration-300 ${pushNotifications ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
                             >
-                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${pushNotifications ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
+                                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${pushNotifications ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
                             </button>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Security & Privacy */}
-            <Card className="border-slate-200 dark:border-slate-700">
-                <CardHeader className="pb-3">
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-indigo-500" />
-                        Security & Privacy
+            {/* Shield Infrastructure */}
+            <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+                <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800/50">
+                    <h3 className="text-[10px] font-black text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-tight">
+                        <Shield className="h-3.5 w-3.5 text-indigo-500" />
+                        Shield Infrastructure
                     </h3>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <button 
+                        <button
                             onClick={handleChangePassword}
-                            className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all text-left"
+                            className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 transition-all text-left shadow-sm group"
                         >
-                            <Lock className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                            <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 group-hover:rotate-6 transition-transform">
+                                <Lock className="h-3.5 w-3.5" />
+                            </div>
                             <div>
-                                <p className="text-sm font-medium text-slate-900 dark:text-white">Change Password</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">Update your password</p>
+                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Identity Key Rotation</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Secure Override</p>
                             </div>
                         </button>
 
-                        <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 shadow-sm">
                             <div className="flex items-center gap-3">
-                                <Key className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                                <p className="text-sm font-medium text-slate-900 dark:text-white">Two-Factor Auth</p>
+                                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
+                                    <Key className="h-3.5 w-3.5" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">TOTP Protocol</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Two-Factor Auth</p>
+                                </div>
                             </div>
                             <button
                                 onClick={handleEnable2FA}
-                                className={`relative w-12 h-6 rounded-full transition-colors ${twoFactorEnabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                className={`relative w-10 h-5 rounded-full transition-all duration-300 ${twoFactorEnabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
                             >
-                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${twoFactorEnabled ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
+                                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${twoFactorEnabled ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
                             </button>
                         </div>
                     </div>
@@ -303,8 +338,8 @@ export default function SettingsPage() {
                         <h4 className="text-sm font-semibold text-rose-900 dark:text-rose-400">Danger Zone</h4>
                     </CardHeader>
                     <CardContent>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             size="sm"
                             onClick={handleDeleteAccount}
                             className="w-full text-xs border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/30"
@@ -335,10 +370,14 @@ export default function SettingsPage() {
                 </Card>
             </div>
 
-            {/* Save Button */}
-            <div className="flex justify-end">
-                <Button onClick={handleSavePreferences} variant="primary">
-                    Save All Preferences
+            {/* Save Action */}
+            <div className="flex justify-end pt-4">
+                <Button
+                    onClick={handleSavePreferences}
+                    variant="primary"
+                    className="h-10 px-12 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20"
+                >
+                    Synchronize System Architecture
                 </Button>
             </div>
 

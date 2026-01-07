@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { EmailTypeEnum, DepartmentEnum } from '@adminvault/shared-models';
-import { employeeService } from '@/lib/api/services';
+import { EmailTypeEnum } from '@adminvault/shared-models';
+import { employeeService, mastersService } from '@/lib/api/services';
 import { User, Mail, Shield, Building } from 'lucide-react';
 
 interface AddEmailModalProps {
@@ -18,6 +18,7 @@ interface AddEmailModalProps {
 
 export default function AddEmailModal({ isOpen, onClose, onSuccess, companyId, initialTab }: AddEmailModalProps) {
     const [employees, setEmployees] = useState<any[]>([]);
+    const [departments, setDepartments] = useState<any[]>([]);
 
     const getDefaultType = useCallback(() => {
         if (initialTab === 'USER') return EmailTypeEnum.USER;
@@ -28,27 +29,44 @@ export default function AddEmailModal({ isOpen, onClose, onSuccess, companyId, i
     const [formData, setFormData] = useState({
         email: '',
         emailType: getDefaultType(),
-        department: DepartmentEnum.IT,
+        department: '',
         employeeId: '',
     });
 
     const fetchEmployees = useCallback(async () => {
         try {
-            const response = await employeeService.getAllEmployees({ companyId } as any);
+            // Use getAllEmployees API with undefined to fetch global identity list
+            const response = await employeeService.getAllEmployees(undefined as any);
             if (response.status) {
-                setEmployees(response.employees || []);
+                const data = (response as any).employees || (response as any).data || [];
+                setEmployees(data);
             }
         } catch (error) {
             console.error('Failed to fetch employees:', error);
         }
-    }, [companyId]);
+    }, []);
+
+    const fetchDepartments = useCallback(async () => {
+        try {
+            const response = await mastersService.getAllDepartments(companyId as any);
+            if (response.status) {
+                setDepartments(response.departments || []);
+                if (response.departments?.length > 0 && !formData.department) {
+                    setFormData(prev => ({ ...prev, department: response.departments[0].name }));
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch departments:', error);
+        }
+    }, [companyId, formData.department]);
 
     useEffect(() => {
         if (isOpen) {
             fetchEmployees();
+            fetchDepartments();
             setFormData(prev => ({ ...prev, emailType: getDefaultType() }));
         }
-    }, [isOpen, fetchEmployees, getDefaultType]);
+    }, [isOpen, fetchEmployees, fetchDepartments, getDefaultType]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -60,7 +78,7 @@ export default function AddEmailModal({ isOpen, onClose, onSuccess, companyId, i
 
         const success = await onSuccess(payload);
         if (success) {
-            setFormData({ email: '', emailType: EmailTypeEnum.GENERAL, department: DepartmentEnum.IT, employeeId: '' });
+            setFormData({ email: '', emailType: EmailTypeEnum.GENERAL, department: '', employeeId: '' });
             onClose();
         }
     };
@@ -86,7 +104,6 @@ export default function AddEmailModal({ isOpen, onClose, onSuccess, companyId, i
                         required
                         value={formData.email}
                         onChange={e => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="it-support@company.com"
                         className="font-bold"
                     />
                 </div>
@@ -116,30 +133,45 @@ export default function AddEmailModal({ isOpen, onClose, onSuccess, companyId, i
                         <select
                             className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 font-bold text-sm outline-none focus:border-indigo-500 transition-all appearance-none"
                             value={formData.department}
-                            onChange={e => setFormData({ ...formData, department: e.target.value as DepartmentEnum })}
+                            onChange={e => setFormData({ ...formData, department: e.target.value })}
+                            required
                         >
-                            {Object.values(DepartmentEnum).map(dept => (
-                                <option key={dept} value={dept}>{dept.toUpperCase()}</option>
+                            <option value="">Choose Department</option>
+                            {departments.map(dept => (
+                                <option key={dept.id} value={dept.name}>{dept.name.toUpperCase()}</option>
                             ))}
                         </select>
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
-                        <User className="w-3.5 h-3.5" />
-                        Primary Routing Handle (Owner)
+                    <label className="flex items-center justify-between gap-2 px-1">
+                        <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            <User className="w-3.5 h-3.5" />
+                            Primary Routing Handle
+                        </span>
+                        <span className="text-[9px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full">
+                            {employees.length} Identities
+                        </span>
                     </label>
-                    <select
-                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 font-bold text-sm outline-none focus:border-indigo-500 transition-all appearance-none"
-                        value={formData.employeeId}
-                        onChange={e => setFormData({ ...formData, employeeId: e.target.value })}
-                    >
-                        <option value="">Select Primary Identity...</option>
-                        {employees.map(emp => (
-                            <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-                        ))}
-                    </select>
+                    <div className="relative group/select">
+                        <select
+                            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+                            value={formData.employeeId}
+                            onChange={e => setFormData({ ...formData, employeeId: e.target.value })}
+                        >
+                            <option value="">General / System (No Owner)</option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>
+                                    {emp.firstName} {emp.lastName} {emp.company?.companyName ? `[${emp.company.companyName}]` : ''}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover/select:text-indigo-500 transition-colors">
+                            <User className="w-4 h-4" />
+                        </div>
+                    </div>
+                    <p className="text-[9px] font-medium text-slate-500 px-1">This handle will be the primary contact for automated routing triggers.</p>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">

@@ -126,29 +126,41 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
                         </div>
                     </div>
 
-                    {/* Assignment Info (if assigned) */}
-                    {asset.assignedTo && (
-                        <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/50">
-                            <div className="flex items-center gap-2">
-                                <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-[10px] font-medium text-blue-500 dark:text-blue-400 uppercase tracking-wide leading-none mb-0.5">Assigned To</p>
-                                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300 truncate block">{asset.assignedTo}</span>
+                    {/* Assignment Info - Only show for IN_USE assets */}
+                    {['IN_USE', 'INUSE'].includes((asset.status || '').toUpperCase()) && (
+                        <div className="mb-3 min-h-[52px]">
+                            {asset.assignedTo ? (
+                                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/50">
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[10px] font-medium text-blue-500 dark:text-blue-400 uppercase tracking-wide leading-none mb-0.5">Assigned To</p>
+                                            <span className="text-xs font-bold text-blue-700 dark:text-blue-300 truncate block">{asset.assignedTo}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="h-full"></div>
+                            )}
                         </div>
                     )}
 
-                    {/* Previous User Info (if available) */}
-                    {asset.previousUser && (
-                        <div className="mb-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
-                            <div className="flex items-center gap-2">
-                                <History className="h-3.5 w-3.5 text-slate-400" />
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide leading-none mb-0.5">Previous User</p>
-                                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 truncate block">{asset.previousUser}</span>
+                    {/* Previous User Info - Only show for IN_USE assets */}
+                    {['IN_USE', 'INUSE'].includes((asset.status || '').toUpperCase()) && (
+                        <div className="mb-3 min-h-[52px]">
+                            {asset.previousUser ? (
+                                <div className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+                                    <div className="flex items-center gap-2">
+                                        <History className="h-3.5 w-3.5 text-slate-400" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide leading-none mb-0.5">Previous User</p>
+                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 truncate block">{asset.previousUser}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="h-full"></div>
+                            )}
                         </div>
                     )}
 

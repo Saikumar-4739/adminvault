@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import {
     FileText, Download, Users, Package, Ticket,
     TrendingUp, Calendar, BarChart3, FileSpreadsheet,
-    CheckCircle2, Clock, AlertCircle, ArrowLeft, FileDown
+    CheckCircle2, Clock, AlertCircle, ArrowLeft, FileDown, Search
 } from 'lucide-react';
 import { reportsService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
@@ -18,6 +18,7 @@ export default function ReportsPage() {
     const [reportData, setReportData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const toast = useToast();
 
     const reportCategories = [
@@ -42,6 +43,30 @@ export default function ReportsPage() {
                     icon: Users,
                     stats: 'Assigned Assets'
                 },
+                {
+                    name: 'Asset Warranty Expiry Report',
+                    description: 'Assets with upcoming warranty expiration dates',
+                    icon: Clock,
+                    stats: 'Active Warranties'
+                },
+                {
+                    name: 'Asset by Department Report',
+                    description: 'Asset distribution across departments',
+                    icon: TrendingUp,
+                    stats: 'By Department'
+                },
+                {
+                    name: 'Asset by Device Type Report',
+                    description: 'Asset breakdown by device type and brand',
+                    icon: Package,
+                    stats: 'By Device Type'
+                },
+                {
+                    name: 'Unassigned Assets Report',
+                    description: 'List of assets not currently assigned to any employee',
+                    icon: AlertCircle,
+                    stats: 'Unassigned'
+                },
             ]
         },
         {
@@ -59,6 +84,12 @@ export default function ReportsPage() {
                     icon: Users,
                     stats: 'All Employees'
                 },
+                {
+                    name: 'Employees by Department Report',
+                    description: 'Employee count and distribution by department',
+                    icon: TrendingUp,
+                    stats: 'By Department'
+                },
             ]
         },
         {
@@ -75,6 +106,53 @@ export default function ReportsPage() {
                     description: 'Overview of all tickets with status, priority, and resolution details',
                     icon: TrendingUp,
                     stats: 'All Tickets'
+                },
+                {
+                    name: 'Open Tickets Report',
+                    description: 'Currently open and pending tickets',
+                    icon: AlertCircle,
+                    stats: 'Open Tickets'
+                },
+                {
+                    name: 'Resolved Tickets Report',
+                    description: 'Resolved and closed tickets with resolution time',
+                    icon: CheckCircle2,
+                    stats: 'Resolved'
+                },
+                {
+                    name: 'Tickets by Priority Report',
+                    description: 'Ticket distribution and metrics by priority level',
+                    icon: BarChart3,
+                    stats: 'By Priority'
+                },
+                {
+                    name: 'Tickets by Category Report',
+                    description: 'Ticket distribution and metrics by category',
+                    icon: FileText,
+                    stats: 'By Category'
+                },
+            ]
+        },
+        {
+            id: 'masters',
+            title: 'Master Data Reports',
+            description: 'Organization structure and configuration',
+            icon: FileSpreadsheet,
+            gradient: 'from-blue-500 to-cyan-600',
+            bgLight: 'bg-blue-50',
+            bgDark: 'dark:bg-blue-900/10',
+            reports: [
+                {
+                    name: 'Department Summary Report',
+                    description: 'Department-wise employee and asset summary',
+                    icon: TrendingUp,
+                    stats: 'Departments'
+                },
+                {
+                    name: 'Device Brands Report',
+                    description: 'Device brand distribution and asset count',
+                    icon: Package,
+                    stats: 'Brands'
                 },
             ]
         }
@@ -122,6 +200,14 @@ export default function ReportsPage() {
         }
     };
 
+    const filteredReportCategories = reportCategories.map(category => ({
+        ...category,
+        reports: category.reports.filter(report =>
+            report.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            report.description.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+    })).filter(category => category.reports.length > 0);
+
     if (selectedReport) {
         const category = reportCategories.find(cat =>
             cat.reports.some(r => r.name === selectedReport)
@@ -142,8 +228,8 @@ export default function ReportsPage() {
                             Back to Reports
                         </Button>
                         <div className="flex items-start gap-4">
-                            <div className={`p-4 rounded-2xl bg-gradient-to-br ${category?.gradient} shadow-lg`}>
-                                {report?.icon && <report.icon className="h-8 w-8 text-white" />}
+                            <div className={`p-2 rounded-xl bg-gradient-to-br ${category?.gradient} shadow-lg`}>
+                                {report?.icon && <report.icon className="h-6 w-6 text-white" />}
                             </div>
                             <div className="flex-1">
                                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{selectedReport}</h1>
@@ -313,23 +399,34 @@ export default function ReportsPage() {
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
             <div className="min-h-screen bg-slate-50/50 dark:bg-slate-900/50 p-4 lg:p-6">
                 {/* Header */}
-                <div className="mb-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
-                            <BarChart3 className="h-6 w-6 text-white" />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
+                            <BarChart3 className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reports & Analytics</h1>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                Generate comprehensive reports for your organization
+                            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Reports Hub</h1>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                Enterprise Analytics & Auditing
                             </p>
                         </div>
+                    </div>
+
+                    <div className="relative group/search">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within/search:text-indigo-500 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Search reports..."
+                            className="w-full sm:w-64 pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
                 </div>
 
                 {/* Report Categories */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {reportCategories.map((category) => {
+                    {filteredReportCategories.map((category) => {
                         const Icon = category.icon;
                         return (
                             <Card key={category.id} className="border-none shadow-md hover:shadow-xl transition-all duration-300">

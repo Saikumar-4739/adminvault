@@ -78,6 +78,7 @@ export class LicensesService {
                 l.assignedEmployeeId,
                 undefined, // licenseKey
                 undefined, // purchaseDate
+                l.assignedDate,
                 l.expiryDate,
                 undefined, // seats
                 l.remarks,

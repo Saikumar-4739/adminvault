@@ -1,6 +1,6 @@
 import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
-import { EmailTypeEnum, DepartmentEnum, EmailStatusEnum } from '@adminvault/shared-models';
+import { EmailTypeEnum, EmailStatusEnum } from '@adminvault/shared-models';
 
 @Entity('email_info')
 @Index('idx_email_info_dept', ['department'])
@@ -14,8 +14,8 @@ export class EmailInfoEntity extends CommonBaseEntity {
     @Column('enum', { name: 'email_type', enum: EmailTypeEnum, nullable: false, comment: 'Type of email' })
     emailType: EmailTypeEnum;
 
-    @Column('enum', { name: 'department', enum: DepartmentEnum, nullable: true, comment: 'Department associated with email' })
-    department: DepartmentEnum;
+    @Column('varchar', { name: 'department', length: 255, nullable: true, comment: 'Department associated with email' })
+    department: string;
 
     @Column('bigint', { name: 'employee_id', nullable: true, comment: 'Reference to employees table' })
     employeeId: number;

@@ -14,27 +14,52 @@ import { RequestAccessModel } from '@adminvault/shared-models';
 import axios from 'axios';
 import { URLSearchParams } from 'url';
 
-const SECRET_KEY = "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
-const REFRESH_SECRET_KEY = "d9f8a1ec2d6826db2f24ea9f8a1d9bda26f054de88bb90b63934561f7225ab";
+// JWT Configuration - Load from environment variables
+const SECRET_KEY = process.env.JWT_SECRET_KEY || (() => {
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error('JWT_SECRET_KEY must be set in production environment');
+    }
+    console.warn('⚠️  WARNING: Using default JWT_SECRET_KEY. Set JWT_SECRET_KEY in .env for production!');
+    return "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
+})();
 
-// SSO Configuration - Should be in .env in production
+const REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY || (() => {
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error('JWT_REFRESH_SECRET_KEY must be set in production environment');
+    }
+    console.warn('⚠️  WARNING: Using default JWT_REFRESH_SECRET_KEY. Set JWT_REFRESH_SECRET_KEY in .env for production!');
+    return "d9f8a1ec2d6826db2f24ea9f8a1d9bda26f054de88bb90b63934561f7225ab";
+})();
+
+// SSO Configuration - Load from environment variables
 const SSO_CONFIG = {
     microsoft: {
-        clientId: process.env.MICROSOFT_CLIENT_ID || 'YOUR_MS_CLIENT_ID',
-        clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'YOUR_MS_CLIENT_SECRET',
+        clientId: process.env.MICROSOFT_CLIENT_ID || '',
+        clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
         tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
-        redirectUri: process.env.SSO_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
-        authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-        tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-        scope: 'user.read openid profile email'
+        redirectUri: process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
+        authUrl: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID || 'common'}/oauth2/v2.0/authorize`,
+        tokenUrl: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID || 'common'}/oauth2/v2.0/token`,
+        userInfoUrl: 'https://graph.microsoft.com/v1.0/me',
+        scope: 'openid profile email User.Read'
     },
     zoho: {
-        clientId: process.env.ZOHO_CLIENT_ID || 'YOUR_ZOHO_CLIENT_ID',
-        clientSecret: process.env.ZOHO_CLIENT_SECRET || 'YOUR_ZOHO_CLIENT_SECRET',
-        redirectUri: process.env.SSO_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
+        clientId: process.env.ZOHO_CLIENT_ID || '',
+        clientSecret: process.env.ZOHO_CLIENT_SECRET || '',
+        redirectUri: process.env.ZOHO_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
         authUrl: 'https://accounts.zoho.com/oauth/v2/auth',
         tokenUrl: 'https://accounts.zoho.com/oauth/v2/token',
-        scope: 'Aaaserver.profile.Read email' // 'email' might need specific Zoho scope like ZohoMail.accounts.READ depending on needs, sticking to profile read
+        userInfoUrl: 'https://accounts.zoho.com/oauth/user/info',
+        scope: 'Aaaserver.profile.Read email'
+    },
+    google: {
+        clientId: process.env.GOOGLE_CLIENT_ID || '',
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+        redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
+        authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenUrl: 'https://oauth2.googleapis.com/token',
+        userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+        scope: 'openid profile email'
     }
 };
 
@@ -345,9 +370,22 @@ export class AuthUsersService {
         }
     }
 
-    async getSSOAuthUrl(provider: 'microsoft' | 'zoho'): Promise<string> {
+    /**
+     * Generate SSO authorization URL for supported providers
+     * Creates OAuth 2.0 authorization URL with proper parameters
+     * 
+     * @param provider - SSO provider (microsoft, zoho, or google)
+     * @returns Authorization URL to redirect user to
+     * @throws ErrorResponse if provider is invalid or not configured
+     */
+    async getSSOAuthUrl(provider: 'microsoft' | 'zoho' | 'google'): Promise<string> {
         const config = SSO_CONFIG[provider];
         if (!config) throw new ErrorResponse(0, 'Invalid Provider');
+
+        // Validate that provider is configured
+        if (!config.clientId || !config.clientSecret) {
+            throw new ErrorResponse(0, `${provider} SSO is not configured. Please set environment variables.`);
+        }
 
         const params = new URLSearchParams({
             client_id: config.clientId,
@@ -357,16 +395,31 @@ export class AuthUsersService {
             state: provider // Pass provider as state to identify during callback
         });
 
+        // Provider-specific parameters
         if (provider === 'zoho') {
             params.append('access_type', 'offline');
             params.append('prompt', 'Consent');
+        } else if (provider === 'google') {
+            params.append('access_type', 'offline');
+            params.append('prompt', 'consent');
         }
 
         return `${config.authUrl}?${params.toString()}`;
     }
 
+    /**
+     * Handle SSO callback and authenticate user
+     * Exchanges authorization code for access token and retrieves user profile
+     * 
+     * @param provider - SSO provider name
+     * @param code - Authorization code from provider
+     * @param ipAddress - Client IP address
+     * @param userAgent - Client user agent string
+     * @returns LoginResponseModel with user info and JWT tokens
+     * @throws ErrorResponse if authentication fails or user not found
+     */
     async handleSSOCallback(provider: string, code: string, ipAddress: string, userAgent: string): Promise<LoginResponseModel> {
-        const config = SSO_CONFIG[provider as 'microsoft' | 'zoho'];
+        const config = SSO_CONFIG[provider as 'microsoft' | 'zoho' | 'google'];
         if (!config) throw new ErrorResponse(0, 'Invalid Provider');
 
         let email = '';
@@ -388,35 +441,37 @@ export class AuthUsersService {
 
             const accessToken = tokenRes.data.access_token;
 
-
-            // 2. Get User Profile
+            // 2. Get User Profile based on provider
             if (provider === 'microsoft') {
-                const profileRes = await axios.get('https://graph.microsoft.com/v1.0/me', {
+                const profileRes = await axios.get(config.userInfoUrl, {
                     headers: { Authorization: `Bearer ${accessToken}` }
                 });
                 email = profileRes.data.mail || profileRes.data.userPrincipalName;
                 name = profileRes.data.displayName;
             } else if (provider === 'zoho') {
-                const profileRes = await axios.get('https://accounts.zoho.com/oauth/user/info', {
+                const profileRes = await axios.get(config.userInfoUrl, {
                     headers: { Authorization: `Bearer ${accessToken}` }
                 });
-                // Zoho structure might vary, generally:
                 email = profileRes.data.Email;
-                name = profileRes.data.First_Name + ' ' + profileRes.data.Last_Name;
+                name = `${profileRes.data.First_Name || ''} ${profileRes.data.Last_Name || ''}`.trim();
+            } else if (provider === 'google') {
+                const profileRes = await axios.get(config.userInfoUrl, {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
+                email = profileRes.data.email;
+                name = profileRes.data.name;
             }
 
             if (!email) throw new Error('Could not retrieve email from provider');
 
-            // 3. Login or Auto-Register
+            // 3. Find or reject user (security: only allow existing users)
             let user = await this.authUsersRepo.findOne({ where: { email } });
 
-            // If user doesn't exist, we could auto-register or reject. 
-            // For now, let's reject to ensure security unless they are invited.
             if (!user) {
                 throw new ErrorResponse(0, `User with email ${email} not found. Please request access first.`);
             }
 
-            // 4. Create Session (similar to loginUser)
+            // 4. Create Session and Generate Tokens
             const payload = {
                 username: user.email,
                 email: user.email,
@@ -426,12 +481,21 @@ export class AuthUsersService {
             const appAccessToken = this.generateAccessToken(payload);
             const appRefreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
 
-            if (ipAddress) { // Only if IP is provided (which implies we are in a valid request context)
+            // 5. Track login session
+            if (ipAddress) {
                 try {
-                    const loginSessionModel = new CreateLoginSessionModel(user.id, user.companyId, ipAddress, userAgent, provider, appAccessToken, 0, 0); // No GPS for SSO for now
+                    const loginSessionModel = new CreateLoginSessionModel(
+                        user.id,
+                        user.companyId,
+                        ipAddress,
+                        userAgent,
+                        provider,
+                        appAccessToken,
+                        0,
+                        0
+                    );
                     await this.loginSessionService.createLoginSession(loginSessionModel);
                 } catch (sessionError) {
-                    // Log error but continue
                     console.error('SSO Session Error:', sessionError);
                 }
             }

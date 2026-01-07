@@ -96,10 +96,10 @@ export class AuthUsersController {
     @Public()
     async ssoLogin(@Query('provider') provider: string, @Res() res: Response) {
         try {
-            if (provider !== 'microsoft' && provider !== 'zoho') {
+            if (provider !== 'microsoft' && provider !== 'zoho' && provider !== 'google') {
                 return res.redirect('http://localhost:3000/login?error=Invalid_Provider');
             }
-            const authUrl = await this.service.getSSOAuthUrl(provider);
+            const authUrl = await this.service.getSSOAuthUrl(provider as 'microsoft' | 'zoho' | 'google');
             return res.redirect(authUrl);
         } catch (error: any) {
             return res.redirect(`http://localhost:3000/login?error=${encodeURIComponent(error.message)}`);

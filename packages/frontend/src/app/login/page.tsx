@@ -67,7 +67,7 @@ export default function LoginPage() {
         }
     };
 
-    const handleSSOLogin = (provider: 'microsoft' | 'zoho') => {
+    const handleSSOLogin = (provider: 'microsoft' | 'zoho' | 'google') => {
         // Redirect to backend SSO endpoint
         // Using direct URL construction based on standard config
         const baseUrl = process.env.NEXT_PUBLIC_APP_AVS_SERVICE_URL || 'http://localhost:3001/api';
@@ -126,6 +126,16 @@ export default function LoginPage() {
             <path fill="#288e22" d="M8.5 6h4v12h-4z" />
             <path fill="#0067d0" d="M13.5 6h4v12h-4z" />
             <path fill="#fee300" d="M18.5 6h4v12h-4z" />
+        </svg>
+    );
+
+    // Google Logo Component
+    const GoogleLogo = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
+            <path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" />
+            <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
+            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" />
         </svg>
     );
 
@@ -212,44 +222,81 @@ export default function LoginPage() {
 
                     {/* Form Header */}
                     <div className="text-center space-y-3">
-                        <div className="inline-flex justify-center items-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-500/20 mb-6 transform hover:scale-105 transition-transform duration-300">
+                        <div className="inline-flex justify-center items-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-500/20 mb-4 transform hover:scale-105 transition-transform duration-300">
                             <Building2 className="w-7 h-7" />
                         </div>
-                        <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                            Welcome Back
-                        </h2>
+                        <div className="flex items-center justify-center gap-3">
+                            <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                                Welcome Back
+                            </h2>
+                        </div>
                         <p className="text-slate-500 dark:text-slate-400 text-base font-medium">
                             Enter your credentials to access your account
                         </p>
                     </div>
 
-                    <div className="space-y-8 bg-white dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-black/20 backdrop-blur-sm">
-                        {/* SSO Buttons */}
-                        <div className="grid grid-cols-2 gap-4">
+
+                    <div className="space-y-6 bg-white dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-black/20 backdrop-blur-sm">
+                        {/* SSO Section Header */}
+                        <div className="text-center">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Sign in with</h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Choose your preferred authentication method</p>
+                        </div>
+                        {/* Icon-only SSO Buttons */}
+                        <div className="flex items-center justify-center gap-4">
+                            {/* Microsoft */}
                             <button
                                 type="button"
                                 onClick={() => handleSSOLogin('microsoft')}
-                                className="flex items-center justify-center gap-2 px-4 py-3.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm hover:shadow-md transform active:scale-[0.98]"
+                                title="Continue with Microsoft"
+                                className="group flex items-center justify-center w-14 h-14 rounded-2xl 
+                   bg-blue-50 dark:bg-blue-950/30 
+                   border-2 border-blue-200 dark:border-blue-800
+                   hover:bg-blue-100 dark:hover:bg-blue-900/40
+                   hover:shadow-lg hover:shadow-blue-200/50 dark:hover:shadow-blue-900/30
+                   transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95"
                             >
                                 <MicrosoftLogo />
-                                <span>Microsoft</span>
                             </button>
+
+                            {/* Google */}
+                            <button
+                                type="button"
+                                onClick={() => handleSSOLogin('google')}
+                                title="Continue with Google"
+                                className="group flex items-center justify-center w-14 h-14 rounded-2xl 
+                   bg-red-50 dark:bg-red-950/30 
+                   border-2 border-red-200 dark:border-red-800
+                   hover:bg-red-100 dark:hover:bg-red-900/40
+                   hover:shadow-lg hover:shadow-red-200/50 dark:hover:shadow-red-900/30
+                   transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95"
+                            >
+                                <GoogleLogo />
+                            </button>
+
+                            {/* Zoho */}
                             <button
                                 type="button"
                                 onClick={() => handleSSOLogin('zoho')}
-                                className="flex items-center justify-center gap-2 px-4 py-3.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm hover:shadow-md transform active:scale-[0.98]"
+                                title="Continue with Zoho"
+                                className="group flex items-center justify-center w-14 h-14 rounded-2xl 
+                   bg-emerald-50 dark:bg-emerald-950/30 
+                   border-2 border-emerald-200 dark:border-emerald-800
+                   hover:bg-emerald-100 dark:hover:bg-emerald-900/40
+                   hover:shadow-lg hover:shadow-emerald-200/50 dark:hover:shadow-emerald-900/30
+                   transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95"
                             >
                                 <ZohoLogo />
-                                <span>Zoho</span>
                             </button>
                         </div>
+
 
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
                                 <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white dark:bg-slate-950 px-2 text-slate-400">Or continue with email</span>
+                                <span className="bg-white dark:bg-slate-900/50 px-3 py-1 text-slate-500 dark:text-slate-400 font-semibold rounded-full">Or continue with email</span>
                             </div>
                         </div>
 

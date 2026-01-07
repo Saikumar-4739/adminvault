@@ -125,13 +125,13 @@ export default function MastersPage() {
             {/* Fixed Page Header */}
             <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
-                        <Package className="h-6 w-6 text-white" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
+                        <Package className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">System Configuration</h1>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Manage all master data for your organization
+                        <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">System Architecture</h1>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                            Organization Master Registry
                         </p>
                     </div>
                 </div>
@@ -150,16 +150,16 @@ export default function MastersPage() {
                             >
                                 <div className="p-6 space-y-4">
                                     {/* Icon */}
-                                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${master.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                        <Icon className="h-7 w-7 text-white" />
+                                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${master.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                                        <Icon className="h-6 w-6 text-white" />
                                     </div>
 
                                     {/* Content */}
                                     <div>
-                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                        <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors tracking-tight">
                                             {master.title}
                                         </h3>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
                                             {master.description}
                                         </p>
                                     </div>
@@ -167,7 +167,7 @@ export default function MastersPage() {
                                     {/* Button */}
                                     <Button
                                         variant="outline"
-                                        className="w-full group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
+                                        className="w-full h-9 rounded-xl text-[9px] font-black uppercase tracking-widest group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleSelectMaster(master);

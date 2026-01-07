@@ -90,9 +90,10 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
             isOpen={isOpen}
             onClose={onClose}
             title={`Assign Asset: ${asset?.assetName || ''}`}
-            size="sm"
+            size="md"
         >
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                {/* Employee Selection */}
                 <div>
                     <Select
                         label="Assign To Employee"
@@ -107,6 +108,7 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
                     />
                 </div>
 
+                {/* Assignment Date */}
                 <div>
                     <Input
                         label="Assignment Date"
@@ -118,23 +120,27 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
                     />
                 </div>
 
+                {/* Remarks */}
                 <div>
-                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 block ml-1">Remarks</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Remarks (Optional)
+                    </label>
                     <textarea
                         name="remarks"
                         value={formData.remarks}
                         onChange={handleChange}
-                        className="w-full p-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm min-h-[80px] focus:outline-none focus:border-indigo-500 transition-colors"
-                        placeholder="Optional remarks..."
+                        rows={3}
+                        className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white resize-none focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all"
                     />
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                     <Button
                         type="button"
                         variant="outline"
                         onClick={onClose}
-                        className="flex-1 py-2"
+                        className="flex-1 h-11"
                     >
                         Cancel
                     </Button>
@@ -142,9 +148,9 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
                         type="submit"
                         variant="primary"
                         isLoading={isLoading}
-                        className="flex-1 py-2"
+                        className="flex-1 h-11"
                     >
-                        Confirm Assignment
+                        Confirm
                     </Button>
                 </div>
             </form>

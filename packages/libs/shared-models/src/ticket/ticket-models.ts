@@ -114,7 +114,7 @@ export class TicketResponseModel {
 export class GetAllTicketsModel extends GlobalResponse {
     tickets: TicketResponseModel[];
     constructor(status: boolean, code: number, message: string, tickets: TicketResponseModel[]) {
-        super(status, code, message);
+        super(status, code, message, tickets);
         this.tickets = tickets;
     }
 }
@@ -122,7 +122,7 @@ export class GetAllTicketsModel extends GlobalResponse {
 export class GetTicketByIdModel extends GlobalResponse {
     ticket: TicketResponseModel;
     constructor(status: boolean, code: number, message: string, ticket: TicketResponseModel) {
-        super(status, code, message);
+        super(status, code, message, ticket);
         this.ticket = ticket;
     }
 }

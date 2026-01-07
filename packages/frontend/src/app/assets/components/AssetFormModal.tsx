@@ -155,10 +155,11 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
             isOpen={isOpen}
             onClose={onClose}
             title={asset ? 'Update Asset' : 'Add New Asset'}
-            size="md" // Medium size but compact internal layout
+            size="lg"
         >
-            <form onSubmit={handleSubmit} className="p-4 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                {/* Company and Asset Type */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Select
                         label="Company"
                         name="companyId"
@@ -183,7 +184,8 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* Brand and Model */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Select
                         label="Brand"
                         name="brandId"
@@ -202,7 +204,8 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* Serial Number and Status */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                         label="Serial Number"
                         name="serialNumber"
@@ -224,7 +227,8 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* Purchase Date and Warranty */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                         label="Purchase Date"
                         name="purchaseDate"
@@ -241,7 +245,8 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* Express Code and Box Number */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                         label="Express Code"
                         name="expressCode"
@@ -256,22 +261,27 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                     />
                 </div>
 
+                {/* Configuration */}
                 <div className="w-full">
-                    <label className="text-xs font-medium text-primary-600 mb-1 block ml-4">Configuration Details</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Configuration Details
+                    </label>
                     <textarea
                         name="configuration"
                         value={formData.configuration}
                         onChange={handleChange}
-                        className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm min-h-[80px] focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
+                        rows={3}
+                        className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white resize-none focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all"
                     />
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                     <Button
                         type="button"
                         variant="outline"
                         onClick={onClose}
-                        className="flex-1 py-2"
+                        className="flex-1 h-11"
                     >
                         Cancel
                     </Button>
@@ -279,7 +289,7 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                         type="submit"
                         variant="primary"
                         isLoading={isLoading}
-                        className="flex-1 py-2"
+                        className="flex-1 h-11"
                     >
                         {asset ? 'Update Asset' : 'Create Asset'}
                     </Button>

@@ -19,9 +19,6 @@ export default function Loading() {
                 <h3 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600 animate-pulse">
                     AdminVault
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-widest uppercase animate-pulse">
-                    Optimizing Workspace
-                </p>
             </div>
         </div>
     );

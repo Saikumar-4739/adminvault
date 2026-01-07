@@ -53,7 +53,15 @@ export default function SecurityScoreCard({ score, metrics }: SecurityScoreCardP
             <div className="mt-6 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/50 flex gap-3">
                 <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed">
-                    Your security score has improved by <span className="font-bold">4.2%</span> this week due to MFA adoption.
+                    {metrics.identity < 70 ? (
+                        <>MFA adoption is low. <span className="font-bold">Action required</span> to secure user identities.</>
+                    ) : metrics.devices < 70 ? (
+                        <>Many assets are unassigned. <span className="font-bold">Inventory audit</span> recommended.</>
+                    ) : metrics.compliance < 100 ? (
+                        <>Outstanding service requests detected. <span className="font-bold">Compliance oversight</span> in progress.</>
+                    ) : (
+                        <>System security is <span className="font-bold">optimal</span>. All protocols synchronized.</>
+                    )}
                 </p>
             </div>
         </Card>

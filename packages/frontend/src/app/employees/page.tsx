@@ -61,6 +61,7 @@ export default function EmployeesPage() {
 
     const [selectedOrg, setSelectedOrg] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
 
     const fetchEmployees = useCallback(async () => {
         setIsLoading(true);
@@ -286,12 +287,18 @@ export default function EmployeesPage() {
     const filteredEmployees = employees.filter(emp => {
         const searchLower = searchQuery.toLowerCase();
         const deptName = getDepartmentName(emp).toLowerCase();
-        return (
+        const matchesSearch = (
             emp.firstName?.toLowerCase().includes(searchLower) ||
             emp.lastName?.toLowerCase().includes(searchLower) ||
             emp.email?.toLowerCase().includes(searchLower) ||
             deptName.includes(searchLower)
         );
+
+        const matchesStatus = statusFilter === 'all' ||
+            (statusFilter === 'active' && emp.empStatus?.toLowerCase() === 'active') ||
+            (statusFilter === 'inactive' && emp.empStatus?.toLowerCase() !== 'active');
+
+        return matchesSearch && matchesStatus;
     });
 
     const stats = {
@@ -312,51 +319,49 @@ export default function EmployeesPage() {
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl">
-                                <Users className="h-6 w-6 text-white" />
+                            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
+                                <Users className="h-5 w-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Employees</h1>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">
-                                    {stats.total} total employees Â· {stats.active} active
+                                <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Employees Registry</h1>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                    {stats.total} total Â· {stats.active} active identities
                                 </p>
                             </div>
                         </div>
 
                         {/* Actions */}
                         <div className="flex items-center gap-2">
-                            <div className="flex bg-white dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm mr-2">
+                            <div className="flex bg-white dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shadow-sm mr-2 h-9 items-center">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                    className={`p-1 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
                                 >
-                                    <LayoutGrid className="h-4 w-4" />
+                                    <LayoutGrid className="h-3.5 w-3.5" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                    className={`p-1 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
                                 >
-                                    <List className="h-4 w-4" />
+                                    <List className="h-3.5 w-3.5" />
                                 </button>
                             </div>
 
                             <Button
                                 variant="secondary"
-                                size="sm"
-                                leftIcon={<Upload className="h-3.5 w-3.5" />}
                                 onClick={() => setIsImportModalOpen(true)}
                                 disabled={!selectedOrg}
-                                className="h-9"
+                                className="h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest"
+                                leftIcon={<Upload className="h-3.5 w-3.5" />}
                             >
                                 Import
                             </Button>
                             <Button
                                 variant="primary"
-                                size="sm"
-                                leftIcon={<Plus className="h-3.5 w-3.5" />}
                                 onClick={() => setIsModalOpen(true)}
                                 disabled={!selectedOrg}
-                                className="h-9 shadow-sm shadow-indigo-500/20"
+                                className="h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md shadow-indigo-500/20"
+                                leftIcon={<Plus className="h-3.5 w-3.5" />}
                             >
                                 Add Employee
                             </Button>
@@ -376,14 +381,31 @@ export default function EmployeesPage() {
                             />
                         </div>
 
-                        <div className="relative min-w-[220px]">
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                        <div className="relative min-w-[160px]">
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="w-full appearance-none px-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer font-medium"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <svg className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div className="relative min-w-[200px]">
+                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
                             <select
                                 value={selectedOrg}
                                 onChange={(e) => setSelectedOrg(e.target.value)}
-                                className="w-full appearance-none pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer font-medium"
+                                className="w-full appearance-none pl-9 pr-8 py-1.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer font-bold uppercase tracking-widest"
                             >
-                                <option value="">Select Organization</option>
+                                <option value="">Organization</option>
                                 {companies.map((company) => (
                                     <option key={company.id} value={company.id}>
                                         {company.companyName}
@@ -467,19 +489,19 @@ export default function EmployeesPage() {
                     ) : (
                         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                <thead className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
                                     <tr>
-                                        <th className="px-4 py-3 pl-6">Name</th>
-                                        <th className="px-4 py-3">Details</th>
-                                        <th className="px-4 py-3">Department</th>
-                                        <th className="px-4 py-3">Status</th>
-                                        <th className="px-4 py-3 text-right pr-6">Action</th>
+                                        <th className="px-6 py-2.5">Global Identity</th>
+                                        <th className="px-6 py-2.5">Communications</th>
+                                        <th className="px-6 py-2.5">Organizational Unit</th>
+                                        <th className="px-6 py-2.5">Operational State</th>
+                                        <th className="px-6 py-2.5 text-right pr-8">Management</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {filteredEmployees.map((emp) => (
-                                        <tr key={emp.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 group transition-colors">
-                                            <td className="px-4 py-3 pl-6">
+                                        <tr key={emp.id} className="group hover:bg-slate-50/50 dark:hover:bg-indigo-900/10 transition-colors">
+                                            <td className="px-6 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br ${getDepartmentBg(emp)}`}>
                                                         {getInitials(emp.firstName, emp.lastName)}

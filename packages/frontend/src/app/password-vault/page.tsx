@@ -34,8 +34,10 @@ export default function PasswordVaultPage() {
     const { success, error: toastError } = useToast();
     const [passwordVaults, setPasswordVaults] = useState<PasswordVault[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [applications, setApplications] = useState<any[]>([]);
     const [isVaultLoading, setIsVaultLoading] = useState(false);
     const [isEmployeesLoading, setIsEmployeesLoading] = useState(false);
+    const [isAppsLoading, setIsAppsLoading] = useState(false);
 
     // UI State
     const [searchQuery, setSearchQuery] = useState('');
@@ -82,9 +84,10 @@ export default function PasswordVaultPage() {
     const fetchEmployees = useCallback(async () => {
         setIsEmployeesLoading(true);
         try {
-            const response = await employeeService.getAllEmployees({ id: getCompanyId() } as any);
+            const response = await employeeService.getAllEmployees(undefined);
             if (response.status) {
-                setEmployees(response.employees || []);
+                const data = (response as any).employees || (response as any).data || [];
+                setEmployees(data);
             }
         } catch (error) {
             console.error('Failed to fetch employees:', error);
@@ -93,10 +96,28 @@ export default function PasswordVaultPage() {
         }
     }, []);
 
+    const fetchApplications = useCallback(async () => {
+        setIsAppsLoading(true);
+        try {
+            // Updated to pass company context for targeted asset lookup
+            const response = await mastersService.getAllApplications({ id: getCompanyId() } as any);
+            if (response.status) {
+                // Support both .applications and .data response structures
+                const data = (response as any).applications || (response as any).data || [];
+                setApplications(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch applications:', error);
+        } finally {
+            setIsAppsLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         fetchPasswordVaults();
         fetchEmployees();
-    }, [fetchPasswordVaults, fetchEmployees]);
+        fetchApplications();
+    }, [fetchPasswordVaults, fetchEmployees, fetchApplications]);
 
     const categories = ['All', 'Work', 'Social', 'Personal', 'Finance'];
 
@@ -256,60 +277,61 @@ export default function PasswordVaultPage() {
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
             <div className="p-6 space-y-6 max-w-[1800px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
-                {/* Header */}
-                <PageHeader
-                    icon={<Lock />}
-                    title="Password Vault"
-                    description="Office-wide application access manager"
-                    gradient="from-indigo-500 to-purple-600"
-                />
-
-                {/* Search & Controls */}
-                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-                    {/* Search */}
-                    <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search vault..."
-                            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
+                            <Lock className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Password Vault</h1>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Identity & Access Registry</p>
+                        </div>
                     </div>
 
-                    {/* View Toggle */}
-                    <div className="flex bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-                        <button
-                            onClick={() => setViewMode('grid')}
-                            className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                            <LayoutGrid className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('list')}
-                            className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                            <List className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="relative group/search">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within/search:text-indigo-500 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Locate secret..."
+                                className="w-full sm:w-48 pl-9 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
 
-                    <Button
-                        variant="outline"
-                        onClick={() => setIsGeneratorOpen(true)}
-                        leftIcon={<Wand2 className="w-4 h-4" />}
-                        size="sm"
-                    >
-                        Entropy Engine
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={handleOpenCreate}
-                        leftIcon={<Plus className="w-4 h-4" />}
-                        size="sm"
-                    >
-                        New Entry
-                    </Button>
+                        <div className="flex bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm h-9 items-center">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                <LayoutGrid className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-1 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                <List className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+
+                        <Button
+                            variant="secondary"
+                            onClick={() => setIsGeneratorOpen(true)}
+                            leftIcon={<Wand2 className="w-3.5 h-3.5" />}
+                            className="h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest"
+                        >
+                            Entropy Engine
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={handleOpenCreate}
+                            leftIcon={<Plus className="w-3.5 h-3.5" />}
+                            className="h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md shadow-indigo-500/20"
+                        >
+                            New Entry
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats Dashboard */}
@@ -320,8 +342,8 @@ export default function PasswordVaultPage() {
                                 <stat.icon className={`w-5 h-5 ${stat.color}`} />
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{stat.label}</p>
-                                <p className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{stat.value}</p>
+                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{stat.label}</p>
+                                <p className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{stat.value}</p>
                             </div>
                         </div>
                     ))}
@@ -396,10 +418,10 @@ export default function PasswordVaultPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between">
                                             <div>
-                                                <h3 className="text-lg font-black text-slate-900 dark:text-white truncate tracking-tight">{vault.name}</h3>
-                                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 mt-0.5">
-                                                    <Globe className="w-3 h-3" />
-                                                    <span className="truncate">{vault.url || 'Internal Application'}</span>
+                                                <h3 className="text-base font-black text-slate-900 dark:text-white truncate tracking-tight">{vault.name}</h3>
+                                                <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">
+                                                    <Globe className="w-2.5 h-2.5" />
+                                                    <span className="truncate">{vault.url || 'Internal Asset'}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -421,8 +443,8 @@ export default function PasswordVaultPage() {
                                         {/* Secret Zone */}
                                         <div className="mt-2.5 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 relative overflow-hidden group/pass shadow-sm">
                                             <div className="flex items-center justify-between">
-                                                <div className="font-mono text-xs tracking-[0.2em] text-slate-900 dark:text-slate-200">
-                                                    {visiblePasswords.has(vault.id) ? vault.password : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'}
+                                                <div className="font-mono text-[10px] tracking-[0.3em] text-slate-400 dark:text-slate-500">
+                                                    {visiblePasswords.has(vault.id) ? vault.password : '••••••••••••'}
                                                 </div>
                                                 <div className="flex gap-1 opacity-0 group-hover/pass:opacity-100 transition-opacity">
                                                     <button
@@ -435,7 +457,7 @@ export default function PasswordVaultPage() {
                                                         onClick={() => copyToClipboard(vault.password, vault.id)}
                                                         className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-400"
                                                     >
-                                                        {copiedId === vault.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                                                        {copiedId === vault.id ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                                                     </button>
                                                 </div>
                                             </div>
@@ -476,35 +498,50 @@ export default function PasswordVaultPage() {
                     size="lg"
                 >
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">Target Employee</label>
-                            <select
-                                value={formData.employeeId}
-                                onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                                required
-                                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 outline-none focus:border-indigo-500 transition-all text-sm font-bold"
-                            >
-                                <option value="">Select Employee...</option>
-                                {employees.map(emp => (
-                                    <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">Target Employee</label>
+                                <select
+                                    value={formData.employeeId}
+                                    onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+                                    required
+                                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 outline-none focus:border-indigo-500 transition-all text-sm font-bold appearance-none cursor-pointer"
+                                >
+                                    <option value="">Employee</option>
+                                    {employees.map(emp => (
+                                        <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-                        <Input
-                            label="App / Service Name"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                            placeholder="e.g. SalesForce, Office 365"
-                        />
+                            <div className="space-y-2">
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">Global Application</label>
+                                <select
+                                    value={formData.name}
+                                    onChange={(e) => {
+                                        const app = applications.find(a => a.name === e.target.value);
+                                        setFormData({
+                                            ...formData,
+                                            name: e.target.value,
+                                            url: app?.url || formData.url
+                                        });
+                                    }}
+                                    required
+                                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 outline-none focus:border-indigo-500 transition-all text-sm font-bold appearance-none cursor-pointer"
+                                >
+                                    <option value="">Application</option>
+                                    {applications.map(app => (
+                                        <option key={app.id} value={app.name}>{app.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input
                                 label="App Username"
                                 value={formData.username}
                                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                placeholder="emp.name@office.com"
                             />
                             <div className="relative group/mpy">
                                 <Input
@@ -513,7 +550,6 @@ export default function PasswordVaultPage() {
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     required
-                                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                 />
                                 <button
                                     type="button"
@@ -529,7 +565,6 @@ export default function PasswordVaultPage() {
                             label="Service URL"
                             value={formData.url}
                             onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                            placeholder="https://app.service.com"
                         />
 
                         <div className="space-y-2">
@@ -539,7 +574,6 @@ export default function PasswordVaultPage() {
                                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                 rows={3}
                                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 outline-none focus:border-indigo-500 transition-all text-sm font-medium"
-                                placeholder="Categorize by 'Work', 'Finance', etc. or add recovery info..."
                             />
                         </div>
                         <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">

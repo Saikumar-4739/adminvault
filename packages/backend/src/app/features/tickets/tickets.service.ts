@@ -7,12 +7,15 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum } from '@adminvault/shared-models';
 
+import { TicketsGateway } from './tickets.gateway';
+
 @Injectable()
 export class TicketsService {
     constructor(
         private dataSource: DataSource,
         private ticketsRepo: TicketsRepository,
-        private employeesRepo: EmployeesRepository
+        private employeesRepo: EmployeesRepository,
+        private gateway: TicketsGateway
     ) { }
 
     /**
@@ -64,9 +67,11 @@ export class TicketsService {
                 // userId will be set by CommonBaseEntity from request context if middleware sets it
             });
 
-            await transManager.getRepository(TicketsEntity).save(entity);
+            const savedTicket = await transManager.getRepository(TicketsEntity).save(entity);
             await transManager.completeTransaction();
 
+            // Notify admins via WebSocket
+            this.gateway.emitTicketCreated(savedTicket);
 
             return new GlobalResponse(true, 0, "Ticket created successfully");
         } catch (error) {
@@ -128,6 +133,9 @@ export class TicketsService {
             await transManager.getRepository(TicketsEntity).update(reqModel.id, reqModel);
             await transManager.completeTransaction();
 
+            // Notify via WebSocket
+            const updated = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
+            this.gateway.emitTicketUpdated(updated);
 
             return new GlobalResponse(true, 0, "Ticket updated successfully");
         } catch (error) {
@@ -173,13 +181,14 @@ export class TicketsService {
         try {
             const query = this.ticketsRepo
                 .createQueryBuilder('ticket')
+                .leftJoinAndMapOne('ticket.employee', 'employees', 'emp', 'emp.id = ticket.employeeId')
                 .orderBy('ticket.createdAt', 'DESC');
 
             if (companyId) {
                 query.where('ticket.companyId = :companyId', { companyId });
             }
 
-            const tickets = await query.getMany();
+            const tickets: any[] = await query.getMany();
 
             const responses = tickets.map(t => new TicketResponseModel(
                 t.id,
@@ -191,8 +200,8 @@ export class TicketsService {
                 t.ticketStatus,
                 t.assignAdminId,
                 t.resolvedAt,
-                `User ID: ${t.employeeId}`, // Placeholder name
-                `User ID: ${t.employeeId}`, // Placeholder email
+                t.employee ? `${t.employee.firstName} ${t.employee.lastName}` : `User ID: ${t.employeeId}`,
+                t.employee ? t.employee.email : `User ID: ${t.employeeId}`,
                 t.createdAt,
                 t.updatedAt
             ));
@@ -252,13 +261,28 @@ export class TicketsService {
                 throw new ErrorResponse(0, `No Employee profile found for ${userEmail}`);
             }
 
-            const tickets = await this.ticketsRepo
+            const tickets: any[] = await this.ticketsRepo
                 .createQueryBuilder('ticket')
+                .leftJoinAndMapOne('ticket.employee', 'employees', 'emp', 'emp.id = ticket.employeeId')
                 .where('ticket.employeeId = :employeeId', { employeeId: employee.id })
                 .orderBy('ticket.createdAt', 'DESC')
                 .getMany();
 
-            const responses = tickets.map(t => new TicketResponseModel(t.id, t.ticketCode, t.employeeId, t.categoryEnum, t.priorityEnum, t.subject, t.ticketStatus, t.assignAdminId, t.resolvedAt, `User ID: ${t.employeeId}`, `User ID: ${t.employeeId}`, t.createdAt, t.updatedAt));
+            const responses = tickets.map(t => new TicketResponseModel(
+                t.id,
+                t.ticketCode,
+                t.employeeId,
+                t.categoryEnum,
+                t.priorityEnum,
+                t.subject,
+                t.ticketStatus,
+                t.assignAdminId,
+                t.resolvedAt,
+                t.employee ? `${t.employee.firstName} ${t.employee.lastName}` : `User ID: ${t.employeeId}`,
+                t.employee ? t.employee.email : `User ID: ${t.employeeId}`,
+                t.createdAt,
+                t.updatedAt
+            ));
             return new GetAllTicketsModel(true, 0, "User tickets retrieved successfully", responses);
         } catch (error) {
             throw error;
@@ -296,7 +320,11 @@ export class TicketsService {
 
         ticket.assignAdminId = assignAdminId;
         ticket.ticketStatus = TicketStatusEnum.IN_PROGRESS;
-        await this.ticketsRepo.save(ticket);
+        const saved = await this.ticketsRepo.save(ticket);
+
+        // Notify via WebSocket
+        this.gateway.emitTicketUpdated(saved);
+
         return new GlobalResponse(true, 200, "Ticket assigned successfully");
     }
 
@@ -305,7 +333,11 @@ export class TicketsService {
         if (!ticket) throw new ErrorResponse(404, "Ticket not found");
 
         ticket.response = response;
-        await this.ticketsRepo.save(ticket);
+        const saved = await this.ticketsRepo.save(ticket);
+
+        // Notify via WebSocket
+        this.gateway.emitTicketUpdated(saved);
+
         return new GlobalResponse(true, 200, "Response added successfully");
     }
 
@@ -317,7 +349,11 @@ export class TicketsService {
         if (status === TicketStatusEnum.RESOLVED || status === TicketStatusEnum.CLOSED) {
             ticket.resolvedAt = new Date();
         }
-        await this.ticketsRepo.save(ticket);
+        const saved = await this.ticketsRepo.save(ticket);
+
+        // Notify via WebSocket
+        this.gateway.emitTicketUpdated(saved);
+
         return new GlobalResponse(true, 200, "Status updated successfully");
     }
 }

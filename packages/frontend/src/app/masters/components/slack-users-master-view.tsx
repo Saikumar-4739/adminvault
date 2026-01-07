@@ -259,7 +259,7 @@ export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent className="flex-1 overflow-hidden p-0">
+                <CardContent className="flex-1 overflow-hidden p-4">
                     {isLoading ? (
                         <PageLoader />
                     ) : (

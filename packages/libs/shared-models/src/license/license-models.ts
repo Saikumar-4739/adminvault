@@ -109,6 +109,7 @@ export class LicenseResponseModel {
     assignedEmployeeId?: number | null;
     licenseKey?: string | null;
     purchaseDate?: Date | null;
+    assignedDate?: Date | null;
     expiryDate?: Date | null;
     seats?: number | null;
     remarks?: string | null;
@@ -127,6 +128,7 @@ export class LicenseResponseModel {
         assignedEmployeeId?: number | null,
         licenseKey?: string | null,
         purchaseDate?: Date | null,
+        assignedDate?: Date | null,
         expiryDate?: Date | null,
         seats?: number | null,
         remarks?: string | null,
@@ -140,6 +142,7 @@ export class LicenseResponseModel {
         this.assignedEmployeeId = assignedEmployeeId;
         this.licenseKey = licenseKey;
         this.purchaseDate = purchaseDate;
+        this.assignedDate = assignedDate;
         this.expiryDate = expiryDate;
         this.seats = seats;
         this.remarks = remarks;

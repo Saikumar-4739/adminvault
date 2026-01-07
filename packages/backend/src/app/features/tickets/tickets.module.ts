@@ -12,12 +12,15 @@ import { TicketStatusLogsRepository } from './repositories/ticket-status-logs.re
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
 
 
+import { TicketsGateway } from './tickets.gateway';
+import { TicketMessageEntity } from './entities/ticket-messages.entity';
+
 @Module({
     imports: [
-        TypeOrmModule.forFeature([TicketsEntity, TicketCommentsEntity, TicketStatusLogsEntity, EmployeesEntity])
+        TypeOrmModule.forFeature([TicketsEntity, TicketCommentsEntity, TicketStatusLogsEntity, EmployeesEntity, TicketMessageEntity])
     ],
     controllers: [TicketsController],
-    providers: [TicketsService, TicketsRepository, TicketCommentsRepository, TicketStatusLogsRepository, EmployeesRepository],
+    providers: [TicketsService, TicketsRepository, TicketCommentsRepository, TicketStatusLogsRepository, EmployeesRepository, TicketsGateway],
     exports: [TicketsService],
 })
 export class TicketsModule { }

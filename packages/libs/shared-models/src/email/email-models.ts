@@ -1,17 +1,17 @@
 import { GlobalResponse } from '../common/global-response';
-import { EmailTypeEnum, DepartmentEnum } from '../enums';
+import { EmailTypeEnum } from '../enums';
 
 export class CreateEmailInfoModel {
     companyId: number;
     emailType: EmailTypeEnum;
-    department: DepartmentEnum;
+    department: string;
     email: string;
     employeeId?: number;
 
     constructor(
         companyId: number,
         emailType: EmailTypeEnum,
-        department: DepartmentEnum,
+        department: string,
         email: string,
         employeeId?: number
     ) {
@@ -30,7 +30,7 @@ export class UpdateEmailInfoModel extends CreateEmailInfoModel {
         id: number,
         companyId: number,
         emailType: EmailTypeEnum,
-        department: DepartmentEnum,
+        department: string,
         email: string,
         employeeId?: number
     ) {
@@ -59,7 +59,7 @@ export class EmailInfoResponseModel {
     id: number;
     companyId: number;
     emailType: EmailTypeEnum;
-    department: DepartmentEnum;
+    department: string;
     email: string;
     employeeId?: number;
 
@@ -67,7 +67,7 @@ export class EmailInfoResponseModel {
         id: number,
         companyId: number,
         emailType: EmailTypeEnum,
-        department: DepartmentEnum,
+        department: string,
         email: string,
         employeeId?: number
     ) {

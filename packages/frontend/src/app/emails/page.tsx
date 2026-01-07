@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { companyService, emailService } from '@/lib/api/services';
+import { companyService, emailService, mastersService } from '@/lib/api/services';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
@@ -48,11 +48,14 @@ const DeptConfig: Record<string, { icon: any, color: string, bg: string, label: 
     [DepartmentEnum.MARKETING]: { icon: Megaphone, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', label: 'Growth & Brand' },
     [DepartmentEnum.SALES]: { icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20', label: 'Revenue Ops' },
     [DepartmentEnum.OPERATIONS]: { icon: ShieldCheck, color: 'text-cyan-600', bg: 'bg-cyan-50 dark:bg-cyan-900/20', label: 'Global Logistics' },
+    'Unassigned': { icon: Globe, color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-900/20', label: 'Legacy / Unmapped' },
+    'Default': { icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-900/20', label: 'Functional Registry' },
 };
 
 export default function InfoEmailsPage() {
     const { success, error: toastError } = useToast();
     const [companies, setCompanies] = useState<any[]>([]);
+    const [departments, setDepartments] = useState<any[]>([]);
     const [emailInfoList, setEmailInfoList] = useState<EmailInfoResponseModel[]>([]);
     const [selectedOrg, setSelectedOrg] = useState<string>('');
     const [activeTab, setActiveTab] = useState<EmailCategory>('COMPANY');
@@ -70,6 +73,18 @@ export default function InfoEmailsPage() {
             toastError(err.message || 'Failed to fetch companies');
         }
     }, [toastError]);
+
+    const fetchDepartments = useCallback(async () => {
+        if (!selectedOrg) return;
+        try {
+            const response = await mastersService.getAllDepartments(Number(selectedOrg) as any);
+            if (response.status) {
+                setDepartments(response.departments || []);
+            }
+        } catch (err: any) {
+            console.error('Failed to fetch departments:', err);
+        }
+    }, [selectedOrg]);
 
     const fetchEmailInfo = useCallback(async () => {
         if (!selectedOrg) return;
@@ -95,10 +110,12 @@ export default function InfoEmailsPage() {
     useEffect(() => {
         if (selectedOrg) {
             fetchEmailInfo();
+            fetchDepartments();
         } else {
             setEmailInfoList([]);
+            setDepartments([]);
         }
-    }, [selectedOrg, fetchEmailInfo]);
+    }, [selectedOrg, fetchEmailInfo, fetchDepartments]);
 
     // Auto-select first organization if none selected
     useEffect(() => {
@@ -148,27 +165,39 @@ export default function InfoEmailsPage() {
         }
     };
 
-    // Filtered and Grouped Data
     const filteredEmails = useMemo(() => {
         const categoryTypes = CategoryConfig[activeTab].types;
         return emailInfoList.filter(acc =>
             categoryTypes.includes(acc.emailType) && (
                 acc.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                acc.department.toLowerCase().includes(searchQuery.toLowerCase())
+                (acc.department?.toLowerCase() || '').includes(searchQuery.toLowerCase())
             )
         );
     }, [emailInfoList, searchQuery, activeTab]);
 
     const groupedData = useMemo(() => {
         const groups: Record<string, typeof emailInfoList> = {};
-        Object.values(DepartmentEnum).forEach(dept => {
-            const emailsInDept = filteredEmails.filter(email => email.department === dept);
-            if (emailsInDept.length > 0 || searchQuery === '') {
+
+        // Use the fetched departments from the masters service
+        const deptNames = departments.map(d => d.name);
+
+        // Add "Unassigned" to catch any emails not matched to a legitimate department
+        const allPossibleDepts = [...deptNames, 'Unassigned'];
+
+        allPossibleDepts.forEach(dept => {
+            const emailsInDept = filteredEmails.filter(email => {
+                const emailDept = email.department || 'Unassigned';
+                return emailDept === dept;
+            });
+
+            // Only show groups that have emails or show all empty groups when not searching
+            if (emailsInDept.length > 0 || (searchQuery === '' && dept !== 'Unassigned')) {
                 groups[dept] = emailsInDept;
             }
         });
+
         return groups;
-    }, [filteredEmails, searchQuery]);
+    }, [filteredEmails, departments, searchQuery]);
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
@@ -177,137 +206,156 @@ export default function InfoEmailsPage() {
                 <PageHeader
                     icon={<Mail />}
                     title="Communicator Hub"
-                    description="Global routing and identity management platform"
-                    gradient="from-indigo-500 to-purple-600"
-                />
+                    description="Global routing and identity management"
+                    gradient="from-indigo-600 to-violet-700"
+                    actions={[
+                        {
+                            label: 'Add New',
+                            onClick: () => setIsModalOpen(true),
+                            icon: <Plus className="w-4 h-4" />,
+                            variant: 'primary'
+                        }
+                    ]}
+                >
+                    <div className="flex items-center gap-2 w-full justify-end">
+                        <div className="relative w-48">
+                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-500" />
+                            <select
+                                value={selectedOrg}
+                                onChange={(e) => setSelectedOrg(e.target.value)}
+                                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-indigo-500 transition-all font-bold text-[11px] appearance-none outline-none shadow-sm h-8"
+                            >
+                                <option value="">Target Org...</option>
+                                {companies.map(c => (
+                                    <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                {/* Organization Selector & Add Button */}
-                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-                    <div className="relative flex-1 max-w-md">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <select
-                            value={selectedOrg}
-                            onChange={(e) => setSelectedOrg(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-indigo-500 transition-all font-semibold text-sm appearance-none outline-none"
-                        >
-                            <option value="">Select Organization</option>
-                            {companies.map(c => (
-                                <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
-                            ))}
-                        </select>
+                        <div className="relative w-80">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search registry..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-[11px] outline-none shadow-sm h-8"
+                            />
+                        </div>
+                    </div>
+                </PageHeader>
+
+                {/* Tab Switcher & Stats Summary */}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all">
+                    <div className="flex items-center gap-1.5 p-1 bg-slate-50 dark:bg-slate-950 rounded-lg">
+                        {(Object.keys(CategoryConfig) as EmailCategory[]).map((cat) => {
+                            const config = CategoryConfig[cat];
+                            const Icon = config.icon;
+                            const isActive = activeTab === cat;
+
+                            return (
+                                <button
+                                    key={cat}
+                                    onClick={() => setActiveTab(cat)}
+                                    className={`
+                                        flex items-center gap-1.5 px-4 py-1.5 rounded-md font-bold text-[11px] transition-all duration-300
+                                        ${isActive
+                                            ? `bg-white dark:bg-slate-800 shadow-md text-indigo-600 dark:text-indigo-400 border border-slate-100 dark:border-slate-700`
+                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                        }
+                                    `}
+                                >
+                                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-indigo-500' : ''}`} />
+                                    {config.label}
+                                </button>
+                            );
+                        })}
                     </div>
 
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        disabled={!selectedOrg}
-                        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50 disabled:scale-100 flex items-center gap-2 justify-center"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Add New
-                    </button>
-                </div>
-
-                {/* Search Bar */}
-                <div className="relative max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Search repository..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-sm outline-none"
-                    />
-                </div>
-
-                {/* Tab Switcher */}
-                <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-fit">
-                    {(Object.keys(CategoryConfig) as EmailCategory[]).map((cat) => {
-                        const config = CategoryConfig[cat];
-                        const Icon = config.icon;
-                        const isActive = activeTab === cat;
-
-                        return (
-                            <button
-                                key={cat}
-                                onClick={() => setActiveTab(cat)}
-                                className={`
-                                    flex items-center gap-2 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all
-                                    ${isActive
-                                        ? `bg-white dark:bg-slate-700 shadow-md text-${config.color}-600 scale-100`
-                                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 scale-95'
-                                    }
-                                `}
-                            >
-                                <Icon className="w-4 h-4" />
-                                {config.label}
-                            </button>
-                        );
-                    })}
+                    <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                        <div className="flex items-center gap-2 px-3 border-r border-slate-200 dark:border-slate-800">
+                            <span className="text-sm text-slate-900 dark:text-white">{emailInfoList.length}</span>
+                            Total
+                        </div>
+                        <div className="flex items-center gap-2 px-3 border-r border-slate-200 dark:border-slate-800">
+                            <span className="text-sm text-indigo-600 dark:text-indigo-400">
+                                {emailInfoList.filter(e => e.emailType === EmailTypeEnum.SUPPORT).length}
+                            </span>
+                            Support
+                        </div>
+                        <div className="flex items-center gap-2 px-3">
+                            <span className="text-sm text-emerald-600 dark:text-emerald-400">
+                                {emailInfoList.filter(e => e.emailType === EmailTypeEnum.USER).length}
+                            </span>
+                            Users
+                        </div>
+                    </div>
                 </div>
 
                 {!selectedOrg ? (
-                    <div className="py-32 flex flex-col items-center justify-center text-center">
-                        <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-slate-100 dark:border-slate-700/50">
-                            <Mail className="h-10 w-10 text-slate-300" />
+                    <div className="py-24 flex flex-col items-center justify-center text-center">
+                        <div className="w-20 h-20 bg-gradient-to-br from-indigo-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-3xl flex items-center justify-center mb-5 shadow-lg border border-white dark:border-slate-800 animate-pulse">
+                            <Mail className="h-8 w-8 text-indigo-300 dark:text-indigo-600" />
                         </div>
-                        <h3 className="text-2xl font-black">Authentication Required</h3>
-                        <p className="text-slate-500 mt-2 max-w-sm font-medium">Please select an organization to access the communicator registry.</p>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white">Authentication Required</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-sm font-medium">Select an organization to access the secure identity routing registry.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                         {Object.entries(groupedData).map(([dept, emails]) => {
-                            const config = DeptConfig[dept] || DeptConfig[DepartmentEnum.IT];
+                            const config = DeptConfig[dept] || DeptConfig['Default'];
                             const Icon = config.icon;
 
                             if (emails.length === 0 && searchQuery !== '') return null;
 
                             return (
-                                <div key={dept} className="space-y-4">
-                                    <div className="flex items-center justify-between px-2">
+                                <div key={dept} className="flex flex-col h-full bg-white dark:bg-slate-900/40 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-500 group/dept">
+                                    <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-xl ${config.bg} ${config.color}`}>
+                                            <div className={`w-10 h-10 rounded-xl ${config.bg} ${config.color} flex items-center justify-center shadow-md transition-transform group-hover/dept:rotate-6`}>
                                                 <Icon className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <h3 className="font-black text-sm uppercase tracking-wider">{dept}</h3>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{config.label}</p>
+                                                <h3 className="font-black text-[12px] uppercase tracking-wider text-slate-900 dark:text-white">{dept}</h3>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{config.label}</p>
                                             </div>
                                         </div>
-                                        <span className="px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500">
+                                        <div className="px-2.5 py-0.5 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[10px] font-black text-indigo-600 dark:text-indigo-400">
                                             {emails.length}
-                                        </span>
+                                        </div>
                                     </div>
 
-                                    <div className="space-y-3 min-h-[100px]">
-                                        {isLoading && emailInfoList.length === 0 ? (
-                                            <div className="p-8 flex flex-col items-center justify-center space-y-3">
-                                                <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading...</p>
+                                    <div className="space-y-3 flex-1">
+                                        {isLoading ? (
+                                            <div className="h-32 flex flex-col items-center justify-center space-y-3">
+                                                <div className="w-6 h-6 border-3 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Syncing Registry...</p>
                                             </div>
                                         ) : emails.length === 0 ? (
-                                            <div className="p-8 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center text-center">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-50">None Configured</p>
+                                            <div className="h-32 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center p-4 transition-colors group-hover/dept:border-slate-200 dark:group-hover/dept:border-slate-700">
+                                                <Plus className="w-5 h-5 text-slate-200 dark:text-slate-800 mb-1" />
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 dark:text-slate-700">None Configured</p>
                                             </div>
                                         ) : (
                                             emails.map((acc) => (
-                                                <Card key={acc.id} className="group p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-500 transition-all rounded-3xl shadow-sm">
-                                                    <div className="flex items-center justify-between gap-4">
+                                                <div key={acc.id} className="group/card p-4 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-white dark:hover:bg-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all duration-300 rounded-xl shadow-none hover:shadow-md relative overflow-hidden">
+                                                    <div className="flex items-center justify-between gap-3 relative z-10">
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <span className={`px-1.5 py-0.5 rounded bg-${CategoryConfig[activeTab].color}-50 dark:bg-${CategoryConfig[activeTab].color}-900/20 text-${CategoryConfig[activeTab].color}-600 dark:text-${CategoryConfig[activeTab].color}-400 text-[8px] font-black uppercase tracking-widest`}>
+                                                            <div className="flex items-center gap-2 mb-1.5">
+                                                                <span className={`px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-[8px] font-black uppercase tracking-wider`}>
                                                                     {acc.emailType}
                                                                 </span>
                                                             </div>
-                                                            <p className="font-bold truncate text-sm">{acc.email}</p>
+                                                            <p className="font-bold truncate text-[13px] text-slate-800 dark:text-slate-200">{acc.email}</p>
                                                         </div>
                                                         <button
                                                             onClick={() => handleDeleteEmailInfo(acc.id)}
-                                                            className="p-2 opacity-0 group-hover:opacity-100 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all"
+                                                            className="p-2 opacity-0 group-hover/card:opacity-100 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-all translate-x-3 group-hover/card:translate-x-0"
                                                         >
-                                                            <Trash2 className="h-4 w-4" />
+                                                            <Trash2 className="h-3.5 w-3.5" />
                                                         </button>
                                                     </div>
-                                                </Card>
+                                                </div>
                                             ))
                                         )}
                                     </div>

@@ -1,6 +1,6 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users, Settings as SettingsIcon, UserCircle } from 'lucide-react';
+import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users, Settings as SettingsIcon, UserCircle, Plus } from 'lucide-react';
 import { useState, useEffect, useMemo, memo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRoleEnum } from '@adminvault/shared-models';
@@ -22,6 +22,8 @@ const allNavigation: NavigationItem[] = [
 
     // SUPPORT & COMMS
     { name: 'Support Tickets', href: '/tickets', icon: Ticket, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
+    { name: 'My Tickets', href: '/create-ticket?tab=tickets', icon: Ticket, roles: [UserRoleEnum.USER] },
+    { name: 'Submit Ticket', href: '/create-ticket?tab=create', icon: Plus, roles: [UserRoleEnum.USER] },
     { name: 'Email Accounts', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
     { name: 'Document Center', href: '/documents', icon: FileText, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
 
@@ -46,6 +48,10 @@ const navigationGroups = [
     {
         title: 'Operations',
         items: allNavigation.filter(item => ['IT Asset Inventory', 'License Manager', 'Employee Directory'].includes(item.name))
+    },
+    {
+        title: 'Support Portal',
+        items: allNavigation.filter(item => ['My Tickets', 'Submit Ticket'].includes(item.name))
     },
     {
         title: 'Support & Comms',

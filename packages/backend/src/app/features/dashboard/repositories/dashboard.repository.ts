@@ -6,6 +6,9 @@ import { TicketsEntity } from '../../tickets/entities/tickets.entity';
 import { CompanyLicenseEntity } from '../../licenses/entities/company-license.entity';
 import { AssetStatusEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
 
+import { AuthUsersEntity } from '../../auth-users/entities/auth-users.entity';
+import { MFASettingsEntity } from '../../administration/entities/mfa-settings.entity';
+
 @Injectable()
 export class DashboardRepository {
     constructor(private readonly dataSource: DataSource) { }
@@ -47,9 +50,47 @@ export class DashboardRepository {
     }
 
     async getLicenseStats() {
-        const repo = this.dataSource.getRepository(CompanyLicenseEntity);
-        const total = await repo.count();
-        const expiring = await repo.find({ where: { expiryDate: MoreThan(new Date()) }, order: { expiryDate: 'ASC' }, take: 5 });
+        const query = this.dataSource.getRepository(CompanyLicenseEntity)
+            .createQueryBuilder('license')
+            .leftJoin('applications', 'app', 'app.id = license.application_id')
+            .leftJoin('employees', 'emp', 'emp.id = license.assigned_employee_id')
+            .select([
+                'license.id as id',
+                'app.name as applicationName',
+                'license.expiryDate as expiryDate',
+                'CONCAT(emp.first_name, \' \', emp.last_name) as assignedTo'
+            ])
+            .where('license.expiryDate > :today', { today: new Date() })
+            .orderBy('license.expiryDate', 'ASC')
+            .limit(5);
+
+        const expiring = await query.getRawMany();
+        const total = await this.dataSource.getRepository(CompanyLicenseEntity).count();
         return { total, expiring };
+    }
+
+    async getSecurityStats() {
+        const userRepo = this.dataSource.getRepository(AuthUsersEntity);
+        const mfaRepo = this.dataSource.getRepository(MFASettingsEntity);
+        const assetRepo = this.dataSource.getRepository(AssetInfoEntity);
+        const ticketRepo = this.dataSource.getRepository(TicketsEntity);
+
+        const totalUsers = await userRepo.count();
+        const enabledMFACount = await mfaRepo.count({ where: { isEnabled: true } });
+        const identityScore = totalUsers > 0 ? (enabledMFACount / totalUsers) * 100 : 100;
+
+        const totalAssets = await assetRepo.count();
+        const assignedAssets = await assetRepo.count({ where: { assetStatusEnum: In([AssetStatusEnum.IN_USE]) } });
+        const deviceScore = totalAssets > 0 ? (assignedAssets / totalAssets) * 100 : 100;
+
+        const totalTickets = await ticketRepo.count();
+        const resolvedTickets = await ticketRepo.count({ where: { ticketStatus: In([TicketStatusEnum.CLOSED, TicketStatusEnum.RESOLVED]) } });
+        const complianceScore = totalTickets > 0 ? (resolvedTickets / totalTickets) * 100 : 100;
+
+        return {
+            identity: Math.round(identityScore),
+            devices: Math.round(deviceScore),
+            compliance: Math.round(complianceScore)
+        };
     }
 }

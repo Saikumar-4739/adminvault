@@ -29,6 +29,14 @@ export interface DashboardStats {
         ticketResolutionRate: number;
         openCriticalTickets: number;
     };
+    security: {
+        score: number;
+        metrics: {
+            identity: number;
+            devices: number;
+            compliance: number;
+        };
+    };
 }
 
 export class DashboardStatsResponseModel extends GlobalResponse {
