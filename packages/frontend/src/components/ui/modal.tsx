@@ -4,7 +4,6 @@ import { X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
-import Button from '@/components/ui/Button';
 
 interface ModalProps {
     isOpen: boolean;
