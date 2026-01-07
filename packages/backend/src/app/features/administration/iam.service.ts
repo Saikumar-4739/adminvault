@@ -314,9 +314,19 @@ export class IAMService implements OnModuleInit {
     }
 
     // API Keys
-    async findAllAPIKeys(companyId: number): Promise<APIKeyResponseModel[]> {
-        const keys = await this.apiKeyRepo.find({ where: { companyId, isActive: true } });
-        return keys.map(k => new APIKeyResponseModel(Number(k.id), k.name, '********', k.expiresAt, k.lastUsedAt));
+    async findAllAPIKeys(companyId: number): Promise<any[]> {
+        const keys = await this.apiKeyRepo.find({ where: { companyId } }); // Removed isActive: true filter to show inactive ones too
+        return keys.map(k => ({
+            id: Number(k.id),
+            name: k.name,
+            key: 'pk_live_********' + k.apiKey.substring(k.apiKey.length - 4),
+            expiresAt: k.expiresAt,
+            lastUsed: k.lastUsedAt,
+            isActive: k.isActive,
+            createdAt: k.createdAt,
+            permissions: [], // Not implemented yet
+            description: '' // Not implemented yet
+        }));
     }
 
     async createAPIKey(model: CreateAPIKeyModel): Promise<{ name: string, apiKey: string, message: string }> {

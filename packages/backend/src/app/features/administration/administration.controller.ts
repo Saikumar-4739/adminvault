@@ -274,7 +274,27 @@ export class AdministrationController {
         try {
             body.userId = req.user.id;
             body.companyId = req.user.companyId;
-            return await this.iamService.createAPIKey(body);
+            const result = await this.iamService.createAPIKey(body);
+            return { status: true, statusCode: 201, message: result.message, data: result };
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/api-keys/get-all')
+    async getAllAPIKeys(@Req() req: any) {
+        try {
+            const data = await this.iamService.findAllAPIKeys(req.user.companyId);
+            return { status: true, statusCode: 200, message: 'API Keys retrieved', data };
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/api-keys/delete')
+    async deleteAPIKey(@Body('id') id: number): Promise<GlobalResponse> {
+        try {
+            return await this.iamService.revokeAPIKey(id);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

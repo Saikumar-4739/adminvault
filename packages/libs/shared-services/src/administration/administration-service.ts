@@ -71,8 +71,20 @@ export class AdministrationService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/status'), {}, config);
     }
 
-    async setupMFA(config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/setup'), {}, config);
+    async setupMFA(reqObj: any, config?: AxiosRequestConfig): Promise<any> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/setup'), reqObj, config);
+    }
+
+    async getMFAMethods(config?: AxiosRequestConfig): Promise<any> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/methods'), {}, config);
+    }
+
+    async disableMFA(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/disable'), { id }, config);
+    }
+
+    async generateBackupCodes(config?: AxiosRequestConfig): Promise<any> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/generate-backup-codes'), {}, config);
     }
 
     async enableMFA(reqObj: EnableMFAModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
@@ -81,6 +93,14 @@ export class AdministrationService extends CommonAxiosService {
 
     async createAPIKey(reqObj: CreateAPIKeyModel, config?: AxiosRequestConfig): Promise<any> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/api-keys/create'), reqObj, config);
+    }
+
+    async getAllAPIKeys(config?: AxiosRequestConfig): Promise<any> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/api-keys/get-all'), {}, config);
+    }
+
+    async deleteAPIKey(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/api-keys/delete'), { id }, config);
     }
 
     async getSSOProviders(config?: AxiosRequestConfig): Promise<any> {

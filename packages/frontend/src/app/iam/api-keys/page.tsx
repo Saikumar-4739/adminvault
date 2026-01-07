@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum } from '@adminvault/shared-models';
+import { CreateAPIKeyModel, UserRoleEnum } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
 import { Key, Plus, Copy, Trash2, Eye, EyeOff, Calendar, CheckCircle2, XCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
@@ -57,7 +57,8 @@ export const APIKeysPage: React.FC = () => {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await iamService.createAPIKey(formData);
+            const req = new CreateAPIKeyModel(1, 1, formData.name, new Date(formData.expiresAt));
+            const response = await iamService.createAPIKey(req);
             if (response.status) {
                 success('Success', response.message || 'API key created successfully');
                 setIsModalOpen(false);

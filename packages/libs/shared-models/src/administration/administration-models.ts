@@ -120,6 +120,12 @@ export class CreateAPIKeyModel {
     companyId!: number;
     name!: string;
     expiresAt?: Date;
+    constructor(userId: number, companyId: number, name: string, expiresAt?: Date) {
+        this.userId = userId;
+        this.companyId = companyId;
+        this.name = name;
+        this.expiresAt = expiresAt;
+    }
 }
 
 export class APIKeyResponseModel {

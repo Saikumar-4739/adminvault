@@ -1,0 +1,8 @@
+{
+    "name": "@org/frontend",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "next": "14.2.15"
+    }
+}

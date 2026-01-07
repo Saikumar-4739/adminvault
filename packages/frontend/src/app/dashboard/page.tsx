@@ -10,8 +10,8 @@ import Badge from '@/components/ui/Badge';
 import {
     Users, Package, Ticket, Lock, RefreshCcw, TrendingUp, Activity,
     PieChart as PieChartIcon, BarChart2, Mail, FileText, Settings,
-    Shield, Clock, AlertTriangle, CheckCircle, ArrowUpRight, Zap,
-    Building2, Calendar, Key, Database, LayoutGrid
+    Clock, AlertTriangle, CheckCircle, ArrowUpRight, Zap,
+    Key, LayoutGrid
 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';

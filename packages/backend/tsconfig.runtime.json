@@ -10,5 +10,13 @@
                 "../libs/backend-utils/dist"
             ]
         }
-    }
+    },
+    "references": [
+      {
+        "path": "../libs/backend-utils/tsconfig.lib.json"
+      },
+      {
+        "path": "../libs/shared-models/tsconfig.lib.json"
+      }
+    ]
 }

@@ -1,12 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-    Laptop, Monitor, Smartphone, Tablet, HardDrive,
-    User, Calendar, Shield, Package, History,
-    QrCode, Pencil, Trash2, ChevronDown, ChevronUp,
-    AlertTriangle, CheckCircle2, UserPlus
-} from 'lucide-react';
+import { Laptop, Monitor, Smartphone, Tablet, HardDrive, User, Calendar, Shield, Package, History, QrCode, Pencil, Trash2, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, UserPlus } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 interface AssetCardProps {

@@ -22,7 +22,6 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
     const [companies, setCompanies] = useState<any[]>([]);
     const [brands, setBrands] = useState<any[]>([]);
     const [assetTypes, setAssetTypes] = useState<any[]>([]);
-
     const [formData, setFormData] = useState({
         deviceId: '',
         brandId: '',

@@ -3,13 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ticketService } from '@/lib/api/services';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
 import { Building2, CheckCircle, Ticket, Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, AlertTriangle, Send, MessageSquare, List, Plus, Clock, ChevronRight, Hash, Layers, Zap } from 'lucide-react';
-import PageHeader from '@/components/ui/PageHeader';
 import { getSocket } from '@/lib/socket';
 
 const CategoryIcons: Record<string, any> = {
@@ -271,7 +269,6 @@ export default function CreateTicketPage() {
                                                 const cat = CategoryStyles[ticket.categoryEnum] || CategoryStyles[TicketCategoryEnum.OTHER];
                                                 const prio = PriorityConfig[ticket.priorityEnum] || PriorityConfig[TicketPriorityEnum.MEDIUM];
                                                 const stat = StatusStyles[ticket.ticketStatus] || StatusStyles[TicketStatusEnum.OPEN];
-                                                const Icon = CategoryIcons[ticket.categoryEnum] || HelpCircle;
 
                                                 return (
                                                     <tr key={ticket.id} className="hover:bg-slate-50/50 dark:hover:bg-blue-500/5 transition-colors">
@@ -371,7 +368,6 @@ export default function CreateTicketPage() {
                                                 {Object.values(TicketCategoryEnum).map((cat) => {
                                                     const Icon = CategoryIcons[cat];
                                                     const isSelected = formData.categoryEnum === cat;
-                                                    const style = CategoryStyles[cat];
                                                     return (
                                                         <button
                                                             key={cat}
