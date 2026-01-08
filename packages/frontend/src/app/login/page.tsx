@@ -67,7 +67,7 @@ export default function LoginPage() {
     };
 
     const handleSSOLogin = (provider: 'microsoft' | 'google') => {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_AVS_SERVICE_URL || 'http://localhost:3001/api';
+        const baseUrl = process.env.NEXT_PUBLIC_APP_AVS_SERVICE_URL || 'http://160.250.205.70:3001';
         window.location.href = `${baseUrl}/auth-users/sso/login?provider=${provider}`;
     };
 
