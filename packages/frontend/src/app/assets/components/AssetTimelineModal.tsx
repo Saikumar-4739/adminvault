@@ -6,7 +6,7 @@ import { services } from '@/lib/api/services';
 import { AssetTimelineEvent, AssetTimelineEventType } from '@adminvault/shared-models';
 import { PageLoader } from '@/components/ui/Spinner';
 import { formatDateTime } from '@/lib/utils';
-import { Modal } from '@/components/ui/Modal';
+import { Modal } from '../../../components/ui/Modal';
 
 interface AssetTimelineModalProps {
     isOpen: boolean;

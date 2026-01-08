@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { Upload, FileUp, AlertCircle, CheckCircle, Download, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { Modal } from '@/components/ui/Modal';
+import { Modal } from '../../../components/ui/Modal';
 import { useToast } from '@/contexts/ToastContext';
 import { services } from '@/lib/api/services';
 import * as XLSX from 'xlsx';
