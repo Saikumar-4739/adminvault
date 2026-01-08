@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import { Printer } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { Modal } from '../../../components/ui/Modal';
+import { Modal } from '../../../../components/ui/Modal';
 import { QRCodeSVG } from 'qrcode.react';
 
 
