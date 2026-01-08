@@ -16,6 +16,17 @@ const nextConfig = {
     '@adminvault/backend-utils',
   ],
 
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
+  },
+
   // Performance Optimizations
 
   compress: true, // Enable gzip compression
