@@ -1,14 +1,16 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:20-alpine'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
+    agent any
+
+    options {
+        timeout(time: 90, unit: 'MINUTES')
     }
 
     stages {
+
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                checkout scm
+            }
         }
 
         stage('Install Dependencies') {
@@ -16,18 +18,27 @@ pipeline {
                 sh '''
                   node -v
                   npm -v
-                  npm ci --no-progress
+                  npm config set progress=false
+                  npm install --loglevel=verbose
                 '''
             }
         }
 
-        stage('Build') {
+        stage('Build Shared') {
             steps {
-                sh '''
-                  npm run build:shared
-                  npm run build:backend
-                  npm run build:frontend
-                '''
+                sh 'npm run build:shared'
+            }
+        }
+
+        stage('Build Backend') {
+            steps {
+                sh 'npm run build:backend'
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                sh 'npm run build:frontend'
             }
         }
 
