@@ -23,7 +23,8 @@ import {
     MFAStatusResponseModel, MFASetupResponseModel, GetAllAPIKeysResponseModel, GetAllSSOProvidersResponseModel,
     GetUserPermissionsResponseModel, CheckPermissionRequestModel, CheckPermissionResponseModel,
     GetAllPermissionsResponseModel, CreatePermissionModel, UpdatePermissionModel, DeletePermissionModel,
-    CreateAPIKeyResponse
+    CreateAPIKeyResponse,
+    PrincipalResponseModel, MenuResponseModel, SSOProvider, PermissionModel
 } from '@adminvault/shared-models';
 
 @ApiTags('Administration')
