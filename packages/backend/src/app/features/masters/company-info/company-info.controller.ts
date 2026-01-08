@@ -50,6 +50,15 @@ export class CompanyInfoController {
         }
     }
 
+    @Post('getAllCompaniesDropdown')
+    async getAllCompaniesDropdown(): Promise<GlobalResponse> {
+        try {
+            return await this.service.getAllCompaniesDropdown();
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
     @Post('deleteCompany')
     @ApiBody({ type: DeleteCompanyModel })
     async deleteCompany(@Body() reqModel: DeleteCompanyModel): Promise<GlobalResponse> {

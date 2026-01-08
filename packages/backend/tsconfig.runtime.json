@@ -1,22 +1,22 @@
 {
-    "extends": "./tsconfig.app.json",
-    "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "@adminvault/shared-models": [
-                "../libs/shared-models/dist"
-            ],
-            "@adminvault/backend-utils": [
-                "../libs/backend-utils/dist"
-            ]
-        }
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@adminvault/shared-models": [
+        "../../dist/packages/libs/shared-models"
+      ],
+      "@adminvault/backend-utils": [
+        "../../dist/packages/libs/backend-utils"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "../libs/backend-utils/tsconfig.lib.json"
     },
-    "references": [
-      {
-        "path": "../libs/backend-utils/tsconfig.lib.json"
-      },
-      {
-        "path": "../libs/shared-models/tsconfig.lib.json"
-      }
-    ]
+    {
+      "path": "../libs/shared-models/tsconfig.lib.json"
+    }
+  ]
 }

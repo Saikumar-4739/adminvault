@@ -1,10 +1,9 @@
 import { Column, Entity, CreateDateColumn, UpdateDateColumn, PrimaryGeneratedColumn, Index } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
-@Entity('user_login_sessions')
+@Entity('login_sessions')
 @Index('idx_session_user', ['userId'])
 @Index('idx_session_ip', ['ipAddress'])
-@Index('idx_session_time', ['loginTimestamp'])
 export class UserLoginSessionsEntity extends CommonBaseEntity {
     @Column('text', { name: 'session_token', nullable: true, comment: 'Unique session identifier / JWT' })
     sessionToken: string;

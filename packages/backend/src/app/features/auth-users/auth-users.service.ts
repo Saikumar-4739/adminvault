@@ -43,15 +43,6 @@ const SSO_CONFIG = {
         userInfoUrl: 'https://graph.microsoft.com/v1.0/me',
         scope: 'openid profile email User.Read'
     },
-    zoho: {
-        clientId: process.env.ZOHO_CLIENT_ID || '',
-        clientSecret: process.env.ZOHO_CLIENT_SECRET || '',
-        redirectUri: process.env.ZOHO_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
-        authUrl: 'https://accounts.zoho.com/oauth/v2/auth',
-        tokenUrl: 'https://accounts.zoho.com/oauth/v2/token',
-        userInfoUrl: 'https://accounts.zoho.com/oauth/user/info',
-        scope: 'Aaaserver.profile.Read email'
-    },
     google: {
         clientId: process.env.GOOGLE_CLIENT_ID || '',
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
@@ -374,11 +365,11 @@ export class AuthUsersService {
      * Generate SSO authorization URL for supported providers
      * Creates OAuth 2.0 authorization URL with proper parameters
      * 
-     * @param provider - SSO provider (microsoft, zoho, or google)
+     * @param provider - SSO provider (microsoft or google)
      * @returns Authorization URL to redirect user to
      * @throws ErrorResponse if provider is invalid or not configured
      */
-    async getSSOAuthUrl(provider: 'microsoft' | 'zoho' | 'google'): Promise<string> {
+    async getSSOAuthUrl(provider: 'microsoft' | 'google'): Promise<string> {
         const config = SSO_CONFIG[provider];
         if (!config) throw new ErrorResponse(0, 'Invalid Provider');
 
@@ -396,10 +387,7 @@ export class AuthUsersService {
         });
 
         // Provider-specific parameters
-        if (provider === 'zoho') {
-            params.append('access_type', 'offline');
-            params.append('prompt', 'Consent');
-        } else if (provider === 'google') {
+        if (provider === 'google') {
             params.append('access_type', 'offline');
             params.append('prompt', 'consent');
         }
@@ -419,7 +407,7 @@ export class AuthUsersService {
      * @throws ErrorResponse if authentication fails or user not found
      */
     async handleSSOCallback(provider: string, code: string, ipAddress: string, userAgent: string): Promise<LoginResponseModel> {
-        const config = SSO_CONFIG[provider as 'microsoft' | 'zoho' | 'google'];
+        const config = SSO_CONFIG[provider as 'microsoft' | 'google'];
         if (!config) throw new ErrorResponse(0, 'Invalid Provider');
 
         let email = '';
@@ -448,12 +436,6 @@ export class AuthUsersService {
                 });
                 email = profileRes.data.mail || profileRes.data.userPrincipalName;
                 name = profileRes.data.displayName;
-            } else if (provider === 'zoho') {
-                const profileRes = await axios.get(config.userInfoUrl, {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                });
-                email = profileRes.data.Email;
-                name = `${profileRes.data.First_Name || ''} ${profileRes.data.Last_Name || ''}`.trim();
             } else if (provider === 'google') {
                 const profileRes = await axios.get(config.userInfoUrl, {
                     headers: { Authorization: `Bearer ${accessToken}` }

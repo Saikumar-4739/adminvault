@@ -1,12 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
-
 import { SettingType } from '@adminvault/shared-models';
 
 @Entity('settings')
-@Index('idx_settings_key', ['key'])
 @Index('idx_settings_user', ['userId'])
 @Index('idx_settings_company', ['companyId'])
-@Index('idx_settings_category', ['category'])
 export class SettingsEntity {
     @PrimaryGeneratedColumn({ type: 'bigint', comment: 'Primary key for settings' })
     id: number;
@@ -17,7 +14,7 @@ export class SettingsEntity {
     @Column({ name: 'value', type: 'text', comment: 'Setting value (JSON)' })
     value: string;
 
-    @Column({ name: 'type', type: 'enum', enum: SettingType, default: SettingType.USER, comment: 'Setting type'})
+    @Column({ name: 'type', type: 'enum', enum: SettingType, default: SettingType.USER, comment: 'Setting type' })
     type: SettingType;
 
     @Column({ name: 'category', type: 'varchar', length: 100, nullable: true, comment: 'Setting category' })

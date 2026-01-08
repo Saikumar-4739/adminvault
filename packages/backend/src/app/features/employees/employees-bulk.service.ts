@@ -20,7 +20,7 @@ export class EmployeesBulkService {
     async processBulkImport(fileBuffer: Buffer, companyId: number, userId: number): Promise<BulkImportResponseModel> {
         try {
             // 1. Fetch valid departments for lookup
-            const departments = await this.departmentRepo.find({ where: { companyId } });
+            const departments = await this.departmentRepo.find();
 
             // Create lookup maps
             const deptIdSet = new Set<number>(departments.map(d => d.id));

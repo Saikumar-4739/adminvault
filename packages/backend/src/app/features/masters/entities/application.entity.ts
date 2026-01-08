@@ -1,11 +1,10 @@
 import { Column, Entity, Index } from 'typeorm';
-import { CommonBaseEntity } from '../../../../database/common-base.entity';
+import { MasterBaseEntity } from '../../../../database/master-base.entity';
 
 @Entity('applications')
 @Index('idx_app_name', ['name'])
-@Index('idx_app_company', ['companyId'])
 @Index('idx_app_user', ['userId'])
-export class ApplicationsMasterEntity extends CommonBaseEntity {
+export class ApplicationsMasterEntity extends MasterBaseEntity {
     @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Application name' })
     name: string;
 

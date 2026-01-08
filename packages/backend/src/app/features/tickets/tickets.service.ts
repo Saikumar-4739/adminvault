@@ -64,7 +64,7 @@ export class TicketsService {
             const entity = this.ticketsRepo.create({
                 ...reqModel,
                 employeeId: employee.id, // Use the resolved employee ID
-                // userId will be set by CommonBaseEntity from request context if middleware sets it
+                userId: userId,
             });
 
             const savedTicket = await transManager.getRepository(TicketsEntity).save(entity);

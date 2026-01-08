@@ -1,13 +1,12 @@
 'use client'
 
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
-import { Building2, ShieldCheck, BarChart3, Users, Zap, X, Lock } from 'lucide-react';
+import { ShieldCheck, Users, Zap, X, Lock, ArrowRight, Globe, Building2 } from 'lucide-react';
 import { authService } from '@/lib/api/services';
 import { RequestAccessModel, UserRoleEnum } from '@adminvault/shared-models';
 
@@ -67,9 +66,7 @@ export default function LoginPage() {
         }
     };
 
-    const handleSSOLogin = (provider: 'microsoft' | 'zoho' | 'google') => {
-        // Redirect to backend SSO endpoint
-        // Using direct URL construction based on standard config
+    const handleSSOLogin = (provider: 'microsoft' | 'google') => {
         const baseUrl = process.env.NEXT_PUBLIC_APP_AVS_SERVICE_URL || 'http://localhost:3001/api';
         window.location.href = `${baseUrl}/auth-users/sso/login?provider=${provider}`;
     };
@@ -118,16 +115,7 @@ export default function LoginPage() {
         </svg>
     );
 
-    // Zoho Logo Component
-    const ZohoLogo = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24">
-            <title>Zoho</title>
-            <path fill="#ed1c24" d="M3.5 6h4v12h-4z" />
-            <path fill="#288e22" d="M8.5 6h4v12h-4z" />
-            <path fill="#0067d0" d="M13.5 6h4v12h-4z" />
-            <path fill="#fee300" d="M18.5 6h4v12h-4z" />
-        </svg>
-    );
+
 
     // Google Logo Component
     const GoogleLogo = () => (
@@ -140,261 +128,199 @@ export default function LoginPage() {
     );
 
     return (
-        <div className="min-h-screen flex bg-white dark:bg-slate-950 font-sans text-slate-900 dark:text-white overflow-hidden">
-            {/* Background Decorations */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[120px]" />
-            </div>
+        <div className="min-h-screen w-full flex bg-white dark:bg-[#020617] font-sans">
 
-            {/* Left Side - App Info (Marketing) */}
-            <div className="hidden lg:flex lg:w-[65%] relative z-10 flex-col justify-between p-16 bg-slate-900/50 backdrop-blur-3xl border-r border-white/5">
-                <div className="absolute inset-0 bg-slate-900/60 z-[-1]" />
-                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] z-[-1]" />
+            {/* Left Side: Brand/Art (60%) */}
+            <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden flex-col justify-between p-16 text-white bg-[#0F172A]">
+                {/* Dynamic Gradient Overlay - Deep Space Theme */}
+                <div className="absolute inset-0 bg-[radial-gradient(at_top_right,_var(--tw-gradient-stops))] from-blue-700/30 via-slate-900/0 to-slate-900/0" />
+                <div className="absolute inset-0 bg-[radial-gradient(at_bottom_left,_var(--tw-gradient-stops))] from-indigo-600/30 via-slate-900/0 to-slate-900/0" />
+                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.04] z-0" />
 
-                {/* Logo Area */}
-                <div>
-                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md shadow-2xl mb-8">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></span>
-                        <span className="text-[10px] font-bold text-white tracking-[0.2em] uppercase">Enterprise V2.0</span>
-                    </div>
-                    <h1 className="text-7xl font-bold tracking-tight text-white mb-6">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">Admin</span>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Vault</span>
-                    </h1>
-                    <p className="text-xl text-slate-400 max-w-lg leading-relaxed font-light">
-                        The next-generation platform for secure identity management, asset tracking, and enterprise resource planning.
-                    </p>
-                </div>
-
-                {/* Feature Pills */}
-                <div className="space-y-8">
-                    <div className="grid grid-cols-2 gap-4">
-                        {[
-                            { icon: ShieldCheck, title: "Identity & Access", desc: "Zero-trust architecture with RBAC, SSO, and MFA policies.", color: "from-blue-500 to-indigo-500", iconColor: "text-blue-200" },
-                            { icon: Building2, title: "Asset Management", desc: "Full lifecycle tracking for hardware, software, and licenses.", color: "from-emerald-500 to-teal-500", iconColor: "text-emerald-200" },
-                            { icon: Users, title: "HR & Onboarding", desc: "Streamlined employee provisioning and automated access flows.", color: "from-orange-500 to-red-500", iconColor: "text-orange-200" },
-                            { icon: BarChart3, title: "Finance & Audits", desc: "Real-time expense tracking, payroll integration, and compliance reports.", color: "from-violet-500 to-purple-500", iconColor: "text-violet-200" },
-                            { icon: Zap, title: "Automated Workflows", desc: "Trigger-based actions for approvals, notifications, and alerts.", color: "from-yellow-400 to-amber-500", iconColor: "text-amber-100" },
-                            { icon: Lock, title: "Security Vault", desc: "Enterprise-grade password manager and secret storage.", color: "from-cyan-500 to-blue-600", iconColor: "text-cyan-100" }
-                        ].map((feature, idx) => (
-                            <div key={idx} className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-default group backdrop-blur-sm hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
-                                <div className={`p-3 h-fit rounded-xl bg-gradient-to-br ${feature.color} shadow-lg shadow-black/20 group-hover:scale-110 transition-transform duration-300`}>
-                                    <feature.icon className={`w-6 h-6 ${feature.iconColor || 'text-white'}`} />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-bold text-sm mb-1 tracking-wide">{feature.title}</h3>
-                                    <p className="text-slate-300 text-xs leading-relaxed font-light">{feature.desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Flow Visualization / Stats */}
-                    <div className="flex gap-4 pt-6 border-t border-white/10">
-                        <div className="flex-1 p-5 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/5 shadow-2xl backdrop-blur-md">
-                            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300 mb-1">99.9%</div>
-                            <div className="text-xs text-slate-400 font-bold tracking-widest uppercase">Uptime Guarantee</div>
+                {/* Content */}
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                    <div>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 backdrop-blur-md border border-blue-400/20 mb-8">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                            </span>
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-blue-100">System Online</span>
                         </div>
-                        <div className="flex-1 p-5 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/5 shadow-2xl backdrop-blur-md">
-                            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-300 mb-1">ISO 27001</div>
-                            <div className="text-xs text-slate-400 font-bold tracking-widest uppercase">Certified Security</div>
-                        </div>
-                        <div className="flex-1 p-5 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/5 shadow-2xl backdrop-blur-md">
-                            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-300 mb-1">24/7</div>
-                            <div className="text-xs text-slate-400 font-bold tracking-widest uppercase">Global Support</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="text-slate-500 text-xs font-medium">
-                    © 2026 AdminVault Enterprise. All rights reserved.
-                </div>
-            </div>
-
-            {/* Right Side - Login Form (35%) - Cleaner & Neater */}
-            <div className="w-full lg:w-[35%] flex flex-col justify-center px-8 sm:px-12 lg:px-20 relative z-20 bg-slate-50 dark:bg-[#0B1120] h-screen overflow-y-auto border-l border-slate-200 dark:border-slate-800 shadow-2xl">
-                {/* Decorative background element for form area */}
-                <div className="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                    <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[100px]" />
-                </div>
-                <div className="w-full max-w-[420px] mx-auto space-y-10 py-10 relative z-10">
-
-                    {/* Form Header */}
-                    <div className="text-center space-y-3">
-                        <div className="inline-flex justify-center items-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-500/20 mb-4 transform hover:scale-105 transition-transform duration-300">
-                            <Building2 className="w-7 h-7" />
-                        </div>
-                        <div className="flex items-center justify-center gap-3">
-                            <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                                Welcome Back
-                            </h2>
-                        </div>
-                        <p className="text-slate-500 dark:text-slate-400 text-base font-medium">
-                            Enter your credentials to access your account
+                        <h1 className="text-7xl font-black tracking-tight mb-6 leading-tight text-white drop-shadow-sm">
+                            Admin<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Vault</span>
+                        </h1>
+                        <p className="text-slate-300 text-xl font-light leading-relaxed max-w-md">
+                            The secure foundation for your enterprise operations. Manage Identity, Assets, and Compliance in one unified platform.
                         </p>
                     </div>
 
-
-                    <div className="space-y-6 bg-white dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-black/20 backdrop-blur-sm">
-                        {/* SSO Section Header */}
-                        <div className="text-center">
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Sign in with</h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Choose your preferred authentication method</p>
-                        </div>
-                        {/* Icon-only SSO Buttons */}
-                        <div className="flex items-center justify-center gap-4">
-                            {/* Microsoft */}
-                            <button
-                                type="button"
-                                onClick={() => handleSSOLogin('microsoft')}
-                                title="Continue with Microsoft"
-                                className="group flex items-center justify-center w-14 h-14 rounded-2xl 
-                   bg-blue-50 dark:bg-blue-950/30 
-                   border-2 border-blue-200 dark:border-blue-800
-                   hover:bg-blue-100 dark:hover:bg-blue-900/40
-                   hover:shadow-lg hover:shadow-blue-200/50 dark:hover:shadow-blue-900/30
-                   transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95"
-                            >
-                                <MicrosoftLogo />
-                            </button>
-
-                            {/* Google */}
-                            <button
-                                type="button"
-                                onClick={() => handleSSOLogin('google')}
-                                title="Continue with Google"
-                                className="group flex items-center justify-center w-14 h-14 rounded-2xl 
-                   bg-red-50 dark:bg-red-950/30 
-                   border-2 border-red-200 dark:border-red-800
-                   hover:bg-red-100 dark:hover:bg-red-900/40
-                   hover:shadow-lg hover:shadow-red-200/50 dark:hover:shadow-red-900/30
-                   transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95"
-                            >
-                                <GoogleLogo />
-                            </button>
-
-                            {/* Zoho */}
-                            <button
-                                type="button"
-                                onClick={() => handleSSOLogin('zoho')}
-                                title="Continue with Zoho"
-                                className="group flex items-center justify-center w-14 h-14 rounded-2xl 
-                   bg-emerald-50 dark:bg-emerald-950/30 
-                   border-2 border-emerald-200 dark:border-emerald-800
-                   hover:bg-emerald-100 dark:hover:bg-emerald-900/40
-                   hover:shadow-lg hover:shadow-emerald-200/50 dark:hover:shadow-emerald-900/30
-                   transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95"
-                            >
-                                <ZohoLogo />
-                            </button>
+                    {/* Feature List */}
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+                        <div className="flex flex-col gap-2 group">
+                            <div className="flex items-center gap-3 text-base font-semibold text-white group-hover:text-blue-200 transition-colors">
+                                <div className="p-2.5 rounded-xl bg-blue-500/20 border border-blue-500/20 group-hover:bg-blue-500/30 transition-colors"><ShieldCheck className="w-5 h-5 text-blue-300" /></div>
+                                Enterprise Security
+                            </div>
+                            <p className="text-sm text-slate-400 leading-relaxed pl-[3.25rem]">Zero-trust architecture with advanced RBAC.</p>
                         </div>
 
-
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
+                        <div className="flex flex-col gap-2 group">
+                            <div className="flex items-center gap-3 text-base font-semibold text-white group-hover:text-indigo-200 transition-colors">
+                                <div className="p-2.5 rounded-xl bg-indigo-500/20 border border-indigo-500/20 group-hover:bg-indigo-500/30 transition-colors"><Zap className="w-5 h-5 text-indigo-300" /></div>
+                                Automated Workflows
                             </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white dark:bg-slate-900/50 px-3 py-1 text-slate-500 dark:text-slate-400 font-semibold rounded-full">Or continue with email</span>
-                            </div>
+                            <p className="text-sm text-slate-400 leading-relaxed pl-[3.25rem]">Trigger-based actions for approvals and alerts.</p>
                         </div>
 
-                        {/* Login Form */}
-                        <form onSubmit={handleSubmit} className="space-y-5">
-                            <Input
-                                label="Email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                placeholder="name@company.com"
-                                className="h-12 bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-700 focus:ring-indigo-500/20"
-                            />
-
-                            <div className="space-y-1">
-                                <Input
-                                    label="Password"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    placeholder="••••••••"
-                                    className="h-12 bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-700 focus:ring-indigo-500/20"
-                                />
-                                <div className="flex justify-end pt-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowForgotModal(true)}
-                                        className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
-                                    >
-                                        Forgot password?
-                                    </button>
-                                </div>
+                        <div className="flex flex-col gap-2 group">
+                            <div className="flex items-center gap-3 text-base font-semibold text-white group-hover:text-cyan-200 transition-colors">
+                                <div className="p-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors"><Globe className="w-5 h-5 text-cyan-300" /></div>
+                                Global Infrastructure
                             </div>
+                            <p className="text-sm text-slate-400 leading-relaxed pl-[3.25rem]">Distributed systems ensures 99.9% uptime.</p>
+                        </div>
 
-                            <Button
-                                type="submit"
-                                className="w-full h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transform hover:-translate-y-0.5"
-                                isLoading={isLoading}
-                            >
-                                Sign In
-                            </Button>
-                        </form>
+                        <div className="flex flex-col gap-2 group">
+                            <div className="flex items-center gap-3 text-base font-semibold text-white group-hover:text-violet-200 transition-colors">
+                                <div className="p-2.5 rounded-xl bg-violet-500/20 border border-violet-500/20 group-hover:bg-violet-500/30 transition-colors"><Users className="w-5 h-5 text-violet-300" /></div>
+                                Team Management
+                            </div>
+                            <p className="text-sm text-slate-400 leading-relaxed pl-[3.25rem]">Streamlined onboarding and access control.</p>
+                        </div>
                     </div>
 
-                    <p className="text-center text-sm font-medium text-slate-500 dark:text-slate-400">
-                        Don't have an account?{' '}
-                        <button
-                            type="button"
-                            onClick={() => setShowRequestModal(true)}
-                            className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline decoration-2 underline-offset-4"
-                        >
-                            Request access
+                    <div className="pt-8 border-t border-slate-700/50">
+                        <div className="flex justify-between items-end">
+                            <div className="text-sm text-slate-400 font-medium">
+                                Trusted by industry leaders worldwide.
+                            </div>
+                            <div className="flex gap-2 opacity-50">
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Decorative Elements - Subtle Glows */}
+                <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]" />
+                <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px]" />
+            </div>
+
+
+            {/* Right Side: Form (40%) */}
+            <div className="w-full lg:w-[40%] flex flex-col justify-center relative bg-white dark:bg-[#020617] transition-colors duration-300">
+                {/* Decorative background element for form area */}
+                <div className="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                    <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[100px]" />
+                </div>
+
+                <div className="w-full max-w-[480px] mx-auto px-8 sm:px-12 py-10 relative z-10">
+
+                    {/* Mobile Logo for small screens */}
+                    <div className="lg:hidden flex justify-center mb-8">
+                        <div className="inline-flex items-center gap-2 group">
+                            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                                <Building2 className="w-6 h-6" />
+                            </div>
+                            <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Admin<span className="text-blue-600 dark:text-blue-500">Vault</span></span>
+                        </div>
+                    </div>
+
+                    <div className="mb-10">
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Welcome Back</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-base">Please enter your details to sign in.</p>
+                    </div>
+
+                    {/* SSO Buttons */}
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                        <button onClick={() => handleSSOLogin('microsoft')} className="flex items-center justify-center h-14 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md">
+                            <MicrosoftLogo />
                         </button>
-                    </p>
+                        <button onClick={() => handleSSOLogin('google')} className="flex items-center justify-center h-14 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md">
+                            <GoogleLogo />
+                        </button>
+                    </div>
+
+                    <div className="relative mb-8">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-800"></div></div>
+                        <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-[#020617] px-4 text-slate-400 font-bold tracking-widest">or continue with email</span></div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-5">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1 uppercase tracking-wide">Email Address</label>
+                                <div className="relative">
+                                    <Input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        placeholder="name@company.com"
+                                        className="h-14 pl-4 text-base bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all rounded-2xl"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between items-center ml-1">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Password</label>
+                                    <button type="button" onClick={() => setShowForgotModal(true)} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Forgot Password?</button>
+                                </div>
+                                <div className="relative">
+                                    <Input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        placeholder="••••••••"
+                                        className="h-14 pl-4 text-base bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all rounded-2xl"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-base font-bold rounded-2xl shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 group mt-2"
+                            isLoading={isLoading}
+                        >
+                            Sign In to Account
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                    </form>
+
+                    <div className="mt-10 text-center">
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                            Don't have an account?{' '}
+                            <button type="button" onClick={() => setShowRequestModal(true)} className="font-bold text-blue-600 dark:text-blue-400 hover:underline transition-all">
+                                Request access
+                            </button>
+                        </p>
+                    </div>
                 </div>
             </div>
 
             {/* Request Access Modal */}
             {showRequestModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md p-8 relative overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
-                        <button
-                            onClick={() => setShowRequestModal(false)}
-                            className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        >
-                            <X className="w-5 h-5" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 relative overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
+                        <button onClick={() => setShowRequestModal(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <X className="w-5 h-5 text-slate-500" />
                         </button>
-
-                        <div className="mb-6">
-                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Get Access</h3>
-                            <p className="text-slate-500 dark:text-slate-400 mt-2">Join your team on AdminVault.</p>
+                        <div className="mb-8">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
+                                <Users className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Request Access</h3>
+                            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">Fill in your details to join your organization's workspace.</p>
                         </div>
-
                         <form onSubmit={handleRequestAccess} className="space-y-4">
-                            <Input
-                                label="Full Name"
-                                value={requestName}
-                                onChange={(e) => setRequestName(e.target.value)}
-                                required
-                                className="bg-slate-50 dark:bg-slate-900/50"
-                            />
-                            <Input
-                                label="Work Email"
-                                type="email"
-                                value={requestEmail}
-                                onChange={(e) => setRequestEmail(e.target.value)}
-                                required
-                                className="bg-slate-50 dark:bg-slate-900/50"
-                            />
-                            <Button
-                                type="submit"
-                                className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl mt-2"
-                                isLoading={isRequesting}
-                            >
-                                Send Request
-                            </Button>
+                            <Input label="Full Name" value={requestName} onChange={(e) => setRequestName(e.target.value)} required className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50" />
+                            <Input label="Work Email" type="email" value={requestEmail} onChange={(e) => setRequestEmail(e.target.value)} required className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50" />
+                            <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl mt-2" isLoading={isRequesting}>Send Request</Button>
                         </form>
                     </div>
                 </div>
@@ -402,43 +328,25 @@ export default function LoginPage() {
 
             {/* Forgot Password Modal */}
             {showForgotModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md p-8 relative overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
-                        <button
-                            onClick={() => setShowForgotModal(false)}
-                            className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        >
-                            <X className="w-5 h-5" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 relative overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
+                        <button onClick={() => setShowForgotModal(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <X className="w-5 h-5 text-slate-500" />
                         </button>
-
-                        <div className="mb-6">
+                        <div className="mb-8">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
+                                <Lock className="w-6 h-6" />
+                            </div>
                             <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Reset Password</h3>
-                            <p className="text-slate-500 dark:text-slate-400 mt-2">Enter your email and we'll obtain a reset link.</p>
+                            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">We'll send you instructions to reset your password.</p>
                         </div>
-
                         <form onSubmit={handleForgotPassword} className="space-y-4">
-                            <Input
-                                label="Email Address"
-                                type="email"
-                                value={forgotEmail}
-                                onChange={(e) => setForgotEmail(e.target.value)}
-                                required
-                                className="bg-slate-50 dark:bg-slate-900/50"
-                            />
-
-                            <Button
-                                type="submit"
-                                className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl mt-2"
-                                isLoading={isResetting}
-                            >
-                                Send Reset Link
-                            </Button>
+                            <Input label="Email Address" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50" />
+                            <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl mt-2" isLoading={isResetting}>Send Reset Link</Button>
                         </form>
                     </div>
                 </div>
             )}
         </div>
     );
-};
-
-
+}

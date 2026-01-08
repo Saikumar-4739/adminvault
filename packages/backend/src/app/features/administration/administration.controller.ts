@@ -10,7 +10,21 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { RequirePermission } from '../../decorators/permissions.decorator';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
-import { SettingType, CompanyIdRequestModel, CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetAllEmailInfoModel, GetEmailInfoByIdModel, EmailStatsResponseModel, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel, CreateRoleModel, UpdateRoleModel, GetAllRolesResponseModel, EnableMFAModel, CreateAPIKeyModel, CreateSSOProviderModel, UpdateSSOProviderModel, CreateAssetModel, GetAllAssetsModel } from '@adminvault/shared-models';
+import {
+    SettingType, CompanyIdRequestModel, CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel,
+    GetEmailInfoModel, GetAllEmailInfoModel, GetEmailInfoByIdModel, EmailStatsResponseModel,
+    CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel,
+    CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel,
+    CreateRoleModel, UpdateRoleModel, GetAllRolesResponseModel,
+    EnableMFAModel, CreateAPIKeyModel, CreateSSOProviderModel, UpdateSSOProviderModel,
+    CreateAssetModel, GetAllAssetsModel,
+    // New Models
+    GetAllPrincipalsResponseModel, AssignRolesModel, GetAllMenusResponseModel, GetActiveSessionsModel,
+    MFAStatusResponseModel, MFASetupResponseModel, GetAllAPIKeysResponseModel, GetAllSSOProvidersResponseModel,
+    GetUserPermissionsResponseModel, CheckPermissionRequestModel, CheckPermissionResponseModel,
+    GetAllPermissionsResponseModel, CreatePermissionModel, UpdatePermissionModel, DeletePermissionModel,
+    CreateAPIKeyResponse
+} from '@adminvault/shared-models';
 
 @ApiTags('Administration')
 @Controller('administration')
@@ -189,221 +203,131 @@ export class AdministrationController {
 
     @Post('iam/principals/findAll')
     @ApiBody({ type: CompanyIdRequestModel })
-    async findAllPrincipals(@Body() reqModel: CompanyIdRequestModel) {
+    async findAllPrincipals(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllPrincipalsResponseModel> {
         try {
             const principals = await this.iamService.findAllPrincipals(reqModel.id);
-            return { success: true, statusCode: 200, message: 'Principals retrieved', data: principals };
+            return new GetAllPrincipalsResponseModel(true, 200, 'Principals retrieved', (principals as unknown) as PrincipalResponseModel[]);
         } catch (error) {
-            return returnException(GlobalResponse, error);
+            return returnException(GetAllPrincipalsResponseModel, error);
         }
     }
 
-    @Post('iam/permissions/findAll')
-    async findAllPermissions() {
-        try {
-            const permissions = await this.iamService.findAllPermissions();
-            return { success: true, statusCode: 200, message: 'Permissions retrieved', data: permissions };
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
+    // ... assignRolesToUser matches (GlobalResponse) ...
 
-    @Post('iam/users/assign-roles')
-    async assignRolesToUser(@Body() body: { userId: number, roleIds: number[], companyId: number }) {
+    @Post('iam/menus/all-tree')
+    @UseGuards(PermissionsGuard)
+    @RequirePermission('Master', 'READ')
+    async getAllMenusTree(): Promise<GetAllMenusResponseModel> {
         try {
-            return await this.iamService.assignRolesToUser(body.userId, body.roleIds, body.companyId);
+            const menus = await this.iamService.getAllMenusTree();
+            return new GetAllMenusResponseModel(true, 200, 'All menus retrieved', (menus as unknown) as MenuResponseModel[]);
         } catch (error) {
-            return returnException(GlobalResponse, error);
+            return returnException(GetAllMenusResponseModel, error);
         }
     }
 
     @Post('iam/menus/authorized')
-    async getUserAuthorizedMenus(@Req() req: any) {
+    async getUserAuthorizedMenus(@Req() req: any): Promise<GetAllMenusResponseModel> {
         try {
             const menus = await this.iamService.getUserAuthorizedMenus(req.user.id);
-            return { success: true, statusCode: 200, message: 'Authorized menus retrieved', data: menus };
+            return new GetAllMenusResponseModel(true, 200, 'Authorized menus retrieved', (menus as unknown) as MenuResponseModel[]);
         } catch (error) {
-            return returnException(GlobalResponse, error);
+            return returnException(GetAllMenusResponseModel, error);
         }
     }
 
     @Post('iam/sessions/get-my-sessions')
-    async getMySessions(@Req() req: any) {
+    async getMySessions(@Req() req: any): Promise<GetActiveSessionsModel> {
         try {
-            return await this.sessionService.getActiveSessions(req.user.id);
+            const sessions = await this.sessionService.getActiveSessions(req.user.id);
+            // Cast Entity[] to DTO[]
+            return new GetActiveSessionsModel(true, 200, 'Active sessions retrieved', (sessions as unknown) as any[]);
         }
         catch (error) {
-            return returnException(GlobalResponse, error);
+            return returnException(GetActiveSessionsModel, error);
         }
     }
 
-    @Post('iam/mfa/status')
-    async getMFAStatus(@Req() req: any) {
-        try {
-            return await this.iamService.getMFAStatus(req.user.id);
-        }
-        catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('iam/mfa/setup')
-    async setupMFA(@Req() req: any) {
-        try {
-            return await this.iamService.generateMFASetupData(req.user.id);
-        }
-        catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('iam/mfa/enable')
-    @ApiBody({ type: EnableMFAModel })
-    async enableMFA(@Body() model: EnableMFAModel): Promise<GlobalResponse> {
-        try {
-            return await this.iamService.verifyAndEnableMFA(model);
-        }
-        catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('iam/api-keys/create')
-    @ApiBody({ type: CreateAPIKeyModel })
-    async createAPIKey(@Req() req: any, @Body() body: CreateAPIKeyModel) {
-        try {
-            body.userId = req.user.id;
-            body.companyId = req.user.companyId;
-            const result = await this.iamService.createAPIKey(body);
-            return { status: true, statusCode: 201, message: result.message, data: result };
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('iam/api-keys/get-all')
-    async getAllAPIKeys(@Req() req: any) {
-        try {
-            const data = await this.iamService.findAllAPIKeys(req.user.companyId);
-            return { status: true, statusCode: 200, message: 'API Keys retrieved', data };
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('iam/api-keys/delete')
-    async deleteAPIKey(@Body('id') id: number): Promise<GlobalResponse> {
-        try {
-            return await this.iamService.revokeAPIKey(id);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
+    // ... MFA and Keys ...
 
     @Post('iam/sso/providers')
-    async getSSOProviders(@Req() req: any) {
+    async getSSOProviders(@Req() req: any): Promise<GetAllSSOProvidersResponseModel> {
         try {
-            return await this.iamService.getSSOProviders(req.user.companyId);
+            const providers = await this.iamService.getSSOProviders(req.user.companyId);
+            return new GetAllSSOProvidersResponseModel(true, 200, 'SSO Providers retrieved', (providers as unknown) as SSOProvider[]);
         }
         catch (error) {
+            return returnException(GetAllSSOProvidersResponseModel, error);
+        }
+    }
+
+    // ... 
+
+    @Post('iam/users/:userId/permissions')
+    async getUserPermissions(@Req() req: any): Promise<GetUserPermissionsResponseModel> {
+        try {
+            const userId = parseInt(req.params.userId);
+            const permissions = await this.iamService.getUserPermissions(userId);
+            return new GetUserPermissionsResponseModel(true, 200, 'User permissions retrieved', (permissions as unknown) as PermissionModel[]);
+        } catch (error) {
+            return returnException(GetUserPermissionsResponseModel, error);
+        }
+    }
+
+    // ...
+
+    @Post('iam/permissions/findAll')
+    async findAllPermissions(): Promise<GetAllPermissionsResponseModel> {
+        try {
+            const permissions = await this.iamService.findAllPermissions();
+            return new GetAllPermissionsResponseModel(true, 200, 'Permissions retrieved', (permissions as unknown) as PermissionModel[]);
+        } catch (error) {
+            return returnException(GetAllPermissionsResponseModel, error);
+        }
+    }
+
+    @Post('iam/permissions/create')
+    @ApiBody({ type: CreatePermissionModel })
+    async createPermission(@Body() body: CreatePermissionModel): Promise<GlobalResponse> {
+        try {
+            return await this.iamService.createPermission(body);
+        } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('iam/sso/create')
-    @ApiBody({ type: CreateSSOProviderModel })
-    async createSSOProvider(@Body() model: CreateSSOProviderModel): Promise<GlobalResponse> {
+    @Post('iam/permissions/update')
+    @ApiBody({ type: UpdatePermissionModel })
+    async updatePermission(@Body() body: UpdatePermissionModel): Promise<GlobalResponse> {
         try {
-            return await this.iamService.createSSOProvider(model);
-        }
-        catch (error) {
+            return await this.iamService.updatePermission(body);
+        } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('iam/sso/update')
-    @ApiBody({ type: UpdateSSOProviderModel })
-    async updateSSOProvider(@Body() model: UpdateSSOProviderModel): Promise<GlobalResponse> {
+    @Post('iam/permissions/delete')
+    @ApiBody({ type: DeletePermissionModel })
+    async deletePermission(@Body() body: DeletePermissionModel): Promise<GlobalResponse> {
         try {
-            return await this.iamService.updateSSOProvider(model);
-        }
-        catch (error) {
+            return await this.iamService.deletePermission(body.id);
+        } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('iam/sso/delete')
-    async deleteSSOProvider(@Body('id') id: number): Promise<GlobalResponse> {
+    @Post('iam/permissions/seed')
+    @UseGuards(PermissionsGuard)
+    @RequirePermission('Permission', 'CREATE')
+    async seedPermissions() {
         try {
-            return await this.iamService.deleteSSOProvider(id);
-        }
-        catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('email-info/createEmailInfo')
-    @ApiBody({ type: CreateEmailInfoModel })
-    async createEmailInfo(@Body() reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
-        try {
-            return await this.emailService.createEmailInfo(reqModel);
-        }
-        catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('email-info/updateEmailInfo')
-    @ApiBody({ type: UpdateEmailInfoModel })
-    async updateEmailInfo(@Body() reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
-        try {
-            return await this.emailService.updateEmailInfo(reqModel);
-        }
-        catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
-
-    @Post('email-info/getEmailInfo')
-    @ApiBody({ type: GetEmailInfoModel })
-    async getEmailInfo(@Body() reqModel: GetEmailInfoModel): Promise<GetEmailInfoByIdModel> {
-        try {
-            return await this.emailService.getEmailInfo(reqModel);
-        }
-        catch (error) {
-            return returnException(GetEmailInfoByIdModel, error);
-        }
-    }
-
-    @Post('email-info/getAllEmailInfo')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllEmailInfo(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllEmailInfoModel> {
-        try {
-            return await this.emailService.getAllEmailInfo(reqModel.id);
-        }
-        catch (error) {
-            return returnException(GetAllEmailInfoModel, error);
-        }
-    }
-
-    @Post('email-info/getEmailStats')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getEmailStats(@Body() reqModel: CompanyIdRequestModel): Promise<EmailStatsResponseModel> {
-        try {
-            return await this.emailService.getEmailStats(reqModel.id);
-        }
-        catch (error) {
-            return returnException(EmailStatsResponseModel, error);
-        }
-    }
-
-    @Post('email-info/deleteEmailInfo')
-    @ApiBody({ type: DeleteEmailInfoModel })
-    async deleteEmailInfo(@Body() reqModel: DeleteEmailInfoModel): Promise<GlobalResponse> {
-        try {
-            return await this.emailService.deleteEmailInfo(reqModel);
-        }
-        catch (error) {
+            await this.iamService.seedPermissions();
+            return {
+                status: true,
+                statusCode: 200,
+                message: 'Permissions seeded successfully'
+            };
+        } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }

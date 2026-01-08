@@ -135,6 +135,23 @@ export class CompanyInfoService {
     }
 
     /**
+     * Get all companies for dropdown (lightweight)
+     * Returns only id and name for dropdown/select components
+     * 
+     * @returns GlobalResponse with array of {id, name} objects
+     * @throws Error if retrieval fails
+     */
+    async getAllCompaniesDropdown(): Promise<GlobalResponse<{ id: number; name: string }[]>> {
+        try {
+            const companies = await this.companyInfoRepo.find({ select: ['id', 'companyName'] });
+            const dropdownData = companies.map(company => ({ id: company.id, name: company.companyName }));
+            return new GlobalResponse(true, 0, "Companies retrieved successfully", dropdownData);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
      * Delete a company (hard delete)
      * Permanently removes a company from the database
      * Note: This is a hard delete, not a soft delete

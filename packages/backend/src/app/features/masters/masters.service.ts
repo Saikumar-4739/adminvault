@@ -45,7 +45,7 @@ export class MastersService {
             const departmentsWithCompanyName = departments.map(dept => ({
                 id: dept.id,
                 userId: dept.userId,
-                companyId: dept.companyId,
+
                 createdAt: dept.createdAt,
                 updatedAt: dept.updatedAt,
                 name: dept.name,
@@ -66,7 +66,7 @@ export class MastersService {
             await transManager.startTransaction();
             const repo = transManager.getRepository(DepartmentsMasterEntity);
             // Ensure ID is not passed to let DB auto-increment
-            const { id, ...createData } = data;
+            const { id, companyId, ...createData } = data;
             const newItem = repo.create(createData);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
@@ -89,7 +89,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(DepartmentsMasterEntity);
-            await repo.update(data.id, {
+            await repo.save({ id: data.id,
                 name: data.name,
                 description: data.description,
                 code: data.code,
@@ -116,7 +116,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(DepartmentsMasterEntity);
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             if (existing) {
@@ -132,14 +132,14 @@ export class MastersService {
     // Asset Types
     async getAllAssetTypes(reqModel: CompanyIdRequestModel): Promise<GetAllAssetTypesResponseModel> {
         try {
-            const assetTypes = await this.assetTypeRepo.find({ where: { companyId: reqModel.id } });
+            const assetTypes = await this.assetTypeRepo.find();
             // Fetch company information from company repository
             const company = await this.companyRepo.findOne({ where: { id: reqModel.id } });
             // Map company name to each asset type
             const assetTypesWithCompanyName = assetTypes.map(asset => ({
                 id: asset.id,
                 userId: asset.userId,
-                companyId: asset.companyId,
+
                 createdAt: asset.createdAt,
                 updatedAt: asset.updatedAt,
                 name: asset.name,
@@ -159,7 +159,8 @@ export class MastersService {
         try {
             await transManager.startTransaction();
             const repo = transManager.getRepository(AssetTypeMasterEntity);
-            const newItem = repo.create(data);
+            const { companyId, ...createData } = data;
+            const newItem = repo.create(createData);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
 
@@ -181,12 +182,11 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(AssetTypeMasterEntity);
-            await repo.update(data.id, {
+            await repo.save({ id: data.id,
                 name: data.name,
                 description: data.description,
                 isActive: data.isActive,
                 code: data.code,
-                companyId: data.companyId
             });
             const updated = await repo.findOne({ where: { id: data.id } });
             if (!updated) {
@@ -209,7 +209,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(AssetTypeMasterEntity);
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             if (existing) {
@@ -225,14 +225,14 @@ export class MastersService {
     // Brands
     async getAllBrands(reqModel: CompanyIdRequestModel): Promise<GetAllBrandsResponseModel> {
         try {
-            const brands = await this.brandRepo.find({ where: { companyId: reqModel.id } });
+            const brands = await this.brandRepo.find();
             // Fetch company information from company repository
             const company = await this.companyRepo.findOne({ where: { id: reqModel.id } });
             // Map company name to each brand
             const brandsWithCompanyName = brands.map(brand => ({
                 id: brand.id,
                 userId: brand.userId,
-                companyId: brand.companyId,
+
                 createdAt: brand.createdAt,
                 updatedAt: brand.updatedAt,
                 name: brand.name,
@@ -254,7 +254,8 @@ export class MastersService {
         try {
             await transManager.startTransaction();
             const repo = transManager.getRepository(BrandsMasterEntity);
-            const newItem = repo.create(data);
+            const { companyId, ...createData } = data;
+            const newItem = repo.create(createData);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
 
@@ -276,14 +277,13 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(BrandsMasterEntity);
-            await repo.update(data.id, {
+            await repo.save({ id: data.id,
                 name: data.name,
                 description: data.description,
                 isActive: data.isActive,
                 website: data.website,
                 rating: data.rating,
                 code: data.code,
-                companyId: data.companyId
             });
             const updated = await repo.findOne({ where: { id: data.id } });
             if (!updated) {
@@ -306,7 +306,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(BrandsMasterEntity);
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             if (existing) {
@@ -322,14 +322,14 @@ export class MastersService {
     // Vendors
     async getAllVendors(reqModel: CompanyIdRequestModel): Promise<GetAllVendorsResponseModel> {
         try {
-            const vendors = await this.vendorRepo.find({ where: { companyId: reqModel.id } });
+            const vendors = await this.vendorRepo.find();
             // Fetch company information from company repository
             const company = await this.companyRepo.findOne({ where: { id: reqModel.id } });
             // Map company name to each vendor
             const vendorsWithCompanyName = vendors.map(vendor => ({
                 id: vendor.id,
                 userId: vendor.userId,
-                companyId: vendor.companyId,
+
                 createdAt: vendor.createdAt,
                 updatedAt: vendor.updatedAt,
                 name: vendor.name,
@@ -353,7 +353,8 @@ export class MastersService {
         try {
             await transManager.startTransaction();
             const repo = transManager.getRepository(VendorsMasterEntity);
-            const newItem = repo.create(data);
+            const { companyId, ...createData } = data;
+            const newItem = repo.create(createData);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
 
@@ -375,7 +376,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(VendorsMasterEntity);
-            await repo.update(data.id, {
+            await repo.save({ id: data.id,
                 name: data.name,
                 description: data.description,
                 isActive: data.isActive,
@@ -384,7 +385,6 @@ export class MastersService {
                 phone: data.phone,
                 address: data.address,
                 code: data.code,
-                companyId: data.companyId
             });
             const updated = await repo.findOne({ where: { id: data.id } });
             if (!updated) {
@@ -407,7 +407,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(VendorsMasterEntity);
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             if (existing) {
@@ -423,7 +423,7 @@ export class MastersService {
     // Locations
     async getAllLocations(reqModel: CompanyIdRequestModel): Promise<GetAllLocationsResponseModel> {
         try {
-            const locations = await this.locationRepo.find({ where: { companyId: reqModel.id } });
+            const locations = await this.locationRepo.find();
             return new GetAllLocationsResponseModel(true, 200, 'Locations retrieved successfully', locations);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Locations');
@@ -437,7 +437,7 @@ export class MastersService {
             const repo = transManager.getRepository(LocationsMasterEntity);
             const newItem = repo.create({
                 userId: data.userId,
-                companyId: data.companyId,
+
                 name: data.name,
                 description: data.description,
                 isActive: data.isActive,
@@ -465,7 +465,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(LocationsMasterEntity);
-            await repo.update(data.id, {
+            await repo.save({ id: data.id,
                 name: data.name,
                 description: data.description,
                 isActive: data.isActive,
@@ -493,7 +493,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(LocationsMasterEntity);
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             if (existing) {
@@ -509,7 +509,7 @@ export class MastersService {
     // Applications
     async getAllApplications(reqModel: CompanyIdRequestModel): Promise<GetAllApplicationsResponseModel> {
         try {
-            const applications = await this.dataSource.getRepository(ApplicationsMasterEntity).find({ where: { companyId: reqModel.id } });
+            const applications = await this.dataSource.getRepository(ApplicationsMasterEntity).find();
             return new GetAllApplicationsResponseModel(true, 200, 'Applications retrieved successfully', applications);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Applications');
@@ -529,7 +529,7 @@ export class MastersService {
 
             const newApp = repo.create({
                 userId: data.userId,
-                companyId: data.companyId,
+
                 name: data.name,
                 description: data.description,
                 isActive: data.isActive,
@@ -593,7 +593,7 @@ export class MastersService {
             const existing = await repo.findOne({ where: { id: reqModel.id } });
 
             await transManager.startTransaction();
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             if (existing) {
@@ -609,7 +609,7 @@ export class MastersService {
     // Ticket Categories
     async getAllTicketCategories(reqModel: CompanyIdRequestModel): Promise<GetAllTicketCategoriesResponseModel> {
         try {
-            const ticketCategories = await this.dataSource.getRepository(TicketCategoriesMasterEntity).find({ where: { companyId: reqModel.id } });
+            const ticketCategories = await this.dataSource.getRepository(TicketCategoriesMasterEntity).find();
             return new GetAllTicketCategoriesResponseModel(true, 200, 'Ticket Categories retrieved successfully', ticketCategories);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Ticket Categories');
@@ -623,7 +623,7 @@ export class MastersService {
             const repo = transManager.getRepository(TicketCategoriesMasterEntity);
             const newCategory = repo.create({
                 userId: data.userId,
-                companyId: data.companyId,
+
                 name: data.name,
                 description: data.description,
                 isActive: data.isActive,
@@ -679,7 +679,7 @@ export class MastersService {
             const existing = await repo.findOne({ where: { id: reqModel.id } });
 
             await transManager.startTransaction();
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             if (existing) {
@@ -695,7 +695,7 @@ export class MastersService {
     // Expense Categories
     async getAllExpenseCategories(reqModel: CompanyIdRequestModel): Promise<GetAllExpenseCategoriesResponseModel> {
         try {
-            const expenseCategories = await this.dataSource.getRepository(ExpenseCategoriesMasterEntity).find({ where: { companyId: reqModel.id } });
+            const expenseCategories = await this.dataSource.getRepository(ExpenseCategoriesMasterEntity).find();
             return new GetAllExpenseCategoriesResponseModel(true, 200, 'Expense Categories retrieved successfully', expenseCategories as any);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Expense Categories');
@@ -709,7 +709,7 @@ export class MastersService {
             const repo = transManager.getRepository(ExpenseCategoriesMasterEntity);
             const newCategory = repo.create({
                 userId: data.userId,
-                companyId: data.companyId,
+
                 name: data.name,
                 description: data.description,
                 isActive: data.isActive,
@@ -767,7 +767,7 @@ export class MastersService {
             const existing = await repo.findOne({ where: { id: reqModel.id } });
 
             await transManager.startTransaction();
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             if (existing) {
@@ -783,7 +783,7 @@ export class MastersService {
     // Password Vaults
     async getAllPasswordVaults(reqModel: CompanyIdRequestModel): Promise<GetAllPasswordVaultsResponseModel> {
         try {
-            const passwordVaults = await this.passwordVaultRepo.find({ where: { companyId: reqModel.id } });
+            const passwordVaults = await this.passwordVaultRepo.find();
             return new GetAllPasswordVaultsResponseModel(true, 200, 'Password Vaults retrieved successfully', passwordVaults);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Password Vaults');
@@ -795,7 +795,8 @@ export class MastersService {
         try {
             await transManager.startTransaction();
             const repo = transManager.getRepository(PasswordVaultMasterEntity);
-            const newItem = repo.create(data);
+            const { companyId, ...createData } = data;
+            const newItem = repo.create(createData);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
 
@@ -817,7 +818,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(PasswordVaultMasterEntity);
-            await repo.update(data.id, {
+            await repo.save({ id: data.id,
                 name: data.name,
                 password: data.password,
                 description: data.description,
@@ -847,7 +848,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(PasswordVaultMasterEntity);
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             if (existing) {
@@ -864,7 +865,7 @@ export class MastersService {
     // Slack Users
     async getAllSlackUsers(reqModel: CompanyIdRequestModel): Promise<GetAllSlackUsersResponseModel> {
         try {
-            const users = await this.slackUserRepo.find({ where: { companyId: reqModel.id } });
+            const users = await this.slackUserRepo.find();
             return new GetAllSlackUsersResponseModel(true, 200, 'Slack Users retrieved successfully', users as any);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Slack Users');
@@ -876,8 +877,9 @@ export class MastersService {
         try {
             await transManager.startTransaction();
             const repo = transManager.getRepository(SlackUsersMasterEntity);
+            const { companyId, ...createData } = data;
             const newItem = repo.create({
-                ...data,
+                ...createData,
                 isActive: true
             });
             const savedItem = await repo.save(newItem);
@@ -899,7 +901,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(SlackUsersMasterEntity);
-            await repo.update(data.id, {
+            await repo.save({ id: data.id,
                 name: data.name,
                 email: data.email,
                 slackUserId: data.slackUserId,
@@ -909,7 +911,6 @@ export class MastersService {
                 phone: data.phone,
                 notes: data.notes,
                 isActive: data.isActive,
-                companyId: data.companyId
             });
             const updated = await repo.findOne({ where: { id: data.id } });
             await transManager.completeTransaction();
@@ -933,7 +934,7 @@ export class MastersService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(SlackUsersMasterEntity);
-            await repo.delete(reqModel.id);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } }); if (delEntity) await repo.remove(delEntity);
             await transManager.completeTransaction();
 
             return new GlobalResponse(true, 200, 'Slack User deleted successfully');

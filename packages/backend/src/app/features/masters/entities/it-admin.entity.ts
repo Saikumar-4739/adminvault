@@ -1,15 +1,14 @@
 import { Column, Entity, PrimaryGeneratedColumn, Index } from 'typeorm';
 import { AdminRoleEnum, AdminStatusEnum } from '@adminvault/shared-models';
-import { CommonBaseEntity } from '../../../../database/common-base.entity';
+import { MasterBaseEntity } from '../../../../database/master-base.entity';
 
 @Entity('it_admin')
 @Index('idx_admin_role', ['roleEnum'])
 @Index('idx_admin_status', ['status'])
 @Index('idx_admin_code', ['adminCode'])
 @Index('idx_admin_email', ['email'])
-@Index('idx_admin_company', ['companyId'])
 @Index('idx_admin_user', ['userId'])
-export class ItAdminEntity extends CommonBaseEntity {
+export class ItAdminEntity extends MasterBaseEntity {
 
     @Column('varchar', { name: 'admin_code', length: 50, nullable: false, unique: true, comment: 'Unique admin code' })
     adminCode: string;

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
+import { useAuth } from '@/contexts/AuthContext';
 import { UserRoleEnum, RoleResponseModel, SSOProvider } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
 import {
@@ -24,13 +25,8 @@ export default function IAMPage() {
     const { error: toastError } = useToast();
 
     // Auth context
-    const getCompanyId = useCallback((): number | undefined => {
-        const storedUser = localStorage.getItem('auth_user');
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        return user?.companyId ? Number(user.companyId) : undefined;
-    }, []);
-
-    const companyId = useMemo(() => getCompanyId(), [getCompanyId]);
+    const { user } = useAuth();
+    const companyId = user?.companyId;
 
     // Custom Hook
     const {
@@ -46,7 +42,7 @@ export default function IAMPage() {
         updateSSOProvider,
         deleteSSOProvider,
         assignRoles
-    } = useIAM(companyId);
+    } = useIAM(Number(companyId));
 
     const [activeTab, setActiveTabState] = useState<'users' | 'sso' | 'roles'>('users');
     const [searchQuery, setSearchQuery] = useState('');
@@ -118,8 +114,18 @@ export default function IAMPage() {
     // Handlers
     const handleSSOSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const sanitize = (val: string) => val && val.trim() !== '' ? val.trim() : undefined;
+
         const data = {
-            ...ssoFormData,
+            name: ssoFormData.name,
+            type: ssoFormData.type,
+            clientId: ssoFormData.clientId,
+            clientSecret: ssoFormData.clientSecret, // Required by DB schema usually, keeps as is
+            issuerUrl: sanitize(ssoFormData.issuerUrl),
+            authorizationUrl: sanitize(ssoFormData.authorizationUrl),
+            tokenUrl: sanitize(ssoFormData.tokenUrl),
+            userInfoUrl: sanitize(ssoFormData.userInfoUrl),
             companyId: companyId || 0,
             isActive: true,
         };

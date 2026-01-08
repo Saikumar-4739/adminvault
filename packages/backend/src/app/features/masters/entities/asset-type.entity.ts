@@ -1,12 +1,11 @@
 import { Column, Entity, Index } from 'typeorm';
-import { CommonBaseEntity } from '../../../../database/common-base.entity';
+import { MasterBaseEntity } from '../../../../database/master-base.entity';
 
 @Entity('asset_types')
 @Index('idx_asset_type_name', ['name'])
 @Index('idx_asset_type_code', ['code'])
-@Index('idx_asset_type_company', ['companyId'])
 @Index('idx_asset_type_user', ['userId'])
-export class AssetTypeMasterEntity extends CommonBaseEntity {
+export class AssetTypeMasterEntity extends MasterBaseEntity {
 
     @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Asset type name' })
     name: string;

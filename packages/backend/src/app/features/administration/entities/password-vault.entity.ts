@@ -2,7 +2,6 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 
 @Entity('password_vault')
 @Index('idx_vault_company', ['companyId'])
-@Index('idx_vault_creator', ['createdBy'])
 @Index('idx_vault_category', ['category'])
 export class PasswordVaultEntity {
     @PrimaryGeneratedColumn({ type: 'bigint', comment: 'Primary key for password vault' })

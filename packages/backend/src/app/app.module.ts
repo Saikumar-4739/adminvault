@@ -21,6 +21,8 @@ import configuration from '../config/configuration';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
+import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +31,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
       load: [configuration],
     }),
     DatabaseModule,
+    AuditLogsModule, // Audit Logs
     CompanyInfoModule,
     AuthUsersModule,
     EmployeesModule,

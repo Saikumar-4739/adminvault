@@ -1,11 +1,10 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
-import { CommonBaseEntity } from '../../../../database/common-base.entity';
+import { MasterBaseEntity } from '../../../../database/master-base.entity';
 
 @Entity('ticket_categories')
 @Index('idx_ticket_cat_name', ['name'])
-@Index('idx_ticket_cat_company', ['companyId'])
 @Index('idx_ticket_cat_user', ['userId'])
-export class TicketCategoriesMasterEntity extends CommonBaseEntity {
+export class TicketCategoriesMasterEntity extends MasterBaseEntity {
 
     @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Ticket category name' })
     name: string;

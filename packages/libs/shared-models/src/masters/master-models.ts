@@ -6,7 +6,7 @@ import { GlobalResponse } from '../common/global-response';
 export interface MasterBase {
     id: number;
     userId: number;
-    companyId: number;
+    companyId?: number;  // Optional - masters are shared across companies
     name: string;
     description?: string;
     isActive: boolean;
@@ -86,12 +86,12 @@ export interface SlackUserModel extends MasterBase {
 export class CreateMasterModel {
     id?: number;
     userId: number;
-    companyId: number;
+    companyId?: number;  // Optional - masters are shared
     name: string;
     description?: string;
     isActive?: boolean = true;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, id?: number) {
         this.userId = userId;
         this.companyId = companyId;
         this.name = name;
@@ -104,7 +104,7 @@ export class CreateMasterModel {
 export class CreateDepartmentModel extends CreateMasterModel {
     code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.code = code;
     }
@@ -113,7 +113,7 @@ export class CreateDepartmentModel extends CreateMasterModel {
 export class CreateDesignationModel extends CreateMasterModel {
     level?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, level?: string, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, level?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.level = level;
     }
@@ -123,7 +123,7 @@ export class CreateAssetTypeModel extends CreateMasterModel {
     code?: string;
     status?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, status?: string, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, code?: string, status?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.code = code;
         this.status = status;
@@ -135,7 +135,7 @@ export class CreateBrandModel extends CreateMasterModel {
     rating?: number;
     code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.website = website;
         this.rating = rating;
@@ -153,7 +153,7 @@ export class CreateSlackUserModel extends CreateMasterModel {
     notes?: string;
     avatar?: string;
 
-    constructor(userId: number, companyId: number, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatar?: string, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatar?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.email = email;
         this.slackUserId = slackUserId;
@@ -173,7 +173,7 @@ export class CreateVendorModel extends CreateMasterModel {
     address?: string;
     code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, code?: string, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.contactPerson = contactPerson;
         this.email = email;
@@ -188,7 +188,7 @@ export class CreateLocationModel extends CreateMasterModel {
     city?: string;
     country?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, address?: string, city?: string, country?: string, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, address?: string, city?: string, country?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.address = address;
         this.city = city;
@@ -199,7 +199,7 @@ export class CreateLocationModel extends CreateMasterModel {
 export class CreateTicketCategoryModel extends CreateMasterModel {
     defaultPriority?: 'Low' | 'Medium' | 'High';
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.defaultPriority = defaultPriority;
     }
@@ -209,7 +209,7 @@ export class CreateApplicationModel extends CreateMasterModel {
     ownerName?: string;
     appReleaseDate?: Date;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, ownerName?: string, appReleaseDate?: Date, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, ownerName?: string, appReleaseDate?: Date, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.ownerName = ownerName;
         this.appReleaseDate = appReleaseDate;
@@ -220,7 +220,7 @@ export class CreateExpenseCategoryModel extends CreateMasterModel {
     categoryType?: string;
     budgetLimit?: number;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, categoryType?: string, budgetLimit?: number, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, categoryType?: string, budgetLimit?: number, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.categoryType = categoryType;
         this.budgetLimit = budgetLimit;
@@ -233,7 +233,7 @@ export class CreatePasswordVaultModel extends CreateMasterModel {
     url?: string;
     notes?: string;
 
-    constructor(userId: number, companyId: number, name: string, password: string, description?: string, isActive?: boolean, username?: string, url?: string, notes?: string, id?: number) {
+    constructor(userId: number, companyId: number | undefined, name: string, password: string, description?: string, isActive?: boolean, username?: string, url?: string, notes?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.password = password;
         this.username = username;

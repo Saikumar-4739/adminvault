@@ -16,15 +16,18 @@ export const useIAM = (companyId?: number) => {
         if (!companyId) return;
         setLoading(true);
         try {
+            // Using logic to fetch each independently so one failure doesn't block others
+            const loadRoles = IAMService.getRoles(companyId).catch(err => { console.error('Roles failed', err); return null; });
+            const loadPerms = IAMService.getPermissions().catch(err => { console.error('Perms failed', err); return null; });
+            const loadSSO = IAMService.getSSOProviders().catch(err => { console.error('SSO failed', err); return null; });
+            const loadUsers = IAMService.getUsers(companyId).catch(err => { console.error('Users failed', err); return null; });
+            const loadMenus = IAMService.getAuthorizedMenus().catch(err => { console.error('Menus failed', err); return null; });
+
             const [rolesData, permsData, ssoData, usersData, menusData] = await Promise.all([
-                IAMService.getRoles(companyId),
-                IAMService.getPermissions(),
-                IAMService.getSSOProviders(),
-                IAMService.getUsers(companyId),
-                IAMService.getAuthorizedMenus()
+                loadRoles, loadPerms, loadSSO, loadUsers, loadMenus
             ]);
 
-            if ((rolesData as any).success) {
+            if (rolesData && (rolesData as any).success) {
                 setRoles((rolesData as any).data);
             }
             if (permsData && (permsData as any).success) {
@@ -33,15 +36,16 @@ export const useIAM = (companyId?: number) => {
             if (Array.isArray(ssoData)) {
                 setSSOProviders(ssoData);
             }
-            if ((usersData as any).success) {
+            if (usersData && (usersData as any).success) {
                 setUsers((usersData as any).data);
             }
-            if ((menusData as any).success) {
+            if (menusData && (menusData as any).success) {
                 setAuthorizedMenus((menusData as any).data);
             }
 
         } catch (error) {
             console.error(error);
+            toastError("Error", "Failed to load data");
         } finally {
             setLoading(false);
         }

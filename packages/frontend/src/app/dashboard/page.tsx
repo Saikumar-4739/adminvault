@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { dashboardService } from '@/lib/api/services';
+import { dashboardService, companyService } from '@/lib/api/services';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import Select from '@/components/ui/Select';
 import {
     Users, Package, Ticket, Lock, RefreshCcw, TrendingUp, Activity,
     PieChart as PieChartIcon, BarChart2, Mail, FileText, Settings,
@@ -17,6 +18,7 @@ import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Lazy load chart components
 const AssetDistributionChart = dynamic(() => import('@/features/dashboard/components/AssetDistributionChart'), {
@@ -92,14 +94,23 @@ export interface DashboardStats {
 
 export default function DashboardPage() {
     const { error: toastError } = useToast();
+    const { isAuthenticated, user } = useAuth();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+    const [companies, setCompanies] = useState<any[]>([]);
+    const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+    const hasFetched = useRef(false);
 
-    const fetchStats = useCallback(async () => {
+    const fetchStats = async (companyId?: number) => {
         try {
             setIsLoading(true);
-            const response = await dashboardService.getDashboardStats();
+            const id = companyId || selectedCompanyId || user?.companyId;
+            if (!id) {
+                toastError('No company selected');
+                return;
+            }
+            const response = await dashboardService.getDashboardStats({ id });
             if (response && response.status && response.data) {
                 setStats(response.data);
                 setLastUpdated(new Date());
@@ -110,11 +121,42 @@ export default function DashboardPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [toastError]);
+    };
 
+    // Load companies on mount
     useEffect(() => {
-        fetchStats();
-    }, [fetchStats]);
+        const loadCompanies = async () => {
+            try {
+                const response = await companyService.getAllCompaniesDropdown();
+                if (response && response.status && response.data) {
+                    setCompanies(response.data);
+                    // Set default to user's company
+                    if (user?.companyId) {
+                        setSelectedCompanyId(user.companyId);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load companies:', error);
+            }
+        };
+        if (isAuthenticated) {
+            loadCompanies();
+        }
+    }, [isAuthenticated, user]);
+
+    // Fetch stats when company changes
+    useEffect(() => {
+        if (!hasFetched.current && isAuthenticated && selectedCompanyId) {
+            hasFetched.current = true;
+            fetchStats();
+        }
+
+        // Reset when user logs out
+        if (!isAuthenticated) {
+            hasFetched.current = false;
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated, selectedCompanyId]);
 
     const securityStats = useMemo(() => stats?.security || {
         score: 0,
@@ -149,7 +191,7 @@ export default function DashboardPage() {
 
     const employeeDeptData = useMemo(() =>
         stats?.employees.byDepartment.map(item => ({
-            name: item.department || 'Unassigned',
+            name: item.department,
             value: parseInt(item.count)
         })) || []
         , [stats?.employees.byDepartment]);
@@ -213,7 +255,7 @@ export default function DashboardPage() {
                         </div>
                         <div>
                             <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Command Center
+                                Operational Dashboard
                             </h1>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
                                 <Clock className="h-3 w-3" />
@@ -221,10 +263,30 @@ export default function DashboardPage() {
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                        {/* Company Dropdown */}
+                        <div className="w-56">
+                            <Select
+                                value={selectedCompanyId?.toString() || ''}
+                                onChange={(e) => {
+                                    const newCompanyId = parseInt(e.target.value);
+                                    setSelectedCompanyId(newCompanyId);
+                                    hasFetched.current = false;
+                                    fetchStats(newCompanyId);
+                                }}
+                                options={[
+                                    { value: '', label: 'Select Company' },
+                                    ...companies.map((company) => ({
+                                        value: company.id,
+                                        label: company.name
+                                    }))
+                                ]}
+                                className="h-8 text-xs font-semibold rounded-xl px-3 border-slate-200 dark:border-slate-800"
+                            />
+                        </div>
                         <Button
                             variant="outline"
-                            onClick={fetchStats}
+                            onClick={() => fetchStats()}
                             disabled={isLoading}
                             leftIcon={<RefreshCcw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
                             className="rounded-xl h-8 px-3 text-xs"
@@ -291,7 +353,7 @@ export default function DashboardPage() {
                                 </div>
                                 Ticket Priorities
                             </h3>
-                            <div className="flex-1 w-full min-h-[160px]">
+                            <div className="w-full h-48">
                                 <TicketPriorityChart data={ticketPriorityData} />
                             </div>
                         </Card>
@@ -323,7 +385,7 @@ export default function DashboardPage() {
                         {isLoading ? (
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
-                            <div className="flex-1 w-full min-h-[200px]">
+                            <div className="w-full h-64">
                                 <AssetDistributionChart data={assetData} />
                             </div>
                         )}
@@ -347,7 +409,7 @@ export default function DashboardPage() {
                         {isLoading ? (
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
-                            <div className="flex-1 w-full min-h-[200px]">
+                            <div className="w-full h-64">
                                 <EmployeeDeptChart data={employeeDeptData} />
                             </div>
                         )}
@@ -371,7 +433,7 @@ export default function DashboardPage() {
                         {isLoading ? (
                             <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
                         ) : (
-                            <div className="flex-1 w-full min-h-[200px]">
+                            <div className="w-full h-64">
                                 <TicketStatusChart data={ticketStatusData} />
                             </div>
                         )}

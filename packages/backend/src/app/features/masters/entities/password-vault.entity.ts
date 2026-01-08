@@ -1,9 +1,9 @@
 import { Column, Entity, Index } from 'typeorm';
-import { CommonBaseEntity } from '../../../../database/common-base.entity';
+import { MasterBaseEntity } from '../../../../database/master-base.entity';
 
 @Entity('password_vaults')
 @Index('idx_password_vault_name', ['name'])
-export class PasswordVaultMasterEntity extends CommonBaseEntity {
+export class PasswordVaultMasterEntity extends MasterBaseEntity {
     @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Password vault entry name' })
     name: string;
 

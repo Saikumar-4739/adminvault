@@ -23,6 +23,10 @@ export class CompanyService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllCompanies'), {}, config);
     }
 
+    async getAllCompaniesDropdown(config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllCompaniesDropdown'), {}, config);
+    }
+
     async deleteCompany(data: DeleteCompanyModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteCompany'), data, config);
     }

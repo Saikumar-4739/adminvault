@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
 
 @Entity('menus')
 @Index('idx_menu_code', ['code'], { unique: true })
@@ -31,10 +31,4 @@ export class MenuEntity {
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
-    @ManyToOne(() => MenuEntity, menu => menu.children)
-    @JoinColumn({ name: 'parent_id' })
-    parent: MenuEntity;
-
-    @OneToMany(() => MenuEntity, menu => menu.parent)
-    children: MenuEntity[];
 }

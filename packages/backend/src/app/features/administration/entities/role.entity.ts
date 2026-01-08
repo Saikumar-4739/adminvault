@@ -1,6 +1,4 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { PermissionEntity } from './permission.entity';
-
 @Entity('roles')
 @Index('idx_role_code', ['code'])
 @Index('idx_role_company', ['companyId'])
@@ -18,15 +16,13 @@ export class RoleEntity {
     description: string;
 
     @Column({ name: 'is_system_role', type: 'boolean', default: false })
-    isSystemRole: boolean; // System roles cannot be deleted
+    isSystemRole: boolean;
 
     @Column({ name: 'is_active', type: 'boolean', default: true })
     isActive: boolean;
 
     @Column({ name: 'company_id', type: 'bigint', nullable: true })
-    companyId: number; // null for system-wide roles
-
-
+    companyId: number;
 
     @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
     createdAt: Date;

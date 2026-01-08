@@ -21,11 +21,10 @@ export class PermissionEntity {
     resource: string;
 
     @Column({ name: 'action', type: 'varchar', length: 50 })
-    action: string; // CREATE, READ, UPDATE, DELETE, EXECUTE
+    action: string;
 
     @Column({ name: 'is_active', type: 'boolean', default: true })
     isActive: boolean;
-
 
     @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
     createdAt: Date;

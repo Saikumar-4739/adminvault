@@ -4,8 +4,6 @@ import { EmailTypeEnum, EmailStatusEnum } from '@adminvault/shared-models';
 
 @Entity('email_info')
 @Index('idx_email_info_dept', ['department'])
-@Index('idx_email_info_type', ['emailType'])
-@Index('idx_email_info_status', ['status'])
 @Index('idx_email_info_employee', ['employeeId'])
 export class EmailInfoEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'email', length: 255, nullable: false, unique: true, comment: 'Email address' })

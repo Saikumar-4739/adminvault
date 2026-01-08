@@ -1,6 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { AuthUsersEntity } from '../../auth-users/entities/auth-users.entity';
-import { PermissionEntity } from './permission.entity';
+import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 
 @Entity('user_permissions')
 @Index('idx_up_user_perm', ['userId', 'permissionId'], { unique: true })
@@ -16,12 +14,4 @@ export class UserPermissionEntity {
 
     @Column('boolean', { name: 'is_granted', default: true, comment: 'True to explicit allow, False to explicit deny' })
     isGranted: boolean;
-
-    @ManyToOne(() => AuthUsersEntity)
-    @JoinColumn({ name: 'user_id' })
-    user: AuthUsersEntity;
-
-    @ManyToOne(() => PermissionEntity)
-    @JoinColumn({ name: 'permission_id' })
-    permission: PermissionEntity;
 }

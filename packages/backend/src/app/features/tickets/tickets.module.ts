@@ -14,10 +14,11 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 
 import { TicketsGateway } from './tickets.gateway';
 import { TicketMessageEntity } from './entities/ticket-messages.entity';
+import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([TicketsEntity, TicketCommentsEntity, TicketStatusLogsEntity, EmployeesEntity, TicketMessageEntity])
+        TypeOrmModule.forFeature([TicketsEntity, TicketCommentsEntity, TicketStatusLogsEntity, EmployeesEntity, TicketMessageEntity, AuthUsersEntity])
     ],
     controllers: [TicketsController],
     providers: [TicketsService, TicketsRepository, TicketCommentsRepository, TicketStatusLogsRepository, EmployeesRepository, TicketsGateway],

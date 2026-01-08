@@ -3,19 +3,18 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 @Entity('api_keys')
 @Index('idx_apikey_user', ['userId'])
 @Index('idx_apikey_company', ['companyId'])
-@Index('idx_apikey_key', ['apiKey'])
 export class APIKeyEntity {
     @PrimaryGeneratedColumn({ type: 'bigint' })
     id: number;
 
     @Column({ name: 'name', type: 'varchar', length: 100 })
-    name: string; // "My Production API Key"
+    name: string;
 
     @Column({ name: 'api_key', type: 'varchar', length: 255, unique: true })
-    apiKey: string; // Hashed or masked key
+    apiKey: string;
 
     @Column({ name: 'prefix', type: 'varchar', length: 10 })
-    prefix: string; // e.g. "av_live_"
+    prefix: string;
 
     @Column({ name: 'user_id', type: 'bigint' })
     userId: number;

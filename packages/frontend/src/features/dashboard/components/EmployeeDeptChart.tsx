@@ -11,7 +11,7 @@ export default function EmployeeDeptChart({ data }: { data: any[] }) {
     if (!data || data.length === 0) return <div className="h-full w-full flex items-center justify-center text-xs text-slate-400">No data</div>;
 
     return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight={100}>
             <AreaChart data={data}>
                 <defs>
                     <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">

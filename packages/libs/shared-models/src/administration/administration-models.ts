@@ -199,3 +199,151 @@ export interface SSOProvider {
     createdAt: Date;
     updatedAt: Date;
 }
+
+// --- Additional Administration Models ---
+
+export class PrincipalResponseModel {
+    id!: number;
+    userId!: number | null;
+    firstName!: string;
+    lastName!: string;
+    email!: string;
+    role!: string;
+    roleIds!: number[];
+    departmentId!: number;
+    status!: boolean;
+    phNumber!: string;
+    isUserActive!: boolean;
+    authType!: string;
+    ssoProviderName!: string | null;
+}
+
+export class GetAllPrincipalsResponseModel extends GlobalResponse<PrincipalResponseModel[]> {
+    constructor(status: boolean, code: number, message: string, data: PrincipalResponseModel[]) {
+        super(status, code, message, data);
+    }
+}
+
+export class AssignRolesModel {
+    userId!: number;
+    roleIds!: number[];
+    companyId!: number;
+}
+
+export class MenuPermissionModel {
+    canCreate!: boolean;
+    canUpdate!: boolean;
+    canDelete!: boolean;
+    canApprove!: boolean;
+}
+
+export class MenuResponseModel {
+    id!: number;
+    parentId!: number | null;
+    code!: string;
+    label!: string;
+    path!: string;
+    icon!: string;
+    sortOrder!: number;
+    requiredPermissionCode!: string;
+    children!: MenuResponseModel[];
+    permissions?: MenuPermissionModel;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export class GetAllMenusResponseModel extends GlobalResponse<MenuResponseModel[]> {
+    constructor(status: boolean, code: number, message: string, data: MenuResponseModel[]) {
+        super(status, code, message, data);
+    }
+}
+
+export class MFAStatusResponseModel {
+    isEnabled!: boolean;
+}
+
+export class MFASetupResponseModel {
+    secret!: string;
+    qrCodeDataUrl!: string;
+}
+
+export class GetAllAPIKeysResponseModel extends GlobalResponse<APIKeyResponseModel[]> {
+    constructor(status: boolean, code: number, message: string, data: APIKeyResponseModel[]) {
+        super(status, code, message, data);
+    }
+}
+
+export class GeneratedAPIKeyResponseModel {
+    name!: string;
+    apiKey!: string;
+    message!: string;
+}
+
+export class CreateAPIKeyResponse extends GlobalResponse<GeneratedAPIKeyResponseModel> {
+    constructor(status: boolean, code: number, message: string, data: GeneratedAPIKeyResponseModel) {
+        super(status, code, message, data);
+    }
+}
+
+export class GetAllSSOProvidersResponseModel extends GlobalResponse<SSOProvider[]> {
+    constructor(status: boolean, code: number, message: string, data: SSOProvider[]) {
+        super(status, code, message, data);
+    }
+}
+
+export class PermissionModel {
+    id!: number;
+    name!: string;
+    code!: string;
+    description!: string;
+    resource!: string;
+    action!: string;
+    isActive?: boolean;
+    createdAt!: Date;
+    updatedAt!: Date;
+}
+
+export class GetAllPermissionsResponseModel extends GlobalResponse<PermissionModel[]> {
+    constructor(status: boolean, code: number, message: string, data: PermissionModel[]) {
+        super(status, code, message, data);
+    }
+}
+
+export class GetUserPermissionsResponseModel extends GlobalResponse<PermissionModel[]> {
+    constructor(status: boolean, code: number, message: string, data: PermissionModel[]) {
+        super(status, code, message, data);
+    }
+}
+
+export class CheckPermissionRequestModel {
+    userId!: number;
+    resource!: string;
+    action!: string;
+}
+
+export class CheckPermissionResponseModel extends GlobalResponse<{ hasPermission: boolean }> {
+    constructor(status: boolean, code: number, message: string, data: { hasPermission: boolean }) {
+        super(status, code, message, data);
+    }
+}
+
+export class CreatePermissionModel {
+    name!: string;
+    code!: string;
+    description!: string;
+    resource!: string;
+    action!: string;
+}
+
+export class UpdatePermissionModel {
+    id!: number;
+    name!: string;
+    code!: string;
+    description!: string;
+    resource!: string;
+    action!: string;
+}
+
+export class DeletePermissionModel {
+    id!: number;
+}

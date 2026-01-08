@@ -1,6 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { RoleEntity } from './role.entity';
-import { MenuEntity } from './menu.entity';
+import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 
 @Entity('role_menu_access')
 @Index('idx_rma_role_menu', ['roleId', 'menuId'], { unique: true })
@@ -29,11 +27,4 @@ export class RoleMenuAccessEntity {
     @Column('boolean', { name: 'can_approve', default: false })
     canApprove: boolean;
 
-    @ManyToOne(() => RoleEntity)
-    @JoinColumn({ name: 'role_id' })
-    role: RoleEntity;
-
-    @ManyToOne(() => MenuEntity)
-    @JoinColumn({ name: 'menu_id' })
-    menu: MenuEntity;
 }

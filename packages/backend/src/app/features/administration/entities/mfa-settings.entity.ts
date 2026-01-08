@@ -6,21 +6,23 @@ export class MFASettingsEntity {
     @PrimaryGeneratedColumn({ type: 'bigint' })
     id: number;
 
-
     @Column({ name: 'user_id', type: 'bigint' })
     userId: number;
+
+    @Column({ name: 'company_id', type: 'bigint' })
+    companyId: number;
 
     @Column({ name: 'is_enabled', type: 'boolean', default: false })
     isEnabled: boolean;
 
     @Column({ name: 'secret', type: 'varchar', length: 255, nullable: true })
-    secret: string | null; // TOTP Secret key
+    secret: string | null;
 
     @Column({ name: 'mfa_type', type: 'varchar', length: 50, default: 'TOTP' })
-    mfaType: string; // TOTP, SMS, EMAIL
+    mfaType: string;
 
     @Column({ name: 'recovery_codes', type: 'text', nullable: true })
-    recoveryCodes: string | null; // JSON array of hashed recovery codes
+    recoveryCodes: string | null;
 
     @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
     createdAt: Date;

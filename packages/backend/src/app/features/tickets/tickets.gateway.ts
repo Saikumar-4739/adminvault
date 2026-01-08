@@ -12,6 +12,8 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { TicketsEntity } from './entities/tickets.entity';
 import { TicketMessageEntity } from './entities/ticket-messages.entity';
+import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { EmployeesEntity } from '../employees/entities/employees.entity';
 
 @WebSocketGateway({
     cors: {
@@ -52,7 +54,7 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
         console.log(`Admin ${client.id} joined admin_room`);
     }
 
-    emitTicketCreated(ticket: any) {
+    async emitTicketCreated(ticket: any) {
         this.server.to('admin_room').emit('ticketCreated', ticket);
 
         // Notify admins with a badge notification
@@ -66,15 +68,17 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
         });
     }
 
-    emitTicketUpdated(ticket: any) {
+    async emitTicketUpdated(ticket: any) {
         const room = `ticket_${ticket.id}`;
         this.server.to(room).emit('ticketUpdated', ticket);
         // Also notify admins
         this.server.to('admin_room').emit('ticketCreated', ticket);
 
-        // Notify the specific user room (only if employeeId exists)
-        if (ticket.employeeId) {
-            const userRoom = `user_${ticket.employeeId}`;
+        // Resolve userId for targeting notification
+        const userId = await this.resolveUserId(ticket);
+
+        if (userId) {
+            const userRoom = `user_${userId}`;
             this.server.to(userRoom).emit('notification', {
                 id: Date.now(),
                 title: 'Ticket Updated',
@@ -153,19 +157,53 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
             // Find the ticket to know who the user is
             const ticket = await this.dataSource.getRepository(TicketsEntity).findOne({ where: { id: data.ticketId } });
             if (ticket) {
-                const userRoom = `user_${ticket.employeeId}`;
-                console.log(`Sending notification to user room ${userRoom}`);
-                this.server.to(userRoom).emit('notification', {
-                    id: Date.now(),
-                    title: 'Support Response',
-                    message: data.message,
-                    time: new Date(),
-                    type: 'message',
-                    link: `/support?ticketId=${data.ticketId}`
-                });
+                const userId = await this.resolveUserId(ticket);
+                if (userId) {
+                    const userRoom = `user_${userId}`;
+                    console.log(`Sending notification to user room ${userRoom}`);
+                    this.server.to(userRoom).emit('notification', {
+                        id: Date.now(),
+                        title: 'Support Response',
+                        message: data.message,
+                        time: new Date(),
+                        type: 'message',
+                        link: `/support?ticketId=${data.ticketId}`
+                    });
+                }
             }
         }
 
         console.log(`Successfully processed sendMessage for ticket ${data.ticketId}`);
+    }
+
+    /**
+     * Helper to resolve the User ID from a ticket.
+     * Prioritizes the direct `userId` field.
+     * Fallback: Uses `employeeId` to find Employee -> Email -> AuthUser -> ID.
+     */
+    private async resolveUserId(ticket: any): Promise<number | null> {
+        if (ticket.userId) {
+            return ticket.userId;
+        }
+
+        if (ticket.employeeId) {
+            // Fallback for legacy tickets created before userId was tracked
+            try {
+                const empRepo = this.dataSource.getRepository(EmployeesEntity);
+                const employee = await empRepo.findOne({ where: { id: ticket.employeeId } });
+
+                if (employee && employee.email) {
+                    const userRepo = this.dataSource.getRepository(AuthUsersEntity);
+                    const user = await userRepo.findOne({ where: { email: employee.email } });
+
+                    if (user) {
+                        return user.id;
+                    }
+                }
+            } catch (error) {
+                console.error("Error resolving userId from ticket:", error);
+            }
+        }
+        return null;
     }
 }

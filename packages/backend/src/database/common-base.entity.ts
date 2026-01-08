@@ -7,7 +7,7 @@ export abstract class CommonBaseEntity {
     @Column({ type: 'bigint', name: 'user_id', nullable: true })
     userId: number;
 
-    @Column({ type: 'bigint', name: 'company_id', nullable: false, default: 1 })
+    @Column({ type: 'bigint', name: 'company_id', nullable: true })
     companyId: number;
 
     @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
