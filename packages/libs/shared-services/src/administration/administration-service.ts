@@ -1,10 +1,18 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { BulkSetSettingsModel, CompanyIdRequestModel, CreateAPIKeyModel, CreateAssetModel, CreateEmailInfoModel, CreatePasswordVaultModel, CreateRoleModel, CreateSSOProviderModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, EnableMFAModel, GetAllAssetsModel, GetAllEmailInfoModel, GetAllPasswordVaultsResponseModel, GetAllRolesResponseModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UpdatePasswordVaultModel, } from '@adminvault/shared-models';
+import { BulkSetSettingsModel, CompanyIdRequestModel, CreateAPIKeyModel, CreateAssetModel, CreateEmailInfoModel, CreatePasswordVaultModel, CreateRoleModel, CreateSSOProviderModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, EnableMFAModel, GetAllAssetsModel, GetAllEmailInfoModel, GetAllPasswordVaultsResponseModel, GetAllRolesResponseModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UpdatePasswordVaultModel, MenuResponseModel, GetAllMenusResponseModel } from '@adminvault/shared-models';
 
 export class AdministrationService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
         return '/administration/' + childUrl;
+    }
+
+    async getUserAuthorizedMenus(config?: AxiosRequestConfig): Promise<GetAllMenusResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/menus/authorized'), {}, config);
+    }
+
+    async checkUserPermission(resource: string, action: string, config?: AxiosRequestConfig): Promise<any> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/permissions/check'), { resource, action }, config);
     }
 
     async getUserSettings(config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {

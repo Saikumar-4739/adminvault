@@ -3,9 +3,10 @@ import { Modal } from '../../../components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { administrationService, employeeService } from '@/lib/api/services';
+import { administrationService, employeeService, workflowService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { ApprovalTypeEnum, CreateApprovalRequestModel } from '@adminvault/shared-models';
 
 interface AssignAssetModalProps {
     isOpen: boolean;
@@ -23,7 +24,8 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
     const [formData, setFormData] = useState({
         employeeId: '',
         assignedDate: new Date().toISOString().split('T')[0],
-        remarks: ''
+        remarks: '',
+        requireApproval: false
     });
 
     const fetchEmployees = useCallback(async () => {
@@ -44,14 +46,20 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
             setFormData({
                 employeeId: '',
                 assignedDate: new Date().toISOString().split('T')[0],
-                remarks: ''
+                remarks: '',
+                requireApproval: false
             });
         }
     }, [isOpen, fetchEmployees]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        // @ts-ignore
+        const checked = e.target.checked;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -65,18 +73,40 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
         }
 
         try {
-            const response = await administrationService.assignAssetOp(
-                asset.id,
-                Number(formData.employeeId),
-                formData.remarks
-            );
+            if (formData.requireApproval) {
+                // Workflow Flow
+                const approvalReq = new CreateApprovalRequestModel(
+                    ApprovalTypeEnum.ASSET_ALLOCATION,
+                    asset.id,
+                    Number(formData.employeeId),
+                    Number(user.companyId),
+                    formData.remarks || 'Asset Allocation Request'
+                );
 
-            if (response.status) {
-                success('Success', 'Asset assigned successfully');
-                onSuccess();
-                onClose();
+                const response = await workflowService.initiateApproval(approvalReq);
+                if (response.status) {
+                    success('Success', 'Approval request submitted');
+                    onSuccess();
+                    onClose();
+                } else {
+                    toastError('Error', response.message || 'Failed to submit approval');
+                }
+
             } else {
-                toastError('Error', response.message || 'Failed to assign asset');
+                // Direct Assignment Flow
+                const response = await administrationService.assignAssetOp(
+                    asset.id,
+                    Number(formData.employeeId),
+                    formData.remarks
+                );
+
+                if (response.status) {
+                    success('Success', 'Asset assigned successfully');
+                    onSuccess();
+                    onClose();
+                } else {
+                    toastError('Error', response.message || 'Failed to assign asset');
+                }
             }
         } catch (error: any) {
             toastError('Error', error.message || 'An error occurred');
@@ -120,6 +150,21 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
                     />
                 </div>
 
+                {/* Approval Checkbox */}
+                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <input
+                        type="checkbox"
+                        id="requireApproval"
+                        name="requireApproval"
+                        checked={formData.requireApproval}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                    />
+                    <label htmlFor="requireApproval" className="text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
+                        Require Manager Approval
+                    </label>
+                </div>
+
                 {/* Remarks */}
                 <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -150,7 +195,7 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
                         isLoading={isLoading}
                         className="flex-1 h-11"
                     >
-                        Confirm
+                        {formData.requireApproval ? 'Submit for Approval' : 'Confirm'}
                     </Button>
                 </div>
             </form>

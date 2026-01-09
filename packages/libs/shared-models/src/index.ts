@@ -21,3 +21,8 @@ export * from './types/geolocation.types';
 
 // Export commonly used types
 export { GlobalResponse } from './common/global-response';
+export * from './workflow/approval-models';
+export * from './ai';
+export * from './knowledge-base/knowledge-base.models';
+export * from './procurement/procurement.models';
+export * from './advanced/advanced-modules.models';

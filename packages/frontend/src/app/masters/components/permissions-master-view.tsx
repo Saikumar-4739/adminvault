@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { useToast } from '@/contexts/ToastContext';
 import { ArrowLeft, Plus, Pencil, Trash2 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
@@ -256,15 +256,11 @@ export default function PermissionsMasterView({ onBack }: PermissionsMasterViewP
                 </form>
             </Modal>
 
-            <ConfirmDialog
+            <DeleteConfirmDialog
                 isOpen={isDeleteDialogOpen}
                 onClose={() => setIsDeleteDialogOpen(false)}
                 onConfirm={handleDeleteConfirm}
-                title="Delete Permission"
-                message="Are you sure you want to delete this permission? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
-                variant="danger"
+                itemName="Permission"
             />
         </>
     );

@@ -274,5 +274,8 @@ export class AssetInfoService {
     async deleteAssignment(reqModel: any, userId?: number): Promise<GlobalResponse> {
         return new GlobalResponse(false, 400, "Assignment deletion not supported");
     }
+    async findAll(companyId: number): Promise<AssetInfoEntity[]> {
+        return await this.assetInfoRepo.find({ where: { companyId } });
+    }
 }
 

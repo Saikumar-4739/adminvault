@@ -15,6 +15,11 @@ import { ReportsModule } from './features/reports/reports.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { DocumentsModule } from './features/documents/documents.module';
 import { AdministrationModule } from './features/administration/administration.module';
+import { WorkflowModule } from './features/workflow/workflow.module';
+import { AiModule } from './features/ai/ai.module';
+import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
+import { ProcurementModule } from './features/procurement/procurement.module';
+import { MaintenanceModule } from './features/maintenance/maintenance.module';
 import configuration from '../config/configuration';
 
 
@@ -44,6 +49,11 @@ import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
     DashboardModule,
     DocumentsModule,
     AdministrationModule,
+    WorkflowModule,
+    AiModule,
+    KnowledgeBaseModule,
+    ProcurementModule,
+    MaintenanceModule
   ],
   controllers: [AppController],
   providers: [

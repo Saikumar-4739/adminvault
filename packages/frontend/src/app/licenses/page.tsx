@@ -9,7 +9,7 @@ import { RouteGuard } from '@/components/auth/RouteGuard';
 import AddLicenseModal from './AddLicenseModal';
 import { useToast } from '@/contexts/ToastContext';
 import { PageLoader } from '@/components/ui/Spinner';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDate } from '@/lib/utils';
 import Card, { CardContent } from '@/components/ui/Card';
@@ -415,13 +415,11 @@ export default function LicensesPage() {
                     employees={allEmployees}
                 />
 
-                <ConfirmDialog
+                <DeleteConfirmDialog
                     isOpen={isDeleteDialogOpen}
                     onClose={() => setIsDeleteDialogOpen(false)}
                     onConfirm={handleDeleteConfirm}
-                    title="Delete License"
-                    message="Are you sure you want to delete this license? This action cannot be undone."
-                    variant="danger"
+                    itemName="License"
                 />
             </div>
         </RouteGuard>

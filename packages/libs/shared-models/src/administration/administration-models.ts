@@ -58,6 +58,7 @@ export class GetAllSettingsResponseModel extends GlobalResponse {
 
 export class CreateRoleModel {
     name!: string;
+    code!: string;
     companyId!: number;
     description?: string;
     permissionIds?: number[];
@@ -66,6 +67,7 @@ export class CreateRoleModel {
 export class UpdateRoleModel {
     id!: number;
     name!: string;
+    code?: string;
     description?: string;
     permissionIds?: number[];
 }

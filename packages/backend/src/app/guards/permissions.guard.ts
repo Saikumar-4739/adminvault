@@ -24,31 +24,72 @@ export class PermissionsGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
         const user = request.user;
 
-        if (!user) {
+        // payload from JwtStrategy uses userId
+        const targetUserId = user?.userId || user?.id;
+        if (!targetUserId) {
             return false;
         }
 
+        // 1. Fetch User and check for Legacy Admin Role bypass
         const userRepo = this.dataSource.getRepository(AuthUsersEntity);
-        const userWithDetails = await userRepo.findOne({
-            where: { id: user.id },
-            relations: ['roles', 'roles.permissions']
-        });
+        const userEntity = await userRepo.findOne({ where: { id: targetUserId } });
 
-        if (!userWithDetails) {
+        if (!userEntity) {
             return false;
         }
 
-        const hasPermission = (userWithDetails as any).roles?.some((role: any) =>
-            role.permissions?.some((permission: any) =>
-                permission.resource === requiredPermission.resource &&
-                permission.action === requiredPermission.action
-            )
-        ) || false;
-
-        if (!hasPermission) {
-            throw new ForbiddenException(`You do not have permission to ${requiredPermission.action} ${requiredPermission.resource}`);
+        // Bypass for ADMIN or SUPER_ADMIN in legacy field
+        const legacyRole = userEntity.userRole?.toUpperCase() || '';
+        if (legacyRole.includes('ADMIN') || legacyRole === 'SUPER_ADMIN') {
+            return true;
         }
 
-        return true;
+        // 2. Fetch Dynamic Roles for this user
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        
+        try {
+            // Get role IDs
+            const userRoles = await queryRunner.manager.query(
+                'SELECT role_id FROM user_roles WHERE user_id = ?',
+                [targetUserId]
+            );
+            const roleIds = userRoles.map((ur: any) => ur.role_id);
+            
+            if (roleIds.length === 0) return false;
+
+            // Check if any assigned role is an ADMIN role (Bypass)
+            const roles = await queryRunner.manager.query(
+                `SELECT name, code FROM roles WHERE id IN (${roleIds.join(',')})`
+            );
+            
+            const hasAdminRole = roles.some((r: any) => 
+                (r.code?.toUpperCase() || '').includes('ADMIN') || 
+                (r.name?.toUpperCase() || '').includes('ADMIN')
+            );
+
+            if (hasAdminRole) return true;
+
+            // 3. Check for specific permission
+            const permissions = await queryRunner.manager.query(
+                `SELECT p.resource, p.action 
+                 FROM permissions p
+                 JOIN role_permissions rp ON p.id = rp.permission_id
+                 WHERE rp.role_id IN (${roleIds.join(',')})`
+            );
+
+            const hasPermission = permissions.some((p: any) => 
+                p.resource === requiredPermission.resource && 
+                p.action === requiredPermission.action
+            );
+
+            if (!hasPermission) {
+                throw new ForbiddenException(`You do not have permission to ${requiredPermission.action} ${requiredPermission.resource}`);
+            }
+
+            return true;
+        } finally {
+            await queryRunner.release();
+        }
     }
 }

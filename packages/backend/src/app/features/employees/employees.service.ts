@@ -183,6 +183,10 @@ export class EmployeesService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if employee ID is missing or employee not found
      */
+    async findAll(companyId: number): Promise<EmployeesEntity[]> {
+        return await this.employeesRepo.find({ where: { companyId } });
+    }
+
     async deleteEmployee(reqModel: DeleteEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {

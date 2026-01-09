@@ -6,6 +6,7 @@ import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 
 interface APIKey {
     id: number;
@@ -22,6 +23,7 @@ export default function APIKeyManager() {
     const [isLoading, setIsLoading] = useState(false);
     const [newKeyName, setNewKeyName] = useState('');
     const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+    const [keyToRevoke, setKeyToRevoke] = useState<number | null>(null);
 
     useEffect(() => {
         fetchKeys();
@@ -64,8 +66,16 @@ export default function APIKeyManager() {
         }
     };
 
-    const revokeKey = async (id: number) => {
-        if (!confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) return;
+    const revokeKey = (id: number) => {
+        setKeyToRevoke(id);
+    };
+
+    const confirmRevokeKey = async () => {
+        if (keyToRevoke === null) return;
+
+        const id = keyToRevoke;
+        setKeyToRevoke(null);
+
         try {
             await fetch(`/api/iam/api-keys/${id}`, { method: 'DELETE' });
             toast.success('API Key revoked');
@@ -187,6 +197,13 @@ export default function APIKeyManager() {
                     )}
                 </div>
             </CardContent>
+
+            <DeleteConfirmDialog
+                isOpen={keyToRevoke !== null}
+                onClose={() => setKeyToRevoke(null)}
+                onConfirm={confirmRevokeKey}
+                message="Are you sure you want to revoke this API key? This action cannot be undone."
+            />
         </Card>
     );
 }

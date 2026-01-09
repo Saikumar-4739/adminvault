@@ -7,7 +7,7 @@ import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
@@ -300,15 +300,11 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                 </form>
             </Modal>
 
-            <ConfirmDialog
+            <DeleteConfirmDialog
                 isOpen={isDeleteDialogOpen}
                 onClose={() => setIsDeleteDialogOpen(false)}
                 onConfirm={handleDeleteConfirm}
-                title="Delete Asset Type"
-                message="Are you sure you want to delete this asset type? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
-                variant="danger"
+                itemName="Asset Type"
             />
         </>
     );

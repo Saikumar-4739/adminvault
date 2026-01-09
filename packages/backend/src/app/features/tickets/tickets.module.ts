@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TicketsService } from './tickets.service';
 import { TicketsController } from './tickets.controller';
@@ -15,10 +15,23 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { TicketsGateway } from './tickets.gateway';
 import { TicketMessageEntity } from './entities/ticket-messages.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { AdministrationModule } from '../administration/administration.module';
+import { WorkflowModule } from '../workflow/workflow.module';
+import { TicketWorkLogEntity } from './entities/ticket-work-log.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([TicketsEntity, TicketCommentsEntity, TicketStatusLogsEntity, EmployeesEntity, TicketMessageEntity, AuthUsersEntity])
+        TypeOrmModule.forFeature([
+            TicketsEntity,
+            TicketCommentsEntity,
+            TicketStatusLogsEntity,
+            EmployeesEntity,
+            TicketMessageEntity,
+            AuthUsersEntity,
+            TicketWorkLogEntity
+        ]),
+        AdministrationModule,
+        forwardRef(() => WorkflowModule)
     ],
     controllers: [TicketsController],
     providers: [TicketsService, TicketsRepository, TicketCommentsRepository, TicketStatusLogsRepository, EmployeesRepository, TicketsGateway],

@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useToast } from '@/contexts/ToastContext';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 
 export default function SettingsPage() {
     const { isDarkMode, toggleDarkMode } = useTheme();
@@ -57,10 +58,15 @@ export default function SettingsPage() {
         }
     };
 
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
     const handleDeleteAccount = () => {
-        if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-            error('Account deletion requires admin approval. Please contact support.');
-        }
+        setIsDeleteOpen(true);
+    };
+
+    const confirmDeleteAccount = () => {
+        error('Account deletion requires admin approval. Please contact support.');
+        setIsDeleteOpen(false);
     };
 
     const handleSavePreferences = () => {
@@ -381,6 +387,12 @@ export default function SettingsPage() {
                 </Button>
             </div>
 
-        </div>
+            <DeleteConfirmDialog
+                isOpen={isDeleteOpen}
+                onClose={() => setIsDeleteOpen(false)}
+                onConfirm={confirmDeleteAccount}
+                message="Are you sure you want to delete your account? This action cannot be undone."
+            />
+        </div >
     );
 };

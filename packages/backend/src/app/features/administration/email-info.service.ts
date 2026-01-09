@@ -19,6 +19,8 @@ import {
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse } from '@adminvault/backend-utils';
 
+import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class EmailInfoService {
     private transporter: nodemailer.Transporter;
@@ -26,13 +28,21 @@ export class EmailInfoService {
 
     constructor(
         private readonly emailInfoRepo: EmailInfoRepository,
-        private readonly dataSource: DataSource
+        private readonly dataSource: DataSource,
+        private readonly configService: ConfigService
     ) {
+        const emailUser = this.configService.get<string>('EMAIL_USER');
+        const emailPass = this.configService.get<string>('EMAIL_PASS');
+
+        if (!emailUser || !emailPass) {
+            this.logger.warn('EMAIL_USER or EMAIL_PASS is missing in environment variables. Email sending will not work.');
+        }
+
         this.transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
+                user: emailUser,
+                pass: emailPass,
             },
         });
     }
@@ -137,6 +147,39 @@ export class EmailInfoService {
             return true;
         } catch (error) {
             this.logger.error('Error sending email', error);
+            return false;
+        }
+    }
+    async sendTicketCreatedEmail(ticket: any, recipientEmail: string, roleName: string): Promise<boolean> {
+        const mailOptions = {
+            from: `"AdminVault Support" <no-reply@adminvault.com>`,
+            to: recipientEmail,
+            subject: `[New Ticket] ${ticket.ticketCode} - ${ticket.subject}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #4f46e5;">Ticket Created Successfully</h2>
+                    <p>Hello, <strong>${roleName}</strong></p>
+                    <p>A new support ticket has been created with the following details:</p>
+                    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p><strong>Ticket ID:</strong> ${ticket.ticketCode}</p>
+                        <p><strong>Subject:</strong> ${ticket.subject}</p>
+                        <p><strong>Category:</strong> ${ticket.categoryEnum}</p>
+                        <p><strong>Priority:</strong> <span style="color: ${ticket.priorityEnum === 'HIGH' ? 'red' : 'inherit'}">${ticket.priorityEnum}</span></p>
+                        <p><strong>Created By:</strong> ${ticket.employee ? ticket.employee.email : 'Unknown'}</p>
+                    </div>
+                    <p>Please login to the portal to view more details and take action.</p>
+                    <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
+                    <p style="font-size: 12px; color: #6b7280;">This is an automated message from AdminVault. Please do not reply directly to this email.</p>
+                </div>
+            `,
+        };
+
+        try {
+            const info = await this.transporter.sendMail(mailOptions);
+            this.logger.log(`Ticket email sent to ${recipientEmail}: ${info.messageId}`);
+            return true;
+        } catch (error) {
+            this.logger.error(`Error sending ticket email to ${recipientEmail}`, error);
             return false;
         }
     }

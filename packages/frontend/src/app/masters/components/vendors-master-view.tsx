@@ -7,7 +7,7 @@ import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
@@ -65,7 +65,7 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
         try {
             const response = await mastersService.getAllVendors(user.companyId as any);
             if (response.status) {
-                setVendors(response.vendors || []);
+                setVendors(response.vendors as any);
             } else {
                 toastError(response.message || 'Failed to fetch vendors');
             }
@@ -291,15 +291,11 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
                 </form>
             </Modal>
 
-            <ConfirmDialog
+            <DeleteConfirmDialog
                 isOpen={isDeleteDialogOpen}
                 onClose={() => setIsDeleteDialogOpen(false)}
                 onConfirm={handleDeleteConfirm}
-                title="Delete Vendor"
-                message="Are you sure you want to delete this vendor? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
-                variant="danger"
+                itemName="Vendor"
             />
         </>
     );

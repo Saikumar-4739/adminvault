@@ -15,7 +15,7 @@ const SlackUsersMasterView = dynamic(() => import('./components/slack-users-mast
 const VendorsMasterView = dynamic(() => import('./components/vendors-master-view'), { loading: () => <p>Loading Vendors...</p> });
 const RolesMasterView = dynamic(() => import('./components/roles-master-view'), { loading: () => <p>Loading Roles...</p> });
 const PermissionsMasterView = dynamic(() => import('./components/permissions-master-view'), { loading: () => <p>Loading Permissions...</p> });
-import { Building2, Users, Package, Smartphone, Tag, AppWindow, MessageSquare, Store, Key } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, Tag, AppWindow, MessageSquare, Store, Key, UserCircle, Mail, Lock } from 'lucide-react';
 
 interface MasterItem {
     id: string;
@@ -112,6 +112,30 @@ export default function MastersPage() {
             icon: Key,
             color: 'from-indigo-500 to-indigo-600',
             component: PermissionsMasterView
+        },
+        {
+            id: 'employees',
+            title: 'Employee Directory',
+            description: 'Manage organization employees and directory',
+            icon: UserCircle,
+            color: 'from-blue-600 to-indigo-700',
+            href: '/employees'
+        },
+        {
+            id: 'emails',
+            title: 'Email Accounts',
+            description: 'Enterprise email account management',
+            icon: Mail,
+            color: 'from-amber-500 to-orange-600',
+            href: '/emails'
+        },
+        {
+            id: 'password-vault',
+            title: 'Password Vault',
+            description: 'Secure enterprise password storage',
+            icon: Lock,
+            color: 'from-emerald-600 to-teal-700',
+            href: '/password-vault'
         },
     ];
 

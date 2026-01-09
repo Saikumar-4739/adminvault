@@ -41,4 +41,10 @@ export class TicketsEntity extends CommonBaseEntity {
 
     @Column('timestamp', { name: 'resolved_at', nullable: true, comment: 'Timestamp when ticket was resolved' })
     resolvedAt: Date;
+
+    @Column('timestamp', { name: 'sla_deadline', nullable: true, comment: 'SLA deadline timestamp' })
+    slaDeadline: Date;
+
+    @Column('int', { name: 'time_spent_minutes', default: 0, comment: 'Total time spent by technicians in minutes' })
+    timeSpentMinutes: number;
 }

@@ -3,4 +3,5 @@ export enum AssetStatusEnum {
     IN_USE = 'in_use',
     MAINTENANCE = 'maintenance',
     RETIRED = 'retired',
+    PENDING_APPROVAL = 'pending_approval'
 }

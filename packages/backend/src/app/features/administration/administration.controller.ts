@@ -317,19 +317,5 @@ export class AdministrationController {
         }
     }
 
-    @Post('iam/permissions/seed')
-    @UseGuards(PermissionsGuard)
-    @RequirePermission('Permission', 'CREATE')
-    async seedPermissions() {
-        try {
-            await this.iamService.seedPermissions();
-            return {
-                status: true,
-                statusCode: 200,
-                message: 'Permissions seeded successfully'
-            };
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
+
 }

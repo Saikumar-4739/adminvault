@@ -6,6 +6,7 @@ import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 
 export default function MFASetup() {
     const toast = useToast();
@@ -14,6 +15,7 @@ export default function MFASetup() {
     const [token, setToken] = useState('');
     const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isDisableMFAOpen, setIsDisableMFAOpen] = useState(false);
 
     useEffect(() => {
         fetchStatus();
@@ -74,7 +76,11 @@ export default function MFASetup() {
     };
 
     const disableMFA = async () => {
-        if (!confirm('Are you sure you want to disable MFA? This will reduce your account security.')) return;
+        setIsDisableMFAOpen(true);
+    };
+
+    const confirmDisableMFA = async () => {
+        setIsDisableMFAOpen(false);
         setIsLoading(true);
         try {
             await fetch('/api/iam/mfa/disable', { method: 'POST' });
@@ -208,6 +214,13 @@ export default function MFASetup() {
                     </div>
                 )}
             </CardContent>
+
+            <DeleteConfirmDialog
+                isOpen={isDisableMFAOpen}
+                onClose={() => setIsDisableMFAOpen(false)}
+                onConfirm={confirmDisableMFA}
+                message="Are you sure you want to disable MFA? This will reduce your account security."
+            />
         </Card>
     );
 }

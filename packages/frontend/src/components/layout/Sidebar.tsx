@@ -1,77 +1,96 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users, Settings as SettingsIcon, UserCircle, Plus } from 'lucide-react';
-import { useState, useEffect, useMemo, memo, useCallback } from 'react';
+import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users, Settings as SettingsIcon, UserCircle, Plus, GitPullRequest, Book, ShoppingCart, Calendar } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRoleEnum } from '@adminvault/shared-models';
+import { UserRoleEnum, MenuResponseModel } from '@adminvault/shared-models';
+import { iamService } from '@/lib/api/services';
+
+const ICON_MAP: Record<string, any> = {
+    'LayoutDashboard': LayoutDashboard,
+    'Package': Package,
+    'ShoppingCart': ShoppingCart,
+    'Calendar': Calendar,
+    'GitPullRequest': GitPullRequest,
+    'KeySquare': KeySquare,
+    'Users': Users,
+    'Ticket': Ticket,
+    'Book': Book,
+    'Plus': Plus,
+    'Mail': Mail,
+    'FileText': FileText,
+    'Lock': Lock,
+    'ShieldAlert': ShieldAlert,
+    'Database': Database,
+    'PieChart': PieChart,
+    'UserCircle': UserCircle,
+    'SettingsIcon': SettingsIcon,
+    'Building2': Building2,
+};
+
+const DEFAULT_NAVIGATION = [
+    {
+        title: 'System',
+        items: [
+            { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+            { name: 'Configuration', href: '/masters', icon: Database },
+            { name: 'All Reports', href: '/reports', icon: PieChart },
+        ]
+    },
+    {
+        title: 'Operations',
+        items: [
+            { name: 'IT Asset Inventory', href: '/assets', icon: Package },
+            { name: 'Procurement', href: '/procurement', icon: ShoppingCart },
+            { name: 'Maintenance', href: '/maintenance', icon: Calendar },
+            { name: 'Approvals', href: '/approvals', icon: GitPullRequest },
+            { name: 'License Manager', href: '/licenses', icon: KeySquare },
+        ]
+    },
+    {
+        title: 'Support Portal',
+        items: [
+            { name: 'My Tickets', href: '/create-ticket?tab=tickets', icon: Ticket },
+            { name: 'Submit Ticket', href: '/create-ticket?tab=create', icon: Plus },
+        ]
+    },
+    {
+        title: 'Support & Comms',
+        items: [
+            { name: 'Support Tickets', href: '/tickets', icon: Ticket },
+            { name: 'Knowledge Base', href: '/knowledge-base', icon: Book },
+            { name: 'Document Center', href: '/documents', icon: FileText },
+        ]
+    },
+    {
+        title: 'Security & Access',
+        items: [
+            { name: 'IAM & SSO', href: '/iam', icon: ShieldAlert },
+        ]
+    },
+    {
+        title: 'Account',
+        items: [
+            { name: 'Profile', href: '/profile', icon: UserCircle },
+            { name: 'Settings', href: '/settings', icon: SettingsIcon },
+        ]
+    }
+];
 
 interface NavigationItem {
     name: string;
     href: string;
     icon: any;
-    roles?: UserRoleEnum[];
+    roles?: UserRoleEnum[]; // This will be ignored as menus are now dynamic
 }
-
-const allNavigation: NavigationItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-
-    // OPERATIONS SECTION
-    { name: 'IT Asset Inventory', href: '/assets', icon: Package, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'License Manager', href: '/licenses', icon: KeySquare, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'Employee Directory', href: '/employees', icon: Users, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-
-    // SUPPORT & COMMS
-    { name: 'Support Tickets', href: '/tickets', icon: Ticket, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'My Tickets', href: '/create-ticket?tab=tickets', icon: Ticket, roles: [UserRoleEnum.USER] },
-    { name: 'Submit Ticket', href: '/create-ticket?tab=create', icon: Plus, roles: [UserRoleEnum.USER] },
-    { name: 'Email Accounts', href: '/emails', icon: Mail, roles: [UserRoleEnum.ADMIN] },
-    { name: 'Document Center', href: '/documents', icon: FileText, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-
-    // SECURITY & ACCESS
-    { name: 'Password Vault', href: '/password-vault', icon: Lock, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER] },
-    { name: 'IAM & SSO', href: '/iam', icon: ShieldAlert, roles: [UserRoleEnum.ADMIN] },
-
-    // SYSTEM
-    { name: 'Configuration', href: '/masters', icon: Database, roles: [UserRoleEnum.ADMIN] },
-    { name: 'System Reports', href: '/reports', icon: PieChart, roles: [UserRoleEnum.ADMIN] },
-
-    // ACCOUNT
-    { name: 'Profile', href: '/profile', icon: UserCircle, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER] },
-    { name: 'Settings', href: '/settings', icon: SettingsIcon, roles: [UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER] },
-];
-
-const navigationGroups = [
-    {
-        title: 'System',
-        items: allNavigation.filter(item => ['Dashboard', 'Configuration', 'System Reports'].includes(item.name))
-    },
-    {
-        title: 'Operations',
-        items: allNavigation.filter(item => ['IT Asset Inventory', 'License Manager', 'Employee Directory'].includes(item.name))
-    },
-    {
-        title: 'Support Portal',
-        items: allNavigation.filter(item => ['My Tickets', 'Submit Ticket'].includes(item.name))
-    },
-    {
-        title: 'Support & Comms',
-        items: allNavigation.filter(item => ['Support Tickets', 'Email Accounts', 'Document Center'].includes(item.name))
-    },
-    {
-        title: 'Security & Access',
-        items: allNavigation.filter(item => ['Password Vault', 'IAM & SSO'].includes(item.name))
-    },
-    {
-        title: 'Account',
-        items: allNavigation.filter(item => ['Profile', 'Settings'].includes(item.name))
-    }
-];
 
 export default function Sidebar() {
     const pathname = usePathname();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isCollapsed, setIsCollapsed] = useState(false);
     const { user } = useAuth();
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [dynamicMenus, setDynamicMenus] = useState<MenuResponseModel[]>([]);
+    const [loading, setLoading] = useState(true);
 
     // Persist collapsed state
     useEffect(() => {
@@ -87,18 +106,58 @@ export default function Sidebar() {
         localStorage.setItem('sidebar_collapsed', String(newState));
     }, [isCollapsed]);
 
-    // Memoize hasRole function to prevent recreation on every render
-    const hasRole = useCallback((roles: UserRoleEnum[]): boolean => {
-        if (!user?.role) return false;
-        return roles.includes(user.role as UserRoleEnum);
-    }, [user?.role]);
+    const fetchMenus = useCallback(async () => {
+        try {
+            setLoading(true);
+            const response = await iamService.getUserAuthorizedMenus();
+            if (response.status && response.data) {
+                setDynamicMenus(response.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch menus:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-    const permissions = useMemo(() => ({ hasRole }), [hasRole]);
+    useEffect(() => {
+        if (user) {
+            fetchMenus();
+        }
+    }, [user, fetchMenus]);
 
-    const SidebarContent = ({ collapsed, pathname, permissions, setIsMobileMenuOpen }: {
+    const navigationGroups = useMemo(() => {
+        if (loading) {
+            return []; // Or a loading state representation
+        }
+
+        // Super Admin Fallback: Show all menus initially if none are configured in the DB
+        const role = user?.role?.toUpperCase() || '';
+        const isAdmin = role.includes('ADMIN') || role.includes('SUPER_ADMIN');
+        if (dynamicMenus.length === 0 && isAdmin) {
+            return DEFAULT_NAVIGATION;
+        }
+
+        if (dynamicMenus.length === 0) {
+            return [];
+        }
+
+        // Backend returns a tree structure. We'll treat top-level items as Groups
+        // if they have children, or just single items.
+        return dynamicMenus.map(group => ({
+            title: group.label,
+            items: group.children.map(item => ({
+                name: item.label,
+                href: item.path,
+                icon: ICON_MAP[item.icon] || LayoutDashboard, // Default icon if not found
+            }))
+        }));
+    }, [dynamicMenus, loading, user]);
+
+    if (!user) return null; // Don't render sidebar if user is not authenticated
+
+    const SidebarContent = ({ collapsed, setIsMobileMenuOpen }: {
         collapsed: boolean,
-        pathname: string | null,
-        permissions: any,
         setIsMobileMenuOpen: (val: boolean) => void
     }) => (
         <>
@@ -109,8 +168,8 @@ export default function Sidebar() {
                 </div>
                 {!collapsed && (
                     <div className="overflow-hidden transition-all duration-300">
-                        <h1 className="text-xl font-bold text-white tracking-tight whitespace-nowrap">AdminVault</h1>
-                        <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider whitespace-nowrap">Enterprise Platform</p>
+                        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight whitespace-nowrap">AdminVault</h1>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider whitespace-nowrap">Enterprise Platform</p>
                     </div>
                 )}
             </div>
@@ -118,23 +177,19 @@ export default function Sidebar() {
             {/* Navigation */}
             <div className="flex-1 px-4 py-2 space-y-6 overflow-y-auto custom-scrollbar">
                 {navigationGroups.map((group) => {
-                    const filteredItems = group.items.filter(item => {
-                        if (!item.roles || item.roles.length === 0) return true;
-                        return permissions.hasRole(item.roles);
-                    });
-
-                    if (filteredItems.length === 0) return null;
+                    const items = group.items;
+                    if (items.length === 0) return null;
 
                     return (
                         <div key={group.title} className="space-y-1">
                             {!collapsed && (
-                                <h3 className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <h3 className="px-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
                                     <span className="w-1 h-3 bg-indigo-500/50 rounded-full" />
                                     {group.title}
                                 </h3>
                             )}
                             <nav className="space-y-0.5">
-                                {filteredItems.map((item) => {
+                                {items.map((item) => {
                                     const Icon = item.icon;
                                     const isActive = item.href === '/dashboard'
                                         ? pathname === '/dashboard'
@@ -146,12 +201,12 @@ export default function Sidebar() {
                                             href={item.href}
                                             prefetch={true}
                                             className={`relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 group font-medium text-xs ${isActive
-                                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30'
-                                                : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
+                                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                                                 } ${collapsed ? 'justify-center px-2' : ''}`}
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
-                                            <Icon className={`h-4 w-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
+                                            <Icon className={`h-4 w-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-white'}`} />
 
                                             {!collapsed && <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>}
 
@@ -194,8 +249,6 @@ export default function Sidebar() {
                         {/* Always expanded on mobile */}
                         <SidebarContent
                             collapsed={false}
-                            pathname={pathname}
-                            permissions={permissions}
                             setIsMobileMenuOpen={setIsMobileMenuOpen}
                         />
                     </div>
@@ -204,20 +257,18 @@ export default function Sidebar() {
 
             {/* Desktop Sidebar */}
             <aside
-                className={`hidden lg:flex lg:flex-col bg-slate-900 border-r border-slate-800 h-screen sticky top-0 shadow-2xl z-40 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-72'}`}
+                className={`hidden lg:flex lg:flex-col bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800/50 h-screen sticky top-0 shadow-xl z-40 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-72'}`}
             >
                 <SidebarContent
                     collapsed={isCollapsed}
-                    pathname={pathname}
-                    permissions={permissions}
                     setIsMobileMenuOpen={setIsMobileMenuOpen}
                 />
 
                 {/* Collapse Toggle Button (Desktop Only) */}
-                <div className={`hidden lg:flex p-4 border-t border-slate-800 ${isCollapsed ? 'justify-center' : 'justify-end'}`}>
+                <div className={`hidden lg:flex p-4 border-t border-slate-100 dark:border-slate-800/50 ${isCollapsed ? 'justify-center' : 'justify-end'}`}>
                     <button
                         onClick={toggleCollapse}
-                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                        className="p-2 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                         title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                     >
                         {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}

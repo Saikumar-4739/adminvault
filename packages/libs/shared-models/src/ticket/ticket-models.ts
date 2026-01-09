@@ -10,6 +10,7 @@ export class CreateTicketModel {
     subject: string;
     ticketStatus: TicketStatusEnum;
     resolvedAt?: Date;
+    timeSpentMinutes?: number;
 
     constructor(
         ticketCode: string,
@@ -19,7 +20,8 @@ export class CreateTicketModel {
         ticketStatus: TicketStatusEnum = TicketStatusEnum.OPEN,
         employeeId?: number,
         assignAdminId?: number,
-        resolvedAt?: Date
+        resolvedAt?: Date,
+        timeSpentMinutes?: number
     ) {
         this.ticketCode = ticketCode;
         this.employeeId = employeeId;
@@ -29,6 +31,7 @@ export class CreateTicketModel {
         this.ticketStatus = ticketStatus;
         this.assignAdminId = assignAdminId;
         this.resolvedAt = resolvedAt;
+        this.timeSpentMinutes = timeSpentMinutes;
     }
 }
 
@@ -44,9 +47,10 @@ export class UpdateTicketModel extends CreateTicketModel {
         ticketStatus: TicketStatusEnum = TicketStatusEnum.OPEN,
         employeeId?: number,
         assignAdminId?: number,
-        resolvedAt?: Date
+        resolvedAt?: Date,
+        timeSpentMinutes?: number
     ) {
-        super(ticketCode, categoryEnum, priorityEnum, subject, ticketStatus, employeeId, assignAdminId, resolvedAt);
+        super(ticketCode, categoryEnum, priorityEnum, subject, ticketStatus, employeeId, assignAdminId, resolvedAt, timeSpentMinutes);
         this.id = id;
     }
 }
@@ -77,6 +81,8 @@ export class TicketResponseModel {
     subject: string;
     ticketStatus: TicketStatusEnum;
     resolvedAt?: Date;
+    slaDeadline?: Date;
+    timeSpentMinutes?: number;
     createdAt?: Date;
     updatedAt?: Date;
 
@@ -93,7 +99,9 @@ export class TicketResponseModel {
         employeeName?: string,
         employeeEmail?: string,
         createdAt?: Date,
-        updatedAt?: Date
+        updatedAt?: Date,
+        slaDeadline?: Date,
+        timeSpentMinutes?: number
     ) {
         this.id = id;
         this.ticketCode = ticketCode;
@@ -108,6 +116,8 @@ export class TicketResponseModel {
         this.resolvedAt = resolvedAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.slaDeadline = slaDeadline;
+        this.timeSpentMinutes = timeSpentMinutes;
     }
 }
 

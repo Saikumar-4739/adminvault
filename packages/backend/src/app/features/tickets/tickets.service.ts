@@ -5,9 +5,16 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { TicketsEntity } from './entities/tickets.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum } from '@adminvault/shared-models';
-
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum, UserRoleEnum } from '@adminvault/shared-models';
 import { TicketsGateway } from './tickets.gateway';
+import { EmailInfoService } from '../administration/email-info.service';
+import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { WorkflowService } from '../workflow/workflow.service';
+import { CreateApprovalRequestModel, ApprovalTypeEnum } from '@adminvault/shared-models';
+
+import { TicketWorkLogEntity } from './entities/ticket-work-log.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class TicketsService {
@@ -15,7 +22,11 @@ export class TicketsService {
         private dataSource: DataSource,
         private ticketsRepo: TicketsRepository,
         private employeesRepo: EmployeesRepository,
-        private gateway: TicketsGateway
+        @InjectRepository(TicketWorkLogEntity)
+        private workLogRepo: Repository<TicketWorkLogEntity>,
+        private gateway: TicketsGateway,
+        private emailInfoService: EmailInfoService,
+        private workflowService: WorkflowService
     ) { }
 
     /**
@@ -61,10 +72,20 @@ export class TicketsService {
 
             await transManager.startTransaction();
 
+            // Calculate SLA Deadline
+            let slaHours = 24;
+            if (reqModel.priorityEnum === TicketPriorityEnum.HIGH) slaHours = 4;
+            else if (reqModel.priorityEnum === TicketPriorityEnum.LOW) slaHours = 72;
+
+            const now = new Date();
+            const slaDeadline = new Date(now.getTime() + slaHours * 60 * 60 * 1000);
+
             const entity = this.ticketsRepo.create({
                 ...reqModel,
                 employeeId: employee.id, // Use the resolved employee ID
                 userId: userId,
+                companyId: employee.companyId,
+                slaDeadline: slaDeadline
             });
 
             const savedTicket = await transManager.getRepository(TicketsEntity).save(entity);
@@ -72,6 +93,37 @@ export class TicketsService {
 
             // Notify admins via WebSocket
             this.gateway.emitTicketCreated(savedTicket);
+
+            // Trigger Workflow for High Priority Tickets OR if status is PENDING
+            if (savedTicket.priorityEnum === TicketPriorityEnum.HIGH || savedTicket.ticketStatus === TicketStatusEnum.PENDING) {
+                const approvalReq = new CreateApprovalRequestModel(
+                    ApprovalTypeEnum.TICKET,
+                    Number(savedTicket.id),
+                    Number(employee.id), // requester
+                    Number(employee.companyId),
+                    `Ticket Approval Request: ${savedTicket.subject} (${savedTicket.priorityEnum})`
+                );
+                await this.workflowService.initiateApproval(approvalReq);
+            }
+
+            // Send Emails
+            // 1. To User
+            await this.emailInfoService.sendTicketCreatedEmail(savedTicket, userEmail, 'User');
+
+            // 2. To Admins & Managers
+            const authRepo = this.dataSource.getRepository(AuthUsersEntity);
+            const recipients = await authRepo.find({
+                where: [
+                    { companyId: employee.companyId, userRole: UserRoleEnum.ADMIN },
+                    { companyId: employee.companyId, userRole: UserRoleEnum.MANAGER }
+                ]
+            });
+
+            for (const recipient of recipients) {
+                if (recipient.email !== userEmail) { // Avoid sending duplicate if user is also admin/manager
+                    await this.emailInfoService.sendTicketCreatedEmail(savedTicket, recipient.email, recipient.userRole);
+                }
+            }
 
             return new GlobalResponse(true, 0, "Ticket created successfully");
         } catch (error) {
@@ -131,6 +183,19 @@ export class TicketsService {
 
             await transManager.startTransaction();
             await transManager.getRepository(TicketsEntity).update(reqModel.id, reqModel);
+            
+            // If time spent is provided, optionally create a work log
+            if (reqModel.timeSpentMinutes && reqModel.timeSpentMinutes > 0) {
+                const workLog = new TicketWorkLogEntity();
+                workLog.ticketId = reqModel.id;
+                workLog.timeSpentMinutes = reqModel.timeSpentMinutes;
+                workLog.description = `Work logged during ticket update. Total time spent updated to ${reqModel.timeSpentMinutes}m.`;
+                workLog.startTime = new Date();
+                // If we had a technicianId, we'd use it here. Defaulting for now or using userId.
+                workLog.technicianId = userId; 
+                await transManager.getRepository(TicketWorkLogEntity).save(workLog);
+            }
+
             await transManager.completeTransaction();
 
             // Notify via WebSocket
@@ -162,7 +227,12 @@ export class TicketsService {
                 throw new ErrorResponse(0, "Ticket not found");
             }
 
-            const response = new TicketResponseModel(ticket.id, ticket.ticketCode, ticket.employeeId, ticket.categoryEnum, ticket.priorityEnum, ticket.subject, ticket.ticketStatus, ticket.assignAdminId, ticket.resolvedAt);
+            const response = new TicketResponseModel(
+                ticket.id, ticket.ticketCode, ticket.employeeId, ticket.categoryEnum, ticket.priorityEnum, ticket.subject, ticket.ticketStatus, ticket.assignAdminId, ticket.resolvedAt,
+                undefined, undefined,
+                ticket.createdAt, ticket.updatedAt, ticket.slaDeadline,
+                ticket.timeSpentMinutes
+            );
             return new GetTicketByIdModel(true, 0, "Ticket retrieved successfully", response);
         } catch (error) {
             throw error;
@@ -203,7 +273,9 @@ export class TicketsService {
                 t.employee ? `${t.employee.firstName} ${t.employee.lastName}` : `User ID: ${t.employeeId}`,
                 t.employee ? t.employee.email : `User ID: ${t.employeeId}`,
                 t.createdAt,
-                t.updatedAt
+                t.updatedAt,
+                t.slaDeadline,
+                t.timeSpentMinutes
             ));
             return new GetAllTicketsModel(true, 0, "Tickets retrieved successfully", responses);
         } catch (error) {
@@ -281,12 +353,23 @@ export class TicketsService {
                 t.employee ? `${t.employee.firstName} ${t.employee.lastName}` : `User ID: ${t.employeeId}`,
                 t.employee ? t.employee.email : `User ID: ${t.employeeId}`,
                 t.createdAt,
-                t.updatedAt
+                t.updatedAt,
+                t.slaDeadline,
+                t.timeSpentMinutes
             ));
             return new GetAllTicketsModel(true, 0, "User tickets retrieved successfully", responses);
         } catch (error) {
             throw error;
         }
+    }
+
+    async getStatisticsByCompany(companyId: number): Promise<any> {
+        const total = await this.ticketsRepo.count({ where: { companyId } });
+        const open = await this.ticketsRepo.count({ where: { companyId, ticketStatus: TicketStatusEnum.OPEN } });
+        const inProgress = await this.ticketsRepo.count({ where: { companyId, ticketStatus: TicketStatusEnum.IN_PROGRESS } });
+        const resolved = await this.ticketsRepo.count({ where: { companyId, ticketStatus: TicketStatusEnum.RESOLVED } });
+
+        return { total, open, inProgress, resolved };
     }
 
     async getStatistics(companyId: number): Promise<any> {

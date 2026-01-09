@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { slackUsersService, employeeService, mastersService } from '@/lib/api/services';
+import { employeeService, mastersService } from '@/lib/api/services';
 import { SlackUserModel, CreateSlackUserModel, UpdateSlackUserModel, EmployeeResponseModel, Department } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -10,12 +10,15 @@ import { Modal } from '@/components/ui/Modal';
 import { Search, Plus, MessageSquare, Pencil, Trash2, User, Users } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 
 export default function SlackUsersPage() {
     const [users, setUsers] = useState<SlackUserModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<SlackUserModel | null>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [employees, setEmployees] = useState<EmployeeResponseModel[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
@@ -54,9 +57,9 @@ export default function SlackUsersPage() {
     const fetchUsers = async () => {
         try {
             setIsLoading(true);
-            const response = await slackUsersService.getAllSlackUsers();
+            const response = await mastersService.getAllSlackUsers({ id: 1 }); // Hardcoded companyId 1 as per original code context
             if (response.status) {
-                setUsers(response.slackUsers);
+                setUsers(response.slackUsers || []);
             }
         } catch (error) {
             console.error('Failed to fetch Slack users:', error);
@@ -118,19 +121,37 @@ export default function SlackUsersPage() {
             const companyId = 1;
 
             if (editingUser) {
-                const updateModel: UpdateSlackUserModel = {
-                    id: editingUser.id,
-                    ...formData,
-                    userId
-                };
-                await slackUsersService.updateSlackUser(updateModel);
-            } else {
-                const createModel: CreateSlackUserModel = {
-                    ...formData,
-                    userId,
+                const updateModel = new UpdateSlackUserModel(
+                    editingUser.id,
+                    formData.name,
+                    formData.email,
+                    formData.notes, // description
+                    true, // isActive
+                    formData.slackUserId,
+                    formData.displayName,
+                    formData.role,
+                    formData.department,
+                    formData.phone,
+                    formData.notes, // notes
                     companyId
-                };
-                await slackUsersService.createSlackUser(createModel);
+                );
+                await mastersService.updateSlackUser(updateModel);
+            } else {
+                const createModel = new CreateSlackUserModel(
+                    userId,
+                    companyId,
+                    formData.name,
+                    formData.email,
+                    formData.notes, // description
+                    true, // isActive
+                    formData.slackUserId,
+                    formData.displayName,
+                    formData.role,
+                    formData.department,
+                    formData.phone,
+                    formData.notes // notes
+                );
+                await mastersService.createSlackUser(createModel);
             }
             setIsModalOpen(false);
             fetchUsers();
@@ -139,14 +160,21 @@ export default function SlackUsersPage() {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (confirm('Are you sure you want to delete this user?')) {
-            try {
-                await slackUsersService.deleteSlackUser({ id, userId: 1 });
-                fetchUsers();
-            } catch (error) {
-                console.error('Failed to delete user:', error);
-            }
+    const handleDelete = (id: number) => {
+        setUserToDelete(id);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!userToDelete) return;
+        try {
+            await mastersService.deleteSlackUser(userToDelete);
+            fetchUsers();
+        } catch (error) {
+            console.error('Failed to delete user:', error);
+        } finally {
+            setDeleteConfirmOpen(false);
+            setUserToDelete(null);
         }
     };
 
@@ -339,6 +367,13 @@ export default function SlackUsersPage() {
                         </div>
                     </form>
                 </Modal>
+
+                <DeleteConfirmDialog
+                    isOpen={deleteConfirmOpen}
+                    onClose={() => setDeleteConfirmOpen(false)}
+                    onConfirm={confirmDelete}
+                    itemName="Slack User"
+                />
             </div>
         </RouteGuard>
     );
