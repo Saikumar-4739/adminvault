@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Laptop, Monitor, Smartphone, Tablet, HardDrive, User, Calendar, Shield, Package, History, QrCode, Pencil, Trash2, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, UserPlus } from 'lucide-react';
+import { Laptop, Monitor, Smartphone, Tablet, HardDrive, User, Calendar, Shield, Package, History, QrCode, Pencil, Trash2, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, UserPlus, ShieldCheck, AlertOctagon, Clock, HelpCircle, RefreshCw, Lock, Eraser } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { ComplianceStatusEnum } from '@adminvault/shared-models';
 
 interface AssetCardProps {
     asset: any;
@@ -59,6 +60,22 @@ const getStatusConfig = (status: string) => {
     return configs[statusUpper] || configs['AVAILABLE'];
 };
 
+const getComplianceConfig = (status: ComplianceStatusEnum | string) => {
+    switch (status) {
+        case ComplianceStatusEnum.COMPLIANT:
+        case 'compliant':
+            return { color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20', icon: ShieldCheck, label: 'Compliant' };
+        case ComplianceStatusEnum.NON_COMPLIANT:
+        case 'non_compliant':
+            return { color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-900/20', icon: AlertOctagon, label: 'Non-Compliant' };
+        case ComplianceStatusEnum.PENDING:
+        case 'pending':
+            return { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20', icon: Clock, label: 'Pending' };
+        default:
+            return { color: 'text-slate-400 dark:text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800/50', icon: HelpCircle, label: 'Unknown' };
+    }
+};
+
 const isWarrantyExpiring = (warrantyDate?: string) => {
     if (!warrantyDate) return false;
     const expiry = new Date(warrantyDate);
@@ -81,6 +98,14 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
     const warrantyExpired = isWarrantyExpired(asset.warrantyExpiry);
     // Explicitly check for available status
     const isAvailable = (asset.status || '').toUpperCase() === 'AVAILABLE';
+
+    const complianceConfig = getComplianceConfig(asset.complianceStatus);
+    const ComplianceIcon = complianceConfig.icon;
+
+    const handleRemoteAction = (action: string) => {
+        // In a real app, this would call an API
+        alert(`${action} command sent to device ${asset.serialNumber}`);
+    };
 
     return (
         <div className="group relative">
@@ -140,26 +165,7 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
                         </div>
                     )}
 
-                    {/* Previous User Info - Only show for IN_USE assets */}
-                    {['IN_USE', 'INUSE'].includes((asset.status || '').toUpperCase()) && (
-                        <div className="mb-3 min-h-[52px]">
-                            {asset.previousUser ? (
-                                <div className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
-                                    <div className="flex items-center gap-2">
-                                        <History className="h-3.5 w-3.5 text-slate-400" />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide leading-none mb-0.5">Previous User</p>
-                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 truncate block">{asset.previousUser}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="h-full"></div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Quick Info Grid */}
+                    {/* Quick Info Grid - Updated to include Compliance */}
                     <div className="grid grid-cols-2 gap-2 mb-3">
                         <div className="p-2 bg-slate-50/30 dark:bg-slate-800/30 rounded-lg border border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-1.5 mb-0.5">
@@ -180,13 +186,139 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
                                 {formatDate(asset.warrantyExpiry)}
                             </p>
                         </div>
+
+                        {/* Compliance Status */}
+                        <div className={`p-2 rounded-lg border ${complianceConfig.bg} border-current/10 col-span-2 flex items-center justify-between`}>
+                            <div className="flex items-center gap-2">
+                                <ComplianceIcon className={`h-3.5 w-3.5 ${complianceConfig.color}`} />
+                                <div className="flex flex-col">
+                                    <span className={`text-[9px] font-black uppercase tracking-widest ${complianceConfig.color} opacity-70`}>Compliance</span>
+                                    <span className={`text-xs font-bold ${complianceConfig.color}`}>{complianceConfig.label}</span>
+                                </div>
+                            </div>
+                            {asset.lastSync && (
+                                <div className="text-[9px] text-slate-400 text-right">
+                                    <div>Synced</div>
+                                    <div>{formatDate(asset.lastSync)}</div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Expandable Details */}
-                    {isExpanded && asset.configuration && (
-                        <div className="mb-3 p-2 bg-slate-100/30 dark:bg-slate-900/30 rounded-lg border border-slate-200/20">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Specs</p>
-                            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{asset.configuration}</p>
+
+                    {/* Expandable Details & Actions & Telemetry */}
+                    {isExpanded && (
+                        <div className="mb-3 space-y-2">
+                            {/* Device Telemetry / Health */}
+                            {(asset.batteryLevel !== undefined || asset.storageTotal || asset.encryptionStatus || asset.ipAddress || asset.macAddress) && (
+                                <div className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Device Health</p>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {/* Battery */}
+                                        {asset.batteryLevel !== undefined && (
+                                            <div className="bg-white dark:bg-slate-900 p-1.5 rounded border border-slate-200 dark:border-slate-800">
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="text-[9px] text-slate-500">Battery</span>
+                                                    <span className={`text-[9px] font-bold ${asset.batteryLevel > 20 ? 'text-green-600' : 'text-rose-600'}`}>{asset.batteryLevel}%</span>
+                                                </div>
+                                                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full ${asset.batteryLevel > 20 ? 'bg-green-500' : 'bg-rose-500'}`}
+                                                        style={{ width: `${asset.batteryLevel}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Storage */}
+                                        {asset.storageTotal && (
+                                            <div className="bg-white dark:bg-slate-900 p-1.5 rounded border border-slate-200 dark:border-slate-800">
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="text-[9px] text-slate-500">Storage</span>
+                                                    <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300">{asset.storageAvailable || '0'} / {asset.storageTotal}</span>
+                                                </div>
+                                                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                    {/* Mock progress based on text, or simplified visual */}
+                                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: '65%' }}></div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Network & Security Info */}
+                                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                        {asset.ipAddress && (
+                                            <div className="flex flex-col">
+                                                <span className="text-slate-400 font-medium">IP Address</span>
+                                                <span className="text-slate-700 dark:text-slate-300 font-mono">{asset.ipAddress}</span>
+                                            </div>
+                                        )}
+                                        {asset.macAddress && (
+                                            <div className="flex flex-col">
+                                                <span className="text-slate-400 font-medium">MAC Address</span>
+                                                <span className="text-slate-700 dark:text-slate-300 font-mono">{asset.macAddress}</span>
+                                            </div>
+                                        )}
+                                        {asset.encryptionStatus && (
+                                            <div className="flex flex-col col-span-2">
+                                                <span className="text-slate-400 font-medium">Encryption</span>
+                                                <div className="flex items-center gap-1">
+                                                    {asset.encryptionStatus === 'encrypted' ? (
+                                                        <>
+                                                            <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
+                                                            <span className="text-green-600 dark:text-green-400 font-bold">BitLocker / FileVault Enabled</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <div className="h-1.5 w-1.5 rounded-full bg-rose-500"></div>
+                                                            <span className="text-rose-600 dark:text-rose-400 font-bold">Not Encrypted</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {asset.configuration && (
+                                <div className="p-2 bg-slate-100/30 dark:bg-slate-900/30 rounded-lg border border-slate-200/20">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Specs</p>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{asset.configuration}</p>
+                                </div>
+                            )}
+
+                            {/* Intune-like Remote Actions */}
+                            <div className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Device Actions</p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleRemoteAction('Sync')}
+                                        className="flex-1 flex flex-col items-center gap-1 p-2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                        title="Sync Policy"
+                                    >
+                                        <RefreshCw className="h-3 w-3 text-blue-500" />
+                                        <span className="text-[9px] font-medium text-slate-600 dark:text-slate-300">Sync</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleRemoteAction('Lock')}
+                                        className="flex-1 flex flex-col items-center gap-1 p-2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                        title="Remote Lock"
+                                    >
+                                        <Lock className="h-3 w-3 text-amber-500" />
+                                        <span className="text-[9px] font-medium text-slate-600 dark:text-slate-300">Lock</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleRemoteAction('Wipe')}
+                                        className="flex-1 flex flex-col items-center gap-1 p-2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                        title="Remote Wipe"
+                                    >
+                                        <Eraser className="h-3 w-3 text-rose-500" />
+                                        <span className="text-[9px] font-medium text-slate-600 dark:text-slate-300">Wipe</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -248,14 +380,12 @@ export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory
                                 <Trash2 className="h-3.5 w-3.5" />
                             </button>
 
-                            {asset.configuration && (
-                                <button
-                                    onClick={() => setIsExpanded(!isExpanded)}
-                                    className={`p-2 rounded-lg transition-colors ${isExpanded ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-400 hover:text-slate-900'}`}
-                                >
-                                    {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                                </button>
-                            )}
+                            <button
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className={`p-2 rounded-lg transition-colors ${isExpanded ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-400 hover:text-slate-900'}`}
+                            >
+                                {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                            </button>
                         </div>
                     </div>
                 </div>

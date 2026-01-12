@@ -9,6 +9,7 @@ export const useIAM = (companyId?: number) => {
     const [permissions, setPermissions] = useState<Permission[]>([]);
     const [ssoProviders, setSSOProviders] = useState<SSOProvider[]>([]);
     const [users, setUsers] = useState<any[]>([]);
+    const [allEmployees, setAllEmployees] = useState<any[]>([]);
     const [authorizedMenus, setAuthorizedMenus] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -22,9 +23,10 @@ export const useIAM = (companyId?: number) => {
             const loadSSO = IAMService.getSSOProviders().catch(err => { console.error('SSO failed', err); return null; });
             const loadUsers = IAMService.getUsers(companyId).catch(err => { console.error('Users failed', err); return null; });
             const loadMenus = IAMService.getAuthorizedMenus().catch(err => { console.error('Menus failed', err); return null; });
+            const loadAllEmployees = IAMService.getAllEmployees(companyId).catch(err => { console.error('Employees load failed', err); return null; });
 
-            const [rolesData, permsData, ssoData, usersData, menusData] = await Promise.all([
-                loadRoles, loadPerms, loadSSO, loadUsers, loadMenus
+            const [rolesData, permsData, ssoData, usersData, menusData, employeesData] = await Promise.all([
+                loadRoles, loadPerms, loadSSO, loadUsers, loadMenus, loadAllEmployees
             ]);
 
             if (rolesData && (rolesData as any).success) {
@@ -41,6 +43,9 @@ export const useIAM = (companyId?: number) => {
             }
             if (menusData && (menusData as any).success) {
                 setAuthorizedMenus((menusData as any).data);
+            }
+            if (employeesData && (employeesData as any).status) {
+                setAllEmployees((employeesData as any).employees || (employeesData as any).data || []);
             }
 
         } catch (error) {
@@ -153,11 +158,26 @@ export const useIAM = (companyId?: number) => {
         return false;
     };
 
+    const activateAccount = async (data: { employeeId: number, roles: number[], companyId: number, authType: string, password?: string }) => {
+        try {
+            const res = await IAMService.activateAccount(data);
+            if ((res as any).success) {
+                success('Success', (res as any).message);
+                fetchData();
+                return true;
+            }
+        } catch (error) {
+            toastError('Error', (error as any).message || 'An error occurred');
+        }
+        return false;
+    };
+
     return {
         roles,
         permissions,
         ssoProviders,
         users,
+        allEmployees,
         authorizedMenus,
         loading,
         createRole,
@@ -167,6 +187,7 @@ export const useIAM = (companyId?: number) => {
         updateSSOProvider,
         deleteSSOProvider,
         assignRoles,
+        activateAccount,
         refresh: fetchData
     };
 };

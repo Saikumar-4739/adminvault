@@ -15,3 +15,6 @@ export * from './admin-status.enum';
 export * from './email-status.enum';
 export * from './comment-by.enum';
 export * from './setting-type.enum';
+export * from './compliance-status.enum';
+export * from './encryption-status.enum';
+

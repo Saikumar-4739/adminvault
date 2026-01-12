@@ -4,8 +4,6 @@ import { UserRoleEnum } from '@adminvault/shared-models';
 @Entity('auth_users')
 @Index('idx_auth_email', ['email'])
 @Index('idx_auth_company', ['companyId'])
-@Index('idx_auth_role', ['userRole'])
-@Index('idx_auth_status', ['status'])
 export class AuthUsersEntity {
   @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for auth users' })
   id: number;
@@ -15,6 +13,9 @@ export class AuthUsersEntity {
 
   @Column('bigint', { name: 'company_id', nullable: false, comment: 'Reference to company_info table' })
   companyId: number;
+
+  @Column('varchar', { name: 'employee_id', length: 255, nullable: false, unique: true, comment: 'User employee id' })
+  employeeId: string;
 
   @Column('varchar', { name: 'email', length: 255, nullable: false, unique: true, comment: 'User email address' })
   email: string;
@@ -34,8 +35,8 @@ export class AuthUsersEntity {
   @Column('varchar', { name: 'auth_type', length: 20, default: 'LOCAL', nullable: false, comment: 'Authentication type: LOCAL or SSO' })
   authType: string;
 
-  @Column('bigint', { name: 'sso_provider_id', nullable: true, comment: 'ID of the SSO provider if auth_type is SSO' })
-  ssoProviderId: number;
+  @Column('varchar', { name: 'sso_id', length: 255, nullable: true, comment: 'Unique ID from SSO provider (Google sub or Microsoft id)' })
+  ssoId: string;
 
   @Column('timestamp', { name: 'last_login', nullable: true, comment: 'Last login timestamp' })
   lastLogin: Date;

@@ -1,10 +1,14 @@
 import { Column, Entity, CreateDateColumn, UpdateDateColumn, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('login_sessions')
-@Index('idx_session_user', ['userId'])
-@Index('idx_session_ip', ['ipAddress'])
-export class UserLoginSessionsEntity extends CommonBaseEntity {
+export class UserLoginSessionsEntity {
+
+    @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
+    id: number;
+
+    @Column({ type: 'bigint', name: 'user_id', nullable: true })
+    userId: number;
+
     @Column('text', { name: 'session_token', nullable: true, comment: 'Unique session identifier / JWT' })
     sessionToken: string;
 
@@ -76,4 +80,10 @@ export class UserLoginSessionsEntity extends CommonBaseEntity {
 
     @Column('int', { name: 'failed_attempts', default: 0, comment: 'Number of failed login attempts' })
     failedAttempts: number;
+
+    @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+    createdAt: Date;
+
+    @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
+    updatedAt: Date;
 }

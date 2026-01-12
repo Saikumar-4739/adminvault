@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -8,14 +8,18 @@ function CallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toastError, success } = useToast();
+    const processed = useRef(false);
 
     useEffect(() => {
+        if (processed.current) return;
+
         const token = searchParams.get('token');
         const userStr = searchParams.get('user');
         const refreshToken = searchParams.get('refreshToken');
         const error = searchParams.get('error');
 
         if (error) {
+            processed.current = true;
             console.error("SSO Error:", error);
             toastError('Login Failed', decodeURIComponent(error));
             setTimeout(() => router.push('/login'), 2000);
@@ -23,6 +27,7 @@ function CallbackContent() {
         }
 
         if (token && userStr) {
+            processed.current = true;
             try {
                 // Decode user info
                 const parsedUser = JSON.parse(decodeURIComponent(userStr));

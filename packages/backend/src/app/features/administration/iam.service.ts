@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
@@ -18,6 +18,7 @@ import { RolePermissionRepository } from './repositories/role-permission.reposit
 import { RolePermissionEntity } from './entities/role-permission.entity';
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { AuthUsersService } from '../auth-users/auth-users.service';
 import { MenuRepository } from './repositories/menu.repository';
 import { RoleMenuAccessRepository } from './repositories/role-menu-access.repository';
 import { UserPermissionRepository } from './repositories/user-permission.repository';
@@ -34,7 +35,9 @@ import {
     CreateSSOProviderModel,
     UpdateSSOProviderModel,
     GlobalResponse,
-    EmployeeStatusEnum
+    EmployeeStatusEnum,
+    RegisterUserModel,
+    UserRoleEnum
 } from '@adminvault/shared-models';
 
 @Injectable()
@@ -52,7 +55,9 @@ export class IAMService implements OnModuleInit {
         private readonly userPermRepo: UserPermissionRepository,
         private readonly userRoleRepo: UserRoleRepository,
         @InjectRepository(AuthUsersEntity)
-        private readonly userRepo: Repository<AuthUsersEntity>
+        private readonly userRepo: Repository<AuthUsersEntity>,
+        @Inject(forwardRef(() => AuthUsersService))
+        private readonly authUsersService: AuthUsersService
     ) { }
 
     async findAllPrincipals(companyId?: number): Promise<any[]> {
@@ -94,7 +99,7 @@ export class IAMService implements OnModuleInit {
                 phNumber: emp.phNumber,
                 isUserActive: user?.status || false,
                 authType: user?.authType || 'NONE',
-                ssoProviderName: user?.ssoProviderId ? ssoMap.get(Number(user.ssoProviderId)) : null
+                ssoProviderName: user?.ssoId ? ssoMap.get(Number(user.ssoId)) : null
             };
         });
     }
@@ -432,7 +437,34 @@ export class IAMService implements OnModuleInit {
     }
 
 
-    // User Roles & Permissions
+    async activateEmployeeAccount(data: { employeeId: number, roles: number[], companyId: number, authType: string, password?: string }): Promise<GlobalResponse> {
+        const employee = await this.employeesRepo.findOne({ where: { id: data.employeeId } });
+        if (!employee) throw new NotFoundException('Employee not found');
+
+        const existing = await this.userRepo.findOne({ where: { email: employee.email } });
+        if (existing) throw new BadRequestException('User account already exists for this email');
+
+        const registerModel = new RegisterUserModel(
+            `${employee.firstName} ${employee.lastName}`,
+            data.companyId,
+            employee.email,
+            employee.phNumber,
+            data.authType === 'SSO' ? '' : (data.password || 'Welcome@123'),
+            UserRoleEnum.USER,
+            data.authType
+        );
+
+        const res = await this.authUsersService.registerUser(registerModel);
+        if (!res.status) return res;
+
+        // Fetch the newly created user to get the ID for role assignment
+        const newUser = await this.userRepo.findOne({ where: { email: employee.email } });
+        if (newUser && data.roles && data.roles.length > 0) {
+            await this.assignRolesToUser(Number(newUser.id), data.roles, data.companyId);
+        }
+
+        return new GlobalResponse(true, 201, 'Account activated successfully');
+    }
     async assignRolesToUser(userId: number, roleIds: number[], companyId: number): Promise<GlobalResponse> {
         // Clear existing roles
         await this.userRoleRepo.delete({ userId });
@@ -445,11 +477,11 @@ export class IAMService implements OnModuleInit {
         // Legacy Support: Update the single 'userRole' column based on highest privilege
         try {
             const roles = await this.roleRepo.findByIds(roleIds);
-            let legacyRole = 'USER';
-            if (roles.some(r => r.code === 'ADMIN' || r.name.toUpperCase() === 'ADMIN')) legacyRole = 'ADMIN';
-            else if (roles.some(r => r.code === 'MANAGER' || r.name.toUpperCase() === 'MANAGER')) legacyRole = 'MANAGER';
+            let legacyRole = UserRoleEnum.USER;
+            if (roles.some(r => r.code === 'ADMIN' || r.name.toUpperCase() === 'ADMIN')) legacyRole = UserRoleEnum.ADMIN;
+            else if (roles.some(r => r.code === 'MANAGER' || r.name.toUpperCase() === 'MANAGER')) legacyRole = UserRoleEnum.MANAGER;
 
-            await this.userRepo.update(userId, { userRole: legacyRole as any });
+            await this.userRepo.update(userId, { userRole: legacyRole });
         } catch (e) {
             console.warn('Failed to update legacy user role', e);
         }
@@ -506,8 +538,8 @@ export class IAMService implements OnModuleInit {
 
         // 1.1 Check if User is Admin (Bypass filtering)
         const roles = await this.roleRepo.findByIds(roleIds);
-        const isAdmin = roles.some(r => 
-            (r.code?.toUpperCase() || '').includes('ADMIN') || 
+        const isAdmin = roles.some(r =>
+            (r.code?.toUpperCase() || '').includes('ADMIN') ||
             (r.name?.toUpperCase() || '').includes('ADMIN')
         );
 
@@ -552,6 +584,4 @@ export class IAMService implements OnModuleInit {
 
         return buildTree(null);
     }
-
-
 }

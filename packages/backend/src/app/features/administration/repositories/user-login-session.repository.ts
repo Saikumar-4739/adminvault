@@ -16,8 +16,8 @@ export class UserLoginSessionRepository extends Repository<UserLoginSessionsEnti
         return await this.find({ where: { userId }, order: { loginTimestamp: 'DESC' }, take: limit });
     }
 
-    async getSuspiciousLogins(companyId: number) {
-        return await this.find({ where: { companyId, isSuspicious: true }, order: { loginTimestamp: 'DESC' }, take: 100 });
+    async getSuspiciousLogins() {
+        return await this.find({ where: { isSuspicious: true }, order: { loginTimestamp: 'DESC' }, take: 100 });
     }
 
     async deactivateAllUserSessions(userId: number) {

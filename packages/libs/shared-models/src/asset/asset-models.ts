@@ -1,5 +1,5 @@
 import { GlobalResponse } from '../common/global-response';
-import { AssetStatusEnum } from '../enums';
+import { AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '../enums';
 
 export class CreateAssetModel {
     companyId: number;
@@ -17,6 +17,15 @@ export class CreateAssetModel {
     assetStatusEnum: AssetStatusEnum;
     userAssignedDate?: string;
     lastReturnDate?: string;
+    complianceStatus?: ComplianceStatusEnum;
+    lastSync?: string;
+    osVersion?: string;
+    macAddress?: string;
+    ipAddress?: string;
+    encryptionStatus?: EncryptionStatusEnum;
+    batteryLevel?: number;
+    storageTotal?: string;
+    storageAvailable?: string;
 
     constructor(
         companyId: number,
@@ -33,7 +42,16 @@ export class CreateAssetModel {
         userAssignedDate?: string,
         lastReturnDate?: string,
         expressCode?: string,
-        boxNo?: string
+        boxNo?: string,
+        complianceStatus?: ComplianceStatusEnum,
+        lastSync?: string,
+        osVersion?: string,
+        macAddress?: string,
+        ipAddress?: string,
+        encryptionStatus?: EncryptionStatusEnum,
+        batteryLevel?: number,
+        storageTotal?: string,
+        storageAvailable?: string
     ) {
         this.companyId = companyId;
         this.deviceId = deviceId;
@@ -50,6 +68,15 @@ export class CreateAssetModel {
         this.warrantyExpiry = warrantyExpiry;
         this.userAssignedDate = userAssignedDate;
         this.lastReturnDate = lastReturnDate;
+        this.complianceStatus = complianceStatus;
+        this.lastSync = lastSync;
+        this.osVersion = osVersion;
+        this.macAddress = macAddress;
+        this.ipAddress = ipAddress;
+        this.encryptionStatus = encryptionStatus;
+        this.batteryLevel = batteryLevel;
+        this.storageTotal = storageTotal;
+        this.storageAvailable = storageAvailable;
     }
 }
 
@@ -72,9 +99,18 @@ export class UpdateAssetModel extends CreateAssetModel {
         userAssignedDate?: string,
         lastReturnDate?: string,
         expressCode?: string,
-        boxNo?: string
+        boxNo?: string,
+        complianceStatus?: ComplianceStatusEnum,
+        lastSync?: string,
+        osVersion?: string,
+        macAddress?: string,
+        ipAddress?: string,
+        encryptionStatus?: EncryptionStatusEnum,
+        batteryLevel?: number,
+        storageTotal?: string,
+        storageAvailable?: string
     ) {
-        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, brandId, model, configuration, assignedToEmployeeId, previousUserEmployeeId, userAssignedDate, lastReturnDate, expressCode, boxNo);
+        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, brandId, model, configuration, assignedToEmployeeId, previousUserEmployeeId, userAssignedDate, lastReturnDate, expressCode, boxNo, complianceStatus, lastSync, osVersion, macAddress, ipAddress, encryptionStatus, batteryLevel, storageTotal, storageAvailable);
         this.id = id;
     }
 }
@@ -110,6 +146,15 @@ export class AssetResponseModel {
     assetStatusEnum: AssetStatusEnum;
     userAssignedDate?: Date;
     lastReturnDate?: Date;
+    complianceStatus?: ComplianceStatusEnum;
+    lastSync?: Date;
+    osVersion?: string;
+    macAddress?: string;
+    ipAddress?: string;
+    encryptionStatus?: EncryptionStatusEnum;
+    batteryLevel?: number;
+    storageTotal?: string;
+    storageAvailable?: string;
     createdAt: Date;
     updatedAt: Date;
 
@@ -131,7 +176,16 @@ export class AssetResponseModel {
         userAssignedDate?: Date,
         lastReturnDate?: Date,
         expressCode?: string,
-        boxNo?: string
+        boxNo?: string,
+        complianceStatus?: ComplianceStatusEnum,
+        lastSync?: Date,
+        osVersion?: string,
+        macAddress?: string,
+        ipAddress?: string,
+        encryptionStatus?: EncryptionStatusEnum,
+        batteryLevel?: number,
+        storageTotal?: string,
+        storageAvailable?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -151,6 +205,15 @@ export class AssetResponseModel {
         this.warrantyExpiry = warrantyExpiry;
         this.userAssignedDate = userAssignedDate;
         this.lastReturnDate = lastReturnDate;
+        this.complianceStatus = complianceStatus;
+        this.lastSync = lastSync;
+        this.osVersion = osVersion;
+        this.macAddress = macAddress;
+        this.ipAddress = ipAddress;
+        this.encryptionStatus = encryptionStatus;
+        this.batteryLevel = batteryLevel;
+        this.storageTotal = storageTotal;
+        this.storageAvailable = storageAvailable;
     }
 }
 

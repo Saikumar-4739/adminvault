@@ -35,7 +35,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         </div>
     );
 
-    const showToast = useCallback(({ type, title, message, duration = 4000 }: Omit<Toast, 'id'>) => {
+    const showToast = useCallback(({ type, title, message, duration = 2000 }: Omit<Toast, 'id'>) => {
         const options: ToastOptions = {
             autoClose: duration,
             position: 'top-center',
@@ -47,6 +47,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         };
 
         const content = renderContent(title, message);
+        toast.dismiss(); // Dismiss any existing toasts before showing a new one
 
         switch (type) {
             case 'success':
@@ -74,7 +75,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     return (
         <ToastContext.Provider value={{ showToast, success, error, warning, info }}>
             {children}
-            <ToastContainer />
+            <ToastContainer limit={1} />
         </ToastContext.Provider>
     );
 }

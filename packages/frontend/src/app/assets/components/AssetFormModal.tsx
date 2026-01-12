@@ -5,7 +5,7 @@ import { Modal } from '../../../components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { AssetStatusEnum } from '@adminvault/shared-models';
+import { AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@adminvault/shared-models';
 import { assetService, companyService, mastersService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -33,7 +33,15 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
         purchaseDate: '',
         warrantyExpiry: '',
         expressCode: '',
-        boxNo: ''
+        boxNo: '',
+        complianceStatus: ComplianceStatusEnum.UNKNOWN,
+        encryptionStatus: EncryptionStatusEnum.UNKNOWN,
+        osVersion: '',
+        macAddress: '',
+        ipAddress: '',
+        batteryLevel: '',
+        storageTotal: '',
+        storageAvailable: ''
     });
 
     const getCompanyId = useCallback((): number => {
@@ -94,7 +102,15 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                     purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
                     warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
                     expressCode: asset.expressCode || '',
-                    boxNo: asset.boxNo || ''
+                    boxNo: asset.boxNo || '',
+                    complianceStatus: asset.complianceStatus || ComplianceStatusEnum.UNKNOWN,
+                    encryptionStatus: asset.encryptionStatus || EncryptionStatusEnum.UNKNOWN,
+                    osVersion: asset.osVersion || '',
+                    macAddress: asset.macAddress || '',
+                    ipAddress: asset.ipAddress || '',
+                    batteryLevel: asset.batteryLevel?.toString() || '',
+                    storageTotal: asset.storageTotal || '',
+                    storageAvailable: asset.storageAvailable || ''
                 });
             } else {
                 setFormData({
@@ -108,7 +124,15 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                     purchaseDate: new Date().toISOString().split('T')[0],
                     warrantyExpiry: '',
                     expressCode: '',
-                    boxNo: ''
+                    boxNo: '',
+                    complianceStatus: ComplianceStatusEnum.UNKNOWN,
+                    encryptionStatus: EncryptionStatusEnum.UNKNOWN,
+                    osVersion: '',
+                    macAddress: '',
+                    ipAddress: '',
+                    batteryLevel: '',
+                    storageTotal: '',
+                    storageAvailable: ''
                 });
             }
         }
@@ -128,7 +152,8 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                 deviceId: Number(formData.deviceId),
                 brandId: formData.brandId ? Number(formData.brandId) : undefined,
                 companyId: Number(formData.companyId),
-                id: asset?.id
+                id: asset?.id,
+                batteryLevel: formData.batteryLevel ? Number(formData.batteryLevel) : undefined
             };
 
             const response = asset
@@ -258,6 +283,85 @@ export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: As
                         value={formData.boxNo}
                         onChange={handleChange}
                     />
+                </div>
+
+                {/* Telemetry & Compliance Section */}
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Device Telemetry</h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <Select
+                            label="Compliance Status"
+                            name="complianceStatus"
+                            value={formData.complianceStatus}
+                            onChange={handleChange}
+                            options={[
+                                { value: ComplianceStatusEnum.UNKNOWN, label: 'Unknown' },
+                                { value: ComplianceStatusEnum.COMPLIANT, label: 'Compliant' },
+                                { value: ComplianceStatusEnum.NON_COMPLIANT, label: 'Non-Compliant' },
+                                { value: ComplianceStatusEnum.PENDING, label: 'Pending' }
+                            ]}
+                        />
+                        <Select
+                            label="Encryption Status"
+                            name="encryptionStatus"
+                            value={formData.encryptionStatus}
+                            onChange={handleChange}
+                            options={[
+                                { value: EncryptionStatusEnum.UNKNOWN, label: 'Unknown' },
+                                { value: EncryptionStatusEnum.ENCRYPTED, label: 'Encrypted' },
+                                { value: EncryptionStatusEnum.NOT_ENCRYPTED, label: 'Not Encrypted' },
+                                { value: EncryptionStatusEnum.NOT_APPLICABLE, label: 'Not Applicable' }
+                            ]}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <Input
+                            label="OS Version"
+                            name="osVersion"
+                            value={formData.osVersion}
+                            onChange={handleChange}
+                        />
+                        <Input
+                            label="MAC Address"
+                            name="macAddress"
+                            value={formData.macAddress}
+                            onChange={handleChange}
+                        />
+                        <Input
+                            label="IP Address"
+                            name="ipAddress"
+                            value={formData.ipAddress}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input
+                            label="Battery Level (%)"
+                            name="batteryLevel"
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={formData.batteryLevel}
+                            onChange={handleChange}
+                        />
+                        <Input
+                            label="Storage Total"
+                            name="storageTotal"
+                            placeholder="e.g. 512 GB"
+                            value={formData.storageTotal}
+                            onChange={handleChange}
+                        />
+                        <Input
+                            label="Storage Available"
+                            name="storageAvailable"
+                            placeholder="e.g. 120 GB"
+                            value={formData.storageAvailable}
+                            onChange={handleChange}
+                        />
+                    </div>
                 </div>
 
                 {/* Configuration */}

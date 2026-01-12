@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, AssetWithAssignmentModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@adminvault/shared-models';
 import { AssetInfoEntity } from './entities/asset-info.entity';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
 
@@ -47,6 +47,15 @@ export class AssetInfoService {
             entity.warrantyExpiry = reqModel.warrantyExpiry ? new Date(reqModel.warrantyExpiry) : null;
             entity.userAssignedDate = reqModel.userAssignedDate ? new Date(reqModel.userAssignedDate) : null;
             entity.lastReturnDate = reqModel.lastReturnDate ? new Date(reqModel.lastReturnDate) : null;
+            entity.complianceStatus = reqModel.complianceStatus || ComplianceStatusEnum.UNKNOWN;
+            entity.lastSync = reqModel.lastSync ? new Date(reqModel.lastSync) : null;
+            entity.osVersion = reqModel.osVersion;
+            entity.macAddress = reqModel.macAddress;
+            entity.ipAddress = reqModel.ipAddress;
+            entity.encryptionStatus = reqModel.encryptionStatus || EncryptionStatusEnum.UNKNOWN;
+            entity.batteryLevel = reqModel.batteryLevel;
+            entity.storageTotal = reqModel.storageTotal;
+            entity.storageAvailable = reqModel.storageAvailable;
             entity.assetStatusEnum = reqModel.assignedToEmployeeId ? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE) : (reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE);
             await transManager.getRepository(AssetInfoEntity).save(entity);
             await transManager.completeTransaction();
@@ -90,6 +99,16 @@ export class AssetInfoService {
             existing.warrantyExpiry = reqModel.warrantyExpiry ? new Date(reqModel.warrantyExpiry) : null;
             existing.userAssignedDate = reqModel.userAssignedDate ? new Date(reqModel.userAssignedDate) : null;
             existing.lastReturnDate = reqModel.lastReturnDate ? new Date(reqModel.lastReturnDate) : null;
+
+            existing.complianceStatus = reqModel.complianceStatus || existing.complianceStatus;
+            existing.lastSync = reqModel.lastSync ? new Date(reqModel.lastSync) : existing.lastSync;
+            existing.osVersion = reqModel.osVersion || existing.osVersion;
+            existing.macAddress = reqModel.macAddress || existing.macAddress;
+            existing.ipAddress = reqModel.ipAddress || existing.ipAddress;
+            existing.encryptionStatus = reqModel.encryptionStatus || existing.encryptionStatus;
+            existing.batteryLevel = reqModel.batteryLevel ?? existing.batteryLevel;
+            existing.storageTotal = reqModel.storageTotal || existing.storageTotal;
+            existing.storageAvailable = reqModel.storageAvailable || existing.storageAvailable;
             existing.userId = userId || existing.userId;
             existing.assetStatusEnum = reqModel.assignedToEmployeeId ? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE) : (reqModel.assetStatusEnum || existing.assetStatusEnum || AssetStatusEnum.AVAILABLE);
             await transManager.getRepository(AssetInfoEntity).save(existing);
@@ -120,7 +139,7 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Asset not found");
             }
 
-            const response = new AssetResponseModel(asset.id, asset.companyId, asset.deviceId, asset.serialNumber, asset.assetStatusEnum, asset.createdAt, asset.updatedAt, asset.purchaseDate, asset.warrantyExpiry, asset.brandId, asset.model, asset.configuration, asset.assignedToEmployeeId, asset.previousUserEmployeeId, asset.userAssignedDate, asset.lastReturnDate);
+            const response = new AssetResponseModel(asset.id, asset.companyId, asset.deviceId, asset.serialNumber, asset.assetStatusEnum, asset.createdAt, asset.updatedAt, asset.purchaseDate, asset.warrantyExpiry, asset.brandId, asset.model, asset.configuration, asset.assignedToEmployeeId, asset.previousUserEmployeeId, asset.userAssignedDate, asset.lastReturnDate, asset.expressCode, asset.boxNo, asset.complianceStatus, asset.lastSync, asset.osVersion, asset.macAddress, asset.ipAddress, asset.encryptionStatus, asset.batteryLevel, asset.storageTotal, asset.storageAvailable);
             return new GetAssetByIdModel(true, 0, "Asset retrieved successfully", response);
         } catch (error) {
             throw error;
@@ -138,7 +157,7 @@ export class AssetInfoService {
     async getAllAssets(companyId?: number): Promise<GetAllAssetsModel> {
         try {
             const assets = companyId ? await this.assetInfoRepo.find({ where: { companyId } }) : await this.assetInfoRepo.find();
-            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate));
+            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.expressCode, a.boxNo, a.complianceStatus, a.lastSync, a.osVersion, a.macAddress, a.ipAddress, a.encryptionStatus, a.batteryLevel, a.storageTotal, a.storageAvailable));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
         } catch (error) {
             throw error;

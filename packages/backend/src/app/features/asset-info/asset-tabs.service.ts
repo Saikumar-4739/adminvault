@@ -23,7 +23,7 @@ export class AssetTabsService {
     async getStoreAssets(reqModel: GetStoreAssetsRequestModel): Promise<GetStoreAssetsResponseModel> {
         try {
             const results = await this.assetInfoRepo.getStoreAssets(reqModel.companyId);
-            const assets: StoreAssetModel[] = results.map(r => ({ id: r.id, deviceName: r.deviceName, configuration: r.configuration, serialNumber: r.serialNumber, expressCode: r.expressCode, boxNo: r.boxNo, pastUserName: r.pastUserName, presentUserName: r.presentUserName, assetStatusEnum: r.assetStatusEnum, brandName: r.brandName, model: r.model, warrantyExpiry: r.warrantyExpiry}));
+            const assets: StoreAssetModel[] = results.map(r => ({ id: r.id, deviceName: r.deviceName, configuration: r.configuration, serialNumber: r.serialNumber, expressCode: r.expressCode, boxNo: r.boxNo, pastUserName: r.pastUserName, presentUserName: r.presentUserName, assetStatusEnum: r.assetStatusEnum, brandName: r.brandName, model: r.model, warrantyExpiry: r.warrantyExpiry }));
             return new GetStoreAssetsResponseModel(true, 200, 'Store assets retrieved successfully', assets);
         } catch (error) {
             throw error;
@@ -33,7 +33,7 @@ export class AssetTabsService {
     async getReturnAssets(reqModel: GetReturnAssetsRequestModel): Promise<GetReturnAssetsResponseModel> {
         try {
             const results = await this.returnHistoryRepo.getReturnAssets(reqModel);
-            const returns: ReturnAssetModel[] = results.map(r => ({ id: r.id, employeeName: r.employeeName, employeeRole: r.employeeRole, laptopAllocationStatus: r.deviceType === 'Laptop' ? 'Returned' : undefined, desktopAllocationStatus: r.deviceType === 'Desktop' ? 'Returned' : undefined, configuration: r.configuration, allocationDate: r.allocationDate, returnDate: r.returnDate, returnReason: r.returnReason, assetCondition: r.assetCondition, assetId: r.assetId, serialNumber: r.serialNumber}));
+            const returns: ReturnAssetModel[] = results.map(r => ({ id: r.id, employeeName: r.employeeName, employeeRole: r.employeeRole, laptopAllocationStatus: r.deviceType === 'Laptop' ? 'Returned' : undefined, desktopAllocationStatus: r.deviceType === 'Desktop' ? 'Returned' : undefined, configuration: r.configuration, allocationDate: r.allocationDate, returnDate: r.returnDate, returnReason: r.returnReason, assetCondition: r.assetCondition, assetId: r.assetId, serialNumber: r.serialNumber }));
             return new GetReturnAssetsResponseModel(true, 200, 'Return assets retrieved successfully', returns);
         } catch (error) {
             throw error;
@@ -49,7 +49,7 @@ export class AssetTabsService {
             }
 
             await transManager.startTransaction();
-            
+
             // 1. Create return history record
             const returnHistory = new AssetReturnHistoryEntity();
             returnHistory.assetId = reqModel.assetId;
@@ -79,7 +79,7 @@ export class AssetTabsService {
             });
 
             await transManager.completeTransaction();
-            
+
             const returnRecord: ReturnAssetModel = {
                 id: savedReturn.id,
                 employeeName: '',
@@ -99,7 +99,7 @@ export class AssetTabsService {
     async getNextAssignments(reqModel: GetNextAssignmentsRequestModel): Promise<GetNextAssignmentsResponseModel> {
         try {
             const results = await this.nextAssignmentRepo.getNextAssignments(reqModel.companyId);
-            const assignments: NextAssignmentModel[] = results.map(r => ({id: r.id,employeeName: r.employeeName,employeeRole: r.employeeRole,laptopAllocationStatus: r.assetType === 'Laptop' ? r.status : undefined,desktopAllocationStatus: r.assetType === 'Desktop' ? r.status : undefined,assetType: r.assetType,requestDate: r.requestDate,expectedDate: r.expectedDate,assignedAssetId: r.assignedAssetId,assignedAssetName: r.assignedAssetName,status: r.status,priority: r.priority,remarks: r.remarks}));
+            const assignments: NextAssignmentModel[] = results.map(r => ({ id: r.id, employeeName: r.employeeName, employeeRole: r.employeeRole, laptopAllocationStatus: r.assetType === 'Laptop' ? r.status : undefined, desktopAllocationStatus: r.assetType === 'Desktop' ? r.status : undefined, assetType: r.assetType, requestDate: r.requestDate, expectedDate: r.expectedDate, assignedAssetId: r.assignedAssetId, assignedAssetName: r.assignedAssetName, status: r.status, priority: r.priority, remarks: r.remarks }));
             return new GetNextAssignmentsResponseModel(true, 200, 'Next assignments retrieved successfully', assignments);
         } catch (error) {
             throw error;
@@ -122,7 +122,7 @@ export class AssetTabsService {
             assignment.requestedById = reqModel.userId;
             const saved = await transManager.getRepository(AssetNextAssignmentEntity).save(assignment);
             await transManager.completeTransaction();
-            const assignmentModel: NextAssignmentModel = {id: saved.id,employeeName: '',assetType: saved.assetType,requestDate: saved.requestDate,expectedDate: saved.expectedDate,status: saved.status as any as NextAssignmentStatus,priority: saved.priority as any as AssignmentPriority,remarks: saved.remarks};
+            const assignmentModel: NextAssignmentModel = { id: saved.id, employeeName: '', assetType: saved.assetType, requestDate: saved.requestDate, expectedDate: saved.expectedDate, status: saved.status as any as NextAssignmentStatus, priority: saved.priority as any as AssignmentPriority, remarks: saved.remarks };
             return new CreateNextAssignmentResponseModel(true, 201, 'Assignment request created successfully', assignmentModel);
         } catch (error) {
             await transManager.releaseTransaction();

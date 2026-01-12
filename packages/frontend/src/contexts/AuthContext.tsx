@@ -55,7 +55,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (credentials: LoginUserModel): Promise<User | undefined> => {
         try {
-            const loginData = new LoginUserModel(credentials.email, credentials.password, undefined, undefined);
+            // Attempt to get geolocation coordinates
+            let latitude: number | undefined;
+            let longitude: number | undefined;
+
+            try {
+                const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error('Geolocation not supported'));
+                        return;
+                    }
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: false,
+                        timeout: 3000,
+                        maximumAge: 1000 * 60 * 5 // 5 minutes
+                    });
+                });
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+            } catch (geoError) {
+                console.warn('Geolocation failed:', geoError);
+                // Continue with login even if geolocation fails
+            }
+
+            const loginData = new LoginUserModel(
+                credentials.email,
+                credentials.password,
+                latitude,
+                longitude
+            );
             const response: LoginResponseModel = await authService.loginUser(loginData);
             const tokenToSave = response.accessToken || (response as any)?.access_token;
             if (response.status && tokenToSave) {
@@ -77,15 +105,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         localStorage.setItem("refresh_token", response.refreshToken);
                     }
                 } catch (error: any) {
-                    toast.error(error.message);
+                    console.error('Storage Error:', error);
                 }
                 return userData;
             }
-            toast.error(response.message);
-            return undefined;
+            throw new Error(response.message || 'Login Failed');
         } catch (error: any) {
-            toast.error(error?.message);
-            return undefined;
+            console.error('Login Context Error:', error);
+            throw error;
         }
     };
 

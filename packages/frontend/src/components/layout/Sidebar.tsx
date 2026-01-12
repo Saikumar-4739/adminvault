@@ -40,20 +40,20 @@ const DEFAULT_NAVIGATION = [
     {
         title: 'Operations',
         items: [
-            { name: 'IT Asset Inventory', href: '/assets', icon: Package },
+            { name: 'Asset Inventory', href: '/assets', icon: Package },
             { name: 'Procurement', href: '/procurement', icon: ShoppingCart },
             { name: 'Maintenance', href: '/maintenance', icon: Calendar },
             { name: 'Approvals', href: '/approvals', icon: GitPullRequest },
-            { name: 'License Manager', href: '/licenses', icon: KeySquare },
+            { name: 'Licenses', href: '/licenses', icon: KeySquare },
         ]
     },
-    {
-        title: 'Support Portal',
-        items: [
-            { name: 'My Tickets', href: '/create-ticket?tab=tickets', icon: Ticket },
-            { name: 'Submit Ticket', href: '/create-ticket?tab=create', icon: Plus },
-        ]
-    },
+    // {
+    //     title: 'Support Portal',
+    //     items: [
+    //         { name: 'My Tickets', href: '/create-ticket?tab=tickets', icon: Ticket },
+    //         { name: 'Submit Ticket', href: '/create-ticket?tab=create', icon: Plus },
+    //     ]
+    // },
     {
         title: 'Support & Comms',
         items: [

@@ -14,6 +14,7 @@ import {
     SettingType, CompanyIdRequestModel, CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel,
     GetEmailInfoModel, GetAllEmailInfoModel, GetEmailInfoByIdModel, EmailStatsResponseModel,
     CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel,
+    GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel,
     CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel,
     CreateRoleModel, UpdateRoleModel, GetAllRolesResponseModel,
     EnableMFAModel, CreateAPIKeyModel, CreateSSOProviderModel, UpdateSSOProviderModel,
@@ -86,6 +87,36 @@ export class AdministrationController {
             return await this.settingsService.bulkSetSettings(model);
         } catch (error) {
             return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('settings/get-setting')
+    @ApiBody({ type: GetSettingRequestModel })
+    async getSetting(@Body() model: GetSettingRequestModel): Promise<GetSettingResponseModel> {
+        try {
+            return await this.settingsService.getSetting(model);
+        } catch (error) {
+            return returnException(GetSettingResponseModel, error);
+        }
+    }
+
+    @Post('settings/delete')
+    @ApiBody({ type: DeleteSettingRequestModel })
+    async deleteSetting(@Body() model: DeleteSettingRequestModel): Promise<GlobalResponse> {
+        try {
+            return await this.settingsService.deleteSetting(model);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('settings/get-by-category')
+    @ApiBody({ type: GetSettingsByCategoryRequestModel })
+    async getAllSettingsByCategory(@Body() model: GetSettingsByCategoryRequestModel): Promise<GetAllSettingsResponseModel> {
+        try {
+            return await this.settingsService.getAllSettingsByCategory(model);
+        } catch (error) {
+            return returnException(GetAllSettingsResponseModel, error);
         }
     }
 
@@ -213,7 +244,23 @@ export class AdministrationController {
         }
     }
 
-    // ... assignRolesToUser matches (GlobalResponse) ...
+    @Post('iam/users/activate-account')
+    async activateUserAccount(@Body() body: { employeeId: number, roles: number[], companyId: number, authType: string, password?: string }): Promise<GlobalResponse> {
+        try {
+            return await this.iamService.activateEmployeeAccount(body);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('iam/users/assign-roles')
+    async assignRoles(@Body() model: AssignRolesModel): Promise<GlobalResponse> {
+        try {
+            return await this.iamService.assignRolesToUser(model.userId, model.roleIds, model.companyId);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
 
     @Post('iam/menus/all-tree')
     @UseGuards(PermissionsGuard)

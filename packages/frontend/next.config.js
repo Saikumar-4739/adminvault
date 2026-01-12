@@ -38,16 +38,12 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
 
-  // Modularize imports for better tree-shaking
-  modularizeImports: {
-    'lucide-react': {
-      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
-    },
-  },
+  // Modularize imports disabled temporarily to debug 404s
+
 
   // Webpack optimizations
   webpack: (config, { isServer }) => {
-    if (!isServer) {
+    if (!isServer && process.env.NODE_ENV === 'production') {
       // Optimize chunk splitting
       config.optimization = config.optimization || {};
       config.optimization.splitChunks = {

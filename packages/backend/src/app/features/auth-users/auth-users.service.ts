@@ -32,26 +32,47 @@ const REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY || (() => {
 })();
 
 // SSO Configuration - Load from environment variables
-const SSO_CONFIG = {
-    microsoft: {
-        clientId: process.env.MICROSOFT_CLIENT_ID || '',
-        clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
-        tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
-        redirectUri: process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
-        authUrl: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID || 'common'}/oauth2/v2.0/authorize`,
-        tokenUrl: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID || 'common'}/oauth2/v2.0/token`,
-        userInfoUrl: 'https://graph.microsoft.com/v1.0/me',
-        scope: 'openid profile email User.Read'
-    },
-    google: {
-        clientId: process.env.GOOGLE_CLIENT_ID || '',
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-        redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth-users/sso/callback',
-        authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-        tokenUrl: 'https://oauth2.googleapis.com/token',
-        userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
-        scope: 'openid profile email'
-    }
+interface SSOProviderConfig {
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    userInfoUrl: string;
+    scope: string;
+    authUrl: string | ((tenantId: string) => string);
+    tokenUrl: string | ((tenantId: string) => string);
+    tenantId?: string;
+}
+
+interface SSOConfig {
+    microsoft: SSOProviderConfig;
+    google: SSOProviderConfig;
+}
+
+const getSSOConfig = (): SSOConfig => {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const apiPrefix = '/api'; // Assuming global prefix is 'api'
+
+    return {
+        microsoft: {
+            clientId: process.env.MICROSOFT_CLIENT_ID || '',
+            clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
+            tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
+            redirectUri: process.env.MICROSOFT_REDIRECT_URI || `${backendUrl}${apiPrefix}/auth-users/sso/callback`,
+            authUrl: (tenantId: string) => `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`,
+            tokenUrl: (tenantId: string) => `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+            userInfoUrl: 'https://graph.microsoft.com/v1.0/me',
+            scope: 'openid profile email User.Read'
+        },
+        google: {
+            clientId: process.env.GOOGLE_CLIENT_ID || '',
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+            redirectUri: process.env.GOOGLE_REDIRECT_URI || `${backendUrl}${apiPrefix}/auth-users/sso/callback`,
+            authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+            tokenUrl: 'https://oauth2.googleapis.com/token',
+            userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+            scope: 'openid profile email'
+        }
+    };
 };
 
 @Injectable()
@@ -82,22 +103,35 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "Email already exists")
             }
 
-            if (!reqModel.companyId || reqModel.companyId <= 0 || reqModel.password.length < 8) {
-                throw new ErrorResponse(0, "Invalid company ID or password")
+            if (!reqModel.companyId || reqModel.companyId <= 0) {
+                throw new ErrorResponse(0, "Invalid company ID")
             }
 
-            const passwordHash = await bcrypt.hash(reqModel.password, 10)
+            // Password check only for LOCAL users
+            const isLocal = !reqModel.authType || reqModel.authType === 'LOCAL';
+            if (isLocal && (reqModel.password?.length < 8)) {
+                throw new ErrorResponse(0, "Password must be at least 8 characters")
+            }
+
             await transManager.startTransaction()
+
+            // Password logic: generate a complex random password for SSO users
+            const effectivePassword = isLocal
+                ? reqModel.password
+                : Math.random().toString(36).slice(-16) + 'SSO!';
+
+            const passwordHash = await bcrypt.hash(effectivePassword, 10)
+
             const newUser = new AuthUsersEntity()
             newUser.email = reqModel.email
-            newUser.passwordHash = passwordHash
             newUser.fullName = reqModel.fullName
             newUser.phNumber = reqModel.phNumber
             newUser.companyId = reqModel.companyId
-            newUser.userRole = UserRoleEnum.ADMIN
+            newUser.passwordHash = passwordHash
+            newUser.authType = reqModel.authType || 'LOCAL'
+            newUser.userRole = reqModel.role || UserRoleEnum.USER
             newUser.status = true
-            newUser.createdAt = new Date()
-            newUser.updatedAt = new Date()
+            newUser.employeeId = `EMP-${Date.now()}` // Default employee ID if not provided
             const save = await transManager.getRepository(AuthUsersEntity).save(newUser)
             await transManager.completeTransaction()
             return new GlobalResponse(true, 0, "User Created Successfully")
@@ -370,7 +404,7 @@ export class AuthUsersService {
      * @throws ErrorResponse if provider is invalid or not configured
      */
     async getSSOAuthUrl(provider: 'microsoft' | 'google'): Promise<string> {
-        const config = SSO_CONFIG[provider];
+        const config = getSSOConfig()[provider];
         if (!config) throw new ErrorResponse(0, 'Invalid Provider');
 
         // Validate that provider is configured
@@ -392,7 +426,11 @@ export class AuthUsersService {
             params.append('prompt', 'consent');
         }
 
-        return `${config.authUrl}?${params.toString()}`;
+        const authUrl = provider === 'microsoft' && typeof config.authUrl === 'function'
+            ? config.authUrl(config.tenantId || 'common')
+            : (config.authUrl as string);
+
+        return `${authUrl}?${params.toString()}`;
     }
 
     /**
@@ -407,11 +445,12 @@ export class AuthUsersService {
      * @throws ErrorResponse if authentication fails or user not found
      */
     async handleSSOCallback(provider: string, code: string, ipAddress: string, userAgent: string): Promise<LoginResponseModel> {
-        const config = SSO_CONFIG[provider as 'microsoft' | 'google'];
+        const config = getSSOConfig()[provider as 'microsoft' | 'google'];
         if (!config) throw new ErrorResponse(0, 'Invalid Provider');
 
         let email = '';
         let name = '';
+        let ssoId = '';
 
         try {
             // 1. Exchange Code for Token
@@ -423,7 +462,11 @@ export class AuthUsersService {
                 grant_type: 'authorization_code'
             });
 
-            const tokenRes = await axios.post(config.tokenUrl, tokenParams.toString(), {
+            const tokenUrl = provider === 'microsoft' && typeof config.tokenUrl === 'function'
+                ? config.tokenUrl(config.tenantId || 'common')
+                : (config.tokenUrl as string);
+
+            const tokenRes = await axios.post(tokenUrl, tokenParams.toString(), {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             });
 
@@ -434,14 +477,37 @@ export class AuthUsersService {
                 const profileRes = await axios.get(config.userInfoUrl, {
                     headers: { Authorization: `Bearer ${accessToken}` }
                 });
-                email = profileRes.data.mail || profileRes.data.userPrincipalName;
+
+                const upn = profileRes.data.userPrincipalName;
+                const mail = profileRes.data.mail;
                 name = profileRes.data.displayName;
+                ssoId = profileRes.data.id;
+
+                // Priority 1: Use 'mail' if available (it's usually the clean email)
+                if (mail) {
+                    email = mail;
+                } else if (upn) {
+                    // Priority 2: Use UPN, but handle guest users (#EXT#)
+                    if (upn.includes('#EXT#')) {
+                        const guestParts = upn.split('#EXT#')[0];
+                        // Microsoft encodes @ as _ in the prefix of guest UPNs
+                        if (guestParts.includes('_')) {
+                            const lastUnderscoreIndex = guestParts.lastIndexOf('_');
+                            email = guestParts.substring(0, lastUnderscoreIndex) + '@' + guestParts.substring(lastUnderscoreIndex + 1);
+                        } else {
+                            email = upn;
+                        }
+                    } else {
+                        email = upn;
+                    }
+                }
             } else if (provider === 'google') {
                 const profileRes = await axios.get(config.userInfoUrl, {
                     headers: { Authorization: `Bearer ${accessToken}` }
                 });
                 email = profileRes.data.email;
                 name = profileRes.data.name;
+                ssoId = profileRes.data.sub || profileRes.data.id;
             }
 
             if (!email) throw new Error('Could not retrieve email from provider');
@@ -452,6 +518,12 @@ export class AuthUsersService {
             if (!user) {
                 throw new ErrorResponse(0, `User with email ${email} not found. Please request access first.`);
             }
+
+            // Update user details from SSO if not already linked
+            user.ssoId = ssoId;
+            user.authType = 'SSO';
+            user.lastLogin = new Date();
+            await this.authUsersRepo.save(user);
 
             // 4. Create Session and Generate Tokens
             const payload = {
@@ -488,6 +560,9 @@ export class AuthUsersService {
 
         } catch (error: any) {
             console.error('SSO Error:', error.response?.data || error.message);
+            if (error instanceof ErrorResponse) {
+                throw error;
+            }
             throw new ErrorResponse(0, 'SSO Authentication Failed: ' + (error.response?.data?.error_description || error.message));
         }
     }

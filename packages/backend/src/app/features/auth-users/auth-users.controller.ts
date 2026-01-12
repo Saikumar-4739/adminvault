@@ -95,23 +95,25 @@ export class AuthUsersController {
     @Get('sso/login')
     @Public()
     async ssoLogin(@Query('provider') provider: string, @Res() res: Response) {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         try {
             if (provider !== 'microsoft' && provider !== 'google') {
-                return res.redirect('http://localhost:3000/login?error=Invalid_Provider');
+                return res.redirect(`${frontendUrl}/login?error=Invalid_Provider`);
             }
             const authUrl = await this.service.getSSOAuthUrl(provider as 'microsoft' | 'google');
             return res.redirect(authUrl);
         } catch (error: any) {
-            return res.redirect(`http://localhost:3000/login?error=${encodeURIComponent(error.message)}`);
+            return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent(error.message)}`);
         }
     }
 
     @Get('sso/callback')
     @Public()
     async ssoCallback(@Query('code') code: string, @Query('state') state: string, @Req() req: any, @Res() res: Response) {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         try {
             if (!code || !state) {
-                return res.redirect('http://localhost:3000/login?error=Invalid_Callback_Params');
+                return res.redirect(`${frontendUrl}/login?error=Invalid_Callback_Params`);
             }
 
             const ipAddress = this.extractIp(req);
@@ -119,16 +121,13 @@ export class AuthUsersController {
             const loginResponse = await this.service.handleSSOCallback(state, code, ipAddress, userAgent);
 
             // Redirect to frontend with token
-            // Ideally, we should set a secure cookie, but query param is common for simple OAuth handoffs
-            // or we render a page that posts the token to the parent window if it was a popup.
-            // Here, straightforward redirect:
             const userJson = JSON.stringify(loginResponse.userInfo);
-            const redirectUrl = `http://localhost:3000/login/callback?token=${loginResponse.accessToken}&refreshToken=${loginResponse.refreshToken}&user=${encodeURIComponent(userJson)}`;
+            const redirectUrl = `${frontendUrl}/login/callback?token=${loginResponse.accessToken}&refreshToken=${loginResponse.refreshToken}&user=${encodeURIComponent(userJson)}`;
             return res.redirect(redirectUrl);
 
         } catch (error: any) {
             const message = error?.message || 'SSO_Login_Failed';
-            return res.redirect(`http://localhost:3000/login?error=${encodeURIComponent(message)}`);
+            return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent(message)}`);
         }
     }
 

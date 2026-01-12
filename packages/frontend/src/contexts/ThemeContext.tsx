@@ -5,19 +5,22 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface ThemeContextType {
     isDarkMode: boolean;
     toggleDarkMode: () => void;
+    fontFamily: string;
+    setFontFamily: (font: string) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [fontFamily, setFontFamilyState] = useState('var(--font-outfit)');
     const [mounted, setMounted] = useState(false);
 
     // Load theme from localStorage on mount
-    // Load theme from localStorage or system preference on mount
     useEffect(() => {
         setMounted(true);
         const storedTheme = localStorage.getItem('theme');
+        const storedFont = localStorage.getItem('font-family');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
         if (storedTheme === 'dark' || (!storedTheme && systemPrefersDark)) {
@@ -26,6 +29,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         } else {
             setIsDarkMode(false);
             document.documentElement.classList.remove('dark');
+        }
+
+        if (storedFont) {
+            setFontFamilyState(storedFont);
+            document.documentElement.style.setProperty('--app-font', storedFont);
+        } else {
+            document.documentElement.style.setProperty('--app-font', 'var(--font-outfit)');
         }
 
         // Listen for system theme changes
@@ -60,13 +70,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         });
     };
 
+    const setFontFamily = (font: string) => {
+        setFontFamilyState(font);
+        localStorage.setItem('font-family', font);
+        document.documentElement.style.setProperty('--app-font', font);
+    };
+
     // Prevent flash of unstyled content
     if (!mounted) {
         return null;
     }
 
     return (
-        <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
+        <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode, fontFamily, setFontFamily }}>
             {children}
         </ThemeContext.Provider>
     );

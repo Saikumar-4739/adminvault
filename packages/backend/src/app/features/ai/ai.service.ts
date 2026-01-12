@@ -1,272 +1,321 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataSource, Like } from 'typeorm';
-import { EmployeesService } from '../employees/employees.service';
-import { TicketsService } from '../tickets/tickets.service';
-import { AssetInfoService } from '../asset-info/asset-info.service';
-import { TicketStatusEnum } from '@adminvault/shared-models';
+import { ConfigService } from '@nestjs/config';
 import { AiQueryResponse } from '@adminvault/shared-models';
-// Entities for direct access
-// import { DocumentsEntity } from '../documents/entities/documents.entity'; // Check filename
-// import { LicensesEntity } from '../licenses/entities/licenses.entity'; // Check filename
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+
+// Entities
+import { AssetInfoEntity } from '../asset-info/entities/asset-info.entity';
 
 @Injectable()
 export class AiService {
-    // 🧠 THE BRAIN: Knowledge Graph of the Database
-    private readonly SCHEMA = {
-        employee: {
-            repo: 'EmployeesEntity',
-            keywords: ['employee', 'user', 'staff', 'worker', 'person', 'people', 'email', 'contact'],
-            columns: ['firstName', 'lastName', 'email', 'designation', 'departmentId'],
-            searchCols: ['firstName', 'lastName', 'email'],
-            emoji: '👤'
-        },
-        ticket: {
-            repo: 'TicketsEntity',
-            keywords: ['ticket', 'issue', 'request', 'complaint', 'bug', 'help', 'support', 'open', 'pending'],
-            columns: ['ticketCode', 'subject', 'priorityEnum', 'ticketStatus', 'createdAt'],
-            searchCols: ['subject', 'ticketCode'],
-            emoji: '🎫'
-        },
-        asset: {
-            repo: 'AssetInfoEntity',
-            keywords: ['asset', 'device', 'laptop', 'machine', 'equipment', 'inventory', 'serial', 'model'],
-            columns: ['serialNumber', 'model', 'brandId', 'assetStatusEnum'],
-            searchCols: ['serialNumber', 'model', 'configuration'],
-            emoji: '💻'
-        },
-        document: {
-            repo: 'DocumentsEntity',
-            keywords: ['document', 'file', 'doc', 'pdf', 'paper', 'contract', 'invoice'],
-            columns: ['title', 'documentNumber', 'description'],
-            searchCols: ['title', 'documentNumber'],
-            emoji: '📄'
-        },
-        license: {
-            repo: 'LicensesEntity',
-            keywords: ['license', 'key', 'software', 'subscription', 'expiry'],
-            columns: ['softwareName', 'licenseKey', 'expiryDate'],
-            searchCols: ['softwareName', 'licenseKey'],
-            emoji: '🔑'
-        },
-        vendor: {
-            repo: 'VendorsEntity',
-            keywords: ['vendor', 'supplier', 'seller', 'merchant', 'provider'],
-            columns: ['vendorName', 'email', 'contactPerson', 'phNumber'],
-            searchCols: ['vendorName', 'email'],
-            emoji: '🏢'
-        },
-        department: {
-            repo: 'DepartmentEntity',
-            keywords: ['department', 'team', 'group', 'unit', 'division'],
-            columns: ['departmentName', 'departmentCode'],
-            searchCols: ['departmentName'],
-            emoji: '👥'
-        }
-    };
+    private readonly logger = new Logger(AiService.name);
+    private genAI: GoogleGenerativeAI;
+    private model: GenerativeModel;
+    private hasApiKey = false;
 
-    constructor(private readonly dataSource: DataSource) { }
+    // 🧠 KNOWLEDGE GRAPH: Database Schema Definition for the AI
+    private readonly SCHEMA_CONTEXT = `
+    You are AdminVault AI, an advanced enterprise administrator assistant.
+    
+    SYSTEM CAPABILITIES:
+    - You have direct access to "Assets", "Employees", and "Tickets" databases.
+    - User Query -> You Analyze Intent -> You Decide Best Visualization -> You Return Data.
 
-    async processQuery(query: string, companyId: number): Promise<AiQueryResponse> {
-        const cleanQuery = query.toLowerCase().trim();
+    AVAILABLE DATA ENTITIES:
 
-        // 1. SMART INTENT DETECTION (Scoring System)
-        const bestMatch = this.detectEntity(cleanQuery);
+    1. ASSETS (Repository: AssetInfoEntity)
+       - Keywords: asset, device, laptop, macbook, monitor, equipment, machine, computer
+       - Fields: 
+         * serialNumber (unique id)
+         * model (e.g., MacBook Pro, Dell Latitude)
+         * assetStatusEnum (AVAILABLE, IN_USE, MAINTENANCE, RETIRED)
+         * complianceStatus (COMPLIANT, NON_COMPLIANT, PENDING)
+         * batteryLevel (0-100)
+         * storageAvailable (e.g. 100 GB)
+         * osVersion (e.g. macOS 14, Windows 11)
+         * ipAddress, macAddress
+         * lastSync (Date)
+    
+    2. EMPLOYEES (Repository: EmployeesEntity)
+       - Keywords: employee, user, staff, person, worker, team member
+       - Fields: firstName, lastName, email, designation, departmentId
+    
+    3. TICKETS (Repository: TicketsEntity)
+       - Keywords: ticket, issue, support, help, request, complaint, bug
+       - Fields: ticketCode, subject, priorityEnum, ticketStatus (OPEN, CLOSED)
+    `;
 
-        try {
-            if (bestMatch.confidence > 0) {
-                const schema = this.SCHEMA[bestMatch.entity];
-
-                // A. COUNT INTENT
-                if (query.match(/count|how many|total|stats/i)) {
-                    const count = await this.dataSource.getRepository(schema.repo).count({ where: { companyId } });
-                    const text = `### ${schema.emoji} ${this.capitalize(bestMatch.entity)} Statistics\n\n**Total Count:** ${count} items found in database.`;
-                    return new AiQueryResponse(true, 200, "Count success", text, 'count', bestMatch.entity, [{ count }]);
-                }
-
-                // B. SMART SEARCH (REGEX & TOKEN BASED)
-                const searchStrategy = this.analyzeSearchStrategy(query, bestMatch.entity);
-
-                if (searchStrategy.term) {
-                    let whereConditions = [];
-
-                    if (searchStrategy.type === 'email') {
-                        // Strict Email Search
-                        whereConditions = schema.columns.filter(c => c.toLowerCase().includes('email')).map(col => ({ [col]: searchStrategy.term, companyId }));
-                    } else if (searchStrategy.type === 'code') {
-                        // Strict Code Search
-                        whereConditions = schema.columns.filter(c => c.toLowerCase().includes('code') || c.toLowerCase().includes('number')).map(col => ({ [col]: searchStrategy.term, companyId }));
-                    } else {
-                        // Fuzzy / Token Search
-                        // If multiple words, try to match ANY of the search columns with ANY of the words
-                        // But preferred: The term is likely a name "John Doe"
-                        // TypeORM find with OR: [ { col1: Like(%term%) }, { col2: Like(%term%) } ]
-                        whereConditions = schema.searchCols.map(col => ({ [col]: Like(`%${searchStrategy.term}%`), companyId }));
-                    }
-
-                    if (whereConditions.length === 0) {
-                        // Fallback if no specific columns identified for strict search
-                        whereConditions = schema.searchCols.map(col => ({ [col]: Like(`%${searchStrategy.term}%`), companyId }));
-                    }
-
-                    const results = await this.dataSource.getRepository(schema.repo).find({ where: whereConditions, take: 5 });
-
-                    if (results.length > 0) {
-                        const table = this.formatAsTable(results, schema.columns, `${bestMatch.entity} Results for "${searchStrategy.term}"`);
-                        return new AiQueryResponse(true, 200, "Search success", table, 'search', bestMatch.entity, results);
-                    }
-                    return new AiQueryResponse(true, 200, "No results", `I looked for **${searchStrategy.term}** in ${bestMatch.entity}s but found nothing.`, 'search', bestMatch.entity);
-                }
-
-                // C. LIST INTENT (Default)
-                const recentItems = await this.dataSource.getRepository(schema.repo).find({
-                    where: { companyId },
-                    take: 5,
-                    order: { id: 'DESC' } as any
-                });
-                const listTable = this.formatAsTable(recentItems, schema.columns, `Latest ${bestMatch.entity}s`);
-                return new AiQueryResponse(true, 200, "List success", listTable, 'list', bestMatch.entity, recentItems);
-            }
-
-            // 2. FALLBACK: UNIVERSAL DEEP SEARCH
-            return await this.universalDeepSearch(cleanQuery, companyId);
-
-        } catch (error) {
-            console.error('AI Error:', error);
-            return new AiQueryResponse(false, 500, "Error", "I tried to access the database but encountered a schema error. Please verify the table names.", 'error', 'none');
+    constructor(
+        private readonly dataSource: DataSource,
+        private readonly configService: ConfigService
+    ) {
+        const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+        if (apiKey) {
+            this.genAI = new GoogleGenerativeAI(apiKey);
+            this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+            this.hasApiKey = true;
+        } else {
+            this.logger.warn('GEMINI_API_KEY is not set. AI features will run in limited REGEX mode.');
         }
     }
-
-    // --- INTELLIGENCE CORE ---
 
     /**
-     * Scores the query against keywords to find the most likely entity user is talking about.
+     * Main Entry Point: Process a natural language query
      */
-    private detectEntity(query: string) {
-        let bestEntity = '';
-        let maxScore = 0;
+    async processQuery(query: string, companyId: number): Promise<AiQueryResponse> {
+        try {
+            // 1. Try Advanced LLM Processing if available
+            if (this.hasApiKey) {
+                return await this.processWithGemini(query, companyId);
+            }
 
-        for (const [key, config] of Object.entries(this.SCHEMA)) {
-            let score = 0;
-            // Exact entity name match
-            if (query.includes(key)) score += 10;
-            // Plural match
-            if (query.includes(key + 's')) score += 10;
+            // 2. Fallback to Regex/Keywords if no API Key
+            return await this.processWithHeuristics(query, companyId);
 
-            // Keyword matching
-            config.keywords.forEach(word => {
-                if (query.includes(word)) score += 5;
-            });
+        } catch (error) {
+            this.logger.error(`AI Processing Error: ${error.message}`, error.stack);
+            if (this.hasApiKey) {
+                return await this.processWithHeuristics(query, companyId);
+            }
+            return new AiQueryResponse(false, 500, "Error", "I encountered an internal error processing your request.", 'error', 'none');
+        }
+    }
 
-            if (score > maxScore) {
-                maxScore = score;
-                bestEntity = key;
+    /**
+     * OPTION A: Advanced Gemini-Powered Intent Analysis
+     */
+    private async processWithGemini(query: string, companyId: number): Promise<AiQueryResponse> {
+        // Step 1: Intent Classification & Parameter Extraction
+        const analysis = await this.analyzeQueryWithLLM(query);
+
+        if (analysis.type === 'CHIT_CHAT' || analysis.type === 'UNKNOWN') {
+            return new AiQueryResponse(true, 200, "Response", analysis.response, 'chat', 'none');
+        }
+
+        // Step 2: Execute Data Retrieval based on AI instructions
+        let results = [];
+        let entity = 'none';
+
+        if (analysis.type === 'QUERY_DATA') {
+            entity = analysis.entity;
+
+            // If it's a COUNT query, optimization
+            if (analysis.visualization == 'stat_card') {
+                const count = await this.executeCountQuery(analysis.entity, analysis.filters, companyId);
+                results = [{ count, label: `Total ${this.capitalize(analysis.entity)}s` }];
+            } else {
+                results = await this.executeSafeQuery(analysis.entity, analysis.filters, analysis.searchTerm, companyId);
             }
         }
 
-        return { entity: bestEntity, confidence: maxScore };
-    }
-
-    private analyzeSearchStrategy(query: string, entity: string): { type: 'email' | 'code' | 'text', term: string } {
-        // 1. Email Detection
-        const emailMatch = query.match(/[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/);
-        if (emailMatch) return { type: 'email', term: emailMatch[0] };
-
-        // 2. Code/ID Detection (e.g., TKT-123, #123)
-        // const codeMatch = query.match(/\b[A-Z]{3}-\d+\b|\b\d{4,}\b/);
-        // if (codeMatch) return { type: 'code', term: codeMatch[0] };
-
-        // 3. Text Extraction (Parameter)
-        let term = query;
-        // Stop words removal
-        const stopWords = ['find', 'search', 'lookup', 'show', 'list', 'give', 'me', 'who', 'is', 'where', 'what', 'the', 'for', 'details', 'about', 'hi', 'hello', 'i', 'need', 'want', 'of', 'in', 'with', 'id', 'mail', 'using', 'address'];
-
-        // Remove Entity names as well
-        const entityWords = [entity, entity + 's', ...this.SCHEMA[entity].keywords];
-
-        const allRemove = [...stopWords, ...entityWords];
-
-        // Replace one by one
-        allRemove.forEach(w => {
-            term = term.replace(new RegExp(`\\b${w}\\b`, 'gi'), ' ');
-        });
-
-        // Clean up whitespace
-        term = term.replace(/\s+/g, ' ').trim();
-
-        return { type: 'text', term };
-    }
-
-    // --- DATA FORMATTER ---
-
-    private formatAsTable(data: any[], columns: string[], title: string): string {
-        if (!data || data.length === 0) return "No data found.";
-
-        let md = `### ${title}\n\n`;
-
-        // Header
-        const headers = columns.map(c => this.capitalize(c.replace(/Id|Enum|Code/g, '')));
-        md += `| ${headers.join(' | ')} |\n`;
-        md += `| ${headers.map(() => '---').join(' | ')} |\n`;
-
-        // Rows
-        data.forEach(row => {
-            const values = columns.map(col => {
-                let val = row[col];
-                // Handle Nested Objects (e.g. employee.department) if flattened or simple
-                if (typeof val === 'object' && val !== null && !(val instanceof Date)) {
-                    val = '[Object]';
-                }
-                // Handle Dates
-                if (val instanceof Date) val = val.toISOString().split('T')[0];
-                // Handle Empty
-                if (val === null || val === undefined) val = '-';
-                return val;
-            });
-            md += `| ${values.join(' | ')} |\n`;
-        });
-
-        return md;
-    }
-
-    private capitalize(s: string) {
-        return s.charAt(0).toUpperCase() + s.slice(1);
-    }
-
-    private async universalDeepSearch(term: string, companyId: number): Promise<AiQueryResponse> {
-        let report = `### 🔍 Universal Search Results for "${term}"\n`;
-        let found = false;
-        let allResults = [];
-
-        // Clean term
-        let cleanTerm = term;
-        const emailMatch = term.match(/[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/);
-        if (emailMatch) {
-            cleanTerm = emailMatch[0];
+        // Step 3: Analytics & Summarization
+        if (results.length > 0) {
+            const summary = await this.summarizeResultsWithLLM(query, results, analysis.visualization);
+            // Return structured intent to Frontend so it knows how to render (Table vs Card vs Chart)
+            return new AiQueryResponse(true, 200, "Success", summary, analysis.visualization, entity, results);
         } else {
-            cleanTerm = cleanTerm.replace(/find|search|lookup|hi|hello|i|need|details/gi, '').trim();
+            return new AiQueryResponse(true, 200, "No Data", `I understood you are looking for **${analysis.entity}** related to "${analysis.searchTerm || query}", but I couldn't find any matching records in the database.`, 'search', entity);
+        }
+    }
+
+    /**
+     * Ask Gemini to parse the user's natural language into structured JSON
+     */
+    private async analyzeQueryWithLLM(query: string): Promise<any> {
+        const prompt = `
+        ${this.SCHEMA_CONTEXT}
+
+        USER QUERY: "${query}"
+
+        YOUR TASK:
+        Analyze the query and return a strict JSON object (no markdown) with this structure:
+        {
+            "type": "QUERY_DATA" | "CHIT_CHAT" | "UNKNOWN",
+            "entity": "asset" | "employee" | "ticket" | "unknown",
+            "visualization": "table" | "stat_card" | "list" | "detail", 
+            "searchTerm": "extracted search keyword or null",
+            "filters": { "field": "value" }, 
+            "response": "If CHIT_CHAT, write a helpful response here. If QUERY_DATA, leave null."
         }
 
-        if (cleanTerm.length < 2) return new AiQueryResponse(true, 200, "Term too short", "Please provide a longer keyword to search.", 'short_term', 'none');
+        VISUALIZATION RULES:
+        - "count", "how many", "stats", "total" -> "stat_card"
+        - "list", "show all", "search", "find" -> "table" (if multiple results expected)
+        - "details of", "show me [specific item]" -> "detail"
+        
+        EXAMPLES:
+        - "Count my laptops" -> { "type": "QUERY_DATA", "entity": "asset", "visualization": "stat_card", "filters": { "model": "laptop" } }
+        - "Show broken devices" -> { "type": "QUERY_DATA", "entity": "asset", "visualization": "table", "filters": { "assetStatusEnum": "MAINTENANCE" } }
+        - "Who is John?" -> { "type": "QUERY_DATA", "entity": "employee", "visualization": "table", "searchTerm": "John" }
+        `;
 
-        for (const [key, schema] of Object.entries(this.SCHEMA)) {
-            const whereConditions = schema.searchCols.map(col => ({ [col]: Like(`%${cleanTerm}%`), companyId }));
-            try {
-                const results = await this.dataSource.getRepository(schema.repo).find({ where: whereConditions, take: 3 });
-                if (results.length > 0) {
-                    found = true;
-                    allResults.push(...results);
-                    report += `\n**${schema.emoji} ${this.capitalize(key)}s**\n`;
-                    results.forEach((r: any) => {
-                        const display = r[schema.searchCols[0]] || r[schema.columns[0]] || 'Unknown';
-                        report += `- ${display}\n`;
-                    });
+        const result = await this.model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            this.logger.error("Failed to parse LLM JSON response", text);
+            return { type: 'UNKNOWN', response: "I'm having trouble understanding that request right now." };
+        }
+    }
+
+    /**
+     * Ask Gemini to write a natural language summary of the data
+     */
+    private async summarizeResultsWithLLM(query: string, data: any[], vizType: string): Promise<string> {
+        const dataSample = JSON.stringify(data.slice(0, 5));
+        const count = data.length;
+
+        const prompt = `
+        USER QUERY: "${query}"
+        VISUALIZATION MODE: ${vizType}
+        DATA FOUND (${count} records): ${dataSample}
+
+        TASK:
+        Write a concise, high-level executive summary of this data.
+        - Start with a clear headline e.g. "### ✅ Found 5 Matching Assets"
+        - Use bullet points for key insights.
+        - If vizType is 'stat_card', just state the number clearly with an emoji.
+        - If vizType is 'table', summarize the commonalities (e.g. "Most are Dell laptops").
+        - Tone: Professional, Helpful, Intelligent.
+        `;
+
+        const result = await this.model.generateContent(prompt);
+        return result.response.text();
+    }
+
+    /**
+     * Execute a TypeORM query based on the AI's structured intent.
+     */
+    private async executeSafeQuery(entityName: string, filters: any, searchTerm: string, companyId: number): Promise<any[]> {
+        let repoName = '';
+        let searchFields = [];
+
+        switch (entityName?.toLowerCase()) {
+            case 'asset':
+            case 'device':
+                repoName = 'AssetInfoEntity';
+                searchFields = ['serialNumber', 'model', 'configuration', 'osVersion', 'ipAddress'];
+                break;
+            case 'employee':
+                repoName = 'EmployeesEntity';
+                searchFields = ['firstName', 'lastName', 'email', 'designation'];
+                break;
+            case 'ticket':
+                repoName = 'TicketsEntity';
+                searchFields = ['ticketCode', 'subject', 'ticketStatus'];
+                break;
+            default:
+                return [];
+        }
+
+        const repo = this.dataSource.getRepository(repoName);
+        const qb = repo.createQueryBuilder('e').where('e.companyId = :companyId', { companyId });
+
+        // Apply Search Term (Fuzzy Search)
+        if (searchTerm) {
+            const conditions = searchFields.map(field => `e.${field} LIKE :term`).join(' OR ');
+            qb.andWhere(`(${conditions})`, { term: `%${searchTerm}%` });
+        }
+
+        // Apply Strict Filters (if AI extracted them)
+        if (filters) {
+            Object.entries(filters).forEach(([key, value]) => {
+                if (/^[a-zA-Z0-9_]+$/.test(key)) {
+                    qb.andWhere(`e.${key} = :${key}`, { [key]: value });
                 }
-            } catch (e) {
-                // Ignore missing tables
+            });
+        }
+
+        return await qb.limit(20).getMany();
+    }
+
+    private async executeCountQuery(entityName: string, filters: any, companyId: number): Promise<number> {
+        let repoName = '';
+        switch (entityName?.toLowerCase()) {
+            case 'asset': repoName = 'AssetInfoEntity'; break;
+            case 'employee': repoName = 'EmployeesEntity'; break;
+            case 'ticket': repoName = 'TicketsEntity'; break;
+            default: return 0;
+        }
+
+        const repo = this.dataSource.getRepository(repoName);
+        const qb = repo.createQueryBuilder('e').where('e.companyId = :companyId', { companyId });
+
+        if (filters) {
+            Object.entries(filters).forEach(([key, value]) => {
+                if (/^[a-zA-Z0-9_]+$/.test(key)) {
+                    qb.andWhere(`e.${key} = :${key}`, { [key]: value });
+                }
+            });
+        }
+
+        return await qb.getCount();
+    }
+
+
+    /**
+     * OPTION B: Heuristic/Regex Fallback (The "Old Brain")
+     */
+    private async processWithHeuristics(query: string, companyId: number): Promise<AiQueryResponse> {
+        const cleanQuery = query.toLowerCase().trim();
+
+        // 1. SIMPLE INTENT DETECTION: COUNT (Stat Card)
+        if (cleanQuery.includes('count') || cleanQuery.includes('how many') || cleanQuery.includes('total')) {
+            if (cleanQuery.includes('asset') || cleanQuery.includes('device')) {
+                const count = await this.dataSource.getRepository(AssetInfoEntity).count({ where: { companyId } });
+                return new AiQueryResponse(true, 200, "Count", `### 📊 Asset Statistics\n\n**Total Assets:** ${count}`, 'stat_card', 'asset', [{ count, label: 'Total Assets' }]);
+            }
+            if (cleanQuery.includes('employee') || cleanQuery.includes('user')) {
+                const count = await this.dataSource.getRepository('EmployeesEntity').count({ where: { companyId } });
+                return new AiQueryResponse(true, 200, "Count", `### 👤 Employee Statistics\n\n**Total Employees:** ${count}`, 'stat_card', 'employee', [{ count, label: 'Total Employees' }]);
+            }
+            if (cleanQuery.includes('ticket')) {
+                const count = await this.dataSource.getRepository('TicketsEntity').count({ where: { companyId } });
+                return new AiQueryResponse(true, 200, "Count", `### 🎫 Ticket Statistics\n\n**Total Tickets:** ${count}`, 'stat_card', 'ticket', [{ count, label: 'Total Tickets' }]);
             }
         }
 
-        const msg = found ? report : `I scanned the database for "**${cleanTerm}**" across Tickets, Employees, and Assets but found nothing.`;
-        return new AiQueryResponse(true, 200, "Universal search", msg, 'universal_search', 'mixed', allResults);
+        // 2. KEYWORD SEARCH (Table View)
+        let results = [];
+        let entity = 'none';
+
+        if (cleanQuery.includes('asset') || cleanQuery.includes('device') || cleanQuery.includes('laptop')) {
+            entity = 'asset';
+            const term = cleanQuery.replace(/asset|device|laptop|search|find|show/gi, '').trim();
+            results = await this.dataSource.getRepository(AssetInfoEntity).find({
+                where: term ? [{ model: Like(`%${term}%`), companyId }, { serialNumber: Like(`%${term}%`), companyId }] : { companyId },
+                take: 10
+            });
+        }
+        else if (cleanQuery.includes('employee') || cleanQuery.includes('user')) {
+            entity = 'employee';
+            const term = cleanQuery.replace(/employee|user|staff|search|find|show/gi, '').trim();
+            results = await this.dataSource.getRepository('EmployeesEntity').find({
+                where: term ? [{ firstName: Like(`%${term}%`), companyId }, { email: Like(`%${term}%`), companyId }] : { companyId },
+                take: 10
+            });
+        }
+        else if (cleanQuery.includes('ticket')) {
+            entity = 'ticket';
+            const term = cleanQuery.replace(/ticket|issue|search|find|show/gi, '').trim();
+            results = await this.dataSource.getRepository('TicketsEntity').find({
+                where: term ? [{ ticketCode: Like(`%${term}%`), companyId }, { subject: Like(`%${term}%`), companyId }] : { companyId },
+                take: 10
+            });
+        }
+
+        if (results.length > 0) {
+            return new AiQueryResponse(true, 200, "Success", `### Found ${results.length} ${this.capitalize(entity)}s`, 'table', entity, results);
+        }
+
+        // Fallback Default
+        const assets = await this.dataSource.getRepository(AssetInfoEntity).find({ where: { companyId }, take: 5, order: { id: 'DESC' } as any });
+        return new AiQueryResponse(true, 200, "List", "### 💻 Latest Assets", 'table', 'asset', assets);
     }
+
+    private capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 }

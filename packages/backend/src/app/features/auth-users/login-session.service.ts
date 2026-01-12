@@ -21,7 +21,16 @@ export class LoginSessionService {
     private async getLocationFromIP(ipAddress: string) {
         try {
             if (ipAddress === '127.0.0.1' || ipAddress === '::1' || ipAddress.startsWith('192.168.') || ipAddress.startsWith('10.') || ipAddress.startsWith('172.')) {
-                return null;
+                return {
+                    country: 'Localhost',
+                    region: 'Local Development',
+                    city: 'Localhost',
+                    district: 'Localhost',
+                    latitude: 0,
+                    longitude: 0,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    isLocal: true
+                };
             }
 
             const response = await axios.get(`http://ip-api.com/json/${ipAddress}`, { timeout: 5000 });
@@ -37,7 +46,8 @@ export class LoginSessionService {
                 };
             }
         } catch (error) {
-            throw error;
+            console.error('Location lookup error:', (error as Error).message);
+            return null;
         }
         return null;
     }
@@ -112,10 +122,12 @@ export class LoginSessionService {
                 // Fallback to IP-based geolocation
                 locationData = await this.getLocationFromIP(reqModel.ipAddress);
 
-                if (locationData) {
+                if (locationData && (locationData as any).isLocal) {
+                    console.log('ℹ️ Local development detected (IP: ' + reqModel.ipAddress + '), using default location data');
+                } else if (locationData) {
                     console.log('✅ IP-based location:', locationData);
                 } else {
-                    console.log('❌ IP-based location failed (likely localhost)');
+                    console.log('❌ IP-based location lookup failed');
                 }
             }
 
@@ -126,7 +138,6 @@ export class LoginSessionService {
 
             const session = new UserLoginSessionsEntity();
             session.userId = reqModel.userId;
-            session.companyId = reqModel.companyId;
             session.ipAddress = reqModel.ipAddress;
             session.sessionToken = reqModel.sessionToken || this.generateSessionToken();
             session.loginTimestamp = new Date();
@@ -235,9 +246,9 @@ export class LoginSessionService {
     /**
      * Get suspicious logins for a company (Admin only)
      */
-    async getSuspiciousLogins(companyId: number): Promise<GetUserLoginHistoryModel> {
+    async getSuspiciousLogins(): Promise<GetUserLoginHistoryModel> {
         try {
-            const sessions = await this.loginSessionRepo.getSuspiciousLogins(companyId);
+            const sessions = await this.loginSessionRepo.getSuspiciousLogins();
             const responses = sessions.map(s => this.mapToResponseModel(s));
             return new GetUserLoginHistoryModel(true, 0, "Suspicious logins retrieved successfully", responses);
         } catch (error) {
@@ -315,7 +326,6 @@ export class LoginSessionService {
 
             const session = new UserLoginSessionsEntity();
             session.userId = data.userId;
-            session.companyId = data.companyId;
             session.ipAddress = data.ipAddress;
             session.sessionToken = `failed_${Date.now()}`;
             session.loginTimestamp = new Date();

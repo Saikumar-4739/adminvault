@@ -1,12 +1,25 @@
 import 'module-alias/register';
 import { config } from 'dotenv';
 import { resolve } from 'path';
-config({ path: resolve(__dirname, '../.env') });
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app/app.module';
 import "reflect-metadata";
+
+// Load environment variables from various possible locations
+const envPaths = [
+  resolve(process.cwd(), '.env'),
+  resolve(process.cwd(), 'packages/backend/.env'),
+  resolve(__dirname, '.env'),
+  resolve(__dirname, '../.env'),
+  resolve(__dirname, '../../.env'),
+];
+
+for (const envPath of envPaths) {
+  config({ path: envPath });
+}
+Logger.log(`Environment variables loaded. MICROSOFT_CLIENT_ID: ${process.env.MICROSOFT_CLIENT_ID ? 'Set' : 'Not Set'}`, 'Bootstrap');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

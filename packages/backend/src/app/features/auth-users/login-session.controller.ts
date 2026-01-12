@@ -53,7 +53,7 @@ export class LoginSessionController {
     @ApiBody({ type: CompanyIdRequestModel })
     async getSuspiciousLogins(@Body() reqModel: CompanyIdRequestModel): Promise<GetUserLoginHistoryModel> {
         try {
-            return await this.loginSessionService.getSuspiciousLogins(reqModel.id);
+            return await this.loginSessionService.getSuspiciousLogins();
         } catch (error) {
             return returnException(GetUserLoginHistoryModel, error);
         }

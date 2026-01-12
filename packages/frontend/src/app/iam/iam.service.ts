@@ -6,7 +6,8 @@ import {
     UpdateRoleModel,
     SSOProvider,
     CreateSSOProviderModel,
-    UpdateSSOProviderModel
+    UpdateSSOProviderModel,
+    GetAllEmployeesModel
 } from '@adminvault/shared-models';
 
 export interface Permission {
@@ -25,8 +26,18 @@ export const IAMService = {
         return response.data;
     },
 
+    getAllEmployees: async (companyId: number) => {
+        const response = await apiClient.post<GetAllEmployeesModel>('/employees/getAllEmployees', { id: companyId });
+        return response.data;
+    },
+
     assignRoles: async (data: { userId: number, roleIds: number[], companyId: number }) => {
         const response = await apiClient.post<GlobalResponse>('/administration/iam/users/assign-roles', data);
+        return response.data;
+    },
+
+    activateAccount: async (data: { employeeId: number, roles: number[], companyId: number, authType: string, password?: string }) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/users/activate-account', data);
         return response.data;
     },
 

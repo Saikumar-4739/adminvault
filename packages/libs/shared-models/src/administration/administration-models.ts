@@ -54,6 +54,33 @@ export class GetAllSettingsResponseModel extends GlobalResponse {
     }
 }
 
+export class GetSettingResponseModel extends GlobalResponse {
+    data: SettingResponseModel | null;
+    constructor(status: boolean, code: number, message: string, data: SettingResponseModel | null) {
+        super(status, code, message);
+        this.data = data;
+    }
+}
+
+export class GetSettingsByCategoryRequestModel {
+    category!: string;
+    companyId?: number;
+}
+
+export class DeleteSettingRequestModel {
+    key!: string;
+    type!: SettingType;
+    userId?: number;
+    companyId?: number;
+}
+
+export class GetSettingRequestModel {
+    key!: string;
+    type!: SettingType;
+    userId?: number;
+    companyId?: number;
+}
+
 // --- IAM (Roles, Permissions, MFA, API Keys, SSO) ---
 
 export class CreateRoleModel {

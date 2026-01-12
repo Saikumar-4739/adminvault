@@ -1,6 +1,6 @@
 'use client';
 
-import { Moon, Sun, Download, LogOut, Clock, Bell, Mail, Globe, Shield, Lock, Trash2, Key, Languages, HardDrive } from 'lucide-react';
+import { Moon, Sun, Download, LogOut, Clock, Bell, Mail, Globe, Shield, Lock, Trash2, Key, Languages, HardDrive, Type } from 'lucide-react';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -11,7 +11,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 
 export default function SettingsPage() {
-    const { isDarkMode, toggleDarkMode } = useTheme();
+    const { isDarkMode, toggleDarkMode, fontFamily, setFontFamily } = useTheme();
     const { logout, user } = useAuth();
     const router = useRouter();
     const { success, error } = useToast();
@@ -95,9 +95,9 @@ export default function SettingsPage() {
             </div>
 
             {/* Top Row - Command Center Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Theme Controller */}
-                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 shadow-sm">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -119,8 +119,33 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
+                {/* Font Identity */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 shadow-sm">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-9 h-9 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md">
+                                <Type className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Font Identity</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Typography Hub</p>
+                            </div>
+                        </div>
+                        <select
+                            value={fontFamily}
+                            onChange={(e) => setFontFamily(e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-600 dark:text-slate-400 outline-none focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+                        >
+                            <option value="var(--font-outfit)">Outfit (Premium)</option>
+                            <option value="var(--font-inter)">Inter (Default)</option>
+                            <option value="var(--font-roboto)">Roboto (Classic)</option>
+                            <option value="system-ui">System (Native)</option>
+                        </select>
+                    </CardContent>
+                </Card>
+
                 {/* Regional Interface */}
-                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 shadow-sm">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-3 mb-3">
                             <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-md">
@@ -147,7 +172,7 @@ export default function SettingsPage() {
                 </Card>
 
                 {/* Global Timezone */}
-                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+                <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 shadow-sm">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-3 mb-3">
                             <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
