@@ -7,7 +7,16 @@ import {
     SSOProvider,
     CreateSSOProviderModel,
     UpdateSSOProviderModel,
-    GetAllEmployeesModel
+    GetAllEmployeesModel,
+    GetAllPermissionsResponseModel,
+    GetAllScopesResponseModel,
+    CreateMenuModel,
+    UpdateMenuModel,
+    CreateScopeModel,
+    UpdateScopeModel,
+    CreatePermissionModel,
+    UpdatePermissionModel,
+    DeletePermissionModel
 } from '@adminvault/shared-models';
 
 export interface Permission {
@@ -72,9 +81,8 @@ export const IAMService = {
         return response.data;
     },
 
-    // Permissions
     getPermissions: async () => {
-        const response = await apiClient.post<{ success: boolean; data: Permission[] }>('/administration/iam/permissions/findAll');
+        const response = await apiClient.post<GetAllPermissionsResponseModel>('/administration/iam/permissions/findAll');
         return response.data;
     },
 
@@ -97,6 +105,64 @@ export const IAMService = {
 
     deleteSSOProvider: async (id: number) => {
         const response = await apiClient.post<GlobalResponse>('/administration/iam/sso/delete', { id });
+        return response.data;
+    },
+
+    // Menus
+    getAllMenusTree: async () => {
+        const response = await apiClient.post<any>('/administration/iam/menus/all-tree');
+        return response.data;
+    },
+
+    createMenu: async (data: CreateMenuModel) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/menus/create', data);
+        return response.data;
+    },
+
+    updateMenu: async (data: UpdateMenuModel) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/menus/update', data);
+        return response.data;
+    },
+
+    deleteMenu: async (id: number) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/menus/delete', { id });
+        return response.data;
+    },
+
+    // Scopes
+    getScopes: async () => {
+        const response = await apiClient.post<GetAllScopesResponseModel>('/administration/iam/scopes/findAll');
+        return response.data;
+    },
+
+    createScope: async (data: CreateScopeModel) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/scopes/create', data);
+        return response.data;
+    },
+
+    updateScope: async (data: UpdateScopeModel) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/scopes/update', data);
+        return response.data;
+    },
+
+    deleteScope: async (id: number) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/scopes/delete', { id });
+        return response.data;
+    },
+
+    // Permissions (Full CRUD)
+    createPermission: async (data: CreatePermissionModel) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/permissions/create', data);
+        return response.data;
+    },
+
+    updatePermission: async (data: UpdatePermissionModel) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/permissions/update', data);
+        return response.data;
+    },
+
+    deletePermission: async (id: number) => {
+        const response = await apiClient.post<GlobalResponse>('/administration/iam/permissions/delete', { id });
         return response.data;
     }
 };

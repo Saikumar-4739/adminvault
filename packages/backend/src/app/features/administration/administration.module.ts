@@ -10,6 +10,7 @@ import { PasswordVaultService } from './password-vault.service';
 import { IAMService } from './iam.service';
 import { AssetOperationsService } from './asset-operations.service';
 import { EmailInfoService } from './email-info.service';
+import { SeedService } from './seed.service';
 
 // Entities
 import { SettingsEntity } from './entities/settings.entity';
@@ -26,6 +27,7 @@ import { MenuEntity } from './entities/menu.entity';
 import { RoleMenuAccessEntity } from './entities/role-menu-access.entity';
 import { UserPermissionEntity } from './entities/user-permission.entity';
 import { UserRoleEntity } from './entities/user-role.entity';
+import { ScopeEntity } from './entities/scope.entity';
 
 // Cross-feature entities
 import { AssetInfoEntity } from '../asset-info/entities/asset-info.entity';
@@ -48,6 +50,7 @@ import { MenuRepository } from './repositories/menu.repository';
 import { RoleMenuAccessRepository } from './repositories/role-menu-access.repository';
 import { UserPermissionRepository } from './repositories/user-permission.repository';
 import { UserRoleRepository } from './repositories/user-role.repository';
+import { ScopeRepository } from './repositories/scope.repository';
 
 // External Modules
 import { AuthUsersModule } from '../auth-users/auth-users.module';
@@ -73,7 +76,8 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
             MenuEntity,
             RoleMenuAccessEntity,
             UserPermissionEntity,
-            UserRoleEntity
+            UserRoleEntity,
+            ScopeEntity
         ]),
         forwardRef(() => AuthUsersModule)
     ],
@@ -86,6 +90,7 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
         IAMService,
         AssetOperationsService,
         EmailInfoService,
+        SeedService,
         UserLoginSessionRepository,
         EmailInfoRepository,
         SettingsRepository,
@@ -102,7 +107,8 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
         MenuRepository,
         RoleMenuAccessRepository,
         UserPermissionRepository,
-        UserRoleRepository
+        UserRoleRepository,
+        ScopeRepository
     ],
     exports: [
         SettingsService,

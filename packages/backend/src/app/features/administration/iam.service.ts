@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { RoleEntity } from './entities/role.entity';
 import { PermissionEntity } from './entities/permission.entity';
 import { MFASettingsEntity } from './entities/mfa-settings.entity';
@@ -23,6 +23,10 @@ import { MenuRepository } from './repositories/menu.repository';
 import { RoleMenuAccessRepository } from './repositories/role-menu-access.repository';
 import { UserPermissionRepository } from './repositories/user-permission.repository';
 import { UserRoleRepository } from './repositories/user-role.repository';
+import { ScopeRepository } from './repositories/scope.repository';
+import { ScopeEntity } from './entities/scope.entity';
+import { MenuEntity } from './entities/menu.entity';
+import { RoleMenuAccessEntity } from './entities/role-menu-access.entity';
 import {
     CreateRoleModel,
     UpdateRoleModel,
@@ -37,7 +41,14 @@ import {
     GlobalResponse,
     EmployeeStatusEnum,
     RegisterUserModel,
-    UserRoleEnum
+    UserRoleEnum,
+    CreateMenuModel,
+    UpdateMenuModel,
+    CreateScopeModel,
+    UpdateScopeModel,
+    ScopeResponseModel,
+    GetAllScopesResponseModel,
+    MenuResponseModel
 } from '@adminvault/shared-models';
 
 @Injectable()
@@ -54,6 +65,7 @@ export class IAMService implements OnModuleInit {
         private readonly roleMenuRepo: RoleMenuAccessRepository,
         private readonly userPermRepo: UserPermissionRepository,
         private readonly userRoleRepo: UserRoleRepository,
+        private readonly scopeRepo: ScopeRepository,
         @InjectRepository(AuthUsersEntity)
         private readonly userRepo: Repository<AuthUsersEntity>,
         @Inject(forwardRef(() => AuthUsersService))
@@ -105,32 +117,194 @@ export class IAMService implements OnModuleInit {
     }
 
     async onModuleInit() {
-        // Seeding is disabled to allow purely manual management through the UI
-        // If a fresh installation is needed, use the manual seeding endpoints
+        // 1. Core Roles Initialization
+        const rolesCount = await this.roleRepo.count({ where: { companyId: 1 } });
+        if (rolesCount === 0) {
+            console.log('IAM: Initializing core security dimensions for primary entity...');
+            const coreRoles = [
+                { name: 'Super Administrator', code: 'SUPERADMIN', description: 'Total system authority and architectural governance.' },
+                { name: 'Administrator', code: 'ADMIN', description: 'Full operational control and security management.' },
+                { name: 'Executive Officer', code: 'CEO', description: 'High-level analytical access and strategic oversight.' },
+                { name: 'Department Manager', code: 'MANAGER', description: 'Functional unit management and personnel coordination.' },
+                { name: 'Standard Associate', code: 'USER', description: 'Standard operational access for daily workflows.' }
+            ];
+
+            for (const rData of coreRoles) {
+                const role = new RoleEntity();
+                role.name = rData.name;
+                role.code = rData.code;
+                role.companyId = 1;
+                role.description = rData.description;
+                role.isSystemRole = true;
+                await this.roleRepo.save(role);
+            }
+            console.log('IAM: Core dimensions successfully commissioned.');
+        }
+
+        // 2. Default Navigation Hubs Initialization
+        const menuCount = await this.menuRepo.count();
+        if (menuCount === 0) {
+            console.log('IAM: Initializing default navigation architecture...');
+            const DEFAULT_NAV = [
+                {
+                    title: 'System',
+                    code: 'NAV_SYSTEM',
+                    items: [
+                        { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard', code: 'MENU_DASHBOARD' },
+                        { label: 'Configuration', path: '/masters', icon: 'Database', code: 'MENU_MASTERS' },
+                        { label: 'All Reports', path: '/reports', icon: 'PieChart', code: 'MENU_REPORTS' },
+                    ]
+                },
+                {
+                    title: 'Operations',
+                    code: 'NAV_OPERATIONS',
+                    items: [
+                        { label: 'Asset Inventory', path: '/assets', icon: 'Package', code: 'MENU_ASSETS' },
+                        { label: 'Procurement', path: '/procurement', icon: 'ShoppingCart', code: 'MENU_PROCURE' },
+                        { label: 'Maintenance', path: '/maintenance', icon: 'Calendar', code: 'MENU_MAINTAIN' },
+                        { label: 'Approvals', path: '/approvals', icon: 'GitPullRequest', code: 'MENU_APPROVE' },
+                        { label: 'Licenses', path: '/licenses', icon: 'KeySquare', code: 'MENU_LICENSES' },
+                    ]
+                },
+                {
+                    title: 'Support Portal',
+                    code: 'NAV_SUPPORT_PORTAL',
+                    items: [
+                        { label: 'My Tickets', path: '/create-ticket?tab=tickets', icon: 'Ticket', code: 'MENU_MY_TICKETS' },
+                        { label: 'Submit Ticket', path: '/create-ticket?tab=create', icon: 'Plus', code: 'MENU_SUBMIT_TICKET' },
+                    ]
+                },
+                {
+                    title: 'Support & Comms',
+                    code: 'NAV_SUPPORT_COMMS',
+                    items: [
+                        { label: 'Support Tickets', path: '/tickets', icon: 'Ticket', code: 'MENU_TICKETS' },
+                        { label: 'Knowledge Base', path: '/knowledge-base', icon: 'Book', code: 'MENU_KB' },
+                        { label: 'Document Center', path: '/documents', icon: 'FileText', code: 'MENU_DOCS' },
+                    ]
+                },
+                {
+                    title: 'Security & Access',
+                    code: 'NAV_SECURITY',
+                    items: [
+                        { label: 'IAM & SSO', path: '/iam', icon: 'ShieldAlert', code: 'MENU_IAM' },
+                    ]
+                },
+                {
+                    title: 'Account',
+                    code: 'NAV_ACCOUNT',
+                    items: [
+                        { label: 'Profile', path: '/profile', icon: 'UserCircle', code: 'MENU_PROFILE' },
+                        { label: 'Settings', path: '/settings', icon: 'SettingsIcon', code: 'MENU_SETTINGS' },
+                    ]
+                }
+            ];
+
+            const adminRoles = await this.roleRepo.find({
+                where: [
+                    { code: 'SUPERADMIN' },
+                    { code: 'ADMIN' }
+                ]
+            });
+
+            let groupSortOrder = 1;
+            for (const group of DEFAULT_NAV) {
+                const parentMenu = new MenuEntity();
+                parentMenu.label = group.title;
+                parentMenu.code = group.code;
+                parentMenu.sortOrder = groupSortOrder++;
+                const savedParent = await this.menuRepo.save(parentMenu);
+
+                // Auto-grant access to Admin roles
+                for (const role of adminRoles) {
+                    const rma = new RoleMenuAccessEntity();
+                    rma.roleId = Number(role.id);
+                    rma.menuId = Number(savedParent.id);
+                    rma.canRead = true;
+                    rma.canCreate = true;
+                    rma.canUpdate = true;
+                    rma.canDelete = true;
+                    rma.canApprove = true;
+                    await this.roleMenuRepo.save(rma);
+                }
+
+                let itemSortOrder = 1;
+                for (const item of group.items) {
+                    const menu = new MenuEntity();
+                    menu.label = item.label;
+                    menu.code = item.code;
+                    menu.path = item.path;
+                    menu.icon = item.icon;
+                    menu.parentId = Number(savedParent.id);
+                    menu.sortOrder = itemSortOrder++;
+                    const savedMenu = await this.menuRepo.save(menu);
+
+                    // Auto-grant access to Admin roles
+                    for (const role of adminRoles) {
+                        const rma = new RoleMenuAccessEntity();
+                        rma.roleId = Number(role.id);
+                        rma.menuId = Number(savedMenu.id);
+                        rma.canRead = true;
+                        rma.canCreate = true;
+                        rma.canUpdate = true;
+                        rma.canDelete = true;
+                        rma.canApprove = true;
+                        await this.roleMenuRepo.save(rma);
+                    }
+                }
+            }
+            console.log('IAM: Default navigation architecture successfully deployed.');
+        }
     }
 
     // Roles
     async findAllRoles(companyId?: number): Promise<GetAllRolesResponseModel> {
-        const roles = await this.roleRepo.find({ where: companyId ? { companyId } : {} });
+        const targetCompanyId = Number(companyId);
+
+        // Strategy: Fetch all roles for the company OR system roles
+        const roles = await this.roleRepo.find({
+            where: targetCompanyId && targetCompanyId !== 1
+                ? [{ companyId: targetCompanyId }, { companyId: 1 }]
+                : [{ companyId: 1 }]
+        });
+
+        const totalRolesInDb = await this.roleRepo.count();
+        console.log(`IAM DEBUG: Found ${roles.length} roles for company ${targetCompanyId}. Total roles in DB: ${totalRolesInDb}`);
+
+        // If still no roles found, and it's a critical failure, return system default attempt
+        if (roles.length === 0 && targetCompanyId !== 1) {
+            console.warn(`IAM WARNING: No roles found for ${targetCompanyId}, falling back to system roles only.`);
+            const systemRoles = await this.roleRepo.find({ where: { companyId: 1 } });
+            roles.push(...systemRoles);
+        }
+
         const responses = await Promise.all(roles.map(async (r) => {
             const perms = await this.getPermissionsForRole(Number(r.id));
-            return this.mapRoleToResponse(r, perms);
+            const menuIds = await this.getMenusForRole(Number(r.id));
+            return this.mapRoleToResponse(r, perms, menuIds);
         }));
-        return new GetAllRolesResponseModel(true, 200, 'Roles retrieved', responses);
+
+        return new GetAllRolesResponseModel(true, 200, `Found ${responses.length} roles`, responses);
     }
 
     async findOneRole(id: number): Promise<RoleResponseModel | null> {
         const role = await this.roleRepo.findOne({ where: { id } });
         if (!role) return null;
         const perms = await this.getPermissionsForRole(id);
-        return this.mapRoleToResponse(role, perms);
+        const menuIds = await this.getMenusForRole(id);
+        return this.mapRoleToResponse(role, perms, menuIds);
     }
 
     private async getPermissionsForRole(roleId: number): Promise<PermissionEntity[]> {
         const rolePerms = await this.rolePermRepo.find({ where: { roleId } });
-        const permIds = rolePerms.map(rp => rp.permissionId);
+        const permIds = rolePerms.map(rp => Number(rp.permissionId));
         if (permIds.length === 0) return [];
-        return this.permissionRepo.findByIds(permIds);
+        return this.permissionRepo.find({ where: { id: In(permIds) } });
+    }
+
+    private async getMenusForRole(roleId: number): Promise<number[]> {
+        const menuAccess = await this.roleMenuRepo.find({ where: { roleId } });
+        return menuAccess.map(ma => Number(ma.menuId));
     }
 
     async createRole(model: CreateRoleModel): Promise<GlobalResponse> {
@@ -139,6 +313,7 @@ export class IAMService implements OnModuleInit {
         role.code = model.code;
         role.companyId = model.companyId;
         role.description = model.description || '';
+        role.userRole = model.userRole || 'user';
 
         const saved = await this.roleRepo.save(role);
 
@@ -148,6 +323,16 @@ export class IAMService implements OnModuleInit {
                 rp.roleId = Number(saved.id);
                 rp.permissionId = pId;
                 await this.rolePermRepo.save(rp);
+            }
+        }
+
+        if (model.menuIds && model.menuIds.length > 0) {
+            for (const mId of model.menuIds) {
+                const rma = new RoleMenuAccessEntity();
+                rma.roleId = Number(saved.id);
+                rma.menuId = mId;
+                rma.canRead = true;
+                await this.roleMenuRepo.save(rma);
             }
         }
 
@@ -161,6 +346,7 @@ export class IAMService implements OnModuleInit {
         role.name = model.name;
         role.code = model.code || role.code;
         role.description = model.description || role.description;
+        if (model.userRole) role.userRole = model.userRole;
 
         const saved = await this.roleRepo.save(role);
 
@@ -171,6 +357,17 @@ export class IAMService implements OnModuleInit {
                 rp.roleId = model.id;
                 rp.permissionId = pId;
                 await this.rolePermRepo.save(rp);
+            }
+        }
+
+        if (model.menuIds) {
+            await this.roleMenuRepo.delete({ roleId: model.id });
+            for (const mId of model.menuIds) {
+                const rma = new RoleMenuAccessEntity();
+                rma.roleId = model.id;
+                rma.menuId = mId;
+                rma.canRead = true;
+                await this.roleMenuRepo.save(rma);
             }
         }
 
@@ -185,7 +382,7 @@ export class IAMService implements OnModuleInit {
         return new GlobalResponse(true, 200, 'Role deleted successfully');
     }
 
-    private mapRoleToResponse(entity: RoleEntity, permissions: PermissionEntity[] = []): RoleResponseModel {
+    private mapRoleToResponse(entity: RoleEntity, permissions: PermissionEntity[] = [], menuIds: number[] = []): RoleResponseModel {
         return new RoleResponseModel(
             Number(entity.id),
             entity.name,
@@ -195,8 +392,10 @@ export class IAMService implements OnModuleInit {
             entity.code,
             entity.isSystemRole,
             entity.isActive,
+            entity.userRole,
             entity.createdAt,
-            entity.updatedAt
+            entity.updatedAt,
+            menuIds
         );
     }
 
@@ -490,9 +689,19 @@ export class IAMService implements OnModuleInit {
     }
 
     async getUserPermissions(userId: number): Promise<PermissionEntity[]> {
+        // Get user entity for legacy role check
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+
         // Get user's roles
         const userRoles = await this.userRoleRepo.find({ where: { userId } });
         const roleIds = userRoles.map(ur => ur.roleId);
+
+        const roles = roleIds.length > 0 ? await this.roleRepo.find({ where: { id: In(roleIds) } }) : [];
+
+        // SUPER_ADMIN bypass
+        if (user?.userRole === UserRoleEnum.SUPER_ADMIN || roles.some(r => r.userRole === UserRoleEnum.SUPER_ADMIN)) {
+            return this.permissionRepo.find({ where: { isActive: true } });
+        }
 
         if (roleIds.length === 0) return [];
 
@@ -507,7 +716,7 @@ export class IAMService implements OnModuleInit {
         if (permissionIds.length === 0) return [];
 
         // Get permission details
-        return this.permissionRepo.findByIds(permissionIds);
+        return this.permissionRepo.find({ where: { id: In(permissionIds) } });
     }
 
     async checkUserPermission(userId: number, resource: string, action: string): Promise<boolean> {
@@ -515,35 +724,49 @@ export class IAMService implements OnModuleInit {
         return permissions.some(p => p.resource === resource && p.action === action);
     }
 
-    async getAllMenusTree(): Promise<any[]> {
-        const allMenus = await this.menuRepo.find({ order: { sortOrder: 'ASC' } });
-
-        const buildTree = (parentId: number | null): any[] => {
-            return allMenus
-                .filter(m => m.parentId === (parentId ? Number(parentId) : null))
-                .map(m => ({
-                    ...m,
-                    children: buildTree(Number(m.id))
-                }));
-        };
-        return buildTree(null);
-    }
 
     async getUserAuthorizedMenus(userId: number): Promise<any[]> {
         // 1. Get user roles
+        const user = await this.userRepo.findOne({ where: { id: userId } });
         const userRoles = await this.userRoleRepo.find({ where: { userId } });
         const roleIds = userRoles.map(ur => ur.roleId);
 
-        if (roleIds.length === 0) return [];
-
         // 1.1 Check if User is Admin (Bypass filtering)
-        const roles = await this.roleRepo.findByIds(roleIds);
-        const isAdmin = roles.some(r =>
+        const roles = roleIds.length > 0 ? await this.roleRepo.find({ where: { id: In(roleIds) } }) : [];
+
+        const isSuperAdmin = user?.userRole === UserRoleEnum.SUPER_ADMIN || roles.some(r => r.userRole === UserRoleEnum.SUPER_ADMIN);
+        const isAdmin = isSuperAdmin || roles.some(r =>
             (r.code?.toUpperCase() || '').includes('ADMIN') ||
             (r.name?.toUpperCase() || '').includes('ADMIN')
         );
 
-        // 2. Get menu access for these roles
+        // 2. Fetch full menu tree structure
+        const allMenus = await this.menuRepo.find({ order: { sortOrder: 'ASC' } });
+
+        if (isSuperAdmin) {
+            // Super Admin gets everything with full permissions
+            const buildFullTree = (parentId: number | null): any[] => {
+                const pid = parentId ? Number(parentId) : null;
+                return allMenus
+                    .filter(m => (m.parentId ? Number(m.parentId) : null) === pid)
+                    .map(m => ({
+                        ...m,
+                        permissions: {
+                            canRead: true,
+                            canCreate: true,
+                            canUpdate: true,
+                            canDelete: true,
+                            canApprove: true,
+                        },
+                        children: buildFullTree(Number(m.id))
+                    }));
+            };
+            return buildFullTree(null);
+        }
+
+        if (roleIds.length === 0) return [];
+
+        // 3. Get menu access for these roles
         const menuAccess = await this.roleMenuRepo
             .createQueryBuilder('rma')
             .where('rma.roleId IN (:...roleIds)', { roleIds })
@@ -552,22 +775,22 @@ export class IAMService implements OnModuleInit {
 
         const allowedMenuIds = new Set(menuAccess.map(ma => ma.menuId));
 
-        // 3. Fetch full menu tree structure
-        const allMenus = await this.menuRepo.find({ order: { sortOrder: 'ASC' } });
-
         // 4. Filter and build tree
         const buildTree = (parentId: number | null): any[] => {
+            const pid = parentId ? Number(parentId) : null;
             return allMenus
-                .filter(m => m.parentId === (parentId ? Number(parentId) : null))
+                .filter(m => (m.parentId ? Number(m.parentId) : null) === pid)
                 .filter(m => isAdmin || allowedMenuIds.has(Number(m.id))) // Authorization check or bypass for Admin
                 .map(m => {
                     const relevantAccess = menuAccess.filter(ma => Number(ma.menuId) === Number(m.id));
                     const permissions = isAdmin ? {
+                        canRead: true,
                         canCreate: true,
                         canUpdate: true,
                         canDelete: true,
                         canApprove: true,
                     } : {
+                        canRead: true,
                         canCreate: relevantAccess.some(a => a.canCreate),
                         canUpdate: relevantAccess.some(a => a.canUpdate),
                         canDelete: relevantAccess.some(a => a.canDelete),
@@ -582,6 +805,67 @@ export class IAMService implements OnModuleInit {
                 });
         };
 
+        return buildTree(null);
+    }
+
+    // --- Menus CRUD ---
+    async createMenu(model: CreateMenuModel): Promise<GlobalResponse> {
+        const menu = new MenuEntity();
+        Object.assign(menu, model);
+        await this.menuRepo.save(menu);
+        return new GlobalResponse(true, 201, 'Menu created successfully');
+    }
+
+    async updateMenu(model: UpdateMenuModel): Promise<GlobalResponse> {
+        const menu = await this.menuRepo.findOne({ where: { id: model.id } });
+        if (!menu) throw new NotFoundException('Menu not found');
+        Object.assign(menu, model);
+        await this.menuRepo.save(menu);
+        return new GlobalResponse(true, 200, 'Menu updated successfully');
+    }
+
+    async deleteMenu(id: number): Promise<GlobalResponse> {
+        await this.menuRepo.delete(id);
+        return new GlobalResponse(true, 200, 'Menu deleted successfully');
+    }
+
+    // --- Scopes CRUD ---
+    async findAllScopes(): Promise<GetAllScopesResponseModel> {
+        const scopes = await this.scopeRepo.find();
+        return new GetAllScopesResponseModel(true, 200, 'Scopes retrieved', scopes as any[]);
+    }
+
+    async createScope(model: CreateScopeModel): Promise<GlobalResponse> {
+        const scope = new ScopeEntity();
+        Object.assign(scope, model);
+        await this.scopeRepo.save(scope);
+        return new GlobalResponse(true, 201, 'Scope created successfully');
+    }
+
+    async updateScope(model: UpdateScopeModel): Promise<GlobalResponse> {
+        const scope = await this.scopeRepo.findOne({ where: { id: model.id } });
+        if (!scope) throw new NotFoundException('Scope not found');
+        Object.assign(scope, model);
+        await this.scopeRepo.save(scope);
+        return new GlobalResponse(true, 200, 'Scope updated successfully');
+    }
+
+    async deleteScope(id: number): Promise<GlobalResponse> {
+        await this.scopeRepo.delete(id);
+        return new GlobalResponse(true, 200, 'Scope deleted successfully');
+    }
+
+    async getAllMenusTree(): Promise<MenuResponseModel[]> {
+        const allMenus = await this.menuRepo.find({ order: { sortOrder: 'ASC' } });
+        const buildTree = (parentId: number | null): any[] => {
+            const pid = parentId ? Number(parentId) : null;
+            return allMenus
+                .filter(m => (m.parentId ? Number(m.parentId) : null) === pid)
+                .map(m => ({
+                    ...m,
+                    children: buildTree(Number(m.id))
+                }));
+        };
         return buildTree(null);
     }
 }

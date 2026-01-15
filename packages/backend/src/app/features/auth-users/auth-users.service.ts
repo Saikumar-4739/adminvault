@@ -1,5 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, MoreThan } from 'typeorm';
+import * as crypto from 'crypto';
 import { AuthUsersRepository } from './repositories/auth-users.repository';
 import { AuthUsersEntity } from './entities/auth-users.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
@@ -10,7 +11,7 @@ import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
 import { LoginSessionService } from './login-session.service';
 import { EmailInfoService } from '../administration/email-info.service';
-import { RequestAccessModel } from '@adminvault/shared-models';
+import { ForgotPasswordModel, ResetPasswordModel, RequestAccessModel } from '@adminvault/shared-models';
 import axios from 'axios';
 import { URLSearchParams } from 'url';
 
@@ -564,6 +565,55 @@ export class AuthUsersService {
                 throw error;
             }
             throw new ErrorResponse(0, 'SSO Authentication Failed: ' + (error.response?.data?.error_description || error.message));
+        }
+    }
+
+    async forgotPassword(model: ForgotPasswordModel): Promise<GlobalResponse> {
+        try {
+            const user = await this.authUsersRepo.findOne({ where: { email: model.email } });
+            if (!user) {
+                // Security best practice
+                return new GlobalResponse(true, 200, "If an account exists with this email, a reset instructions have been sent.");
+            }
+
+            const token = crypto.randomBytes(32).toString('hex');
+            const expiry = new Date();
+            expiry.setHours(expiry.getHours() + 1);
+
+            user.resetToken = token;
+            user.resetTokenExpiry = expiry;
+            await this.authUsersRepo.save(user);
+
+            // Send Reset Email
+            await this.emailService.sendPasswordResetEmail(user.email, token);
+
+            return new GlobalResponse(true, 200, "Password reset instructions sent.");
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async resetPassword(model: ResetPasswordModel): Promise<GlobalResponse> {
+        try {
+            const user = await this.authUsersRepo.findOne({
+                where: {
+                    resetToken: model.token,
+                    resetTokenExpiry: MoreThan(new Date())
+                }
+            });
+
+            if (!user) {
+                throw new ErrorResponse(400, "Invalid or expired reset token.");
+            }
+
+            user.passwordHash = await bcrypt.hash(model.newPassword, 10);
+            user.resetToken = null;
+            user.resetTokenExpiry = null;
+            await this.authUsersRepo.save(user);
+
+            return new GlobalResponse(true, 200, "Password has been reset successfully.");
+        } catch (error) {
+            throw error;
         }
     }
 

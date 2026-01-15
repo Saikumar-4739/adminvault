@@ -1,8 +1,8 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-@Entity('roles')
-@Index('idx_role_code', ['code'])
-@Index('idx_role_company', ['companyId'])
-export class RoleEntity {
+
+@Entity('scopes')
+@Index('idx_scope_code', ['code'], { unique: true })
+export class ScopeEntity {
     @PrimaryGeneratedColumn({ type: 'bigint' })
     id: number;
 
@@ -15,17 +15,8 @@ export class RoleEntity {
     @Column({ name: 'description', type: 'text', nullable: true })
     description: string;
 
-    @Column({ name: 'is_system_role', type: 'boolean', default: false })
-    isSystemRole: boolean;
-
     @Column({ name: 'is_active', type: 'boolean', default: true })
     isActive: boolean;
-
-    @Column({ name: 'user_role', type: 'varchar', length: 50, default: 'user' })
-    userRole: string;
-
-    @Column({ name: 'company_id', type: 'bigint', nullable: true })
-    companyId: number;
 
     @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
     createdAt: Date;

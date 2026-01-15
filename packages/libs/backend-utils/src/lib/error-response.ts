@@ -9,6 +9,7 @@ export class ErrorResponse extends HttpException {
     ) {
         super(
             {
+                status: false,
                 success: false,
                 code,
                 message,
@@ -28,6 +29,7 @@ export class SuccessResponse<T = any> {
 
     toJSON() {
         return {
+            status: true,
             success: true,
             code: this.code,
             message: this.message,

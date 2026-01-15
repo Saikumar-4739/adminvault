@@ -183,4 +183,36 @@ export class EmailInfoService {
             return false;
         }
     }
+
+    async sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
+        const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+        const mailOptions = {
+            from: `"AdminVault Security" <no-reply@adminvault.com>`,
+            to: email,
+            subject: `[Password Reset] Reset your AdminVault password`,
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #4f46e5;">Password Reset Request</h2>
+                    <p>We received a request to reset your password for your AdminVault account.</p>
+                    <p>Click the button below to reset it. This link is valid for <strong>1 hour</strong>.</p>
+                    <div style="margin: 30px 0;">
+                        <a href="${resetLink}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset Password</a>
+                    </div>
+                    <p>If you did not request this, please ignore this email or contact support if you have concerns.</p>
+                    <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
+                    <p style="font-size: 12px; color: #6b7280;">If the button doesn't work, copy and paste this URL into your browser:</p>
+                    <p style="font-size: 12px; color: #4f46e5;">${resetLink}</p>
+                </div>
+            `,
+        };
+
+        try {
+            const info = await this.transporter.sendMail(mailOptions);
+            this.logger.log(`Reset email sent to ${email}: ${info.messageId}`);
+            return true;
+        } catch (error) {
+            this.logger.error(`Error sending reset email to ${email}`, error);
+            return false;
+        }
+    }
 }

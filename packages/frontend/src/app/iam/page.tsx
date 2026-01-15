@@ -1,47 +1,61 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRoleEnum, RoleResponseModel, SSOProvider } from '@adminvault/shared-models';
 import Button from '@/components/ui/Button';
 import {
-    Search,
     CheckSquare,
     Square,
-    Mail,
-    Copy,
     Lock,
     Unlock,
     Key,
-    UserPlus,
-    CreditCard,
-    ChevronRight,
-    ExternalLink,
     Edit,
     Plus,
     Shield,
-    Trash2
+    Trash2,
+    CheckCircle2,
+    Copy,
+    CreditCard,
+    Layers,
+    Cpu,
+    Database,
+    Network,
+    Globe,
+    Layout,
+    Menu as MenuIcon,
+    Search,
+    ChevronRight,
+    ArrowRight,
+    Eye,
+    EyeOff,
+    Terminal,
+    Fingerprint,
+    Boxes,
+    KeyRound
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
 import { useIAM } from './hooks/useIAM';
+import PageHeader from '@/components/ui/PageHeader';
+
+type IAMTab = 'registry' | 'architecture' | 'dimensions' | 'protocols' | 'domains' | 'gateways';
 
 export default function IAMPage() {
-    const { error: toastError } = useToast();
-
-    // Auth context
+    const { error: toastError, success } = useToast();
     const { user } = useAuth();
     const companyId = user?.companyId;
 
-    // Custom Hook
     const {
         users,
         allEmployees,
         roles,
         permissions,
         ssoProviders,
+        allMenusTree,
+        scopes,
         loading,
         createRole,
         updateRole,
@@ -50,872 +64,712 @@ export default function IAMPage() {
         updateSSOProvider,
         deleteSSOProvider,
         assignRoles,
-        activateAccount
+        activateAccount,
+        createMenu,
+        updateMenu,
+        deleteMenu,
+        createScope,
+        updateScope,
+        deleteScope,
+        createPermission,
+        updatePermission,
+        deletePermission,
+        refresh
     } = useIAM(Number(companyId));
 
-    const [activeTab, setActiveTabState] = useState<'users' | 'sso' | 'roles' | 'register'>('users');
+    const [activeTab, setActiveTab] = useState<IAMTab>('registry');
+
+    useEffect(() => {
+        refresh();
+    }, [activeTab, refresh]);
+
     const [searchQuery, setSearchQuery] = useState('');
 
     // Modal states
     const [isSSOModalOpen, setIsSSOModalOpen] = useState(false);
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
+    const [isScopeModalOpen, setIsScopeModalOpen] = useState(false);
+    const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+    const [isProvisionModalOpen, setIsProvisionModalOpen] = useState(false);
 
     // Edit states
     const [editingSSO, setEditingSSO] = useState<SSOProvider | null>(null);
     const [editingRole, setEditingRole] = useState<RoleResponseModel | null>(null);
-    const [editingUser, setEditingUser] = useState<any | null>(null);
+    const [editingMenu, setEditingMenu] = useState<any | null>(null);
+    const [editingScope, setEditingScope] = useState<any | null>(null);
+    const [editingPermission, setEditingPermission] = useState<any | null>(null);
+    const [provisioningUser, setProvisioningUser] = useState<any | null>(null);
 
     // Form states
-    const [ssoFormData, setSSOFormData] = useState<any>({
-        name: '',
-        type: '',
-        clientId: '',
-        clientSecret: '',
-        issuerUrl: '',
-        authorizationUrl: '',
-        tokenUrl: '',
-        userInfoUrl: '',
-    });
+    const [ssoFormData, setSSOFormData] = useState<any>({ name: '', type: 'OIDC', clientId: '', clientSecret: '', issuerUrl: '', authorizationUrl: '', tokenUrl: '', userInfoUrl: '' });
+    const [roleFormData, setRoleFormData] = useState<any>({ name: '', code: '', description: '', permissionIds: [], userRole: UserRoleEnum.USER });
+    const [menuFormData, setMenuFormData] = useState<any>({ label: '', code: '', parentId: null, path: '', icon: 'Circle', sortOrder: 0, requiredPermissionCode: '' });
+    const [scopeFormData, setScopeFormData] = useState<any>({ name: '', code: '', description: '' });
+    const [permissionFormData, setPermissionFormData] = useState<any>({ name: '', code: '', description: '', resource: '', action: 'READ' });
+    const [provisionFormData, setProvisionFormData] = useState<any>({ roleIds: [], authType: 'LOCAL', password: '' });
 
-    const [roleFormData, setRoleFormData] = useState<{
-        name: string;
-        code: string;
-        description: string;
-        permissionIds: number[];
-    }>({
-        name: '',
-        code: '',
-        description: '',
-        permissionIds: [],
-    });
-
-    const [grantFormData, setGrantFormData] = useState<{ userId: string, roleIds: number[], authType: string, password?: string }>({
-        userId: '',
-        roleIds: [],
-        authType: 'LOCAL',
-        password: ''
-    });
-
-    // Filtering users
+    // Filtered data
     const filteredUsers = useMemo(() => {
-        if (!searchQuery) return users;
-        return users.filter(u =>
-            u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            u.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        const query = searchQuery.toLowerCase();
+        return users.filter(u => u.email.toLowerCase().includes(query) || (u.firstName + ' ' + u.lastName).toLowerCase().includes(query));
     }, [users, searchQuery]);
 
-    // Helpers
-    const getRoleBadgeColor = useCallback((role: string) => {
-        const r = role.toLowerCase();
-        if (r.includes('admin')) return 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800';
-        if (r.includes('manager')) return 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800';
-        return 'bg-slate-50 text-slate-700 border-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700';
-    }, []);
-
-    const getProviderTypeBadge = useCallback((type: string) => {
-        const colors: Record<string, string> = {
-            'SAML': 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800',
-            'OAuth': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
-            'OIDC': 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:border-violet-800',
-            'SSO': 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-800',
-        };
-        return (
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${colors[type] || colors['OIDC']}`}>
-                {type}
-            </span>
-        );
-    }, []);
-
-    const getInitials = useCallback((firstName?: string, lastName?: string) => {
-        return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
-    }, []);
+    const filteredRoles = useMemo(() => {
+        const query = searchQuery.toLowerCase();
+        return roles.filter(r => r.name.toLowerCase().includes(query) || r.code.toLowerCase().includes(query));
+    }, [roles, searchQuery]);
 
     // Handlers
-    const handleSSOSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const sanitize = (val: string) => val && val.trim() !== '' ? val.trim() : undefined;
-
-        const data = {
-            name: ssoFormData.name,
-            type: ssoFormData.type,
-            clientId: ssoFormData.clientId,
-            clientSecret: ssoFormData.clientSecret, // Required by DB schema usually, keeps as is
-            issuerUrl: sanitize(ssoFormData.issuerUrl),
-            authorizationUrl: sanitize(ssoFormData.authorizationUrl),
-            tokenUrl: sanitize(ssoFormData.tokenUrl),
-            userInfoUrl: sanitize(ssoFormData.userInfoUrl),
-            companyId: companyId || 0,
-            isActive: true,
-        };
-
-        let result;
-        if (editingSSO) {
-            result = await updateSSOProvider({ ...data, id: editingSSO.id });
-        } else {
-            result = await createSSOProvider(data);
-        }
-
-        if (result) {
-            setIsSSOModalOpen(false);
-            setSSOFormData({ name: '', type: '', clientId: '', clientSecret: '', issuerUrl: '', authorizationUrl: '', tokenUrl: '', userInfoUrl: '' });
-            setEditingSSO(null);
-        }
-    };
-
-    const handleEditSSO = (provider: SSOProvider) => {
-        setEditingSSO(provider);
-        setSSOFormData({
-            name: provider.name,
-            type: provider.type,
-            clientId: provider.clientId,
-            clientSecret: provider.clientSecret || '',
-            issuerUrl: provider.issuerUrl || '',
-            authorizationUrl: provider.authorizationUrl || '',
-            tokenUrl: provider.tokenUrl || '',
-            userInfoUrl: provider.userInfoUrl || '',
-        });
-        setIsSSOModalOpen(true);
-    };
-
-    const handleDeleteSSO = async (provider: SSOProvider) => {
-        if (confirm(`Delete SSO provider ${provider.name}?`)) {
-            await deleteSSOProvider(provider.id);
-        }
-    };
-
     const handleRoleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const data = {
-            ...roleFormData,
-            companyId: companyId || 0,
-            isActive: true,
-            isSystemRole: false,
-        };
-
-        let result;
-        if (editingRole) {
-            result = await updateRole({ ...data, id: editingRole.id });
-        } else {
-            result = await createRole(data);
-        }
-
-        if (result) {
-            setIsRoleModalOpen(false);
-            setRoleFormData({ name: '', code: '', description: '', permissionIds: [] });
-            setEditingRole(null);
-        }
+        const success = editingRole
+            ? await updateRole({ id: Number(editingRole.id), ...roleFormData })
+            : await createRole({ ...roleFormData, companyId: Number(companyId) });
+        if (success) setIsRoleModalOpen(false);
     };
 
-    const handleEditRole = (role: RoleResponseModel) => {
-        setEditingRole(role);
-        setRoleFormData({
-            name: role.name,
-            code: role.code,
-            description: role.description || '',
-            permissionIds: role.permissions ? role.permissions.map(p => Number(p.id)) : [],
-        });
-        setIsRoleModalOpen(true);
-    };
-
-    const handleDeleteRole = async (role: RoleResponseModel) => {
-        if (role.isSystemRole) {
-            toastError('Error', 'System roles cannot be deleted');
-            return;
-        }
-        if (confirm(`Delete role ${role.name}?`)) {
-            await deleteRole(role.id);
-        }
-    };
-
-    const togglePermission = (permId: number) => {
-        setRoleFormData(prev => {
-            if (prev.permissionIds.includes(permId)) {
-                return { ...prev, permissionIds: prev.permissionIds.filter(id => id !== permId) };
-            } else {
-                return { ...prev, permissionIds: [...prev.permissionIds, permId] };
-            }
-        });
-    };
-
-    const handleGrantAccessSubmit = async (e: React.FormEvent) => {
+    const handleMenuSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!grantFormData.userId || grantFormData.roleIds.length === 0) {
-            toastError("Error", "Please select a user and at least one role");
-            return;
-        }
-
-        let targetValue = grantFormData.userId;
-        let success = false;
-
-        // Handle selection from allEmployees/users
-        if (targetValue.startsWith('EMP:')) {
-            const employeeId = Number(targetValue.split(':')[1]);
-            // Find existing user if any
-            const existingPrincipal = users.find(u => Number(u.id) === employeeId);
-
-            if (existingPrincipal && existingPrincipal.userId) {
-                // Already has a user account
-                success = await assignRoles({
-                    userId: Number(existingPrincipal.userId),
-                    roleIds: grantFormData.roleIds,
-                    companyId: companyId || 0
-                });
-            } else {
-                // New user - activate account
-                success = await activateAccount({
-                    employeeId: employeeId,
-                    roles: grantFormData.roleIds,
-                    companyId: companyId || 0,
-                    authType: grantFormData.authType,
-                    password: grantFormData.password || undefined
-                });
-            }
-        } else if (targetValue) {
-            // Probably a raw user ID (fallback)
-            success = await assignRoles({
-                userId: Number(targetValue),
-                roleIds: grantFormData.roleIds,
-                companyId: companyId || 0
-            });
-        }
-
-        if (success) {
-            setGrantFormData({ userId: '', roleIds: [], authType: 'LOCAL', password: '' });
-            setEditingUser(null);
-            setActiveTabState('users');
-        }
+        const success = editingMenu ? await updateMenu({ id: editingMenu.id, ...menuFormData }) : await createMenu(menuFormData);
+        if (success) setIsMenuModalOpen(false);
     };
 
-    const handleEditUser = (user: any) => {
-        if (!user.userId) {
-            toastError("Cannot edit", "This employee has no user account.");
-            return;
-        }
-        setEditingUser(user);
+    const handleScopeSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const success = editingScope ? await updateScope({ id: editingScope.id, ...scopeFormData }) : await createScope(scopeFormData);
+        if (success) setIsScopeModalOpen(false);
+    };
 
-        let currentRoleIds: number[] = user.roleIds ? user.roleIds.map((id: number) => Number(id)) : [];
-        if (currentRoleIds.length === 0 && user.role) {
-            const matchedRole = roles.find(r => r.code === user.role || r.name === user.role);
-            if (matchedRole) currentRoleIds.push(Number(matchedRole.id));
-        }
+    const handlePermissionSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const success = editingPermission ? await updatePermission({ id: editingPermission.id, ...permissionFormData }) : await createPermission(permissionFormData);
+        if (success) setIsPermissionModalOpen(false);
+    };
 
-        setGrantFormData({
-            userId: String(user.userId),
-            roleIds: currentRoleIds,
-            authType: user.authType || 'LOCAL'
+    const handleSSOSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const success = editingSSO ? await updateSSOProvider({ id: editingSSO.id, ...ssoFormData }) : await createSSOProvider({ ...ssoFormData, companyId: Number(companyId) });
+        if (success) setIsSSOModalOpen(false);
+    };
+
+    const handleProvisionSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!provisioningUser) return;
+        const res = await activateAccount({
+            employeeId: provisioningUser.id,
+            roles: provisionFormData.roleIds,
+            companyId: Number(companyId),
+            authType: provisionFormData.authType,
+            password: provisionFormData.password
         });
-        setActiveTabState('register');
+        if (res) setIsProvisionModalOpen(false);
     };
 
-    const toggleGrantRole = (roleId: number) => {
-        setGrantFormData(prev => {
-            if (prev.roleIds.includes(roleId)) {
-                return { ...prev, roleIds: prev.roleIds.filter(id => id !== roleId) };
-            } else {
-                return { ...prev, roleIds: [...prev.roleIds, roleId] };
-            }
-        });
+    const togglePermission = (id: number) => {
+        setRoleFormData((prev: any) => ({
+            ...prev,
+            permissionIds: prev.permissionIds.includes(id)
+                ? prev.permissionIds.filter((pid: number) => pid !== id)
+                : [...prev.permissionIds, id]
+        }));
     };
 
-    const pageContent = (
-        <>
-            <div className="p-4 lg:p-6 space-y-6 max-w-[1920px] mx-auto min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/20 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950/20">
-                {/* Header Actions */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-                            <Shield className="h-6 w-6 text-white" />
+    const toggleMenu = (id: number) => {
+        setRoleFormData((prev: any) => ({
+            ...prev,
+            menuIds: prev.menuIds.includes(id)
+                ? prev.menuIds.filter((mid: number) => mid !== id)
+                : [...prev.menuIds, id]
+        }));
+    };
+
+    // Flatten menus for selection
+    const flatMenus = useMemo(() => {
+        const flatten = (items: any[]): any[] => {
+            return items.reduce((acc, item) => {
+                return [...acc, item, ...(item.children ? flatten(item.children) : [])];
+            }, []);
+        };
+        return flatten(allMenusTree);
+    }, [allMenusTree]);
+
+    return (
+        <RouteGuard>
+            <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] p-6 lg:p-10">
+                <PageHeader
+                    title="Security Nexus"
+                    description="Advanced Identity & Access Management Control Center"
+                />
+
+                {/* Cyber-styled Tab Bar */}
+                <div className="flex flex-wrap gap-2 mb-8 p-1.5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-slate-800 w-fit max-w-full overflow-x-auto shadow-sm">
+                    {[
+                        { id: 'registry', label: 'Registry', icon: Fingerprint, color: 'indigo' },
+                        { id: 'architecture', label: 'Architecture', icon: Layers, color: 'blue' },
+                        { id: 'dimensions', label: 'Dimensions', icon: Boxes, color: 'cyan' },
+                        { id: 'protocols', label: 'Protocols', icon: Cpu, color: 'violet' },
+                        { id: 'domains', label: 'Domains', icon: Globe, color: 'emerald' },
+                        { id: 'gateways', label: 'Gateways', icon: Network, color: 'amber' },
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as IAMTab)}
+                            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-[11px] uppercase tracking-wider ${activeTab === tab.id
+                                ? `bg-gradient-to-br from-${tab.color}-600 to-${tab.color}-700 text-white shadow-lg shadow-${tab.color}-100 dark:shadow-none`
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                }`}
+                        >
+                            <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'animate-pulse' : ''}`} />
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Primary Content Area */}
+                <div className="space-y-6">
+                    {/* Universal Search Container */}
+                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                        <div className="relative w-full max-w-md">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search the Nexus..."
+                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                            />
                         </div>
-                        <div>
-                            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">IAM & Admin</h1>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage access control and permissions for your organization</p>
+
+                        <div className="flex gap-2">
+                            {activeTab === 'architecture' && (
+                                <Button variant="primary" onClick={() => { setEditingMenu(null); setMenuFormData({ label: '', code: '', parentId: null, path: '', icon: 'Circle', sortOrder: 0, requiredPermissionCode: '' }); setIsMenuModalOpen(true); }} className="rounded-xl px-6 bg-indigo-600 shadow-indigo-100 dark:shadow-none">
+                                    <Plus className="h-4 w-4 mr-2" /> NEW MENU
+                                </Button>
+                            )}
+                            {activeTab === 'dimensions' && (
+                                <Button variant="primary" onClick={() => { setEditingRole(null); setRoleFormData({ name: '', code: '', description: '', permissionIds: [], userRole: UserRoleEnum.USER }); setIsRoleModalOpen(true); }} className="rounded-xl px-6 bg-indigo-600 shadow-indigo-100 dark:shadow-none">
+                                    <Plus className="h-4 w-4 mr-2" /> NEW DIMENSION
+                                </Button>
+                            )}
+                            {activeTab === 'protocols' && (
+                                <Button variant="primary" onClick={() => { setEditingPermission(null); setPermissionFormData({ name: '', code: '', description: '', resource: '', action: 'READ' }); setIsPermissionModalOpen(true); }} className="rounded-xl px-6 bg-indigo-600 shadow-indigo-100 dark:shadow-none">
+                                    <Plus className="h-4 w-4 mr-2" /> NEW PROTOCOL
+                                </Button>
+                            )}
+                            {activeTab === 'domains' && (
+                                <Button variant="primary" onClick={() => { setEditingScope(null); setScopeFormData({ name: '', code: '', description: '' }); setIsScopeModalOpen(true); }} className="rounded-xl px-6 bg-indigo-600 shadow-indigo-100 dark:shadow-none">
+                                    <Plus className="h-4 w-4 mr-2" /> NEW DOMAIN
+                                </Button>
+                            )}
                         </div>
+                    </div>
+
+                    {/* Dynamic View Injection */}
+                    <div className="grid grid-cols-1 gap-6">
+                        {activeTab === 'registry' && <RegistryView users={filteredUsers} employees={allEmployees} onProvision={(u) => { setProvisioningUser(u); setProvisionFormData({ roleIds: [], authType: 'LOCAL', password: '' }); setIsProvisionModalOpen(true); }} onEdit={(u) => { setEditingUser(u); }} />}
+                        {activeTab === 'architecture' && <ArchitectureView menus={allMenusTree} onEdit={(m) => { setEditingMenu(m); setMenuFormData(m); setIsMenuModalOpen(true); }} />}
+                        {activeTab === 'dimensions' && <DimensionsView roles={filteredRoles} onEdit={(r) => { setEditingRole(r); setRoleFormData({ ...r, permissionIds: r.permissions?.map((p: any) => p.id) || [] }); setIsRoleModalOpen(true); }} onDelete={deleteRole} />}
+                        {activeTab === 'protocols' && <ProtocolsView permissions={permissions} onEdit={(p) => { setEditingPermission(p); setPermissionFormData(p); setIsPermissionModalOpen(true); }} onDelete={deletePermission} />}
+                        {activeTab === 'domains' && <DomainsView scopes={scopes} onEdit={(s) => { setEditingScope(s); setScopeFormData(s); setIsScopeModalOpen(true); }} onDelete={deleteScope} />}
+                        {activeTab === 'gateways' && <GatewaysView providers={ssoProviders} onEdit={(p) => { setEditingSSO(p); setSSOFormData(p); setIsSSOModalOpen(true); }} onDelete={deleteSSOProvider} onNew={() => { setEditingSSO(null); setSSOFormData({ name: '', type: 'OIDC', clientId: '', clientSecret: '', issuerUrl: '', authorizationUrl: '', tokenUrl: '', userInfoUrl: '' }); setIsSSOModalOpen(true); }} />}
                     </div>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 min-h-[600px] overflow-hidden">
-                    {/* Toolbar */}
-                    <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between gap-4 items-center">
-                        <div className="flex items-center gap-4 w-full sm:w-auto">
-                            <div className="flex bg-slate-100 dark:bg-slate-900 rounded-md p-1">
-                                <button
-                                    onClick={() => setActiveTabState('users')}
-                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'users' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                >
-                                    Principals
-                                </button>
-                                <button
-                                    onClick={() => setActiveTabState('roles')}
-                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'roles' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                >
-                                    Roles
-                                </button>
-                                <button
-                                    onClick={() => setActiveTabState('sso')}
-                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'sso' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                >
-                                    SSO
-                                </button>
-                                <button
-                                    onClick={() => setActiveTabState('register')}
-                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'register' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                >
-                                    Provisioning
-                                </button>
-                            </div>
+                {/* --- MODALS --- */}
+
+                {/* 1. Dimension Modal (Roles) */}
+                <Modal isOpen={isRoleModalOpen} onClose={() => setIsRoleModalOpen(false)} title={editingRole ? 'Modify Reality Dimension' : 'Forge New Dimension'}>
+                    <form onSubmit={handleRoleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <section className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">Designation</label>
+                                <Input value={roleFormData.name} onChange={e => setRoleFormData({ ...roleFormData, name: e.target.value })} placeholder="e.g. System Archon" required className="rounded-xl h-11" />
+                            </section>
+                            <section className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">Codename</label>
+                                <Input value={roleFormData.code} onChange={e => setRoleFormData({ ...roleFormData, code: e.target.value })} placeholder="ROLE_ARCHON" required className="rounded-xl h-11" />
+                            </section>
                         </div>
-
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <div className="relative flex-1 sm:w-64">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Filter..."
-                                    className="w-full pl-9 pr-4 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                            {activeTab === 'users' && (
-                                <Button
-                                    onClick={() => {
-                                        setEditingUser(null);
-                                        setGrantFormData({ userId: '', roleIds: [], authType: 'LOCAL', password: '' });
-                                        setActiveTabState('register');
-                                    }}
-                                    size="sm"
-                                    className="bg-indigo-600 hover:bg-slate-900 text-white rounded-xl px-5 h-10 shadow-lg shadow-indigo-100 dark:shadow-none font-bold text-xs"
-                                    leftIcon={<Plus className="h-4 w-4" />}
-                                >
-                                    Provision New
-                                </Button>
-                            )}
-                            {activeTab === 'roles' && (
-                                <Button
-                                    onClick={() => {
-                                        setEditingRole(null);
-                                        setRoleFormData({ name: '', code: '', description: '', permissionIds: [] });
-                                        setIsRoleModalOpen(true);
-                                    }}
-                                    size="sm"
-                                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 h-9 shadow-sm"
-                                    leftIcon={<Plus className="h-4 w-4" />}
-                                >
-                                    Create Role
-                                </Button>
-                            )}
-                            {activeTab === 'sso' && (
-                                <Button
-                                    onClick={() => {
-                                        setEditingSSO(null);
-                                        setSSOFormData({ name: '', type: '', clientId: '', clientSecret: '', issuerUrl: '', authorizationUrl: '', tokenUrl: '', userInfoUrl: '' });
-                                        setIsSSOModalOpen(true);
-                                    }}
-                                    size="sm"
-                                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 h-9 shadow-sm"
-                                    leftIcon={<Plus className="h-4 w-4" />}
-                                >
-                                    Add Provider
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Content Table Area */}
-                    <div className="relative">
-                        {loading && (
-                            <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 z-10 flex items-center justify-center transition-opacity">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                            </div>
-                        )}
-
-                        {activeTab === 'users' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <table className="w-full text-sm text-left text-slate-600 dark:text-slate-400">
-                                    <thead className="text-[11px] text-slate-400 uppercase bg-slate-50/50 dark:bg-slate-900/50 dark:text-slate-500 border-b border-slate-200 dark:border-slate-800">
-                                        <tr>
-                                            <th scope="col" className="px-6 py-3 font-bold tracking-wider">Principal</th>
-                                            <th scope="col" className="px-6 py-3 font-bold tracking-wider">Rights / Role</th>
-                                            <th scope="col" className="px-6 py-3 font-bold tracking-wider text-center">Contact</th>
-                                            <th scope="col" className="px-6 py-3 font-bold tracking-wider">Status</th>
-                                            <th scope="col" className="px-6 py-3 font-bold tracking-wider text-right uppercase">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {filteredUsers.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={5} className="px-6 py-20 text-center">
-                                                    <div className="flex flex-col items-center justify-center space-y-3">
-                                                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center">
-                                                            <Search className="h-8 w-8 text-slate-300" />
-                                                        </div>
-                                                        <p className="text-slate-400 font-medium tracking-tight">No principals found matching your filter</p>
-                                                        <Button variant="outline" size="sm" onClick={() => setSearchQuery('')}>Clear Filter</Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            filteredUsers.map((u) => (
-                                                <tr key={u.id} className="group bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200">
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="relative">
-                                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm font-bold shadow-sm group-hover:shadow transition-shadow">
-                                                                    {getInitials(u.firstName, u.lastName)}
-                                                                </div>
-                                                                {u.isUserActive && (
-                                                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold text-slate-900 dark:text-white text-sm tracking-tight">{u.firstName} {u.lastName}</span>
-                                                                <div className="flex items-center gap-2 group/email">
-                                                                    <span className="text-xs text-slate-500 font-medium truncate max-w-[200px]">{u.email}</span>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            navigator.clipboard.writeText(u.email);
-                                                                        }}
-                                                                        className="opacity-0 group-hover/email:opacity-100 p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-all"
-                                                                        title="Copy Email"
-                                                                    >
-                                                                        <Copy className="h-3 w-3 text-slate-400" />
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-tight border self-start ${getRoleBadgeColor(u.role || '')}`}>
-                                                                {u.role || 'Unassigned'}
-                                                            </span>
-                                                            {u.authType === 'SSO' && (
-                                                                <div className="flex items-center gap-1">
-                                                                    <Unlock className="h-3 w-3 text-sky-500" />
-                                                                    <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-widest">
-                                                                        {u.ssoProviderName || 'SSO AUTH'}
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <div className="flex flex-col items-center">
-                                                            <span className="text-xs font-mono text-slate-500 flex items-center gap-1.5 ring-1 ring-slate-200 dark:ring-slate-700 px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 font-bold">
-                                                                {u.phNumber || '---'}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        {u.isUserActive ? (
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">ACTIVE</span>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
-                                                                <span className="text-xs font-bold text-slate-400">INACTIVE</span>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button
-                                                                onClick={() => handleEditUser(u)}
-                                                                className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800 transition-all uppercase tracking-widest"
-                                                            >
-                                                                <Edit className="h-3.5 w-3.5" /> Manage
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-
-                        {activeTab === 'roles' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-slate-50/30 dark:bg-slate-900/10">
-                                {roles.map((role) => (
-                                    <div key={role.id} className="group relative bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
-                                        <div className="p-5">
-                                            <div className="flex items-start justify-between mb-4">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 shadow-sm">
-                                                        <Shield className="h-5 w-5" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-black text-slate-900 dark:text-white tracking-tight leading-none text-sm">{role.name}</h3>
-                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 inline-block">{role.code}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-1">
-                                                    {!role.isSystemRole && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleEditRole(role)}
-                                                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors"
-                                                            >
-                                                                <Edit className="h-3.5 w-3.5" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteRole(role)}
-                                                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-rose-600 transition-colors"
-                                                            >
-                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-4 line-clamp-2 h-8 font-medium">
-                                                {role.description || "No description provided."}
-                                            </p>
-
-                                            <div className="pt-4 border-t border-slate-50 dark:border-slate-700/50 flex items-center justify-between">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Key className="h-3 w-3 text-slate-300" />
-                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                                        {role.permissions?.length || 0} Rights
-                                                    </span>
-                                                </div>
-                                                {role.isSystemRole && (
-                                                    <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 text-[8px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700">
-                                                        System
-                                                    </span>
-                                                )}
-                                            </div>
+                        <section className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-slate-400">Role Taxonomy</label>
+                            <select
+                                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold outline-none ring-indigo-500 focus:ring-1"
+                                value={roleFormData.userRole}
+                                onChange={e => setRoleFormData({ ...roleFormData, userRole: e.target.value })}
+                            >
+                                {Object.values(UserRoleEnum).map(r => <option key={r} value={r}>{r}</option>)}
+                            </select>
+                        </section>
+                        <section className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-slate-400">Protocol Binding (Permissions)</label>
+                            <div className="grid grid-cols-2 gap-2 max-h-[250px] overflow-y-auto p-2 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 custom-scrollbar">
+                                {permissions.map(p => (
+                                    <div
+                                        key={p.id}
+                                        onClick={() => togglePermission(Number(p.id))}
+                                        className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${roleFormData.permissionIds.includes(Number(p.id))
+                                            ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400'
+                                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400'
+                                            }`}
+                                    >
+                                        <div className={`p-1 rounded-md ${roleFormData.permissionIds.includes(Number(p.id)) ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                            <Shield className="h-3 w-3" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold uppercase truncate max-w-[120px]">{p.name}</span>
+                                            <span className="text-[8px] font-black tracking-tighter opacity-50">{p.resource}:{p.action}</span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        )}
-
-                        {activeTab === 'sso' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
-                                {ssoProviders.map((provider) => (
-                                    <div key={provider.id} className="group flex flex-col sm:flex-row gap-5 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow shadow-blue-500/20 shrink-0">
-                                            <Unlock className="h-5 w-5" />
-                                        </div>
-                                        <div className="flex-1 space-y-3">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">{provider.name}</h3>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        {getProviderTypeBadge(provider.type)}
-                                                        <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Active</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-1">
-                                                    <button onClick={() => handleEditSSO(provider)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors">
-                                                        <Edit className="h-3.5 w-3.5" />
-                                                    </button>
-                                                    <button onClick={() => handleDeleteSSO(provider)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-rose-600 transition-colors">
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div className="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 truncate text-[10px] font-mono text-slate-400">
-                                                ID: {provider.clientId}
-                                            </div>
+                        </section>
+                        <section className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-slate-400">Hub Subscription (Menus)</label>
+                            <div className="grid grid-cols-2 gap-2 max-h-[150px] overflow-y-auto p-2 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 custom-scrollbar">
+                                {flatMenus.map(m => (
+                                    <div
+                                        key={m.id}
+                                        onClick={() => toggleMenu(Number(m.id))}
+                                        className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${roleFormData.menuIds.includes(Number(m.id))
+                                            ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400'
+                                            }`}
+                                    >
+                                        <MenuIcon className={`h-3 w-3 ${roleFormData.menuIds.includes(Number(m.id)) ? 'text-blue-600' : 'text-slate-400'}`} />
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold uppercase truncate max-w-[120px]">{m.label}</span>
                                         </div>
                                     </div>
                                 ))}
-                                {ssoProviders.length === 0 && (
-                                    <div className="lg:col-span-2 flex flex-col items-center justify-center py-20 bg-slate-50/50 dark:bg-slate-900/30 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                        <div className="w-14 h-14 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-200 mb-4">
-                                            <CreditCard className="h-7 w-7" />
-                                        </div>
-                                        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No SSO Providers</h3>
-                                        <p className="text-xs text-slate-500 text-center max-w-xs mb-6">Connect external identity systems like Azure AD or Okta.</p>
-                                        <Button onClick={() => setIsSSOModalOpen(true)} variant="primary" size="sm">Add Provider</Button>
-                                    </div>
-                                )}
+                            </div>
+                        </section>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button variant="outline" onClick={() => setIsRoleModalOpen(false)} className="rounded-xl px-6 h-11 text-[10px] font-black uppercase tracking-widest" type="button">Abuse</Button>
+                            <Button variant="primary" type="submit" className="rounded-xl px-10 h-11 bg-indigo-600 font-black text-[10px] uppercase tracking-widest">Commit Changes</Button>
+                        </div>
+                    </form>
+                </Modal>
+
+                {/* 2. Menu Modal */}
+                <Modal isOpen={isMenuModalOpen} onClose={() => setIsMenuModalOpen(false)} title={editingMenu ? 'Optimize Navigation Hub' : 'Construct New Hub'}>
+                    <form onSubmit={handleMenuSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <section className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">Menu Label</label>
+                                <Input value={menuFormData.label} onChange={e => setMenuFormData({ ...menuFormData, label: e.target.value })} placeholder="e.g. Dashboard" required className="rounded-xl" />
+                            </section>
+                            <section className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">System Code</label>
+                                <Input value={menuFormData.code} onChange={e => setMenuFormData({ ...menuFormData, code: e.target.value })} placeholder="MENU_DASHBOARD" required className="rounded-xl" />
+                            </section>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <section className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">Path Endpoint</label>
+                                <Input value={menuFormData.path} onChange={e => setMenuFormData({ ...menuFormData, path: e.target.value })} placeholder="/dashboard" className="rounded-xl" />
+                            </section>
+                            <section className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">Parent Link (Submenu)</label>
+                                <select
+                                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold outline-none"
+                                    value={menuFormData.parentId || ''}
+                                    onChange={e => setMenuFormData({ ...menuFormData, parentId: e.target.value ? Number(e.target.value) : null })}
+                                >
+                                    <option value="">No Parent (Root)</option>
+                                    {roles.length > 0 && <optgroup label="Root Menus">
+                                        {/* Mocking root menus for selection, normally would fetch all menus list */}
+                                    </optgroup>}
+                                </select>
+                            </section>
+                        </div>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button variant="primary" type="submit" className="rounded-xl px-10 h-11 bg-indigo-600 font-black text-[10px] uppercase tracking-widest">Publish Hub</Button>
+                        </div>
+                    </form>
+                </Modal>
+
+                {/* 3. Gateways Modal (SSO) */}
+                <Modal isOpen={isSSOModalOpen} onClose={() => setIsSSOModalOpen(false)} title={editingSSO ? 'Reconfigure Gateway' : 'Establish SSO Gateway'}>
+                    <form onSubmit={handleSSOSubmit} className="space-y-4">
+                        <section className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-slate-400">Provider Name</label>
+                            <Input value={ssoFormData.name} onChange={e => setSSOFormData({ ...ssoFormData, name: e.target.value })} placeholder="Google Workplace" required className="rounded-xl" />
+                        </section>
+                        <div className="grid grid-cols-2 gap-4">
+                            <section className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">Identity Protocol</label>
+                                <select className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold outline-none ring-indigo-500 focus:ring-1" value={ssoFormData.type} onChange={e => setSSOFormData({ ...ssoFormData, type: e.target.value })}>
+                                    <option value="OIDC">OpenID Connect</option>
+                                    <option value="SAML">SAML 2.0</option>
+                                    <option value="OAuth2">OAuth 2.0</option>
+                                </select>
+                            </section>
+                            <section className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">Agent Identifier (Client ID)</label>
+                                <Input value={ssoFormData.clientId} onChange={e => setSSOFormData({ ...ssoFormData, clientId: e.target.value })} placeholder="XXXX-XXXX-XXXX" required className="rounded-xl" />
+                            </section>
+                        </div>
+                        <section className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-slate-400">Secret Artifact (Client Secret)</label>
+                            <Input value={ssoFormData.clientSecret} type="password" onChange={e => setSSOFormData({ ...ssoFormData, clientSecret: e.target.value })} placeholder="••••••••••••" className="rounded-xl" />
+                        </section>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button variant="primary" type="submit" className="rounded-xl px-10 h-11 bg-indigo-600 font-black text-[10px] uppercase tracking-widest">Activate Gateway</Button>
+                        </div>
+                    </form>
+                </Modal>
+
+                {/* 4. Provisioning Modal */}
+                <Modal isOpen={isProvisionModalOpen} onClose={() => setIsProvisionModalOpen(false)} title="Empower Principal">
+                    <form onSubmit={handleProvisionSubmit} className="space-y-4">
+                        {provisioningUser && (
+                            <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/40 flex items-center gap-4 mb-2">
+                                <div className="h-12 w-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg">
+                                    {provisioningUser.firstName?.[0]}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-black dark:text-slate-100">{provisioningUser.firstName} {provisioningUser.lastName}</span>
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{provisioningUser.email}</span>
+                                </div>
                             </div>
                         )}
+                        <section className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Assign Dimension (Roles)</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {roles.map(r => (
+                                    <button
+                                        key={r.id}
+                                        type="button"
+                                        onClick={() => {
+                                            const id = Number(r.id);
+                                            setProvisionFormData(prev => ({
+                                                ...prev,
+                                                roleIds: prev.roleIds.includes(id) ? prev.roleIds.filter(x => x !== id) : [...prev.roleIds, id]
+                                            }));
+                                        }}
+                                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${provisionFormData.roleIds.includes(Number(r.id))
+                                            ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 shadow-md'
+                                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600'
+                                            }`}
+                                    >
+                                        <div className={`h-2 w-2 rounded-full ${provisionFormData.roleIds.includes(Number(r.id)) ? 'bg-indigo-600 animate-ping' : 'bg-slate-300 dark:bg-slate-700'}`} />
+                                        <span className="text-[10px] font-black uppercase tracking-tight">{r.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+                        <div className="grid grid-cols-2 gap-4">
+                            <section className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">Auth Method</label>
+                                <select className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold outline-none" value={provisionFormData.authType} onChange={e => setProvisionFormData({ ...provisionFormData, authType: e.target.value })}>
+                                    <option value="LOCAL">Secure Ledger (Local)</option>
+                                    <option value="SSO">External Gateway (SSO)</option>
+                                </select>
+                            </section>
+                            {provisionFormData.authType === 'LOCAL' && (
+                                <section className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase text-slate-400">Master Key (Password)</label>
+                                    <Input type="password" placeholder="••••••••" value={provisionFormData.password} onChange={e => setProvisionFormData({ ...provisionFormData, password: e.target.value })} className="rounded-xl h-11" />
+                                </section>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button variant="primary" type="submit" className="rounded-xl px-12 h-11 bg-indigo-600 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100 dark:shadow-none">Authorize Principal</Button>
+                        </div>
+                    </form>
+                </Modal>
+            </div>
+        </RouteGuard>
+    );
+}
 
-                        {activeTab === 'register' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 max-w-4xl mx-auto py-12 px-6">
-                                <form onSubmit={handleGrantAccessSubmit} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                                    <div className="p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20">
-                                        <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest">
-                                            <UserPlus className="h-5 w-5 text-indigo-600" />
-                                            Identity Provisioning
-                                        </h2>
-                                        <p className="text-[11px] text-slate-500 mt-1 font-bold uppercase tracking-tight">Activate secure system access for organization members.</p>
-                                    </div>
+// --- SUB-VIEWS ---
 
-                                    <div className="p-8 space-y-8">
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Member Profile</label>
-                                            {editingUser ? (
-                                                <div className="p-4 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-xl border border-indigo-100 dark:border-indigo-900/30 flex items-center justify-between shadow-sm">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-md">
-                                                            {getInitials(editingUser.firstName, editingUser.lastName)}
-                                                        </div>
-                                                        <div>
-                                                            <div className="font-black text-sm text-slate-900 dark:text-white tracking-tight">{editingUser.firstName} {editingUser.lastName}</div>
-                                                            <div className="text-[10px] text-slate-500 font-bold flex items-center gap-1 uppercase tracking-tighter"><Mail className="h-2.5 w-2.5" /> {editingUser.email}</div>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setEditingUser(null);
-                                                            setGrantFormData({ ...grantFormData, userId: '' });
-                                                        }}
-                                                        className="text-[9px] font-black text-rose-500 uppercase tracking-[0.15em] hover:bg-rose-50 dark:hover:bg-rose-900/20 px-3 py-1.5 rounded-lg border border-rose-100 dark:border-rose-900/30 transition-all"
-                                                    >
-                                                        Clear
-                                                    </button>
+function RegistryView({ users, employees, onProvision, onEdit }: any) {
+    const sortedEmployees = [...employees].sort((a, b) => (a.empStatus === 'Terminated' ? 1 : -1));
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-4 mb-2">Enterprise Registry (Staff)</h3>
+                <div className="bg-white dark:bg-slate-900/50 backdrop-blur-3xl rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-slate-50/50 dark:bg-slate-950/50">
+                            <tr>
+                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Identity</th>
+                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Vocation</th>
+                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Nexus Status</th>
+                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {sortedEmployees.map((emp: any) => {
+                                const isUser = users.some((u: any) => u.email.toLowerCase() === emp.email.toLowerCase());
+                                return (
+                                    <tr key={emp.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200 dark:shadow-none transition-transform group-hover:scale-105">
+                                                    {emp.firstName?.[0]}
                                                 </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[13px] font-black text-slate-700 dark:text-slate-200">{emp.firstName} {emp.lastName}</span>
+                                                    <span className="text-[10px] font-bold text-slate-400">{emp.email}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400">{emp.designation || 'Specialist'}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {isUser ? (
+                                                <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase">
+                                                    <CheckCircle2 className="h-4 w-4" /> AUTHORIZED
+                                                </span>
                                             ) : (
-                                                <div className="relative">
-                                                    <select
-                                                        className="w-full px-5 py-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none cursor-pointer pr-12 font-bold group-hover:bg-slate-50 shadow-sm"
-                                                        value={grantFormData.userId}
-                                                        onChange={e => setGrantFormData({ ...grantFormData, userId: e.target.value })}
-                                                        required
-                                                    >
-                                                        <option value="">Select target employee from directory...</option>
-                                                        {allEmployees.map((u: any) => (
-                                                            <option key={u.id} value={`EMP:${u.id}`}>
-                                                                {u.firstName} {u.lastName} ({u.email})
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    <ChevronRight className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 rotate-90" />
-                                                </div>
+                                                <span className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase">
+                                                    <Lock className="h-3.5 w-3.5" /> PENDING
+                                                </span>
                                             )}
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Auth Strategy</label>
-                                                <div className="flex p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setGrantFormData({ ...grantFormData, authType: 'LOCAL' })}
-                                                        className={`flex-1 py-2.5 text-[10px] font-black rounded-lg transition-all uppercase tracking-widest ${grantFormData.authType === 'LOCAL' ? 'bg-white dark:bg-slate-700 shadow-md text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-indigo-500'}`}
-                                                    >
-                                                        Local Path
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setGrantFormData({ ...grantFormData, authType: 'SSO' })}
-                                                        className={`flex-1 py-2.5 text-[10px] font-black rounded-lg transition-all uppercase tracking-widest ${grantFormData.authType === 'SSO' ? 'bg-white dark:bg-slate-700 shadow-md text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-indigo-500'}`}
-                                                    >
-                                                        SSO Bridge
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {grantFormData.authType === 'LOCAL' && (
-                                                <div className="space-y-3">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Identity Secret</label>
-                                                    <div className="relative">
-                                                        <input
-                                                            type="password"
-                                                            placeholder="Set initial password"
-                                                            className="w-full px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm focus:ring-2 focus:ring-indigo-600 outline-none shadow-sm font-bold"
-                                                            value={grantFormData.password}
-                                                            onChange={e => setGrantFormData({ ...grantFormData, password: e.target.value })}
-                                                        />
-                                                        <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                                                    </div>
-                                                </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            {!isUser ? (
+                                                <Button onClick={() => onProvision(emp)} size="sm" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-[10px] font-black uppercase px-4 py-2 h-auto shadow-indigo-100">Establish Access</Button>
+                                            ) : (
+                                                <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 transition-colors">
+                                                    <ChevronRight className="h-5 w-5" />
+                                                </button>
                                             )}
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Privilege Allocation</label>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[250px] overflow-y-auto p-1 custom-scrollbar">
-                                                {roles.map(role => (
-                                                    <div
-                                                        key={role.id}
-                                                        onClick={() => toggleGrantRole(Number(role.id))}
-                                                        className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${grantFormData.roleIds.includes(Number(role.id))
-                                                            ? 'bg-indigo-50/50 border-indigo-400 dark:bg-indigo-900/30 dark:border-indigo-600 shadow-sm'
-                                                            : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-200'}`}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            {grantFormData.roleIds.includes(Number(role.id))
-                                                                ? <CheckSquare className="h-5 w-5 text-indigo-600" />
-                                                                : <Square className="h-5 w-5 text-slate-200" />}
-                                                            <div className="flex flex-col">
-                                                                <span className="text-xs font-black text-slate-900 dark:text-white tracking-tight uppercase">{role.name}</span>
-                                                            </div>
-                                                        </div>
-                                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter opacity-70 px-2 py-0.5 bg-slate-50 dark:bg-slate-800 rounded">{role.code}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-8 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50/20 dark:bg-slate-800/10">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => setActiveTabState('users')}
-                                            className="px-8 rounded-xl text-[10px] font-black uppercase tracking-widest h-12 shadow-sm border-slate-200 dark:border-slate-700"
-                                        >
-                                            Dismiss
-                                        </Button>
-                                        <Button
-                                            type="submit"
-                                            className="px-12 h-12 bg-indigo-600 hover:bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-xl shadow-indigo-200/50 dark:shadow-none transition-all"
-                                        >
-                                            {editingUser ? 'Sync Identity' : 'Establish Provisioning'}
-                                        </Button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
-
-                        {/* Footer Info Row */}
-                        <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-50/20">
-                            <div>Total Registry: {activeTab === 'users' ? filteredUsers.length : activeTab === 'roles' ? roles.length : activeTab === 'sso' ? ssoProviders.length : 0} Nodes</div>
-                            <div className="flex gap-2">
-                                <button className="px-3 py-1 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 opacity-50 cursor-not-allowed">Previous Page</button>
-                                <button className="px-3 py-1 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 opacity-50 cursor-not-allowed">Next Page</button>
-                            </div>
-                        </div>
-                    </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {/* SSO Modal */}
-            <Modal
-                isOpen={isSSOModalOpen}
-                onClose={() => setIsSSOModalOpen(false)}
-                title={editingSSO ? 'Sync Gateway Config' : 'Enlist Identity Provider'}
-                size="lg"
-            >
-                <form onSubmit={handleSSOSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Provider Signature" placeholder="e.g. Corporate Azure" value={ssoFormData.name} onChange={e => setSSOFormData({ ...ssoFormData, name: e.target.value })} required />
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Identity Protocol</label>
-                            <select
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all cursor-pointer appearance-none font-bold"
-                                value={ssoFormData.type}
-                                onChange={e => setSSOFormData({ ...ssoFormData, type: e.target.value })}
-                                required
-                            >
-                                <option value="">Select Handshake...</option>
-                                <option value="SAML">SAML 2.0</option>
-                                <option value="OAuth">OAuth 2.0</option>
-                                <option value="OIDC">OIDC 1.0</option>
-                            </select>
+            <div className="space-y-6">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-4 mb-2">Nexus Analytics</h3>
+                <div className="grid grid-cols-1 gap-4">
+                    <div className="p-6 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2.5rem] text-white shadow-xl shadow-indigo-100 dark:shadow-none">
+                        <Fingerprint className="h-8 w-8 mb-4 opacity-50" />
+                        <div className="text-3xl font-black mb-1">{users.length}</div>
+                        <div className="text-[10px] font-black uppercase tracking-widest opacity-80">Authorized Principals</div>
+                    </div>
+                    <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-sm">
+                        <Shield className="h-8 w-8 mb-4 text-indigo-600 opacity-50" />
+                        <div className="text-3xl font-black mb-1 text-slate-800 dark:text-slate-100">{employees.length}</div>
+                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Workforce</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ArchitectureView({ menus, onEdit }: any) {
+    return (
+        <div className="grid grid-cols-1 gap-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-4 mb-2">Platform Navigation Architecture</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {menus.map((menu: any) => (
+                    <ArchitectureCard key={menu.id} menu={menu} onEdit={onEdit} />
+                ))}
+                <button onClick={() => onEdit(null)} className="flex flex-col items-center justify-center p-8 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all text-slate-400 hover:text-indigo-600 group">
+                    <Plus className="h-10 w-10 mb-4 transition-transform group-hover:scale-110" />
+                    <span className="text-[11px] font-black uppercase tracking-widest">Architect New Hub</span>
+                </button>
+            </div>
+        </div>
+    );
+}
+
+function ArchitectureCard({ menu, onEdit }: any) {
+    return (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 shadow-sm hover:shadow-xl transition-all group">
+            <div className="flex items-center justify-between mb-6">
+                <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-3xl text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                    <Layout className="h-6 w-6" />
+                </div>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => onEdit(menu)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 transition-colors"><Edit className="h-4 w-4" /></button>
+                    <button className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>
+                </div>
+            </div>
+            <div className="mb-4">
+                <div className="text-[14px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{menu.label}</div>
+                <div className="text-[10px] font-black text-slate-400 tracking-wider">CODE: {menu.code}</div>
+            </div>
+            {menu.children?.length > 0 && (
+                <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-3">Sub-Elements ({menu.children.length})</div>
+                    {menu.children.map((child: any) => (
+                        <div key={child.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                            <ArrowRight className="h-3 w-3 text-indigo-500" />
+                            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{child.label}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+            <div className="mt-6 flex items-center justify-between">
+                <span className="text-[10px] font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500 uppercase">{menu.path || '/root'}</span>
+                <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1 rounded-full uppercase">SORT: {menu.sortOrder}</span>
+            </div>
+        </div>
+    );
+}
+
+function DimensionsView({ roles, onEdit, onDelete }: any) {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {roles.map((role: any) => (
+                <div key={role.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-7 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                        <div className="flex gap-2">
+                            <button onClick={() => onEdit(role)} className="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95">
+                                <Edit className="h-4 w-4 text-indigo-600" />
+                            </button>
+                            {!role.isSystemRole && (
+                                <button onClick={() => onDelete(Number(role.id))} className="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all active:scale-95">
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                </button>
+                            )}
                         </div>
                     </div>
+
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none">
+                            <Shield className="h-7 w-7" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-15px font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-none mb-1">{role.name}</span>
+                            <span className="text-[10px] font-black text-indigo-500 tracking-widest">{role.code}</span>
+                        </div>
+                    </div>
+
+                    <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-6 line-clamp-2 leading-relaxed h-[34px]">{role.description || 'No description provided for this security dimension.'}</p>
 
                     <div className="space-y-4">
-                        <div className="flex items-center gap-4">
-                            <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Secret Vault</span>
-                            <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
+                        <div className="flex items-center justify-between py-3 border-t border-slate-100 dark:border-slate-800">
+                            <span className="text-[10px] font-black uppercase text-slate-400">Taxonomy</span>
+                            <span className="text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1 rounded-lg">{role.userRole}</span>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input label="Identity Key (Client ID)" value={ssoFormData.clientId} onChange={e => setSSOFormData({ ...ssoFormData, clientId: e.target.value })} required />
-                            <Input label="Secret (Client Secret)" type="password" value={ssoFormData.clientSecret} onChange={e => setSSOFormData({ ...ssoFormData, clientSecret: e.target.value })} />
+                        <div className="flex items-center justify-between py-3 border-t border-slate-100 dark:border-slate-800">
+                            <span className="text-[10px] font-black uppercase text-slate-400">Permissions</span>
+                            <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">{role.permissions?.length || 0} Nodes</span>
                         </div>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-700">
-                        <Button variant="outline" onClick={() => setIsSSOModalOpen(false)} className="rounded-xl px-6 h-11 text-xs font-bold uppercase tracking-widest">Discard</Button>
-                        <Button variant="primary" type="submit" className="rounded-xl px-10 h-11 bg-indigo-600 font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-100 dark:shadow-none">
-                            {editingSSO ? 'Sync Provider' : 'Establish Link'}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
-
-            {/* Role Modal */}
-            <Modal
-                isOpen={isRoleModalOpen}
-                onClose={() => setIsRoleModalOpen(false)}
-                title={editingRole ? 'Sync Security Dimension' : 'Forge New Role Dimension'}
-                size="xl"
-            >
-                <form onSubmit={handleRoleSubmit} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="md:col-span-2 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Input label="Role Alias" placeholder="e.g., Security Lead" value={roleFormData.name} onChange={e => setRoleFormData({ ...roleFormData, name: e.target.value })} required />
-                                <Input label="Nexus Code" placeholder="SEC_LEAD" value={roleFormData.code} onChange={e => setRoleFormData({ ...roleFormData, code: e.target.value.toUpperCase() })} required />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Descriptive Intent</label>
-                                <textarea
-                                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all placeholder:text-slate-300 min-h-[100px] font-medium"
-                                    placeholder="Define the scope and operational limits of this role..."
-                                    rows={3}
-                                    value={roleFormData.description}
-                                    onChange={e => setRoleFormData({ ...roleFormData, description: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center shadow-inner">
-                            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-50 mb-4">
-                                <Shield className="h-8 w-8" />
-                            </div>
-                            <h4 className="text-sm font-black text-slate-900 dark:text-white mb-1 uppercase tracking-tight">Role Node</h4>
-                            <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase tracking-tighter opacity-70">Logical bundle of system entitlements.</p>
-                            <div className="mt-4 px-3 py-1.5 rounded-full bg-indigo-600 text-white text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-100">
-                                {roleFormData.permissionIds.length} Rights
-                            </div>
+                        <div className="flex items-center justify-between py-3 border-t border-slate-100 dark:border-slate-800">
+                            <span className="text-[10px] font-black uppercase text-slate-400">Navigation Hubs</span>
+                            <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-lg">{(role as any).menus?.length || 0} Subscriptions</span>
                         </div>
                     </div>
+                </div>
+            ))}
+        </div>
+    );
+}
 
-                    <div className="space-y-4">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Entitlement Spectrum</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[360px] overflow-y-auto p-1 custom-scrollbar">
-                            {permissions.map(perm => (
-                                <div key={perm.id}
-                                    onClick={() => togglePermission(Number(perm.id))}
-                                    className={`group cursor-pointer p-4 rounded-xl border transition-all duration-300 flex items-start gap-3 ${roleFormData.permissionIds.includes(Number(perm.id))
-                                        ? 'bg-indigo-50/50 border-indigo-400 dark:bg-indigo-900/20 shadow-sm'
-                                        : 'bg-white border-slate-100 dark:bg-slate-800 hover:border-indigo-200'
-                                        }`}>
-                                    <div className={`mt-0.5 ${roleFormData.permissionIds.includes(Number(perm.id)) ? 'text-indigo-600' : 'text-slate-200'}`}>
-                                        {roleFormData.permissionIds.includes(Number(perm.id)) ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="text-xs font-black text-slate-700 dark:text-white uppercase tracking-tight">{perm.name}</div>
-                                        <div className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter opacity-70 line-clamp-1">{perm.description}</div>
+function ProtocolsView({ permissions, onEdit, onDelete }: any) {
+    const resources = [...new Set(permissions.map((p: any) => p.resource))];
+    return (
+        <div className="space-y-8">
+            {resources.map(res => (
+                <div key={res as string} className="space-y-4">
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 ml-4">{res as string} Control Interface</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {permissions.filter((p: any) => p.resource === res).map((p: any) => (
+                            <div key={p.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all group border-l-4 border-l-indigo-500">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight truncate max-w-[120px]">{p.name}</div>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => onEdit(p)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400"><Edit className="h-3 w-3" /></button>
+                                        <button onClick={() => onDelete(Number(p.id))} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-500"><Trash2 className="h-3 w-3" /></button>
                                     </div>
                                 </div>
-                            ))}
+                                <div className="flex items-center gap-2 mb-4">
+                                    <span className="text-[9px] font-black bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 px-2.5 py-1 rounded-lg uppercase">{p.action}</span>
+                                    <span className="text-[9px] font-black text-slate-400 tracking-tighter truncate max-w-full">ID: {p.code}</span>
+                                </div>
+                                <p className="text-[10px] font-bold text-slate-400 line-clamp-1">{p.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function DomainsView({ scopes, onEdit, onDelete }: any) {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {scopes.map((scope: any) => (
+                <div key={scope.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all group overflow-hidden relative">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="h-10 w-10 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
+                            <Globe className="h-5 w-5" />
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => onEdit(scope)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400"><Edit className="h-4 w-4" /></button>
+                            <button onClick={() => onDelete(Number(scope.id))} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-red-500"><Trash2 className="h-4 w-4" /></button>
                         </div>
                     </div>
-
-                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-700">
-                        <Button variant="outline" onClick={() => setIsRoleModalOpen(false)} className="rounded-xl px-6 h-11 text-xs font-bold uppercase tracking-widest" type="button">Discard</Button>
-                        <Button variant="primary" type="submit" className="rounded-xl px-10 h-11 bg-indigo-600 font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-100 dark:shadow-none">
-                            {editingRole ? 'Sync Dimension' : 'Establish Role'}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
-        </>
+                    <div className="text-[13px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight mb-1">{scope.name}</div>
+                    <div className="text-[10px] font-black text-emerald-600 mb-4 tracking-wider">{scope.code}</div>
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{scope.description || 'Global boundary scope definition.'}</p>
+                </div>
+            ))}
+            <button onClick={() => onEdit(null)} className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-slate-400 group">
+                <Plus className="h-8 w-8 mb-2 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-black uppercase tracking-widest">New Boundary</span>
+            </button>
+        </div>
     );
+}
 
+function GatewaysView({ providers, onEdit, onDelete, onNew }: any) {
     return (
-        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
-            {pageContent}
-        </RouteGuard>
+        <div className="space-y-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-4 mb-2">Ingress Authentication Gateways</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {providers.map((p: any) => (
+                    <div key={p.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl transition-all group">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className={`h-12 w-12 rounded-2xl flex items-center justify-center text-white shadow-lg ${p.type === 'OIDC' ? 'bg-blue-600 shadow-blue-100' : 'bg-emerald-600 shadow-emerald-100'}`}>
+                                <Globe className="h-6 w-6" />
+                            </div>
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => onEdit(p)} className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 hover:text-indigo-600"><Edit className="h-4 w-4" /></button>
+                                <button onClick={() => onDelete(Number(p.id))} className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                        </div>
+                        <div className="mb-6">
+                            <div className="text-[16px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight mb-1">{p.name}</div>
+                            <div className="flex items-center gap-2">
+                                <span className={`text-[9px] font-black px-2.5 py-1 rounded-lg uppercase ${p.type === 'OIDC' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30'}`}>{p.type}</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em]">Protocol Active</span>
+                            </div>
+                        </div>
+                        <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black text-slate-400 uppercase">Agent ID</span>
+                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[120px]">{p.clientId}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black text-slate-400 uppercase">Status</span>
+                                <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-600">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" /> OPERATIONAL
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                <button onClick={onNew} className="flex flex-col items-center justify-center p-12 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all text-slate-400 hover:text-indigo-600 group">
+                    <Network className="h-12 w-12 mb-4 transition-transform group-hover:rotate-12" />
+                    <span className="text-[11px] font-black uppercase tracking-widest">Deploy New Gateway</span>
+                </button>
+            </div>
+        </div>
     );
 }

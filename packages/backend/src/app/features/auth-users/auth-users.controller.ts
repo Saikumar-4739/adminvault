@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, Get, Query, Res } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
-import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel } from '@adminvault/shared-models';
+import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel } from '@adminvault/shared-models';
 import type { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
 
@@ -104,6 +104,28 @@ export class AuthUsersController {
             return res.redirect(authUrl);
         } catch (error: any) {
             return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent(error.message)}`);
+        }
+    }
+
+    @Post('forgot-password')
+    @Public()
+    @ApiBody({ type: ForgotPasswordModel })
+    async forgotPassword(@Body() reqModel: ForgotPasswordModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.forgotPassword(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('reset-password')
+    @Public()
+    @ApiBody({ type: ResetPasswordModel })
+    async resetPassword(@Body() reqModel: ResetPasswordModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.resetPassword(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 

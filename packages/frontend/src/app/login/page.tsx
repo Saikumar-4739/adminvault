@@ -8,7 +8,7 @@ import Input from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
 import { ShieldCheck, Users, Zap, X, Lock, ArrowRight, Globe, Building2 } from 'lucide-react';
 import { authService } from '@/lib/api/services';
-import { RequestAccessModel, UserRoleEnum } from '@adminvault/shared-models';
+import { RequestAccessModel, UserRoleEnum, ForgotPasswordModel } from '@adminvault/shared-models';
 
 function LoginContent() {
     const router = useRouter();
@@ -108,11 +108,21 @@ function LoginContent() {
     const handleForgotPassword = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsResetting(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        success('Reset Link Sent', `Password reset instructions sent to ${forgotEmail}`);
-        setIsResetting(false);
-        setShowForgotModal(false);
-        setForgotEmail('');
+        try {
+            const model = new ForgotPasswordModel(forgotEmail);
+            const response = await authService.forgotPassword(model);
+            if (response.status) {
+                success('Reset Link Sent', response.message || `Password reset instructions sent to ${forgotEmail}`);
+                setShowForgotModal(false);
+                setForgotEmail('');
+            } else {
+                toastError('Reset Failed', response.message || 'Could not send reset link');
+            }
+        } catch (error: any) {
+            toastError('Reset Failed', error.message || 'An error occurred');
+        } finally {
+            setIsResetting(false);
+        }
     };
 
     // Microsoft Logo Component

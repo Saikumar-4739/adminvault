@@ -47,13 +47,13 @@ const DEFAULT_NAVIGATION = [
             { name: 'Licenses', href: '/licenses', icon: KeySquare },
         ]
     },
-    // {
-    //     title: 'Support Portal',
-    //     items: [
-    //         { name: 'My Tickets', href: '/create-ticket?tab=tickets', icon: Ticket },
-    //         { name: 'Submit Ticket', href: '/create-ticket?tab=create', icon: Plus },
-    //     ]
-    // },
+    {
+        title: 'Support Portal',
+        items: [
+            { name: 'My Tickets', href: '/create-ticket?tab=tickets', icon: Ticket },
+            { name: 'Submit Ticket', href: '/create-ticket?tab=create', icon: Plus },
+        ]
+    },
     {
         title: 'Support & Comms',
         items: [

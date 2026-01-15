@@ -44,6 +44,12 @@ export class AuthUsersEntity {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', comment: 'Record creation timestamp' })
   createdAt: Date;
 
+  @Column('varchar', { name: 'reset_token', length: 255, nullable: true, comment: 'Token for password reset' })
+  resetToken: string;
+
+  @Column('timestamp', { name: 'reset_token_expiry', nullable: true, comment: 'Expiry for reset token' })
+  resetTokenExpiry: Date;
+
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', comment: 'Record last update timestamp' })
   updatedAt: Date;
 }

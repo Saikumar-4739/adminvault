@@ -4,6 +4,7 @@ import { PasswordVaultService } from './password-vault.service';
 import { IAMService } from './iam.service';
 import { AssetOperationsService } from './asset-operations.service';
 import { EmailInfoService } from './email-info.service';
+import { SeedService } from './seed.service';
 import { LoginSessionService } from '../auth-users/login-session.service';
 import { PermissionsGuard } from '../../guards/permissions.guard';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
@@ -24,9 +25,13 @@ import {
     MFAStatusResponseModel, MFASetupResponseModel, GetAllAPIKeysResponseModel, GetAllSSOProvidersResponseModel,
     GetUserPermissionsResponseModel, CheckPermissionRequestModel, CheckPermissionResponseModel,
     GetAllPermissionsResponseModel, CreatePermissionModel, UpdatePermissionModel, DeletePermissionModel,
+    GetAllScopesResponseModel, CreateScopeModel, UpdateScopeModel, CreateMenuModel, UpdateMenuModel,
     CreateAPIKeyResponse,
     PrincipalResponseModel, MenuResponseModel, SSOProvider, PermissionModel
 } from '@adminvault/shared-models';
+
+
+
 
 @ApiTags('Administration')
 @Controller('administration')
@@ -38,8 +43,18 @@ export class AdministrationController {
         private readonly iamService: IAMService,
         private readonly assetService: AssetOperationsService,
         private readonly emailService: EmailInfoService,
-        private readonly sessionService: LoginSessionService
+        private readonly sessionService: LoginSessionService,
+        private readonly seedService: SeedService
     ) { }
+
+    @Post('seed')
+    async seedAll(): Promise<GlobalResponse> {
+        try {
+            return await this.seedService.seedAll();
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
 
     @Post('settings/get-all-user-settings')
     async getUserSettings(@Req() req: any): Promise<GetAllSettingsResponseModel> {
@@ -364,5 +379,49 @@ export class AdministrationController {
         }
     }
 
+    @Post('iam/menus/create')
+    @ApiBody({ type: CreateMenuModel })
+    async createMenu(@Body() model: CreateMenuModel): Promise<GlobalResponse> {
+        try { return await this.iamService.createMenu(model); }
+        catch (error) { return returnException(GlobalResponse, error); }
+    }
 
+    @Post('iam/menus/update')
+    @ApiBody({ type: UpdateMenuModel })
+    async updateMenu(@Body() model: UpdateMenuModel): Promise<GlobalResponse> {
+        try { return await this.iamService.updateMenu(model); }
+        catch (error) { return returnException(GlobalResponse, error); }
+    }
+
+    @Post('iam/menus/delete')
+    async deleteMenu(@Body('id') id: number): Promise<GlobalResponse> {
+        try { return await this.iamService.deleteMenu(id); }
+        catch (error) { return returnException(GlobalResponse, error); }
+    }
+
+    @Post('iam/scopes/findAll')
+    async findAllScopes(): Promise<GetAllScopesResponseModel> {
+        try { return await this.iamService.findAllScopes(); }
+        catch (error) { return returnException(GetAllScopesResponseModel, error); }
+    }
+
+    @Post('iam/scopes/create')
+    @ApiBody({ type: CreateScopeModel })
+    async createScope(@Body() model: CreateScopeModel): Promise<GlobalResponse> {
+        try { return await this.iamService.createScope(model); }
+        catch (error) { return returnException(GlobalResponse, error); }
+    }
+
+    @Post('iam/scopes/update')
+    @ApiBody({ type: UpdateScopeModel })
+    async updateScope(@Body() model: UpdateScopeModel): Promise<GlobalResponse> {
+        try { return await this.iamService.updateScope(model); }
+        catch (error) { return returnException(GlobalResponse, error); }
+    }
+
+    @Post('iam/scopes/delete')
+    async deleteScope(@Body('id') id: number): Promise<GlobalResponse> {
+        try { return await this.iamService.deleteScope(id); }
+        catch (error) { return returnException(GlobalResponse, error); }
+    }
 }

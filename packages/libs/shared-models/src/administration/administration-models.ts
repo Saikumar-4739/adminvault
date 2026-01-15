@@ -89,6 +89,8 @@ export class CreateRoleModel {
     companyId!: number;
     description?: string;
     permissionIds?: number[];
+    menuIds?: number[];
+    userRole!: string; // Mandatory mapping to system role
 }
 
 export class UpdateRoleModel {
@@ -97,6 +99,8 @@ export class UpdateRoleModel {
     code?: string;
     description?: string;
     permissionIds?: number[];
+    menuIds?: number[];
+    userRole?: string;
 }
 
 export class RoleResponseModel {
@@ -107,11 +111,13 @@ export class RoleResponseModel {
     code: string;
     isSystemRole: boolean;
     isActive: boolean;
+    userRole: string;
     createdAt: Date;
     updatedAt: Date;
     permissions: any[];
+    menuIds: number[];
 
-    constructor(id: number, name: string, companyId: number, description: string, permissions: any[], code: string, isSystemRole: boolean, isActive: boolean, createdAt: Date, updatedAt: Date) {
+    constructor(id: number, name: string, companyId: number, description: string, permissions: any[], code: string, isSystemRole: boolean, isActive: boolean, userRole: string, createdAt: Date, updatedAt: Date, menuIds: number[] = []) {
         this.id = id;
         this.name = name;
         this.companyId = companyId;
@@ -120,15 +126,17 @@ export class RoleResponseModel {
         this.code = code;
         this.isSystemRole = isSystemRole;
         this.isActive = isActive;
+        this.userRole = userRole;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.menuIds = menuIds;
     }
 }
 
 export class GetAllRolesResponseModel extends GlobalResponse {
     data: RoleResponseModel[];
     constructor(status: boolean, code: number, message: string, data: RoleResponseModel[]) {
-        super(status, code, message);
+        super(status, code, message, data);
         this.data = data;
     }
 }
@@ -289,6 +297,48 @@ export class GetAllMenusResponseModel extends GlobalResponse<MenuResponseModel[]
 
 export class MFAStatusResponseModel {
     isEnabled!: boolean;
+}
+
+// --- Menu CRU Models ---
+export class CreateMenuModel {
+    label!: string;
+    code!: string;
+    parentId?: number | null;
+    path?: string;
+    icon?: string;
+    sortOrder?: number;
+    requiredPermissionCode?: string;
+}
+
+export class UpdateMenuModel extends CreateMenuModel {
+    id!: number;
+}
+
+// --- Scope Models ---
+export class ScopeResponseModel {
+    id!: number;
+    name!: string;
+    code!: string;
+    description?: string;
+    isActive!: boolean;
+    createdAt!: Date;
+    updatedAt!: Date;
+}
+
+export class CreateScopeModel {
+    name!: string;
+    code!: string;
+    description?: string;
+}
+
+export class UpdateScopeModel extends CreateScopeModel {
+    id!: number;
+}
+
+export class GetAllScopesResponseModel extends GlobalResponse<ScopeResponseModel[]> {
+    constructor(status: boolean, code: number, message: string, data: ScopeResponseModel[]) {
+        super(status, code, message, data);
+    }
 }
 
 export class MFASetupResponseModel {
