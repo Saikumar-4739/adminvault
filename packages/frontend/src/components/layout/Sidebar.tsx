@@ -127,32 +127,25 @@ export default function Sidebar() {
     }, [user, fetchMenus]);
 
     const navigationGroups = useMemo(() => {
-        if (loading) {
-            return []; // Or a loading state representation
-        }
+        // Validate if there are any actual items to show in the dynamic menus
+        const hasValidContent = dynamicMenus?.some(group => group.children && group.children.length > 0);
 
-        // Super Admin Fallback: Show all menus initially if none are configured in the DB
-        const role = user?.role?.toUpperCase() || '';
-        const isAdmin = role.includes('ADMIN') || role.includes('SUPER_ADMIN');
-        if (dynamicMenus.length === 0 && isAdmin) {
+        // Fallback: Show default menus if no valid dynamic configuration is found
+        if (!hasValidContent) {
             return DEFAULT_NAVIGATION;
-        }
-
-        if (dynamicMenus.length === 0) {
-            return [];
         }
 
         // Backend returns a tree structure. We'll treat top-level items as Groups
         // if they have children, or just single items.
         return dynamicMenus.map(group => ({
             title: group.label,
-            items: group.children.map(item => ({
+            items: (group.children || []).map(item => ({
                 name: item.label,
                 href: item.path,
                 icon: ICON_MAP[item.icon] || LayoutDashboard, // Default icon if not found
             }))
         }));
-    }, [dynamicMenus, loading, user]);
+    }, [dynamicMenus]);
 
     if (!user) return null; // Don't render sidebar if user is not authenticated
 
