@@ -121,7 +121,7 @@ export class PasswordVaultService {
             where: { companyId, createdBy: userId },
             select: ['category'],
         });
-        return [...new Set(entries.map(e => e.category))];
+        return [...new Set(entries.map(e => e.category))] as string[];
     }
 
     private mapVaultToResponse(entity: PasswordVaultEntity): PasswordVault {

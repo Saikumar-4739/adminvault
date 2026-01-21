@@ -8,15 +8,13 @@ export class RegisterUserModel {
     phNumber: string;
     password: string;
     role?: UserRoleEnum;
-    authType?: string;
-    constructor(fullName: string, companyId: number, email: string, phNumber: string, password: string, role?: UserRoleEnum, authType?: string) {
+    constructor(fullName: string, companyId: number, email: string, phNumber: string, password: string, role?: UserRoleEnum) {
         this.fullName = fullName;
         this.companyId = companyId;
         this.email = email;
         this.phNumber = phNumber;
         this.password = password;
         this.role = role;
-        this.authType = authType || 'LOCAL';
     }
 }
 

@@ -1,32 +1,8 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, Mail, KeySquare, ChevronLeft, ChevronRight, FileText, Lock, PieChart, ShieldAlert, Users, Settings as SettingsIcon, UserCircle, Plus, GitPullRequest, Book, ShoppingCart, Calendar } from 'lucide-react';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, KeySquare, ChevronLeft, ChevronRight, FileText, PieChart, Settings as SettingsIcon, UserCircle, Plus, GitPullRequest, Book, ShoppingCart, Calendar } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRoleEnum, MenuResponseModel } from '@adminvault/shared-models';
-import { iamService } from '@/lib/api/services';
-
-const ICON_MAP: Record<string, any> = {
-    'LayoutDashboard': LayoutDashboard,
-    'Package': Package,
-    'ShoppingCart': ShoppingCart,
-    'Calendar': Calendar,
-    'GitPullRequest': GitPullRequest,
-    'KeySquare': KeySquare,
-    'Users': Users,
-    'Ticket': Ticket,
-    'Book': Book,
-    'Plus': Plus,
-    'Mail': Mail,
-    'FileText': FileText,
-    'Lock': Lock,
-    'ShieldAlert': ShieldAlert,
-    'Database': Database,
-    'PieChart': PieChart,
-    'UserCircle': UserCircle,
-    'SettingsIcon': SettingsIcon,
-    'Building2': Building2,
-};
 
 const DEFAULT_NAVIGATION = [
     {
@@ -63,12 +39,6 @@ const DEFAULT_NAVIGATION = [
         ]
     },
     {
-        title: 'Security & Access',
-        items: [
-            { name: 'IAM & SSO', href: '/iam', icon: ShieldAlert },
-        ]
-    },
-    {
         title: 'Account',
         items: [
             { name: 'Profile', href: '/profile', icon: UserCircle },
@@ -77,20 +47,12 @@ const DEFAULT_NAVIGATION = [
     }
 ];
 
-interface NavigationItem {
-    name: string;
-    href: string;
-    icon: any;
-    roles?: UserRoleEnum[]; // This will be ignored as menus are now dynamic
-}
 
 export default function Sidebar() {
     const pathname = usePathname();
     const { user } = useAuth();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [dynamicMenus, setDynamicMenus] = useState<MenuResponseModel[]>([]);
-    const [loading, setLoading] = useState(true);
 
     // Persist collapsed state
     useEffect(() => {
@@ -106,46 +68,7 @@ export default function Sidebar() {
         localStorage.setItem('sidebar_collapsed', String(newState));
     }, [isCollapsed]);
 
-    const fetchMenus = useCallback(async () => {
-        try {
-            setLoading(true);
-            const response = await iamService.getUserAuthorizedMenus();
-            if (response.status && response.data) {
-                setDynamicMenus(response.data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch menus:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (user) {
-            fetchMenus();
-        }
-    }, [user, fetchMenus]);
-
-    const navigationGroups = useMemo(() => {
-        // Validate if there are any actual items to show in the dynamic menus
-        const hasValidContent = dynamicMenus?.some(group => group.children && group.children.length > 0);
-
-        // Fallback: Show default menus if no valid dynamic configuration is found
-        if (!hasValidContent) {
-            return DEFAULT_NAVIGATION;
-        }
-
-        // Backend returns a tree structure. We'll treat top-level items as Groups
-        // if they have children, or just single items.
-        return dynamicMenus.map(group => ({
-            title: group.label,
-            items: (group.children || []).map(item => ({
-                name: item.label,
-                href: item.path,
-                icon: ICON_MAP[item.icon] || LayoutDashboard, // Default icon if not found
-            }))
-        }));
-    }, [dynamicMenus]);
+    const navigationGroups = DEFAULT_NAVIGATION;
 
     if (!user) return null; // Don't render sidebar if user is not authenticated
 

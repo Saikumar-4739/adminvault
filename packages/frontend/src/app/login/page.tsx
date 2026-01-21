@@ -34,21 +34,12 @@ function LoginContent() {
     const [isResetting, setIsResetting] = useState(false);
 
     useEffect(() => {
-        // Check for error in URL (e.g. from SSO redirect)
-        const errorMsg = searchParams.get('error');
-        if (errorMsg && !processedError.current) {
-            processedError.current = true;
-            toastError('Login Failed', decodeURIComponent(errorMsg));
-            // Remove the error from URL without refreshing
-            router.replace('/login');
-        }
-
         const storedEmail = localStorage.getItem('remember_email');
         if (storedEmail) {
             setEmail(storedEmail);
             setRememberMe(true);
         }
-    }, [searchParams, toastError]);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -77,10 +68,6 @@ function LoginContent() {
         }
     };
 
-    const handleSSOLogin = (provider: 'microsoft' | 'google') => {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_AVS_SERVICE_URL || 'http://localhost:3001/api';
-        window.location.href = `${baseUrl}/auth-users/sso/login?provider=${provider}`;
-    };
 
     const handleRequestAccess = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -125,16 +112,6 @@ function LoginContent() {
         }
     };
 
-    // Microsoft Logo Component
-    const MicrosoftLogo = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21">
-            <title>MS-SymbolLockup</title>
-            <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-            <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-            <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-            <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
-        </svg>
-    );
 
 
 
@@ -245,22 +222,6 @@ function LoginContent() {
                     <div className="mb-10">
                         <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Welcome Back</h2>
                         <p className="text-slate-500 dark:text-slate-400 text-base">Please enter your details to sign in.</p>
-                    </div>
-
-                    {/* SSO Buttons */}
-                    <div className="flex flex-col gap-4 mb-8">
-                        <button type="button" onClick={() => handleSSOLogin('microsoft')} className="flex items-center justify-center h-14 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md">
-                            <MicrosoftLogo />
-                            <span className="ml-3 font-bold text-slate-700 dark:text-slate-300">Sign in with Microsoft</span>
-                        </button>
-                        {/* <button type="button" onClick={() => handleSSOLogin('google')} className="flex items-center justify-center h-14 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md">
-                            <GoogleLogo />
-                        </button> */}
-                    </div>
-
-                    <div className="relative mb-8">
-                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-800"></div></div>
-                        <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-[#020617] px-4 text-slate-400 font-bold tracking-widest">or continue with email</span></div>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">

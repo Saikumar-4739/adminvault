@@ -6,7 +6,6 @@ import { TicketsEntity } from '../../tickets/entities/tickets.entity';
 import { CompanyLicenseEntity } from '../../licenses/entities/company-license.entity';
 import { AssetStatusEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
 import { AuthUsersEntity } from '../../auth-users/entities/auth-users.entity';
-import { MFASettingsEntity } from '../../administration/entities/mfa-settings.entity';
 
 @Injectable()
 export class DashboardRepository {
@@ -84,13 +83,13 @@ export class DashboardRepository {
 
     async getSecurityStats(companyId: number) {
         const userRepo = this.dataSource.getRepository(AuthUsersEntity);
-        const mfaRepo = this.dataSource.getRepository(MFASettingsEntity);
         const assetRepo = this.dataSource.getRepository(AssetInfoEntity);
         const ticketRepo = this.dataSource.getRepository(TicketsEntity);
 
+        // Identity score based on active users
         const totalUsers = await userRepo.count({ where: { companyId } });
-        const enabledMFACount = await mfaRepo.count({ where: { companyId, isEnabled: true } });
-        const identityScore = totalUsers > 0 ? (enabledMFACount / totalUsers) * 100 : 100;
+        const activeUsers = await userRepo.count({ where: { companyId, status: true } });
+        const identityScore = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 100;
 
         const totalAssets = await assetRepo.count({ where: { companyId } });
         const assignedAssets = await assetRepo.count({ where: { companyId, assetStatusEnum: In([AssetStatusEnum.IN_USE]) } });

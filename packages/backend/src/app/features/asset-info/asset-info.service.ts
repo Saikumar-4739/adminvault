@@ -4,13 +4,19 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@adminvault/shared-models';
 import { AssetInfoEntity } from './entities/asset-info.entity';
+import { AssetAssignEntity } from './entities/asset-assign.entity';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
+import { LessThan, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class AssetInfoService {
     constructor(
         private dataSource: DataSource,
-        private assetInfoRepo: AssetInfoRepository
+        private assetInfoRepo: AssetInfoRepository,
+        @InjectRepository(AssetAssignEntity)
+        private readonly assignRepo: Repository<AssetAssignEntity>
     ) { }
 
     /**
@@ -295,6 +301,95 @@ export class AssetInfoService {
     }
     async findAll(companyId: number): Promise<AssetInfoEntity[]> {
         return await this.assetInfoRepo.find({ where: { companyId } });
+    }
+
+    async assignAssetOp(assetId: number, employeeId: number, userId: number, remarks?: string): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            await transManager.startTransaction();
+            const assetRepo = transManager.getRepository(AssetInfoEntity);
+            const assignRepo = transManager.getRepository(AssetAssignEntity);
+
+            const asset = await assetRepo.findOne({ where: { id: assetId } });
+            if (!asset) throw new NotFoundException('Asset not found');
+
+            const isReassignment = asset.assetStatusEnum === AssetStatusEnum.IN_USE && asset.assignedToEmployeeId;
+
+            if (isReassignment) {
+                await assignRepo.update(
+                    { assetId, isCurrent: true },
+                    {
+                        isCurrent: false,
+                        returnDate: new Date(),
+                        returnRemarks: `Reassigned to another employee (ID: ${employeeId})`
+                    }
+                );
+                asset.previousUserEmployeeId = asset.assignedToEmployeeId;
+            } else if (asset.assetStatusEnum !== AssetStatusEnum.AVAILABLE) {
+                throw new BadRequestException('Asset is not available for assignment');
+            }
+
+            asset.assetStatusEnum = AssetStatusEnum.IN_USE;
+            asset.assignedToEmployeeId = employeeId;
+            asset.userAssignedDate = new Date();
+            await assetRepo.save(asset);
+
+            const assignment = new AssetAssignEntity();
+            assignment.assetId = assetId;
+            assignment.employeeId = employeeId;
+            assignment.assignedDate = new Date();
+            assignment.assignedById = userId;
+            assignment.isCurrent = true;
+            assignment.remarks = remarks || (isReassignment ? 'Reassigned from previous user' : '');
+            await assignRepo.save(assignment);
+
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 200, isReassignment ? 'Asset reassigned successfully' : 'Asset assigned successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    async returnAssetOp(assetId: number, userId: number, remarks?: string): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            await transManager.startTransaction();
+            const assetRepo = transManager.getRepository(AssetInfoEntity);
+
+            const asset = await assetRepo.findOne({ where: { id: assetId } });
+            if (!asset) throw new NotFoundException('Asset not found');
+
+            asset.assetStatusEnum = AssetStatusEnum.AVAILABLE;
+            asset.previousUserEmployeeId = asset.assignedToEmployeeId;
+            asset.assignedToEmployeeId = null as any;
+            asset.lastReturnDate = new Date();
+            await assetRepo.save(asset);
+
+            await transManager.getRepository(AssetAssignEntity).update({ assetId, isCurrent: true }, {
+                isCurrent: false,
+                returnDate: new Date(),
+                returnRemarks: remarks || ''
+            });
+
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 200, 'Asset returned successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    async getExpiringWarranty(companyId: number, months: number = 3): Promise<GetAllAssetsModel> {
+        const dateLimit = new Date();
+        dateLimit.setMonth(dateLimit.getMonth() + months);
+
+        const assets = await this.assetInfoRepo.find({
+            where: { companyId, warrantyExpiry: LessThan(dateLimit) },
+            relations: ['assignedToEmployee']
+        });
+        const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.expressCode, a.boxNo));
+        return new GetAllAssetsModel(true, 200, 'Expiring assets retrieved', responses);
     }
 }
 

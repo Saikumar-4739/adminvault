@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as nodemailer from 'nodemailer';
 import { EmailInfoEntity } from './entities/email-info.entity';
-import { EmailInfoRepository } from './repositories/email-info.repository';
 import {
     CreateEmailInfoModel,
     UpdateEmailInfoModel,
@@ -20,6 +19,7 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse } from '@adminvault/backend-utils';
 
 import { ConfigService } from '@nestjs/config';
+import { EmailInfoRepository } from './repositories/email-info.repository';
 
 @Injectable()
 export class EmailInfoService {

@@ -5,23 +5,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { User, Mail, Building, Shield, Calendar, MapPin, Phone, Edit, Lock, Key, Smartphone, AlertCircle } from 'lucide-react';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { authService } from '@/lib/api/services';
 import { UpdateUserModel } from '@adminvault/shared-models';
-import dynamic from 'next/dynamic';
 import { Modal } from '@/components/ui/Modal';
-
-const MFASetup = dynamic(() => import('@/features/profile/components/MFASetup'), { ssr: false });
-const APIKeyManager = dynamic(() => import('@/features/profile/components/APIKeyManager'), { ssr: false });
 
 type TabType = 'profile' | 'security';
 
 export default function ProfilePage() {
     const { user } = useAuth();
     const searchParams = useSearchParams();
-    const router = useRouter();
     const toast = useToast();
     const [activeTab, setActiveTab] = useState<TabType>('profile');
     const [isEditing, setIsEditing] = useState(false);
@@ -235,26 +230,34 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'security' && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                    {/* MFA Setup */}
-                    <div className="space-y-4">
-                        <div>
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Multi-Factor Authentication</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Add an extra layer of security to your account</p>
-                        </div>
-                        <MFASetup />
-                    </div>
-
-                    {/* API Keys */}
-                    <div className="space-y-4">
-                        <div>
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">API Access Keys</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your personal access tokens</p>
-                        </div>
-                        <APIKeyManager />
-                    </div>
-
+                <div className="max-w-2xl">
+                    <Card className="border-slate-200 dark:border-slate-700">
+                        <CardHeader>
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Security Settings</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your account security</p>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                                    <div className="flex items-start gap-3">
+                                        <Lock className="h-5 w-5 text-blue-500 mt-0.5" />
+                                        <div className="flex-1">
+                                            <p className="text-sm font-semibold text-slate-900 dark:text-white">Password Protection</p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Your account is secured with a password</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start"
+                                    onClick={() => setIsPasswordModalOpen(true)}
+                                    leftIcon={<Key className="h-4 w-4" />}
+                                >
+                                    Change Password
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             )}
 

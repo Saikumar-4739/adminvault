@@ -1,6 +1,6 @@
-import { DataSource, Repository } from "typeorm";
-import { Injectable } from "@nestjs/common";
-import { PasswordVaultEntity } from "../entities/password-vault.entity";
+import { Injectable } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { PasswordVaultEntity } from '../entities/password-vault.entity';
 
 @Injectable()
 export class PasswordVaultRepository extends Repository<PasswordVaultEntity> {

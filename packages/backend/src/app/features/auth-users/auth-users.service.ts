@@ -12,8 +12,6 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginSessionService } from './login-session.service';
 import { EmailInfoService } from '../administration/email-info.service';
 import { ForgotPasswordModel, ResetPasswordModel, RequestAccessModel } from '@adminvault/shared-models';
-import axios from 'axios';
-import { URLSearchParams } from 'url';
 
 // JWT Configuration - Load from environment variables
 const SECRET_KEY = process.env.JWT_SECRET_KEY || (() => {
@@ -32,49 +30,6 @@ const REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY || (() => {
     return "d9f8a1ec2d6826db2f24ea9f8a1d9bda26f054de88bb90b63934561f7225ab";
 })();
 
-// SSO Configuration - Load from environment variables
-interface SSOProviderConfig {
-    clientId: string;
-    clientSecret: string;
-    redirectUri: string;
-    userInfoUrl: string;
-    scope: string;
-    authUrl: string | ((tenantId: string) => string);
-    tokenUrl: string | ((tenantId: string) => string);
-    tenantId?: string;
-}
-
-interface SSOConfig {
-    microsoft: SSOProviderConfig;
-    google: SSOProviderConfig;
-}
-
-const getSSOConfig = (): SSOConfig => {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
-    const apiPrefix = '/api'; // Assuming global prefix is 'api'
-
-    return {
-        microsoft: {
-            clientId: process.env.MICROSOFT_CLIENT_ID || '',
-            clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
-            tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
-            redirectUri: process.env.MICROSOFT_REDIRECT_URI || `${backendUrl}${apiPrefix}/auth-users/sso/callback`,
-            authUrl: (tenantId: string) => `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`,
-            tokenUrl: (tenantId: string) => `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
-            userInfoUrl: 'https://graph.microsoft.com/v1.0/me',
-            scope: 'openid profile email User.Read'
-        },
-        google: {
-            clientId: process.env.GOOGLE_CLIENT_ID || '',
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-            redirectUri: process.env.GOOGLE_REDIRECT_URI || `${backendUrl}${apiPrefix}/auth-users/sso/callback`,
-            authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-            tokenUrl: 'https://oauth2.googleapis.com/token',
-            userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
-            scope: 'openid profile email'
-        }
-    };
-};
 
 @Injectable()
 export class AuthUsersService {
@@ -108,20 +63,9 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "Invalid company ID")
             }
 
-            // Password check only for LOCAL users
-            const isLocal = !reqModel.authType || reqModel.authType === 'LOCAL';
-            if (isLocal && (reqModel.password?.length < 8)) {
-                throw new ErrorResponse(0, "Password must be at least 8 characters")
-            }
-
             await transManager.startTransaction()
 
-            // Password logic: generate a complex random password for SSO users
-            const effectivePassword = isLocal
-                ? reqModel.password
-                : Math.random().toString(36).slice(-16) + 'SSO!';
-
-            const passwordHash = await bcrypt.hash(effectivePassword, 10)
+            const passwordHash = await bcrypt.hash(reqModel.password, 10)
 
             const newUser = new AuthUsersEntity()
             newUser.email = reqModel.email
@@ -129,7 +73,6 @@ export class AuthUsersService {
             newUser.phNumber = reqModel.phNumber
             newUser.companyId = reqModel.companyId
             newUser.passwordHash = passwordHash
-            newUser.authType = reqModel.authType || 'LOCAL'
             newUser.userRole = reqModel.role || UserRoleEnum.USER
             newUser.status = true
             newUser.employeeId = `EMP-${Date.now()}` // Default employee ID if not provided
@@ -396,177 +339,6 @@ export class AuthUsersService {
         }
     }
 
-    /**
-     * Generate SSO authorization URL for supported providers
-     * Creates OAuth 2.0 authorization URL with proper parameters
-     * 
-     * @param provider - SSO provider (microsoft or google)
-     * @returns Authorization URL to redirect user to
-     * @throws ErrorResponse if provider is invalid or not configured
-     */
-    async getSSOAuthUrl(provider: 'microsoft' | 'google'): Promise<string> {
-        const config = getSSOConfig()[provider];
-        if (!config) throw new ErrorResponse(0, 'Invalid Provider');
-
-        // Validate that provider is configured
-        if (!config.clientId || !config.clientSecret) {
-            throw new ErrorResponse(0, `${provider} SSO is not configured. Please set environment variables.`);
-        }
-
-        const params = new URLSearchParams({
-            client_id: config.clientId,
-            response_type: 'code',
-            redirect_uri: config.redirectUri,
-            scope: config.scope,
-            state: provider // Pass provider as state to identify during callback
-        });
-
-        // Provider-specific parameters
-        if (provider === 'google') {
-            params.append('access_type', 'offline');
-            params.append('prompt', 'consent');
-        }
-
-        const authUrl = provider === 'microsoft' && typeof config.authUrl === 'function'
-            ? config.authUrl(config.tenantId || 'common')
-            : (config.authUrl as string);
-
-        return `${authUrl}?${params.toString()}`;
-    }
-
-    /**
-     * Handle SSO callback and authenticate user
-     * Exchanges authorization code for access token and retrieves user profile
-     * 
-     * @param provider - SSO provider name
-     * @param code - Authorization code from provider
-     * @param ipAddress - Client IP address
-     * @param userAgent - Client user agent string
-     * @returns LoginResponseModel with user info and JWT tokens
-     * @throws ErrorResponse if authentication fails or user not found
-     */
-    async handleSSOCallback(provider: string, code: string, ipAddress: string, userAgent: string): Promise<LoginResponseModel> {
-        const config = getSSOConfig()[provider as 'microsoft' | 'google'];
-        if (!config) throw new ErrorResponse(0, 'Invalid Provider');
-
-        let email = '';
-        let name = '';
-        let ssoId = '';
-
-        try {
-            // 1. Exchange Code for Token
-            const tokenParams = new URLSearchParams({
-                client_id: config.clientId,
-                client_secret: config.clientSecret,
-                code: code,
-                redirect_uri: config.redirectUri,
-                grant_type: 'authorization_code'
-            });
-
-            const tokenUrl = provider === 'microsoft' && typeof config.tokenUrl === 'function'
-                ? config.tokenUrl(config.tenantId || 'common')
-                : (config.tokenUrl as string);
-
-            const tokenRes = await axios.post(tokenUrl, tokenParams.toString(), {
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-            });
-
-            const accessToken = tokenRes.data.access_token;
-
-            // 2. Get User Profile based on provider
-            if (provider === 'microsoft') {
-                const profileRes = await axios.get(config.userInfoUrl, {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                });
-
-                const upn = profileRes.data.userPrincipalName;
-                const mail = profileRes.data.mail;
-                name = profileRes.data.displayName;
-                ssoId = profileRes.data.id;
-
-                // Priority 1: Use 'mail' if available (it's usually the clean email)
-                if (mail) {
-                    email = mail;
-                } else if (upn) {
-                    // Priority 2: Use UPN, but handle guest users (#EXT#)
-                    if (upn.includes('#EXT#')) {
-                        const guestParts = upn.split('#EXT#')[0];
-                        // Microsoft encodes @ as _ in the prefix of guest UPNs
-                        if (guestParts.includes('_')) {
-                            const lastUnderscoreIndex = guestParts.lastIndexOf('_');
-                            email = guestParts.substring(0, lastUnderscoreIndex) + '@' + guestParts.substring(lastUnderscoreIndex + 1);
-                        } else {
-                            email = upn;
-                        }
-                    } else {
-                        email = upn;
-                    }
-                }
-            } else if (provider === 'google') {
-                const profileRes = await axios.get(config.userInfoUrl, {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                });
-                email = profileRes.data.email;
-                name = profileRes.data.name;
-                ssoId = profileRes.data.sub || profileRes.data.id;
-            }
-
-            if (!email) throw new Error('Could not retrieve email from provider');
-
-            // 3. Find or reject user (security: only allow existing users)
-            let user = await this.authUsersRepo.findOne({ where: { email } });
-
-            if (!user) {
-                throw new ErrorResponse(0, `User with email ${email} not found. Please request access first.`);
-            }
-
-            // Update user details from SSO if not already linked
-            user.ssoId = ssoId;
-            user.authType = 'SSO';
-            user.lastLogin = new Date();
-            await this.authUsersRepo.save(user);
-
-            // 4. Create Session and Generate Tokens
-            const payload = {
-                username: user.email,
-                email: user.email,
-                sub: user.id,
-                companyId: user.companyId
-            };
-            const appAccessToken = this.generateAccessToken(payload);
-            const appRefreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
-
-            // 5. Track login session
-            if (ipAddress) {
-                try {
-                    const loginSessionModel = new CreateLoginSessionModel(
-                        user.id,
-                        user.companyId,
-                        ipAddress,
-                        userAgent,
-                        provider,
-                        appAccessToken,
-                        0,
-                        0
-                    );
-                    await this.loginSessionService.createLoginSession(loginSessionModel);
-                } catch (sessionError) {
-                    console.error('SSO Session Error:', sessionError);
-                }
-            }
-
-            const userInfo = new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole);
-            (userInfo as any).id = user.id;
-            return new LoginResponseModel(true, 0, "SSO Login Successful", userInfo, appAccessToken, appRefreshToken);
-
-        } catch (error: any) {
-            console.error('SSO Error:', error.response?.data || error.message);
-            if (error instanceof ErrorResponse) {
-                throw error;
-            }
-            throw new ErrorResponse(0, 'SSO Authentication Failed: ' + (error.response?.data?.error_description || error.message));
-        }
-    }
 
     async forgotPassword(model: ForgotPasswordModel): Promise<GlobalResponse> {
         try {

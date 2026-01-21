@@ -32,12 +32,6 @@ export class AuthUsersEntity {
   @Column('boolean', { name: 'status', default: true, nullable: false, comment: 'User active status' })
   status: boolean;
 
-  @Column('varchar', { name: 'auth_type', length: 20, default: 'LOCAL', nullable: false, comment: 'Authentication type: LOCAL or SSO' })
-  authType: string;
-
-  @Column('varchar', { name: 'sso_id', length: 255, nullable: true, comment: 'Unique ID from SSO provider (Google sub or Microsoft id)' })
-  ssoId: string;
-
   @Column('timestamp', { name: 'last_login', nullable: true, comment: 'Last login timestamp' })
   lastLogin: Date;
 

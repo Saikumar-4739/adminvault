@@ -13,9 +13,7 @@ const ApplicationsMasterView = dynamic(() => import('./components/applications-m
 const TicketCategoriesMasterView = dynamic(() => import('./components/ticket-categories-master-view'), { loading: () => <p>Loading Categories...</p> });
 const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view'), { loading: () => <p>Loading Slack Users...</p> });
 const VendorsMasterView = dynamic(() => import('./components/vendors-master-view'), { loading: () => <p>Loading Vendors...</p> });
-const RolesMasterView = dynamic(() => import('./components/roles-master-view'), { loading: () => <p>Loading Roles...</p> });
-const PermissionsMasterView = dynamic(() => import('./components/permissions-master-view'), { loading: () => <p>Loading Permissions...</p> });
-import { Building2, Users, Package, Smartphone, Tag, AppWindow, MessageSquare, Store, Key, UserCircle, Mail, Lock } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, Tag, AppWindow, MessageSquare, Store, Lock } from 'lucide-react';
 
 interface MasterItem {
     id: string;
@@ -98,36 +96,12 @@ export default function MastersPage() {
             component: VendorsMasterView
         },
         {
-            id: 'roles',
-            title: 'Roles',
-            description: 'Manage user roles and access levels',
-            icon: Users,
-            color: 'from-purple-500 to-purple-600',
-            component: RolesMasterView
-        },
-        {
-            id: 'permissions',
-            title: 'Permissions',
-            description: 'Manage system permissions and scopes',
-            icon: Key,
-            color: 'from-indigo-500 to-indigo-600',
-            component: PermissionsMasterView
-        },
-        {
             id: 'employees',
             title: 'Employee Directory',
             description: 'Manage organization employees and directory',
-            icon: UserCircle,
+            icon: Users,
             color: 'from-blue-600 to-indigo-700',
             href: '/employees'
-        },
-        {
-            id: 'emails',
-            title: 'Email Accounts',
-            description: 'Enterprise email account management',
-            icon: Mail,
-            color: 'from-amber-500 to-orange-600',
-            href: '/emails'
         },
         {
             id: 'password-vault',

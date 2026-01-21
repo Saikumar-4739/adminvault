@@ -1,18 +1,10 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { BulkSetSettingsModel, CompanyIdRequestModel, CreateAPIKeyModel, CreateAssetModel, CreateEmailInfoModel, CreatePasswordVaultModel, CreateRoleModel, CreateSSOProviderModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, EnableMFAModel, GetAllAssetsModel, GetAllEmailInfoModel, GetAllPasswordVaultsResponseModel, GetAllRolesResponseModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UpdatePasswordVaultModel, MenuResponseModel, GetAllMenusResponseModel } from '@adminvault/shared-models';
+import { BulkSetSettingsModel, CompanyIdRequestModel, CreateAssetModel, CreateEmailInfoModel, CreatePasswordVaultModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, GetAllAssetsModel, GetAllEmailInfoModel, GetAllPasswordVaultsResponseModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UpdatePasswordVaultModel } from '@adminvault/shared-models';
 
 export class AdministrationService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
         return '/administration/' + childUrl;
-    }
-
-    async getUserAuthorizedMenus(config?: AxiosRequestConfig): Promise<GetAllMenusResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/menus/authorized'), {}, config);
-    }
-
-    async checkUserPermission(resource: string, action: string, config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/permissions/check'), { resource, action }, config);
     }
 
     async getUserSettings(config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
@@ -61,62 +53,6 @@ export class AdministrationService extends CommonAxiosService {
 
     async assignAssetOp(assetId: number, employeeId: number, remarks?: string, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('operations/assets/assign'), { assetId, employeeId, remarks }, config);
-    }
-
-    async findAllRoles(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllRolesResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/roles/findAll'), reqObj, config);
-    }
-
-    async createRole(reqObj: CreateRoleModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/roles/create'), reqObj, config);
-    }
-
-    async getMySessions(config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/sessions/get-my-sessions'), {}, config);
-    }
-
-    async getMFAStatus(config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/status'), {}, config);
-    }
-
-    async setupMFA(reqObj: any, config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/setup'), reqObj, config);
-    }
-
-    async getMFAMethods(config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/methods'), {}, config);
-    }
-
-    async disableMFA(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/disable'), { id }, config);
-    }
-
-    async generateBackupCodes(config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/generate-backup-codes'), {}, config);
-    }
-
-    async enableMFA(reqObj: EnableMFAModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/mfa/enable'), reqObj, config);
-    }
-
-    async createAPIKey(reqObj: CreateAPIKeyModel, config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/api-keys/create'), reqObj, config);
-    }
-
-    async getAllAPIKeys(config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/api-keys/get-all'), {}, config);
-    }
-
-    async deleteAPIKey(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/api-keys/delete'), { id }, config);
-    }
-
-    async getSSOProviders(config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/sso/providers'), {}, config);
-    }
-
-    async createSSOProvider(reqObj: CreateSSOProviderModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('iam/sso/create'), reqObj, config);
     }
 
     async createEmailInfo(reqObj: CreateEmailInfoModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {

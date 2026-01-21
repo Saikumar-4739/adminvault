@@ -4,9 +4,6 @@ import { CompanyInfoEntity } from '../masters/entities/company-info.entity';
 import { DepartmentsMasterEntity } from '../masters/entities/department.entity';
 import { LocationsMasterEntity } from '../masters/entities/location.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
-import { RoleEntity } from './entities/role.entity';
-import { PermissionEntity } from './entities/permission.entity';
-import { MenuEntity } from './entities/menu.entity';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { AssetInfoEntity } from '../asset-info/entities/asset-info.entity';
 import { TicketCategoriesMasterEntity } from '../masters/entities/ticket-category.entity';
@@ -22,10 +19,6 @@ import { DocumentEntity } from '../documents/entities/document.entity';
 import { CompanyLicenseEntity } from '../licenses/entities/company-license.entity';
 import { SettingType, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum, EmployeeStatusEnum, UserRoleEnum, AssetStatusEnum, DeviceTypeEnum, POStatusEnum, KnowledgeCategoryEnum, MaintenanceStatusEnum, MaintenanceTypeEnum, EmailTypeEnum } from '@adminvault/shared-models';
 import * as bcrypt from 'bcrypt';
-import { RoleMenuAccessEntity } from './entities/role-menu-access.entity';
-import { RolePermissionEntity } from './entities/role-permission.entity';
-import { UserRoleEntity } from './entities/user-role.entity';
-import { ScopeEntity } from './entities/scope.entity';
 import { PasswordVaultEntity } from './entities/password-vault.entity';
 import { SettingsEntity } from './entities/settings.entity';
 import { EmailInfoEntity } from './entities/email-info.entity';
@@ -44,16 +37,15 @@ export class SeedService {
             console.log('SEED: Clearing existing data...');
 
             const tables = [
-                'role_menu_access', 'role_permissions', 'user_roles', 'user_permissions',
-                'mfa_settings', 'api_keys', 'user_login_sessions', 'password_vault',
+                'user_login_sessions', 'password_vault',
                 'asset_assign', 'maintenance_schedule', 'asset_software', 'asset_return_history',
                 'asset_next_assignment', 'asset_info', 'purchase_order_items', 'purchase_orders',
                 'ticket_comments', 'ticket_messages', 'ticket_status_logs', 'ticket_work_log',
                 'tickets', 'approval_requests', 'knowledge_articles', 'documents',
                 'company_license', 'employees', 'auth_users', 'departments',
                 'locations', 'vendors', 'device_brands', 'asset_types', 'ticket_categories',
-                'applications', 'expense_categories', 'menus', 'permissions',
-                'roles', 'company_info', 'scopes', 'settings', 'device_info', 'email_info', 'licenses',
+                'applications', 'expense_categories',
+                'company_info', 'settings', 'device_info', 'email_info', 'licenses',
                 'maintenance_schedules'
             ];
 
@@ -124,87 +116,7 @@ export class SeedService {
             device.model = 'M2 Pro';
             const savedDevice = await queryRunner.manager.save(device);
 
-            // 6. Permissions
-            const permsData = [
-                { name: 'Read Assets', code: 'ASSET_READ', resource: 'Asset', action: 'READ' },
-                { name: 'Write Assets', code: 'ASSET_WRITE', resource: 'Asset', action: 'WRITE' },
-                { name: 'Read Tickets', code: 'TICKET_READ', resource: 'Ticket', action: 'READ' },
-                { name: 'Write Tickets', code: 'TICKET_WRITE', resource: 'Ticket', action: 'WRITE' },
-                { name: 'Admin IAM', code: 'IAM_ADMIN', resource: 'IAM', action: 'ADMIN' },
-                { name: 'Read Reports', code: 'REPORT_READ', resource: 'Report', action: 'READ' }
-            ];
-            const savedPerms = [];
-            for (const p of permsData) {
-                const perm = new PermissionEntity();
-                Object.assign(perm, p);
-                perm.isActive = true;
-                savedPerms.push(await queryRunner.manager.save(perm));
-            }
-
-            // 7. Roles
-            const rolesData = [
-                { name: 'Super Administrator', code: 'SUPERADMIN', userRole: UserRoleEnum.SUPER_ADMIN },
-                { name: 'IT Administrator', code: 'ADMIN', userRole: UserRoleEnum.ADMIN },
-                { name: 'Department Manager', code: 'MANAGER', userRole: UserRoleEnum.MANAGER },
-                { name: 'Standard User', code: 'USER', userRole: UserRoleEnum.USER }
-            ];
-            const savedRoles = [];
-            for (const r of rolesData) {
-                const role = new RoleEntity();
-                role.name = r.name;
-                role.code = r.code;
-                role.companyId = companyId;
-                role.userRole = r.userRole;
-                role.isSystemRole = true;
-                savedRoles.push(await queryRunner.manager.save(role));
-            }
-
-            const adminRole = savedRoles.find(r => r.code === 'ADMIN');
-            for (const p of savedPerms) {
-                const rp = new RolePermissionEntity();
-                rp.roleId = Number(adminRole.id);
-                rp.permissionId = Number(p.id);
-                await queryRunner.manager.save(rp);
-            }
-
-            // 8. Menus
-            const parentMenus = [
-                { label: 'System', code: 'NAV_SYSTEM', icon: 'LayoutDashboard', sort: 1 },
-                { label: 'Operations', code: 'NAV_OPERATIONS', icon: 'Package', sort: 2 },
-                { label: 'Support Portal', code: 'NAV_SUPPORT', icon: 'Ticket', sort: 3 },
-                { label: 'Security', code: 'NAV_SECURITY', icon: 'ShieldAlert', sort: 4 }
-            ];
-            for (const pm of parentMenus) {
-                const m = new MenuEntity();
-                m.label = pm.label;
-                m.code = pm.code;
-                m.icon = pm.icon;
-                m.sortOrder = pm.sort;
-                const savedM = await queryRunner.manager.save(m);
-
-                const rma = new RoleMenuAccessEntity();
-                rma.roleId = Number(adminRole.id);
-                rma.menuId = Number(savedM.id);
-                rma.canRead = true;
-                rma.canCreate = true;
-                rma.canUpdate = true;
-                rma.canDelete = true;
-                rma.canApprove = true;
-                await queryRunner.manager.save(rma);
-            }
-
-            // 9. Scopes
-            const scopes = [
-                { name: 'Full Access', code: 'SCOPE_ALL', description: 'Everything' },
-                { name: 'Read Only', code: 'SCOPE_READ', description: 'View only access' }
-            ];
-            for (const s of scopes) {
-                const sc = new ScopeEntity();
-                Object.assign(sc, s);
-                await queryRunner.manager.save(sc);
-            }
-
-            // 10. Users & Employees
+            // 6. Users & Employees
             const hashedPassword = await bcrypt.hash('Admin@123', 10);
             const user1 = new AuthUsersEntity();
             user1.fullName = 'System Administrator';
@@ -216,11 +128,6 @@ export class SeedService {
             user1.employeeId = 'EMP001';
             const savedUser = await queryRunner.manager.save(user1);
             const adminUserId = Number(savedUser.id);
-
-            const ur = new UserRoleEntity();
-            ur.userId = adminUserId;
-            ur.roleId = Number(adminRole.id);
-            await queryRunner.manager.save(ur);
 
             const emp1 = new EmployeesEntity();
             emp1.firstName = 'Sai';
