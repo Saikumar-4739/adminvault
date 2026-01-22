@@ -3,9 +3,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('licenses')
 @Index('idx_license_app', ['applicationId'])
-@Index('idx_license_employee', ['assignedEmployeeId'])
-@Index('idx_license_expiry', ['expiryDate'])
-@Index('idx_license_company', ['companyId'])
 @Index('idx_license_user', ['userId'])
 export class CompanyLicenseEntity extends CommonBaseEntity {
 

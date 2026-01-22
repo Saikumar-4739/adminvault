@@ -5,11 +5,6 @@ import { AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@ad
 @Entity('asset_info')
 @Index('idx_asset_serial', ['serialNumber'])
 @Index('idx_asset_device', ['deviceId'])
-@Index('idx_asset_brand', ['brandId'])
-@Index('idx_asset_assigned_to', ['assignedToEmployeeId'])
-@Index('idx_asset_status', ['assetStatusEnum'])
-@Index('idx_asset_company', ['companyId'])
-@Index('idx_asset_user', ['userId'])
 export class AssetInfoEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'device_id', nullable: false, comment: 'Reference to device_info table' })
     deviceId: number;

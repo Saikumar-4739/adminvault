@@ -16,17 +16,14 @@ import { DashboardModule } from './features/dashboard/dashboard.module';
 import { DocumentsModule } from './features/documents/documents.module';
 import { AdministrationModule } from './features/administration/administration.module';
 import { WorkflowModule } from './features/workflow/workflow.module';
-import { AiModule } from './features/ai/ai.module';
+import { AiBotModule } from './features/administration/ai-bot/ai-bot.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { ProcurementModule } from './features/procurement/procurement.module';
 import { MaintenanceModule } from './features/maintenance/maintenance.module';
 import configuration from '../config/configuration';
-
-
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
-import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
 
 @Module({
   imports: [
@@ -36,7 +33,6 @@ import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
       load: [configuration],
     }),
     DatabaseModule,
-    AuditLogsModule, // Audit Logs
     CompanyInfoModule,
     AuthUsersModule,
     EmployeesModule,
@@ -50,7 +46,7 @@ import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
     DocumentsModule,
     AdministrationModule,
     WorkflowModule,
-    AiModule,
+    AiBotModule,
     KnowledgeBaseModule,
     ProcurementModule,
     MaintenanceModule

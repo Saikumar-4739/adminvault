@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { KnowledgeCategoryEnum } from '@adminvault/shared-models';
-import { CompanyInfoEntity } from '../../masters/entities/company-info.entity';
+import { CompanyInfoEntity } from '../../masters/company-info/entities/company-info.entity';
 import { AuthUsersEntity } from '../../auth-users/entities/auth-users.entity';
 
 @Entity('knowledge_articles')
@@ -14,11 +14,7 @@ export class KnowledgeArticleEntity {
     @Column({ type: 'text' })
     content: string;
 
-    @Column({
-        type: 'simple-enum',
-        enum: KnowledgeCategoryEnum,
-        default: KnowledgeCategoryEnum.OTHER
-    })
+    @Column({ type: 'simple-enum', enum: KnowledgeCategoryEnum, default: KnowledgeCategoryEnum.OTHER })
     category: KnowledgeCategoryEnum;
 
     @Column('simple-array', { nullable: true })

@@ -102,3 +102,4 @@ export class GetAllPrincipalsResponseModel extends GlobalResponse<PrincipalRespo
         super(status, code, message, data);
     }
 }
+

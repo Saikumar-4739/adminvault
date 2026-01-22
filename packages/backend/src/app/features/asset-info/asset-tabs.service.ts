@@ -22,7 +22,7 @@ export class AssetTabsService {
 
     async getStoreAssets(reqModel: GetStoreAssetsRequestModel): Promise<GetStoreAssetsResponseModel> {
         try {
-            const results = await this.assetInfoRepo.getStoreAssets(reqModel.companyId);
+            const results = await this.assetInfoRepo.getStoreAssets(reqModel);
             const assets: StoreAssetModel[] = results.map(r => ({ id: r.id, deviceName: r.deviceName, configuration: r.configuration, serialNumber: r.serialNumber, expressCode: r.expressCode, boxNo: r.boxNo, pastUserName: r.pastUserName, presentUserName: r.presentUserName, assetStatusEnum: r.assetStatusEnum, brandName: r.brandName, model: r.model, warrantyExpiry: r.warrantyExpiry }));
             return new GetStoreAssetsResponseModel(true, 200, 'Store assets retrieved successfully', assets);
         } catch (error) {
@@ -98,7 +98,7 @@ export class AssetTabsService {
 
     async getNextAssignments(reqModel: GetNextAssignmentsRequestModel): Promise<GetNextAssignmentsResponseModel> {
         try {
-            const results = await this.nextAssignmentRepo.getNextAssignments(reqModel.companyId);
+            const results = await this.nextAssignmentRepo.getNextAssignments(reqModel);
             const assignments: NextAssignmentModel[] = results.map(r => ({ id: r.id, employeeName: r.employeeName, employeeRole: r.employeeRole, laptopAllocationStatus: r.assetType === 'Laptop' ? r.status : undefined, desktopAllocationStatus: r.assetType === 'Desktop' ? r.status : undefined, assetType: r.assetType, requestDate: r.requestDate, expectedDate: r.expectedDate, assignedAssetId: r.assignedAssetId, assignedAssetName: r.assignedAssetName, status: r.status, priority: r.priority, remarks: r.remarks }));
             return new GetNextAssignmentsResponseModel(true, 200, 'Next assignments retrieved successfully', assignments);
         } catch (error) {

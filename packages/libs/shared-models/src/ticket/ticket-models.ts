@@ -1,9 +1,13 @@
 import { GlobalResponse } from '../common/global-response';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '../enums';
 
+// ============================================
+// REQUEST MODELS - CREATE
+// ============================================
+
 export class CreateTicketModel {
     ticketCode: string;
-    employeeId?: number; // Optional - will be set from authenticated user
+    employeeId?: number;
     assignAdminId?: number;
     categoryEnum: TicketCategoryEnum;
     priorityEnum: TicketPriorityEnum;
@@ -35,6 +39,10 @@ export class CreateTicketModel {
     }
 }
 
+// ============================================
+// REQUEST MODELS - UPDATE
+// ============================================
+
 export class UpdateTicketModel extends CreateTicketModel {
     id: number;
 
@@ -55,8 +63,43 @@ export class UpdateTicketModel extends CreateTicketModel {
     }
 }
 
+export class UpdateTicketStatusRequestModel {
+    id: number;
+    status: TicketStatusEnum;
+
+    constructor(id: number, status: TicketStatusEnum) {
+        this.id = id;
+        this.status = status;
+    }
+}
+
+export class AssignTicketRequestModel {
+    id: number;
+    assignAdminId: number;
+
+    constructor(id: number, assignAdminId: number) {
+        this.id = id;
+        this.assignAdminId = assignAdminId;
+    }
+}
+
+export class AddTicketResponseRequestModel {
+    id: number;
+    response: string;
+
+    constructor(id: number, response: string) {
+        this.id = id;
+        this.response = response;
+    }
+}
+
+// ============================================
+// REQUEST MODELS - GET/DELETE
+// ============================================
+
 export class DeleteTicketModel {
     id: number;
+
     constructor(id: number) {
         this.id = id;
     }
@@ -64,10 +107,31 @@ export class DeleteTicketModel {
 
 export class GetTicketModel {
     id: number;
+
     constructor(id: number) {
         this.id = id;
     }
 }
+
+export class GetTicketsByUserModel {
+    userEmail: string;
+
+    constructor(userEmail: string) {
+        this.userEmail = userEmail;
+    }
+}
+
+export class GetTicketStatisticsRequestModel {
+    companyId: number;
+
+    constructor(companyId: number) {
+        this.companyId = companyId;
+    }
+}
+
+// ============================================
+// DATA MODELS
+// ============================================
 
 export class TicketResponseModel {
     id: number;
@@ -121,25 +185,24 @@ export class TicketResponseModel {
     }
 }
 
+// ============================================
+// RESPONSE MODELS
+// ============================================
+
 export class GetAllTicketsModel extends GlobalResponse {
     tickets: TicketResponseModel[];
+
     constructor(status: boolean, code: number, message: string, tickets: TicketResponseModel[]) {
-        super(status, code, message, tickets);
+        super(status, code, message);
         this.tickets = tickets;
     }
 }
 
 export class GetTicketByIdModel extends GlobalResponse {
     ticket: TicketResponseModel;
-    constructor(status: boolean, code: number, message: string, ticket: TicketResponseModel) {
-        super(status, code, message, ticket);
-        this.ticket = ticket;
-    }
-}
 
-export class GetTicketsByUserModel {
-    userEmail: string;
-    constructor(userEmail: string) {
-        this.userEmail = userEmail;
+    constructor(status: boolean, code: number, message: string, ticket: TicketResponseModel) {
+        super(status, code, message);
+        this.ticket = ticket;
     }
 }

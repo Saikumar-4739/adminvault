@@ -1,12 +1,7 @@
-import {
-    Column,
-    Entity,
-    JoinColumn,
-    ManyToOne
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { PurchaseOrderEntity } from './purchase-order.entity';
-import { AssetTypeMasterEntity } from '../../masters/entities/asset-type.entity';
+import { AssetTypeMasterEntity } from '../../masters/asset-type/entities/asset-type.entity';
 
 @Entity('purchase_order_items')
 export class PurchaseOrderItemEntity extends CommonBaseEntity {

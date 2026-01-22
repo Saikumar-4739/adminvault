@@ -1,5 +1,5 @@
 import { CommonAxiosService } from '../common-axios-service';
-import { CreatePOModel, GetAllPOsModel, GetPOByIdModel, GlobalResponse } from '@adminvault/shared-models';
+import { CreatePOModel, GetAllPOsModel, GetPOByIdModel, GlobalResponse, GetAllPOsRequestModel, GetPORequestModel, UpdatePOStatusRequestModel } from '@adminvault/shared-models';
 import { AxiosRequestConfig } from 'axios';
 
 export class ProcurementService extends CommonAxiosService {
@@ -8,16 +8,18 @@ export class ProcurementService extends CommonAxiosService {
     }
 
     async createPO(model: CreatePOModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURL('po'), model, config);
+        return await this.axiosPostCall(this.getURL('createPO'), model, config);
     }
 
-    async getAllPOs(config?: AxiosRequestConfig): Promise<GetAllPOsModel> {
-        // Updated to use axiosGetCall if it exists, or axiosPostCall if the backend expects it.
-        // Looking at backend ProcurementController, it's @Get('po')
-        return await this.axiosGetCall(this.getURL('po'), config);
+    async getAllPOs(reqModel: GetAllPOsRequestModel, config?: AxiosRequestConfig): Promise<GetAllPOsModel> {
+        return await this.axiosPostCall(this.getURL('getAllPOs'), reqModel, config);
     }
 
-    async getPO(id: number, config?: AxiosRequestConfig): Promise<GetPOByIdModel> {
-        return await this.axiosGetCall(this.getURL(`po/${id}`), config);
+    async getPO(reqModel: GetPORequestModel, config?: AxiosRequestConfig): Promise<GetPOByIdModel> {
+        return await this.axiosPostCall(this.getURL('getPO'), reqModel, config);
+    }
+
+    async updatePOStatus(reqModel: UpdatePOStatusRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURL('updatePOStatus'), reqModel, config);
     }
 }

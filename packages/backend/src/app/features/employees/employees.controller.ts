@@ -4,7 +4,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { EmployeesService } from './employees.service';
 import { EmployeesBulkService } from './employees-bulk.service';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesModel, GetEmployeeByIdModel, BulkImportResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, BulkImportResponseModel, CompanyIdRequestModel, BulkImportRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Employees')
 @Controller('employees')
@@ -39,7 +39,8 @@ export class EmployeesController {
             if (!file) {
                 return new BulkImportResponseModel(false, 400, 'No file provided', 0, 0, []);
             }
-            return await this.bulkService.processBulkImport(file.buffer, Number(companyId), Number(userId));
+            const reqModel = new BulkImportRequestModel(file.buffer, Number(companyId), Number(userId));
+            return await this.bulkService.processBulkImport(reqModel);
         } catch (error) {
             return returnException(BulkImportResponseModel, error);
         }
@@ -82,11 +83,11 @@ export class EmployeesController {
      */
     @Post('getEmployee')
     @ApiBody({ type: GetEmployeeModel })
-    async getEmployee(@Body() reqModel: GetEmployeeModel): Promise<GetEmployeeByIdModel> {
+    async getEmployee(@Body() reqModel: GetEmployeeModel): Promise<GetEmployeeResponseModel> {
         try {
             return await this.service.getEmployee(reqModel);
         } catch (error) {
-            return returnException(GetEmployeeByIdModel, error);
+            return returnException(GetEmployeeResponseModel, error);
         }
     }
 
@@ -97,11 +98,11 @@ export class EmployeesController {
      */
     @Post('getAllEmployees')
     @ApiBody({ type: CompanyIdRequestModel })
-    async getAllEmployees(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllEmployeesModel> {
+    async getAllEmployees(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllEmployeesResponseModel> {
         try {
-            return await this.service.getAllEmployees(reqModel.id);
+            return await this.service.getAllEmployees(reqModel);
         } catch (error) {
-            return returnException(GetAllEmployeesModel, error);
+            return returnException(GetAllEmployeesResponseModel, error);
         }
     }
 

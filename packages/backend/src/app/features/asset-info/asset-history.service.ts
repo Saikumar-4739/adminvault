@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AssetTimelineEvent, AssetTimelineEventType, AssetTimelineResponseModel } from '@adminvault/shared-models';
-import { returnException } from '@adminvault/backend-utils';
+import { AssetTimelineEvent, AssetTimelineEventType, AssetTimelineResponseModel, AssetTimelineRequestModel } from '@adminvault/shared-models';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
 import { AssetReturnHistoryRepository } from './repositories/asset-return-history.repository';
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
@@ -16,8 +15,10 @@ export class AssetHistoryService {
         private readonly assetAssignRepo: AssetAssignRepository
     ) { }
 
-    async getAssetTimeline(assetId: number, companyId: number): Promise<AssetTimelineResponseModel> {
+    async getAssetTimeline(reqModel: AssetTimelineRequestModel): Promise<AssetTimelineResponseModel> {
         try {
+            const assetId = Number(reqModel.id);
+            const companyId = Number(reqModel.companyId);
             const asset = await this.assetRepo.findOne({ where: { id: assetId, companyId } });
             if (!asset) {
                 return new AssetTimelineResponseModel(false, 404, 'Asset not found', []);

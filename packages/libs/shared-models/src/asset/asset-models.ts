@@ -354,3 +354,39 @@ export class GetAssetsWithAssignmentsResponseModel extends GlobalResponse {
         this.assets = assets;
     }
 }
+
+export class AssignAssetOpRequestModel {
+    assetId: number;
+    employeeId: number;
+    userId: number;
+    remarks?: string;
+
+    constructor(assetId: number, employeeId: number, userId: number, remarks?: string) {
+        this.assetId = assetId;
+        this.employeeId = employeeId;
+        this.userId = userId;
+        this.remarks = remarks;
+    }
+}
+
+export class ReturnAssetOpRequestModel {
+    assetId: number;
+    userId: number;
+    remarks?: string;
+
+    constructor(assetId: number, userId: number, remarks?: string) {
+        this.assetId = assetId;
+        this.userId = userId;
+        this.remarks = remarks;
+    }
+}
+
+export class GetExpiringWarrantyRequestModel {
+    companyId: number;
+    months?: number;
+
+    constructor(companyId: number, months: number = 3) {
+        this.companyId = companyId;
+        this.months = months;
+    }
+}

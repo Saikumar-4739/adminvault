@@ -3,10 +3,7 @@ import { EmailInfoService } from './email-info.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
-import {
-    CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel,
-    GetEmailInfoModel, GetAllEmailInfoModel, EmailStatsResponseModel
-} from '@adminvault/shared-models';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetAllEmailInfoModel, EmailStatsResponseModel, CompanyIdRequestModel, GetEmailInfoModel, GetEmailInfoByIdModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel } from '@adminvault/shared-models';
 
 @ApiTags('Email Settings')
 @Controller('administration/email')
@@ -14,51 +11,96 @@ import {
 export class EmailController {
     constructor(private readonly emailService: EmailInfoService) { }
 
-    @Post('get-all')
-    async getAllEmailInfo(@Req() req: any): Promise<GetAllEmailInfoModel> {
+    @Post('getAllEmailInfo')
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getAllEmailInfo(@Body() req: CompanyIdRequestModel): Promise<GetAllEmailInfoModel> {
         try {
-            return await this.emailService.getAllEmailInfo(req.user.companyId);
+            return await this.emailService.getAllEmailInfo(req);
         } catch (error) {
             return returnException(GetAllEmailInfoModel, error);
         }
     }
 
-    @Post('create')
+    @Post('getEmailInfo')
+    @ApiBody({ type: GetEmailInfoModel })
+    async getEmailInfo(@Body() req: GetEmailInfoModel): Promise<GetEmailInfoByIdModel> {
+        try {
+            return await this.emailService.getEmailInfo(req);
+        } catch (error) {
+            return returnException(GetEmailInfoByIdModel, error);
+        }
+    }
+
+    @Post('createEmailInfo')
     @ApiBody({ type: CreateEmailInfoModel })
-    async createEmailInfo(@Body() body: CreateEmailInfoModel): Promise<GlobalResponse> {
+    async createEmailInfo(@Body() req: CreateEmailInfoModel): Promise<GlobalResponse> {
         try {
-            return await this.emailService.createEmailInfo(body);
+            return await this.emailService.createEmailInfo(req);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('update')
+    @Post('updateEmailInfo')
     @ApiBody({ type: UpdateEmailInfoModel })
-    async updateEmailInfo(@Body() body: UpdateEmailInfoModel): Promise<GlobalResponse> {
+    async updateEmailInfo(@Body() req: UpdateEmailInfoModel): Promise<GlobalResponse> {
         try {
-            return await this.emailService.updateEmailInfo(body);
+            return await this.emailService.updateEmailInfo(req);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('delete')
+    @Post('deleteEmailInfo')
     @ApiBody({ type: DeleteEmailInfoModel })
-    async deleteEmailInfo(@Body() body: DeleteEmailInfoModel): Promise<GlobalResponse> {
+    async deleteEmailInfo(@Body() req: DeleteEmailInfoModel): Promise<GlobalResponse> {
         try {
-            return await this.emailService.deleteEmailInfo(body);
+            return await this.emailService.deleteEmailInfo(req);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('stats')
-    async getEmailStats(@Req() req: any): Promise<EmailStatsResponseModel> {
+    @Post('getEmailStats')
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getEmailStats(@Body() req: CompanyIdRequestModel): Promise<EmailStatsResponseModel> {
         try {
-            return await this.emailService.getEmailStats(req.user.companyId);
+            return await this.emailService.getEmailStats(req);
         } catch (error) {
             return returnException(EmailStatsResponseModel, error);
+        }
+    }
+
+    @Post('sendTicketCreatedEmail')
+    @ApiBody({ type: SendTicketCreatedEmailModel })
+    async sendTicketCreatedEmail(@Body() req: SendTicketCreatedEmailModel): Promise<GlobalResponse> {
+        try {
+            const result = await this.emailService.sendTicketCreatedEmail(req);
+            return new GlobalResponse(result, result ? 200 : 500, result ? 'Email sent successfully' : 'Failed to send email');
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('sendPasswordResetEmail')
+    @ApiBody({ type: SendPasswordResetEmailModel })
+    async sendPasswordResetEmail(@Body() req: SendPasswordResetEmailModel): Promise<GlobalResponse> {
+        try {
+            const result = await this.emailService.sendPasswordResetEmail(req);
+            return new GlobalResponse(result, result ? 200 : 500, result ? 'Email sent successfully' : 'Failed to send email');
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('sendAccessRequestEmail')
+    @ApiBody({ type: RequestAccessModel })
+    async sendAccessRequestEmail(@Body() req: RequestAccessModel): Promise<GlobalResponse> {
+        try {
+            const result = await this.emailService.sendAccessRequestEmail(req);
+            return new GlobalResponse(result, result ? 200 : 500, result ? 'Email sent successfully' : 'Failed to send email');
+        } catch (error) {
+            return returnException(GlobalResponse, error);
         }
     }
 }

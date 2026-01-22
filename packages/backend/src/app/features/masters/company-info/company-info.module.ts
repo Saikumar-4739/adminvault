@@ -1,17 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CompanyInfoEntity } from '../entities/company-info.entity';
+import { CompanyInfoEntity } from './entities/company-info.entity';
 import { CompanyInfoService } from './company-info.service';
 import { CompanyInfoController } from './company-info.controller';
-import { CompanyInfoRepository } from '../repositories/company-info.repository';
+import { CompanyInfoRepository } from './repositories/company-info.repository';
 
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([CompanyInfoEntity]),
-    ],
+    imports: [TypeOrmModule.forFeature([CompanyInfoEntity])],
     controllers: [CompanyInfoController],
     providers: [CompanyInfoService, CompanyInfoRepository],
-    exports: [CompanyInfoService],
+    exports: [CompanyInfoService, CompanyInfoRepository],
 })
 export class CompanyInfoModule { }

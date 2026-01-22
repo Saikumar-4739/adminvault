@@ -106,3 +106,25 @@ export class EmailStatsResponseModel extends GlobalResponse {
         this.data = data;
     }
 }
+
+export class SendTicketCreatedEmailModel {
+    ticket: any;
+    recipientEmail: string;
+    roleName: string;
+
+    constructor(ticket: any, recipientEmail: string, roleName: string) {
+        this.ticket = ticket;
+        this.recipientEmail = recipientEmail;
+        this.roleName = roleName;
+    }
+}
+
+export class SendPasswordResetEmailModel {
+    email: string;
+    token: string;
+
+    constructor(email: string, token: string) {
+        this.email = email;
+        this.token = token;
+    }
+}

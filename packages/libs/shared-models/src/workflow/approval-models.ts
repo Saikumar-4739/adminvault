@@ -1,3 +1,9 @@
+import { GlobalResponse } from '../common/global-response';
+
+// ============================================
+// ENUMS
+// ============================================
+
 export enum ApprovalStatusEnum {
     PENDING = 'PENDING',
     APPROVED = 'APPROVED',
@@ -12,32 +18,126 @@ export enum ApprovalTypeEnum {
     PURCHASE_ORDER = 'PURCHASE_ORDER'
 }
 
+// ============================================
+// REQUEST MODELS - CREATE
+// ============================================
+
 export class CreateApprovalRequestModel {
+    referenceType: ApprovalTypeEnum;
+    referenceId: number;
+    requesterId: number;
+    companyId: number;
+    description?: string;
+
     constructor(
-        public referenceType: ApprovalTypeEnum,
-        public referenceId: number,
-        public requesterId: number,
-        public companyId: number,
-        public description?: string
-    ) { }
+        referenceType: ApprovalTypeEnum,
+        referenceId: number,
+        requesterId: number,
+        companyId: number,
+        description?: string
+    ) {
+        this.referenceType = referenceType;
+        this.referenceId = referenceId;
+        this.requesterId = requesterId;
+        this.companyId = companyId;
+        this.description = description;
+    }
 }
+
+// ============================================
+// REQUEST MODELS - UPDATE
+// ============================================
 
 export class ApprovalActionModel {
+    requestId: number;
+    actionByUserId: number;
+    remarks?: string;
+
     constructor(
-        public requestId: number,
-        public actionByUserId: number,
-        public remarks?: string
-    ) { }
+        requestId: number,
+        actionByUserId: number,
+        remarks?: string
+    ) {
+        this.requestId = requestId;
+        this.actionByUserId = actionByUserId;
+        this.remarks = remarks;
+    }
 }
 
+// ============================================
+// REQUEST MODELS - GET
+// ============================================
+
+export class GetPendingApprovalsRequestModel {
+    companyId: number;
+
+    constructor(companyId: number) {
+        this.companyId = companyId;
+    }
+}
+
+// ============================================
+// DATA MODELS
+// ============================================
+
 export class ApprovalRequestResponseModel {
+    id: number;
+    referenceType: ApprovalTypeEnum;
+    referenceId: number;
+    status: ApprovalStatusEnum;
+    requesterName: string;
+    requestedAt: Date;
+    description?: string;
+
     constructor(
-        public id: number,
-        public referenceType: ApprovalTypeEnum,
-        public referenceId: number,
-        public status: ApprovalStatusEnum,
-        public requesterName: string,
-        public requestedAt: Date,
-        public description?: string
-    ) { }
+        id: number,
+        referenceType: ApprovalTypeEnum,
+        referenceId: number,
+        status: ApprovalStatusEnum,
+        requesterName: string,
+        requestedAt: Date,
+        description?: string
+    ) {
+        this.id = id;
+        this.referenceType = referenceType;
+        this.referenceId = referenceId;
+        this.status = status;
+        this.requesterName = requesterName;
+        this.requestedAt = requestedAt;
+        this.description = description;
+    }
+}
+
+// ============================================
+// RESPONSE MODELS
+// ============================================
+
+export class InitiateApprovalResponseModel extends GlobalResponse {
+    approvalRequest?: ApprovalRequestResponseModel;
+
+    constructor(status: boolean, code: number, message: string, approvalRequest?: ApprovalRequestResponseModel) {
+        super(status, code, message);
+        this.approvalRequest = approvalRequest;
+    }
+}
+
+export class ApproveRequestResponseModel extends GlobalResponse {
+    constructor(status: boolean, code: number, message: string) {
+        super(status, code, message);
+    }
+}
+
+export class RejectRequestResponseModel extends GlobalResponse {
+    constructor(status: boolean, code: number, message: string) {
+        super(status, code, message);
+    }
+}
+
+export class GetPendingApprovalsResponseModel extends GlobalResponse {
+    approvals: ApprovalRequestResponseModel[];
+
+    constructor(status: boolean, code: number, message: string, approvals: ApprovalRequestResponseModel[]) {
+        super(status, code, message);
+        this.approvals = approvals;
+    }
 }

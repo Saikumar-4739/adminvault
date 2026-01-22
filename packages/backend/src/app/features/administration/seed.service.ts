@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { CompanyInfoEntity } from '../masters/entities/company-info.entity';
-import { DepartmentsMasterEntity } from '../masters/entities/department.entity';
-import { LocationsMasterEntity } from '../masters/entities/location.entity';
+import { CompanyInfoEntity } from '../masters/company-info/entities/company-info.entity';
+import { DepartmentsMasterEntity } from '../masters/department/entities/department.entity';
+import { LocationsMasterEntity } from '../masters/location/entities/location.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { AssetInfoEntity } from '../asset-info/entities/asset-info.entity';
-import { TicketCategoriesMasterEntity } from '../masters/entities/ticket-category.entity';
+import { TicketCategoriesMasterEntity } from '../masters/ticket-category/entities/ticket-category.entity';
 import { TicketsEntity } from '../tickets/entities/tickets.entity';
-import { DeviceInfoEntity } from '../masters/entities/device-info.entity';
-import { BrandsMasterEntity } from '../masters/entities/brand.entity';
-import { ApplicationsMasterEntity } from '../masters/entities/application.entity';
-import { VendorsMasterEntity } from '../masters/entities/vendor.entity';
+import { DeviceInfoEntity } from '../masters/device-info/entities/device-info.entity';
+import { BrandsMasterEntity } from '../masters/brand/entities/brand.entity';
+import { ApplicationsMasterEntity } from '../masters/application/entities/application.entity';
+import { VendorsMasterEntity } from '../masters/vendor/entities/vendor.entity';
 import { PurchaseOrderEntity } from '../procurement/entities/purchase-order.entity';
 import { PurchaseOrderItemEntity } from '../procurement/entities/purchase-order-item.entity';
 import { KnowledgeArticleEntity } from '../knowledge-base/entities/knowledge-article.entity';
@@ -22,7 +22,7 @@ import * as bcrypt from 'bcrypt';
 import { PasswordVaultEntity } from './entities/password-vault.entity';
 import { SettingsEntity } from './entities/settings.entity';
 import { EmailInfoEntity } from './entities/email-info.entity';
-import { MaintenanceScheduleEntity } from '../asset-info/entities/maintenance-schedule.entity';
+import { MaintenanceScheduleEntity } from '../maintenance/entities/maintenance-schedule.entity';
 
 @Injectable()
 export class SeedService {

@@ -31,6 +31,9 @@
       ],
       "@adminvault/backend-utils": [
         "../libs/backend-utils/src/index.ts"
+      ],
+      "@adminvault/shared-services": [
+        "../libs/shared-services/src/index.ts"
       ]
     }
   },
@@ -44,6 +47,9 @@
     },
     {
       "path": "../libs/backend-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../libs/shared-services/tsconfig.lib.json"
     }
   ]
 }

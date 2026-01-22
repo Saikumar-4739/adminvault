@@ -6,7 +6,9 @@ import { AssetInfoService } from './asset-info.service';
 import { AssetTabsService } from './asset-tabs.service';
 import { AssetBulkService } from './asset-bulk.service';
 import { AssetHistoryService } from './asset-history.service';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel, AssetTimelineRequestModel, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
+
 
 @ApiTags('Asset Info')
 @Controller('asset-info')
@@ -19,10 +21,10 @@ export class AssetInfoController {
     ) { }
 
     @Post('timeline')
-    @ApiBody({ schema: { properties: { id: { type: 'number' }, companyId: { type: 'number' } } } })
-    async getTimeline(@Body() body: { id: number, companyId: number }): Promise<AssetTimelineResponseModel> {
+    @ApiBody({ type: AssetTimelineRequestModel })
+    async getTimeline(@Body() body: AssetTimelineRequestModel): Promise<AssetTimelineResponseModel> {
         try {
-            return await this.assetHistoryService.getAssetTimeline(Number(body.id), Number(body.companyId));
+            return await this.assetHistoryService.getAssetTimeline(body);
         } catch (error) {
             return returnException(AssetTimelineResponseModel, error);
         }
@@ -31,7 +33,7 @@ export class AssetInfoController {
     @Post('bulk-import')
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('file'))
-    async bulkImport(@UploadedFile() file: any, @Body('companyId') companyId: number, @Body('userId') userId: number): Promise<BulkImportResponseModel> {
+    async bulkImport(@UploadedFile() file: Express.Multer.File, @Body('companyId') companyId: number, @Body('userId') userId: number): Promise<BulkImportResponseModel> {
         try {
             if (!file) {
                 return new BulkImportResponseModel(false, 400, 'No file provided', 0, 0, []);
@@ -55,9 +57,9 @@ export class AssetInfoController {
 
     @Post('updateAsset')
     @ApiBody({ type: UpdateAssetModel })
-    async updateAsset(@Body() reqModel: UpdateAssetModel, @Req() req: any): Promise<GlobalResponse> {
+    async updateAsset(@Body() reqModel: UpdateAssetModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
+            const userId = req.user.userId;
             return await this.service.updateAsset(reqModel, userId);
         } catch (error) {
             return returnException(GlobalResponse, error);
@@ -78,7 +80,7 @@ export class AssetInfoController {
     @ApiBody({ type: CompanyIdRequestModel })
     async getAllAssets(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllAssetsModel> {
         try {
-            return await this.service.getAllAssets(reqModel.id);
+            return await this.service.getAllAssets(reqModel);
         } catch (error) {
             return returnException(GetAllAssetsModel, error);
         }
@@ -86,9 +88,9 @@ export class AssetInfoController {
 
     @Post('deleteAsset')
     @ApiBody({ type: DeleteAssetModel })
-    async deleteAsset(@Body() reqModel: DeleteAssetModel, @Req() req: any): Promise<GlobalResponse> {
+    async deleteAsset(@Body() reqModel: DeleteAssetModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
+            const userId = req.user.userId;
             return await this.service.deleteAsset(reqModel, userId);
         } catch (error) {
             return returnException(GlobalResponse, error);
@@ -99,7 +101,7 @@ export class AssetInfoController {
     @ApiBody({ type: CompanyIdRequestModel })
     async getStatistics(@Body() reqModel: CompanyIdRequestModel): Promise<AssetStatisticsResponseModel> {
         try {
-            return await this.service.getAssetStatistics(reqModel.id);
+            return await this.service.getAssetStatistics(reqModel);
         } catch (error) {
             return returnException(AssetStatisticsResponseModel, error);
         }
@@ -119,7 +121,7 @@ export class AssetInfoController {
     @ApiBody({ type: CompanyIdRequestModel })
     async getAssetsWithAssignments(@Body() reqModel: CompanyIdRequestModel): Promise<GetAssetsWithAssignmentsResponseModel> {
         try {
-            return await this.service.getAssetsWithAssignments(reqModel.id);
+            return await this.service.getAssetsWithAssignments(reqModel);
         } catch (error) {
             return returnException(GetAssetsWithAssignmentsResponseModel, error);
         }
@@ -188,9 +190,10 @@ export class AssetInfoController {
 
     // Asset Assignment CRUD Operations
     @Post('createAssignment')
-    async createAssignment(@Body() reqModel: any, @Req() req: any): Promise<GlobalResponse> {
+    @ApiBody({ type: CreateAssetAssignModel })
+    async createAssignment(@Body() reqModel: CreateAssetAssignModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
+            const userId = req.user.userId;
             return await this.service.createAssignment(reqModel, userId);
         } catch (error) {
             return returnException(GlobalResponse, error);
@@ -198,9 +201,10 @@ export class AssetInfoController {
     }
 
     @Post('updateAssignment')
-    async updateAssignment(@Body() reqModel: any, @Req() req: any): Promise<GlobalResponse> {
+    @ApiBody({ type: UpdateAssetAssignModel })
+    async updateAssignment(@Body() reqModel: UpdateAssetAssignModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
+            const userId = req.user.userId;
             return await this.service.updateAssignment(reqModel, userId);
         } catch (error) {
             return returnException(GlobalResponse, error);
@@ -208,30 +212,23 @@ export class AssetInfoController {
     }
 
     @Post('getAssignment')
-    async getAssignment(@Body() reqModel: any): Promise<any> {
+    @ApiBody({ type: GetAssetAssignModel })
+    async getAssignment(@Body() reqModel: GetAssetAssignModel): Promise<GetAssetAssignByIdModel | GlobalResponse> {
         try {
             return await this.service.getAssignment(reqModel);
         } catch (error) {
-            return returnException(GlobalResponse, error);
+            return returnException(GetAssetAssignByIdModel, error);
         }
     }
 
     @Post('getAllAssignments')
-    async getAllAssignments(@Body() reqModel: CompanyIdRequestModel): Promise<any> {
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getAllAssignments(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllAssetAssignsModel | GlobalResponse> {
         try {
-            return await this.service.getAllAssignments(reqModel.id);
+            return await this.service.getAllAssignments(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('deleteAssignment')
-    async deleteAssignment(@Body() reqModel: any, @Req() req: any): Promise<GlobalResponse> {
-        try {
-            const userId = req.user?.id || req.user?.userId;
-            return await this.service.deleteAssignment(reqModel, userId);
-        } catch (error) {
-            return returnException(GlobalResponse, error);
-        }
-    }
 }

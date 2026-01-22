@@ -1,10 +1,11 @@
-import { Body, Controller, Post, Req, Get, Query, Res } from '@nestjs/common';
+import { Body, Controller, Post, Req } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel } from '@adminvault/shared-models';
-import type { Request, Response } from 'express';
+import { Request } from 'express';
 import { Public } from '../../decorators/public.decorator';
+import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
 
 @ApiTags('Auth Users')
 @Controller('auth-users')
@@ -16,7 +17,7 @@ export class AuthUsersController {
     @Post('registerUser')
     @Public()
     @ApiBody({ type: RegisterUserModel })
-    async registerUser(@Body() reqModel: RegisterUserModel, @Req() req: any): Promise<GlobalResponse> {
+    async registerUser(@Body() reqModel: RegisterUserModel, @Req() req: Request): Promise<GlobalResponse> {
         try {
             const ipAddress = this.extractIp(req);
             return await this.service.registerUser(reqModel, ipAddress);
@@ -38,7 +39,7 @@ export class AuthUsersController {
 
     @Post('logOutUser')
     @ApiBody({ type: LogoutUserModel })
-    async logOutUser(@Body() reqModel: LogoutUserModel, @Req() req: any): Promise<GlobalResponse> {
+    async logOutUser(@Body() reqModel: LogoutUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
             const ipAddress = this.extractIp(req);
             return await this.service.logOutUser(reqModel, ipAddress);
@@ -49,9 +50,9 @@ export class AuthUsersController {
 
     @Post('updateUser')
     @ApiBody({ type: UpdateUserModel })
-    async updateUser(@Body() reqModel: UpdateUserModel, @Req() req: any): Promise<GlobalResponse> {
+    async updateUser(@Body() reqModel: UpdateUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
+            const userId = req.user.userId;
             const ipAddress = this.extractIp(req);
             return await this.service.updateUser(reqModel, userId, ipAddress);
         } catch (error) {
@@ -61,9 +62,9 @@ export class AuthUsersController {
 
     @Post('deleteUser')
     @ApiBody({ type: DeleteUserModel })
-    async deleteUser(@Body() reqModel: DeleteUserModel, @Req() req: any): Promise<GlobalResponse> {
+    async deleteUser(@Body() reqModel: DeleteUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
+            const userId = req.user.userId;
             const ipAddress = this.extractIp(req);
             return await this.service.deleteUser(reqModel, userId, ipAddress);
         } catch (error) {
@@ -115,14 +116,22 @@ export class AuthUsersController {
     }
 
 
-    private extractIp(req: any): string {
-        let ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || '127.0.0.1';
+    private extractIp(req: Request): string {
+        let ip: any = req.headers['x-forwarded-for'] || req.ip || (req as any).connection?.remoteAddress || '127.0.0.1';
+
+        // If x-forwarded-for is an array, take the first one
+        if (Array.isArray(ip)) {
+            ip = ip[0];
+        }
+
         if (typeof ip === 'string' && ip.includes(',')) {
             ip = ip.split(',')[0].trim();
         }
+
         if (typeof ip === 'string' && ip.startsWith('::ffff:')) {
             ip = ip.replace('::ffff:', '');
         }
+
         return ip as string;
     }
 }

@@ -18,25 +18,14 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { WorkflowModule } from '../workflow/workflow.module';
 import { SoftwareMasterEntity } from './entities/software-master.entity';
 import { AssetSoftwareEntity } from './entities/asset-software.entity';
-import { MaintenanceScheduleEntity } from './entities/maintenance-schedule.entity';
 import { SoftwareService } from './software.service';
-
 @Module({
     imports: [
-        TypeOrmModule.forFeature([
-            AssetInfoEntity,
-            AssetReturnHistoryEntity,
-            AssetNextAssignmentEntity,
-            AssetAssignEntity,
-            EmployeesEntity,
-            SoftwareMasterEntity,
-            AssetSoftwareEntity,
-            MaintenanceScheduleEntity
-        ]),
+        TypeOrmModule.forFeature([AssetInfoEntity, AssetReturnHistoryEntity, AssetNextAssignmentEntity, AssetAssignEntity, EmployeesEntity, SoftwareMasterEntity, AssetSoftwareEntity]),
         forwardRef(() => WorkflowModule)
     ],
     controllers: [AssetInfoController],
     providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository, AssetAssignRepository, EmployeesRepository, SoftwareService],
-    exports: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, SoftwareService]
+    exports: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, SoftwareService, AssetInfoRepository]
 })
 export class AssetInfoModule { }

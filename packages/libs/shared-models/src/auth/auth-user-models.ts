@@ -126,29 +126,6 @@ export class GetAllUsersModel extends GlobalResponse {
     }
 }
 
-export class IdRequestModel {
-    id: number;
-    constructor(id: number) {
-        this.id = id;
-    }
-}
-
-export class CompanyIdRequestModel {
-    id: number;
-    name?: string;
-    constructor(id: number, name?: string) {
-        this.id = id;
-        this.name = name;
-    }
-}
-
-export class UserIdRequestModel {
-    id: number;
-    constructor(id: number) {
-        this.id = id;
-    }
-}
-
 // --- Interfaces for UI ---
 export interface IAMUser {
     id: number;

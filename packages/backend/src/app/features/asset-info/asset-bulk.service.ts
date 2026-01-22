@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as XLSX from 'xlsx';
 import { AssetStatusEnum, BulkImportRequestModel, BulkImportResponseModel } from '@adminvault/shared-models';
-import { ErrorResponse } from '@adminvault/backend-utils';
 import { AssetInfoEntity } from './entities/asset-info.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 
@@ -91,8 +90,8 @@ export class AssetBulkService {
             const totalProcessed = dataRows.length;
             const message = `Bulk import completed. Total: ${totalProcessed}, Success: ${successCount}, Failed: ${errors.length}`;
             return new BulkImportResponseModel(errors.length === 0, 200, message, successCount, errors.length, errors);
-        } catch (error: any) {
-            throw new ErrorResponse(500, error.message || 'Failed to process bulk import');
+        } catch (error) {
+            throw error;
         }
     }
 }

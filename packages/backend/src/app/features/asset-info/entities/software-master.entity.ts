@@ -1,8 +1,4 @@
-import {
-    Column,
-    Entity,
-    Index
-} from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { SoftwareTypeEnum } from '@adminvault/shared-models';
 

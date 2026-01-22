@@ -1,81 +1,153 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { BulkSetSettingsModel, CompanyIdRequestModel, CreateAssetModel, CreateEmailInfoModel, CreatePasswordVaultModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, GetAllAssetsModel, GetAllEmailInfoModel, GetAllPasswordVaultsResponseModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UpdatePasswordVaultModel } from '@adminvault/shared-models';
+import {
+    BulkSetSettingsModel,
+    CompanyIdRequestModel,
+    CreateEmailInfoModel,
+    CreatePasswordVaultModel,
+    CreateSettingModel,
+    DeleteEmailInfoModel,
+    EmailStatsResponseModel,
+    GetAllEmailInfoModel,
+    GetAllPasswordVaultsResponseModel,
+    GetAllSettingsResponseModel,
+    GetEmailInfoByIdModel,
+    GetEmailInfoModel,
+    GlobalResponse,
+    UpdateEmailInfoModel,
+    UpdatePasswordVaultModel,
+    UserIdNumRequestModel,
+    GetSettingRequestModel,
+    GetSettingResponseModel,
+    DeleteSettingRequestModel,
+    GetSettingsByCategoryRequestModel,
+    GetAllVaultEntriesModel,
+    GetVaultEntryModel,
+    GetVaultEntryResponseModel,
+    DeleteVaultEntryModel,
+    GetDecryptedPasswordModel,
+    GetDecryptedPasswordResponseModel,
+    SearchVaultByCategoryModel,
+    ToggleVaultFavoriteModel,
+    GetVaultCategoriesModel,
+    GetVaultCategoriesResponseModel,
+    SendTicketCreatedEmailModel,
+    SendPasswordResetEmailModel,
+    RequestAccessModel
+} from '@adminvault/shared-models';
 
 export class AdministrationService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
         return '/administration/' + childUrl;
     }
 
-    async getUserSettings(config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/get-all-user-settings'), {}, config);
+    // --- SETTINGS ---
+
+    async getUserSettings(reqModel: UserIdNumRequestModel, config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/getUserSettings'), reqModel, config);
     }
 
-    async getCompanySettings(config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/get-all-company-settings'), {}, config);
+    async getCompanySettings(reqModel: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/getCompanySettings'), reqModel, config);
     }
 
     async getSystemSettings(config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/get-all-system-settings'), {}, config);
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/getSystemSettings'), {}, config);
     }
 
-    async setUserSetting(reqObj: CreateSettingModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/set-user-setting'), reqObj, config);
+    async setSetting(reqModel: CreateSettingModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/setUserSetting'), reqModel, config);
     }
 
-    async bulkSetSettings(reqObj: BulkSetSettingsModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/bulk-set'), reqObj, config);
+    async bulkSetSettings(reqModel: BulkSetSettingsModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/bulkSetSettings'), reqModel, config);
     }
 
-    async findAllVaultEntries(config?: AxiosRequestConfig): Promise<GetAllPasswordVaultsResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/get-all'), {}, config);
+    async getSetting(reqModel: GetSettingRequestModel, config?: AxiosRequestConfig): Promise<GetSettingResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/getSetting'), reqModel, config);
     }
 
-    async createVaultEntry(reqObj: CreatePasswordVaultModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/create'), reqObj, config);
+    async deleteSetting(reqModel: DeleteSettingRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/deleteSetting'), reqModel, config);
     }
 
-    async updateVaultEntry(reqObj: UpdatePasswordVaultModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/update'), reqObj, config);
+    async getAllSettingsByCategory(reqModel: GetSettingsByCategoryRequestModel, config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/getAllSettingsByCategory'), reqModel, config);
     }
 
-    async revealVaultPassword(id: number, config?: AxiosRequestConfig): Promise<any> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/reveal-password'), { id }, config);
+    // --- PASSWORD VAULT ---
+
+    async findAllVaultEntries(reqModel: GetAllVaultEntriesModel, config?: AxiosRequestConfig): Promise<GetAllPasswordVaultsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/getAllVaultEntries'), reqModel, config);
     }
 
-    async findAssets(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetsModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('operations/assets/findAll'), reqObj, config);
+    async findOneVaultEntry(reqModel: GetVaultEntryModel, config?: AxiosRequestConfig): Promise<GetVaultEntryResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/getVaultEntry'), reqModel, config);
     }
 
-    async createAsset(reqObj: CreateAssetModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('operations/assets/create'), reqObj, config);
+    async createVaultEntry(reqModel: CreatePasswordVaultModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/createVaultEntry'), reqModel, config);
     }
 
-    async assignAssetOp(assetId: number, employeeId: number, remarks?: string, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('operations/assets/assign'), { assetId, employeeId, remarks }, config);
+    async updateVaultEntry(reqModel: UpdatePasswordVaultModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/updateVaultEntry'), reqModel, config);
     }
 
-    async createEmailInfo(reqObj: CreateEmailInfoModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('email-info/createEmailInfo'), reqObj, config);
+    async deleteVaultEntry(reqModel: DeleteVaultEntryModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/deleteVaultEntry'), reqModel, config);
     }
 
-    async updateEmailInfo(reqObj: UpdateEmailInfoModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('email-info/updateEmailInfo'), reqObj, config);
+    async getDecryptedVaultPassword(reqModel: GetDecryptedPasswordModel, config?: AxiosRequestConfig): Promise<GetDecryptedPasswordResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/getDecryptedVaultPassword'), reqModel, config);
     }
 
-    async getEmailInfo(reqObj: GetEmailInfoModel, config?: AxiosRequestConfig): Promise<GetEmailInfoByIdModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('email-info/getEmailInfo'), reqObj, config);
+    async searchVaultByCategory(reqModel: SearchVaultByCategoryModel, config?: AxiosRequestConfig): Promise<GetAllPasswordVaultsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/searchVaultByCategory'), reqModel, config);
     }
 
-    async getAllEmailInfo(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllEmailInfoModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('email-info/getAllEmailInfo'), reqObj, config);
+    async toggleVaultFavorite(reqModel: ToggleVaultFavoriteModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/toggleVaultFavorite'), reqModel, config);
     }
 
-    async getEmailStats(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<EmailStatsResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('email-info/getEmailStats'), reqObj, config);
+    async getVaultCategories(reqModel: GetVaultCategoriesModel, config?: AxiosRequestConfig): Promise<GetVaultCategoriesResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/getVaultCategories'), reqModel, config);
     }
 
-    async deleteEmailInfo(reqObj: DeleteEmailInfoModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('email-info/deleteEmailInfo'), reqObj, config);
+    // --- EMAIL ---
+
+    async getAllEmailInfo(reqModel: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllEmailInfoModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/getAllEmailInfo'), reqModel, config);
+    }
+
+    async getEmailInfo(reqModel: GetEmailInfoModel, config?: AxiosRequestConfig): Promise<GetEmailInfoByIdModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/getEmailInfo'), reqModel, config);
+    }
+
+    async createEmailInfo(reqModel: CreateEmailInfoModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/createEmailInfo'), reqModel, config);
+    }
+
+    async updateEmailInfo(reqModel: UpdateEmailInfoModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/updateEmailInfo'), reqModel, config);
+    }
+
+    async deleteEmailInfo(reqModel: DeleteEmailInfoModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/deleteEmailInfo'), reqModel, config);
+    }
+
+    async getEmailStats(reqModel: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<EmailStatsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/getEmailStats'), reqModel, config);
+    }
+
+    async sendTicketCreatedEmail(reqModel: SendTicketCreatedEmailModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/sendTicketCreatedEmail'), reqModel, config);
+    }
+
+    async sendPasswordResetEmail(reqModel: SendPasswordResetEmailModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/sendPasswordResetEmail'), reqModel, config);
+    }
+
+    async sendAccessRequestEmail(reqModel: RequestAccessModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/sendAccessRequestEmail'), reqModel, config);
     }
 }

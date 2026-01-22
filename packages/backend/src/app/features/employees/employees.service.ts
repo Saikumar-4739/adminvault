@@ -4,7 +4,7 @@ import { EmployeesRepository } from './repositories/employees.repository';
 import { EmployeesEntity } from './entities/employees.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesModel, GetEmployeeByIdModel, EmployeeResponseModel } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 
 @Injectable()
 export class EmployeesService {
@@ -104,7 +104,7 @@ export class EmployeesService {
      * @returns GetEmployeeByIdModel with employee details
      * @throws ErrorResponse if employee ID is missing or employee not found
      */
-    async getEmployee(reqModel: GetEmployeeModel): Promise<GetEmployeeByIdModel> {
+    async getEmployee(reqModel: GetEmployeeModel): Promise<GetEmployeeResponseModel> {
         try {
             if (!reqModel.id) {
                 throw new ErrorResponse(0, "Employee ID is required");
@@ -130,7 +130,7 @@ export class EmployeesService {
                 employee.remarks,
                 `Dept ID: ${employee.departmentId}` // Placeholder name
             );
-            return new GetEmployeeByIdModel(true, 0, "Employee retrieved successfully", employeeResponse);
+            return new GetEmployeeResponseModel(true, 0, "Employee retrieved successfully", employeeResponse);
         } catch (error) {
             throw error;
         }
@@ -140,13 +140,14 @@ export class EmployeesService {
      * Retrieve all employees, optionally filtered by company
      * Fetches list of all employees or employees for a specific company
      * 
-     * @param companyId - Optional company ID to filter employees
+     * @param reqModel - Request containing optional company ID to filter employees
      * @returns GetAllEmployeesModel with list of employees
      * @throws Error if database query fails
      */
-    async getAllEmployees(companyId?: number): Promise<GetAllEmployeesModel> {
+    async getAllEmployees(reqModel: CompanyIdRequestModel): Promise<GetAllEmployeesResponseModel> {
         try {
             let employees: EmployeesEntity[];
+            const companyId = reqModel.companyId;
 
             if (companyId) {
                 employees = await this.employeesRepo.find({
@@ -169,7 +170,7 @@ export class EmployeesService {
                 emp.remarks,
                 `Dept ID: ${emp.departmentId}` // Placeholder name
             ));
-            return new GetAllEmployeesModel(true, 0, "Employees retrieved successfully", employeeResponses);
+            return new GetAllEmployeesResponseModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {
             throw error;
         }
@@ -183,9 +184,6 @@ export class EmployeesService {
      * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if employee ID is missing or employee not found
      */
-    async findAll(companyId: number): Promise<EmployeesEntity[]> {
-        return await this.employeesRepo.find({ where: { companyId } });
-    }
 
     async deleteEmployee(reqModel: DeleteEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);

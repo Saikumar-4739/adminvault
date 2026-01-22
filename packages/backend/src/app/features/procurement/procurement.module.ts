@@ -5,21 +5,16 @@ import { ProcurementController } from './procurement.controller';
 import { PurchaseOrderEntity } from './entities/purchase-order.entity';
 import { PurchaseOrderItemEntity } from './entities/purchase-order-item.entity';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
-import { VendorsMasterEntity } from '../masters/entities/vendor.entity';
+import { VendorsMasterEntity } from '../masters/vendor/entities/vendor.entity';
 import { WorkflowModule } from '../workflow/workflow.module';
+import { PurchaseOrderRepository } from './repositories/purchase-order.repository';
+import { PurchaseOrderItemRepository } from './repositories/purchase-order-item.repository';
+import { EmployeesRepository } from '../employees/repositories/employees.repository';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([
-            PurchaseOrderEntity,
-            PurchaseOrderItemEntity,
-            EmployeesEntity,
-            VendorsMasterEntity
-        ]),
-        forwardRef(() => WorkflowModule)
-    ],
+    imports: [TypeOrmModule.forFeature([PurchaseOrderEntity, PurchaseOrderItemEntity, EmployeesEntity, VendorsMasterEntity]), forwardRef(() => WorkflowModule)],
     controllers: [ProcurementController],
-    providers: [ProcurementService],
+    providers: [ProcurementService, PurchaseOrderRepository, PurchaseOrderItemRepository, EmployeesRepository],
     exports: [ProcurementService]
 })
 export class ProcurementModule { }

@@ -3,10 +3,6 @@ import { EmployeeStatusEnum } from '@adminvault/shared-models';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('employees')
-@Index('idx_emp_email', ['email'])
-@Index('idx_emp_dept_id', ['departmentId'])
-@Index('idx_emp_slack_id', ['slackUserId'])
-@Index('idx_emp_status', ['empStatus'])
 @Index('idx_emp_company', ['companyId'])
 @Index('idx_emp_user', ['userId'])
 export class EmployeesEntity extends CommonBaseEntity {

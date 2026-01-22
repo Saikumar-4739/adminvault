@@ -1,9 +1,9 @@
 import { POStatusEnum } from '../enums';
 import { GlobalResponse } from '../common/global-response';
 
-// --- PO Item Models ---
-
-// --- PO Item Models ---
+// ============================================
+// PO ITEM MODELS
+// ============================================
 
 export class POItemModel {
     itemName: string;
@@ -11,7 +11,7 @@ export class POItemModel {
     quantity: number;
     unitPrice: number;
     totalPrice: number;
-    assetTypeId?: number; // Optional link to Asset Type for auto-conversion
+    assetTypeId?: number;
 
     constructor(
         itemName: string,
@@ -29,7 +29,9 @@ export class POItemModel {
     }
 }
 
-// --- PO Models ---
+// ============================================
+// REQUEST MODELS - CREATE
+// ============================================
 
 export class CreatePOModel {
     vendorId: number;
@@ -55,6 +57,95 @@ export class CreatePOModel {
         this.timeSpentMinutes = timeSpentMinutes;
     }
 }
+
+// ============================================
+// REQUEST MODELS - UPDATE
+// ============================================
+
+export class UpdatePOModel {
+    id: number;
+    vendorId: number;
+    orderDate: Date;
+    expectedDeliveryDate?: Date;
+    status: POStatusEnum;
+    items: POItemModel[];
+    notes?: string;
+    timeSpentMinutes?: number;
+
+    constructor(
+        id: number,
+        vendorId: number,
+        orderDate: Date,
+        status: POStatusEnum,
+        items: POItemModel[],
+        expectedDeliveryDate?: Date,
+        notes?: string,
+        timeSpentMinutes?: number
+    ) {
+        this.id = id;
+        this.vendorId = vendorId;
+        this.orderDate = orderDate;
+        this.status = status;
+        this.items = items;
+        this.expectedDeliveryDate = expectedDeliveryDate;
+        this.notes = notes;
+        this.timeSpentMinutes = timeSpentMinutes;
+    }
+}
+
+// ============================================
+// REQUEST MODELS - GET/DELETE
+// ============================================
+
+export class GetAllPOsRequestModel {
+    companyId: number;
+
+    constructor(companyId: number) {
+        this.companyId = companyId;
+    }
+}
+
+export class GetPORequestModel {
+    id: number;
+
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+export class DeletePORequestModel {
+    id: number;
+
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+export class UpdatePOStatusRequestModel {
+    id: number;
+    status: POStatusEnum;
+
+    constructor(id: number, status: POStatusEnum) {
+        this.id = id;
+        this.status = status;
+    }
+}
+
+export class SearchPOModel {
+    companyId: number;
+    query?: string;
+    status?: POStatusEnum;
+
+    constructor(companyId: number, query?: string, status?: POStatusEnum) {
+        this.companyId = companyId;
+        this.query = query;
+        this.status = status;
+    }
+}
+
+// ============================================
+// DATA MODELS
+// ============================================
 
 export class PurchaseOrderModel {
     id: number;
@@ -105,30 +196,42 @@ export class PurchaseOrderModel {
     }
 }
 
+// ============================================
+// RESPONSE MODELS
+// ============================================
+
+export class CreatePOResponseModel extends GlobalResponse {
+    po: PurchaseOrderModel;
+
+    constructor(status: boolean, code: number, message: string, po: PurchaseOrderModel) {
+        super(status, code, message);
+        this.po = po;
+    }
+}
+
+export class UpdatePOResponseModel extends GlobalResponse {
+    po: PurchaseOrderModel;
+
+    constructor(status: boolean, code: number, message: string, po: PurchaseOrderModel) {
+        super(status, code, message);
+        this.po = po;
+    }
+}
+
 export class GetAllPOsModel extends GlobalResponse {
     pos: PurchaseOrderModel[];
+
     constructor(status: boolean, code: number, message: string, pos: PurchaseOrderModel[]) {
-        super(status, code, message, pos);
+        super(status, code, message);
         this.pos = pos;
     }
 }
 
 export class GetPOByIdModel extends GlobalResponse {
     po: PurchaseOrderModel;
+
     constructor(status: boolean, code: number, message: string, po: PurchaseOrderModel) {
-        super(status, code, message, po);
+        super(status, code, message);
         this.po = po;
-    }
-}
-
-export class SearchPOModel {
-    companyId: number;
-    query?: string;
-    status?: POStatusEnum;
-
-    constructor(companyId: number, query?: string, status?: POStatusEnum) {
-        this.companyId = companyId;
-        this.query = query;
-        this.status = status;
     }
 }

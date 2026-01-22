@@ -1,21 +1,13 @@
-import {
-    Column,
-    Entity,
-    JoinColumn,
-    ManyToOne,
-    OneToMany,
-    Index
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, Index } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { POStatusEnum } from '@adminvault/shared-models';
-import { VendorsMasterEntity } from '../../masters/entities/vendor.entity';
+import { VendorsMasterEntity } from '../../masters/vendor/entities/vendor.entity';
 import { EmployeesEntity } from '../../employees/entities/employees.entity';
 import { PurchaseOrderItemEntity } from './purchase-order-item.entity';
 
 @Entity('purchase_orders')
 @Index('idx_po_number', ['poNumber'])
 @Index('idx_po_vendor', ['vendorId'])
-@Index('idx_po_status', ['status'])
 export class PurchaseOrderEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'po_number', length: 50, unique: true })
     poNumber: string;

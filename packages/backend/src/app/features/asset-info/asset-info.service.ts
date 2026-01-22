@@ -2,21 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, DeleteAssetAssignModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, GetExpiringWarrantyRequestModel } from '@adminvault/shared-models';
 import { AssetInfoEntity } from './entities/asset-info.entity';
 import { AssetAssignEntity } from './entities/asset-assign.entity';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
+import { AssetAssignRepository } from './repositories/asset-assign.repository';
 import { LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
 
 @Injectable()
 export class AssetInfoService {
     constructor(
         private dataSource: DataSource,
         private assetInfoRepo: AssetInfoRepository,
-        @InjectRepository(AssetAssignEntity)
-        private readonly assignRepo: Repository<AssetAssignEntity>
+        private assignRepo: AssetAssignRepository
     ) { }
 
     /**
@@ -24,7 +25,6 @@ export class AssetInfoService {
      * Validates required fields and ensures serial number uniqueness
      * 
      * @param reqModel - Asset creation data including company, device, and serial number
-     * @returns GlobalResponse indicating success or failure
      * @throws ErrorResponse if validation fails or serial number already exists
      */
     async createAsset(reqModel: CreateAssetModel, userId?: number): Promise<GlobalResponse> {
@@ -160,8 +160,9 @@ export class AssetInfoService {
      * @returns GetAllAssetsModel with list of assets
      * @throws Error if retrieval fails
      */
-    async getAllAssets(companyId?: number): Promise<GetAllAssetsModel> {
+    async getAllAssets(reqModel: CompanyIdRequestModel): Promise<GetAllAssetsModel> {
         try {
+            const companyId = reqModel.companyId;
             const assets = companyId ? await this.assetInfoRepo.find({ where: { companyId } }) : await this.assetInfoRepo.find();
             const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.expressCode, a.boxNo, a.complianceStatus, a.lastSync, a.osVersion, a.macAddress, a.ipAddress, a.encryptionStatus, a.batteryLevel, a.storageTotal, a.storageAvailable));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
@@ -209,13 +210,14 @@ export class AssetInfoService {
      * @returns AssetStatisticsResponseModel with status counts
      * @throws ErrorResponse if company ID not provided
      */
-    async getAssetStatistics(companyId: number): Promise<AssetStatisticsResponseModel> {
+    async getAssetStatistics(reqModel: CompanyIdRequestModel): Promise<AssetStatisticsResponseModel> {
         try {
+            const companyId = reqModel.companyId;
             if (!companyId) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
 
-            const statsData = await this.assetInfoRepo.getAssetStatistics(companyId);
+            const statsData = await this.assetInfoRepo.getAssetStatistics(reqModel);
             // Transform to expected format
             const statistics = {
                 total: statsData.reduce((sum, item) => sum + parseInt(item.count), 0),
@@ -262,12 +264,13 @@ export class AssetInfoService {
      * @returns GetAssetsWithAssignmentsResponseModel with assets and assignment details
      * @throws ErrorResponse if company ID not provided
      */
-    async getAssetsWithAssignments(companyId: number): Promise<GetAssetsWithAssignmentsResponseModel> {
+    async getAssetsWithAssignments(reqModel: CompanyIdRequestModel): Promise<GetAssetsWithAssignmentsResponseModel> {
         try {
+            const companyId = reqModel.companyId;
             if (!companyId) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
-            const assets = await this.assetInfoRepo.getAssetsWithAssignments(companyId);
+            const assets = await this.assetInfoRepo.getAssetsWithAssignments(reqModel);
             return new GetAssetsWithAssignmentsResponseModel(true, 0, "Assets with assignments retrieved successfully", assets);
         } catch (error) {
             throw error;
@@ -279,31 +282,30 @@ export class AssetInfoService {
      * Note: For actual assignment workflow, use AssetOperationsService.assignAssetOp
      */
 
-    async createAssignment(reqModel: any, userId?: number): Promise<GlobalResponse> {
+    async createAssignment(reqModel: CreateAssetAssignModel, userId?: number): Promise<GlobalResponse> {
         // This is a placeholder - actual assignment should use AssetOperationsService
         return new GlobalResponse(false, 400, "Please use the asset operations endpoint for assignment");
     }
 
-    async updateAssignment(reqModel: any, userId?: number): Promise<GlobalResponse> {
+    async updateAssignment(reqModel: UpdateAssetAssignModel, userId?: number): Promise<GlobalResponse> {
         return new GlobalResponse(false, 400, "Assignment updates not supported through this endpoint");
     }
 
-    async getAssignment(reqModel: any): Promise<any> {
-        return new GlobalResponse(false, 400, "Get assignment not implemented");
+    async getAssignment(reqModel: GetAssetAssignModel): Promise<GetAssetAssignByIdModel> {
+        const assignment = await this.assignRepo.findOne({ where: { id: reqModel.id } });
+        if (!assignment) {
+            throw new ErrorResponse(404, "Assignment not found");
+        }
+        return new GetAssetAssignByIdModel(true, 200, "Assignment retrieved successfully", assignment as any);
     }
 
-    async getAllAssignments(companyId: number): Promise<any> {
-        return new GlobalResponse(false, 400, "Get all assignments not implemented");
+    async getAllAssignments(reqModel: CompanyIdRequestModel): Promise<GetAllAssetAssignsModel> {
+        const assignments = await this.assignRepo.getAllAssignments(reqModel);
+        return new GetAllAssetAssignsModel(true, 200, "Assignments retrieved successfully", assignments as any);
     }
 
-    async deleteAssignment(reqModel: any, userId?: number): Promise<GlobalResponse> {
-        return new GlobalResponse(false, 400, "Assignment deletion not supported");
-    }
-    async findAll(companyId: number): Promise<AssetInfoEntity[]> {
-        return await this.assetInfoRepo.find({ where: { companyId } });
-    }
-
-    async assignAssetOp(assetId: number, employeeId: number, userId: number, remarks?: string): Promise<GlobalResponse> {
+    async assignAssetOp(reqModel: AssignAssetOpRequestModel): Promise<GlobalResponse> {
+        const { assetId, employeeId, userId, remarks } = reqModel;
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -351,7 +353,8 @@ export class AssetInfoService {
         }
     }
 
-    async returnAssetOp(assetId: number, userId: number, remarks?: string): Promise<GlobalResponse> {
+    async returnAssetOp(reqModel: ReturnAssetOpRequestModel): Promise<GlobalResponse> {
+        const { assetId, userId, remarks } = reqModel;
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -380,15 +383,16 @@ export class AssetInfoService {
         }
     }
 
-    async getExpiringWarranty(companyId: number, months: number = 3): Promise<GetAllAssetsModel> {
+    async getExpiringWarranty(reqModel: GetExpiringWarrantyRequestModel): Promise<GetAllAssetsModel> {
+        const { companyId, months } = reqModel;
         const dateLimit = new Date();
-        dateLimit.setMonth(dateLimit.getMonth() + months);
+        dateLimit.setMonth(dateLimit.getMonth() + (months || 3));
 
         const assets = await this.assetInfoRepo.find({
             where: { companyId, warrantyExpiry: LessThan(dateLimit) },
             relations: ['assignedToEmployee']
         });
-        const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.expressCode, a.boxNo));
+        const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.expressCode, a.boxNo, a.complianceStatus, a.lastSync, a.osVersion, a.macAddress, a.ipAddress, a.encryptionStatus, a.batteryLevel, a.storageTotal, a.storageAvailable));
         return new GetAllAssetsModel(true, 200, 'Expiring assets retrieved', responses);
     }
 }

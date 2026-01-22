@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { AssetNextAssignmentEntity } from '../entities/asset-next-assignment.entity';
-import { NextAssignmentStatusEnum } from '@adminvault/shared-models';
+import { NextAssignmentStatusEnum, GetNextAssignmentsRequestModel } from '@adminvault/shared-models';
 
 @Injectable()
 export class AssetNextAssignmentRepository extends Repository<AssetNextAssignmentEntity> {
@@ -12,7 +12,8 @@ export class AssetNextAssignmentRepository extends Repository<AssetNextAssignmen
     /**
      * Get pending and assigned next assignments with joins
      */
-    async getNextAssignments(companyId: number) {
+    async getNextAssignments(reqModel: GetNextAssignmentsRequestModel) {
+        const companyId = reqModel.companyId;
         return await this.createQueryBuilder('assignment')
             .leftJoin('employees', 'employee', 'assignment.employee_id = employee.id')
             .leftJoin('asset_info', 'asset', 'assignment.assigned_asset_id = asset.id')

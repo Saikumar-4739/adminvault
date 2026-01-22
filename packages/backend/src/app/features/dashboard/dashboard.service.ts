@@ -13,7 +13,7 @@ export class DashboardService {
      */
     async getDashboardStats(reqModel: CompanyIdRequestModel): Promise<DashboardStatsResponseModel> {
         try {
-            const companyId = reqModel.id;
+            const companyId = reqModel.companyId;
             const [assetStats, ticketStats, employeeStats, licenseStats, securityStats] = await Promise.all([
                 this.repository.getAssetStats(companyId),
                 this.repository.getTicketStats(companyId),

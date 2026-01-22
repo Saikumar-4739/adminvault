@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAssetByIdModel, GetAllAssetsModel, GlobalResponse, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, AssetTimelineResponseModel, CreateAssetAssignModel, UpdateAssetAssignModel, DeleteAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAssetByIdModel, GetAllAssetsModel, GlobalResponse, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, AssetTimelineResponseModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
 
 export class AssetInfoService extends CommonAxiosService {
     private readonly BASE_PATH = '/asset-info';
@@ -36,7 +36,7 @@ export class AssetInfoService extends CommonAxiosService {
     }
 
     async getAllAssets(companyId: number, config?: AxiosRequestConfig): Promise<GetAllAssetsModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/getAllAssets`, { id: companyId }, config);
+        return await this.axiosPostCall(`${this.BASE_PATH}/getAllAssets`, { companyId }, config);
     }
 
     async deleteAsset(reqObj: DeleteAssetModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
@@ -45,7 +45,7 @@ export class AssetInfoService extends CommonAxiosService {
 
     // --- STATISTICS & SEARCH ---
     async getAssetStatistics(companyId: number, config?: AxiosRequestConfig): Promise<AssetStatisticsResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/statistics`, { id: companyId }, config);
+        return await this.axiosPostCall(`${this.BASE_PATH}/statistics`, { companyId }, config);
     }
 
     async searchAssets(reqObj: AssetSearchRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetsModel> {
@@ -53,7 +53,7 @@ export class AssetInfoService extends CommonAxiosService {
     }
 
     async getAssetsWithAssignments(companyId: number, config?: AxiosRequestConfig): Promise<GetAssetsWithAssignmentsResponseModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/with-assignments`, { id: companyId }, config);
+        return await this.axiosPostCall(`${this.BASE_PATH}/with-assignments`, { companyId }, config);
     }
 
     async getStoreAssets(reqObj: GetStoreAssetsRequestModel, config?: AxiosRequestConfig): Promise<GetStoreAssetsResponseModel> {
@@ -93,10 +93,6 @@ export class AssetInfoService extends CommonAxiosService {
     }
 
     async getAllAssignments(companyId: number, config?: AxiosRequestConfig): Promise<GetAllAssetAssignsModel> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/getAllAssignments`, { id: companyId }, config);
-    }
-
-    async deleteAssignment(reqObj: DeleteAssetAssignModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(`${this.BASE_PATH}/deleteAssignment`, reqObj, config);
+        return await this.axiosPostCall(`${this.BASE_PATH}/getAllAssignments`, { companyId }, config);
     }
 }

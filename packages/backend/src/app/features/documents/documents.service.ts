@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { UploadDocumentModel, DeleteDocumentModel, GetDocumentModel, GetAllDocumentsModel, GetDocumentByIdModel, DocumentModel, UploadDocumentResponseModel } from '@adminvault/shared-models';
+import { UploadDocumentModel, DeleteDocumentModel, GetDocumentModel, GetAllDocumentsResponseModel, GetDocumentResponseModel, DocumentModel, UploadDocumentResponseModel, GetAllDocumentsRequestModel, DownloadDocumentRequestModel, DownloadDocumentResponseModel } from '@adminvault/shared-models';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -93,7 +93,7 @@ export class DocumentsService {
             }
 
             await transManager.startTransaction();
-            
+
             // Delete from DB first
             await transManager.getRepository(DocumentEntity).delete(reqModel.id);
 
@@ -118,13 +118,13 @@ export class DocumentsService {
      * @returns GetDocumentByIdModel with document metadata
      * @throws ErrorResponse if document not found
      */
-    async getDocument(reqModel: GetDocumentModel): Promise<GetDocumentByIdModel> {
+    async getDocument(reqModel: GetDocumentModel): Promise<GetDocumentResponseModel> {
         try {
             const document = await this.documentRepo.findOne({ where: { id: reqModel.id } });
             if (!document) {
                 throw new ErrorResponse(404, 'Document not found');
             }
-            return new GetDocumentByIdModel(true, 200, 'Document retrieved successfully', document as unknown as DocumentModel);
+            return new GetDocumentResponseModel(true, 200, 'Document retrieved successfully', document as unknown as DocumentModel);
         } catch (error) {
             throw error;
         }
@@ -134,19 +134,18 @@ export class DocumentsService {
      * Retrieve all documents with optional filtering
      * Fetches documents filtered by company ID and/or category, ordered by creation date
      * 
-     * @param companyId - Optional company ID to filter documents
-     * @param category - Optional category to filter documents
+     * @param reqModel - Request containing filtering criteria (companyId, category)
      * @returns GetAllDocumentsModel with list of documents
      * @throws ErrorResponse if database query fails
      */
-    async getAllDocuments(companyId?: number, category?: string): Promise<GetAllDocumentsModel> {
+    async getAllDocuments(reqModel: GetAllDocumentsRequestModel): Promise<GetAllDocumentsResponseModel> {
         try {
             const where: any = {};
-            if (companyId) where.companyId = companyId;
-            if (category) where.category = category;
+            if (reqModel.companyId) where.companyId = reqModel.companyId;
+            if (reqModel.category) where.category = reqModel.category;
 
             const documents = await this.documentRepo.find({ where, order: { createdAt: 'DESC' } });
-            return new GetAllDocumentsModel(true, 200, 'Documents retrieved successfully', documents as unknown as DocumentModel[]);
+            return new GetAllDocumentsResponseModel(true, 200, 'Documents retrieved successfully', documents as unknown as DocumentModel[]);
         } catch (error) {
             throw error;
         }
@@ -156,20 +155,20 @@ export class DocumentsService {
      * Prepare document for download
      * Retrieves file path and original filename for document download
      * 
-     * @param id - Document ID to download
-     * @returns Object containing file path and original filename
+     * @param reqModel - Request containing document ID to download
+     * @returns DownloadDocumentResponseModel containing file path and original filename
      * @throws ErrorResponse if document or file not found
      */
-    async downloadDocument(id: number): Promise<{ filePath: string; originalName: string }> {
+    async downloadDocument(reqModel: DownloadDocumentRequestModel): Promise<DownloadDocumentResponseModel> {
         try {
-            const document = await this.documentRepo.findOne({ where: { id } });
+            const document = await this.documentRepo.findOne({ where: { id: reqModel.id } });
             if (!document) {
                 throw new ErrorResponse(404, 'Document not found');
             }
             if (!fs.existsSync(document.filePath)) {
                 throw new ErrorResponse(404, 'File not found on disk');
             }
-            return { filePath: document.filePath, originalName: document.originalName };
+            return new DownloadDocumentResponseModel(true, 200, 'Document ready for download', document.filePath, document.originalName);
         } catch (error) {
             throw error;
         }

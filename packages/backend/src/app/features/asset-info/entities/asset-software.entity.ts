@@ -1,9 +1,4 @@
-import {
-    Column,
-    Entity,
-    JoinColumn,
-    ManyToOne
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { AssetInfoEntity } from './asset-info.entity';
 import { SoftwareMasterEntity } from './software-master.entity';

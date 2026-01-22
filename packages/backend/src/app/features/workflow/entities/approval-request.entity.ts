@@ -3,8 +3,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { ApprovalStatusEnum, ApprovalTypeEnum } from '@adminvault/shared-models';
 
 @Entity('approval_requests')
-@Index(['companyId'])
-@Index(['status'])
 @Index(['referenceType', 'referenceId'])
 export class ApprovalRequestEntity extends CommonBaseEntity {
     @Column('enum', { enum: ApprovalTypeEnum })

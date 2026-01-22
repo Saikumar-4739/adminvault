@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { TicketsService } from './tickets.service';
-import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, CompanyIdRequestModel, TicketStatusEnum } from '@adminvault/shared-models';
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, CompanyIdRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel, GetTicketStatisticsRequestModel } from '@adminvault/shared-models';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
 @ApiTags('Tickets')
@@ -11,25 +11,16 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 export class TicketsController {
     constructor(private service: TicketsService) { }
 
-    /**
-     * Create a new support ticket
-     * Requires authentication - extracts user email from JWT token
-     * @param reqModel - Ticket creation data
-     * @param req - Express request with authenticated user
-     * @returns GlobalResponse indicating ticket creation success
-     */
     @Post('createTicket')
-    @ApiOperation({ summary: 'Create new ticket' })
     @ApiBody({ type: CreateTicketModel })
     async createTicket(@Body() reqModel: CreateTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            // req.user should be populated by JwtStrategy
             const userEmail = req.user?.email;
             const userId = req.user?.id || req.user?.userId;
             const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
             if (!userEmail) {
-                throw new Error("User email not found in token");
+                throw new Error('User email not found in token');
             }
             return await this.service.createTicket(reqModel, userEmail, userId, ipAddress);
         } catch (error) {
@@ -37,13 +28,7 @@ export class TicketsController {
         }
     }
 
-    /**
-     * Update existing ticket information
-     * @param reqModel - Ticket update data
-     * @returns GlobalResponse indicating update success
-     */
     @Post('updateTicket')
-    @ApiOperation({ summary: 'Update ticket' })
     @ApiBody({ type: UpdateTicketModel })
     async updateTicket(@Body() reqModel: UpdateTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -55,13 +40,7 @@ export class TicketsController {
         }
     }
 
-    /**
-     * Retrieve a specific ticket by ID
-     * @param reqModel - Request with ticket ID
-     * @returns GetTicketByIdModel with ticket details
-     */
     @Post('getTicket')
-    @ApiOperation({ summary: 'Get ticket by ID' })
     @ApiBody({ type: GetTicketModel })
     async getTicket(@Body() reqModel: GetTicketModel): Promise<GetTicketByIdModel> {
         try {
@@ -71,30 +50,17 @@ export class TicketsController {
         }
     }
 
-    /**
-     * Retrieve all tickets in the system
-     * @returns GetAllTicketsModel with list of all tickets
-     */
     @Post('getAllTickets')
-    @ApiOperation({ summary: 'Get all tickets' })
     @ApiBody({ type: CompanyIdRequestModel })
     async getAllTickets(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllTicketsModel> {
         try {
-            // Updated to pass companyId if service supports it, otherwise generic get
-            // Assuming service update might be needed later, but standardizing controller signature first
-            return await this.service.getAllTickets(reqModel.id);
+            return await this.service.getAllTickets(reqModel.companyId);
         } catch (error) {
             return returnException(GetAllTicketsModel, error);
         }
     }
 
-    /**
-     * Delete a ticket (soft delete)
-     * @param reqModel - Request with ticket ID
-     * @returns GlobalResponse indicating deletion success
-     */
     @Post('deleteTicket')
-    @ApiOperation({ summary: 'Delete ticket' })
     @ApiBody({ type: DeleteTicketModel })
     async deleteTicket(@Body() reqModel: DeleteTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -106,18 +72,12 @@ export class TicketsController {
         }
     }
 
-    /**
-     * Retrieve tickets for the authenticated user
-     * @param req - Express request with authenticated user
-     * @returns GetAllTicketsModel with list of user's tickets
-     */
     @Post('getMyTickets')
-    @ApiOperation({ summary: 'Get tickets for current user' })
     async getMyTickets(@Req() req: any): Promise<GetAllTicketsModel> {
         try {
             const userEmail = req.user?.email;
             if (!userEmail) {
-                throw new Error("User email not found in token");
+                throw new Error('User email not found in token');
             }
             return await this.service.getTicketsByUser(userEmail);
         } catch (error) {
@@ -126,44 +86,40 @@ export class TicketsController {
     }
 
     @Post('statistics')
-    @ApiOperation({ summary: 'Get ticket statistics' })
-    async getStatistics(@Req() req: any) {
+    @ApiBody({ type: GetTicketStatisticsRequestModel })
+    async getStatistics(@Body() reqModel: GetTicketStatisticsRequestModel): Promise<GlobalResponse> {
         try {
-            const { companyId } = req.user;
-            return await this.service.getStatistics(companyId);
+            return await this.service.getStatistics(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
     @Post('status')
-    @ApiOperation({ summary: 'Update ticket status' })
-    @ApiBody({ schema: { properties: { id: { type: 'number' }, status: { type: 'string', enum: Object.values(TicketStatusEnum) } } } })
-    async updateStatus(@Body() body: { id: number, status: TicketStatusEnum }) {
+    @ApiBody({ type: UpdateTicketStatusRequestModel })
+    async updateStatus(@Body() reqModel: UpdateTicketStatusRequestModel): Promise<GlobalResponse> {
         try {
-            return await this.service.updateStatus(body.id, body.status);
+            return await this.service.updateStatus(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
     @Post('assign')
-    @ApiOperation({ summary: 'Assign ticket' })
-    @ApiBody({ schema: { properties: { id: { type: 'number' }, assignAdminId: { type: 'number' } } } })
-    async assignTicket(@Body() body: { id: number, assignAdminId: number }) {
+    @ApiBody({ type: AssignTicketRequestModel })
+    async assignTicket(@Body() reqModel: AssignTicketRequestModel): Promise<GlobalResponse> {
         try {
-            return await this.service.assignTicket(body.id, body.assignAdminId);
+            return await this.service.assignTicket(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
     @Post('addResponse')
-    @ApiOperation({ summary: 'Add response to ticket' })
-    @ApiBody({ schema: { properties: { id: { type: 'number' }, response: { type: 'string' } } } })
-    async addResponse(@Body() body: { id: number, response: string }) {
+    @ApiBody({ type: AddTicketResponseRequestModel })
+    async addResponse(@Body() reqModel: AddTicketResponseRequestModel): Promise<GlobalResponse> {
         try {
-            return await this.service.addResponse(body.id, body.response);
+            return await this.service.addResponse(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

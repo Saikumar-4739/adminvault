@@ -750,3 +750,102 @@ export class UpdateSlackUserModel {
     }
 }
 
+export class GetAllVaultEntriesModel {
+    companyId: number;
+    userId: number;
+
+    constructor(companyId: number, userId: number) {
+        this.companyId = companyId;
+        this.userId = userId;
+    }
+}
+
+export class GetVaultEntryModel {
+    id: number;
+    userId: number;
+
+    constructor(id: number, userId: number) {
+        this.id = id;
+        this.userId = userId;
+    }
+}
+
+export class DeleteVaultEntryModel {
+    id: number;
+    userId: number;
+
+    constructor(id: number, userId: number) {
+        this.id = id;
+        this.userId = userId;
+    }
+}
+
+export class GetDecryptedPasswordModel {
+    id: number;
+    userId: number;
+
+    constructor(id: number, userId: number) {
+        this.id = id;
+        this.userId = userId;
+    }
+}
+
+export class SearchVaultByCategoryModel {
+    category: string;
+    companyId: number;
+    userId: number;
+
+    constructor(category: string, companyId: number, userId: number) {
+        this.category = category;
+        this.companyId = companyId;
+        this.userId = userId;
+    }
+}
+
+export class ToggleVaultFavoriteModel {
+    id: number;
+    userId: number;
+
+    constructor(id: number, userId: number) {
+        this.id = id;
+        this.userId = userId;
+    }
+}
+
+export class GetVaultCategoriesModel {
+    companyId: number;
+    userId: number;
+
+    constructor(companyId: number, userId: number) {
+        this.companyId = companyId;
+        this.userId = userId;
+    }
+}
+
+export class GetVaultEntryResponseModel extends GlobalResponse {
+    vaultEntry: PasswordVault | null;
+
+    constructor(status: boolean, code: number, message: string, vaultEntry: PasswordVault | null) {
+        super(status, code, message);
+        this.vaultEntry = vaultEntry;
+    }
+}
+
+export class GetDecryptedPasswordResponseModel extends GlobalResponse {
+    password: string;
+
+    constructor(status: boolean, code: number, message: string, password: string) {
+        super(status, code, message);
+        this.password = password;
+    }
+}
+
+export class GetVaultCategoriesResponseModel extends GlobalResponse {
+    categories: string[];
+
+    constructor(status: boolean, code: number, message: string, categories: string[]) {
+        super(status, code, message);
+        this.categories = categories;
+    }
+}
+

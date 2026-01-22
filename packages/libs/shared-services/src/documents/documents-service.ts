@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { DeleteDocumentModel, GetDocumentModel, GetAllDocumentsModel, GetDocumentByIdModel, UploadDocumentResponseModel, UploadDocumentModel, GlobalResponse } from '@adminvault/shared-models';
+import { DeleteDocumentModel, GetDocumentModel, GetAllDocumentsResponseModel, GetDocumentResponseModel, UploadDocumentResponseModel, UploadDocumentModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class DocumentsService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -10,9 +10,9 @@ export class DocumentsService extends CommonAxiosService {
     async uploadDocument(file: File, reqModel: UploadDocumentModel, config?: AxiosRequestConfig): Promise<UploadDocumentResponseModel> {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('originalName', reqModel.originalName);
-        formData.append('fileSize', reqModel.fileSize.toString());
-        formData.append('mimeType', reqModel.mimeType);
+        formData.append('originalName', file.name);
+        formData.append('fileSize', file.size.toString());
+        formData.append('mimeType', file.type);
         formData.append('companyId', reqModel.companyId.toString());
         formData.append('userId', reqModel.userId.toString());
         if (reqModel.category) formData.append('category', reqModel.category);
@@ -29,11 +29,11 @@ export class DocumentsService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteDocument'), reqObj, config);
     }
 
-    async getDocument(reqObj: GetDocumentModel, config?: AxiosRequestConfig): Promise<GetDocumentByIdModel> {
+    async getDocument(reqObj: GetDocumentModel, config?: AxiosRequestConfig): Promise<GetDocumentResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getDocument'), reqObj, config);
     }
 
-    async getAllDocuments(companyId: number, category?: string, config?: AxiosRequestConfig): Promise<GetAllDocumentsModel> {
+    async getAllDocuments(companyId: number, category?: string, config?: AxiosRequestConfig): Promise<GetAllDocumentsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllDocuments'), { companyId, category }, config);
     }
 

@@ -5,12 +5,6 @@ import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@admin
 @Entity('tickets')
 @Index('idx_ticket_emp', ['employeeId'])
 @Index('idx_ticket_status', ['ticketStatus'])
-@Index('idx_ticket_category', ['categoryEnum'])
-@Index('idx_ticket_priority', ['priorityEnum'])
-@Index('idx_ticket_assignee', ['assignAdminId'])
-@Index('idx_ticket_code', ['ticketCode'])
-@Index('idx_ticket_company', ['companyId'])
-@Index('idx_ticket_user', ['userId'])
 export class TicketsEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'ticket_code', length: 50, nullable: false, unique: true, comment: 'Unique ticket code' })
     ticketCode: string;

@@ -11,14 +11,14 @@ import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
 import { LoginSessionService } from './login-session.service';
 import { EmailInfoService } from '../administration/email-info.service';
-import { ForgotPasswordModel, ResetPasswordModel, RequestAccessModel } from '@adminvault/shared-models';
+import { ForgotPasswordModel, ResetPasswordModel, RequestAccessModel, SendPasswordResetEmailModel } from '@adminvault/shared-models';
+import { Request } from 'express';
+import { IUserPayload } from '../../interfaces/auth.interface';
 
-// JWT Configuration - Load from environment variables
 const SECRET_KEY = process.env.JWT_SECRET_KEY || (() => {
     if (process.env.NODE_ENV === 'production') {
         throw new Error('JWT_SECRET_KEY must be set in production environment');
     }
-    console.warn('⚠️  WARNING: Using default JWT_SECRET_KEY. Set JWT_SECRET_KEY in .env for production!');
     return "2c6ee24b09816a6c6de4f1d3f8c3c0a6559dca86b6f710d930d3603fdbb724";
 })();
 
@@ -26,7 +26,6 @@ const REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY || (() => {
     if (process.env.NODE_ENV === 'production') {
         throw new Error('JWT_REFRESH_SECRET_KEY must be set in production environment');
     }
-    console.warn('⚠️  WARNING: Using default JWT_REFRESH_SECRET_KEY. Set JWT_REFRESH_SECRET_KEY in .env for production!');
     return "d9f8a1ec2d6826db2f24ea9f8a1d9bda26f054de88bb90b63934561f7225ab";
 })();
 
@@ -92,7 +91,7 @@ export class AuthUsersService {
      * @param payload - Token payload containing user information
      * @returns Signed JWT access token
      */
-    private generateAccessToken(payload: any): string {
+    private generateAccessToken(payload: IUserPayload | object): string {
         return this.jwtService.sign(payload);
     }
 
@@ -103,7 +102,7 @@ export class AuthUsersService {
      * @param payload - Token payload containing user information
      * @returns Signed JWT refresh token with 7-day expiration
      */
-    private generateRefreshToken(payload: any): string {
+    private generateRefreshToken(payload: IUserPayload | object): string {
         return this.jwtService.sign(payload, { secret: REFRESH_SECRET_KEY, expiresIn: '7d' });
     }
 
@@ -116,7 +115,7 @@ export class AuthUsersService {
      * @returns LoginResponseModel with user info, access token, and refresh token
      * @throws ErrorResponse if email doesn't exist or password is invalid (also tracks failed login attempts)
      */
-    async loginUser(reqModel: LoginUserModel, req?: any): Promise<LoginResponseModel> {
+    async loginUser(reqModel: LoginUserModel, req?: Request): Promise<LoginResponseModel> {
         try {
             const user = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
             if (!user) {
@@ -160,7 +159,7 @@ export class AuthUsersService {
         }
     }
 
-    private extractClientIp(req: any): string {
+    private extractClientIp(req: Request): string {
         let ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || '127.0.0.1';
         if (typeof ip === 'string' && ip.includes(',')) {
             ip = ip.split(',')[0].trim();
@@ -201,7 +200,7 @@ export class AuthUsersService {
      * @param longitude - Optional GPS longitude coordinate
      * @throws Error if session service fails to record attempt
      */
-    private async trackFailedLogin(req: any, email: string, reason: string, userId?: number, companyId?: number, latitude?: number, longitude?: number): Promise<void> {
+    private async trackFailedLogin(req: Request, email: string, reason: string, userId?: number, companyId?: number, latitude?: number, longitude?: number): Promise<void> {
         try {
             const ipAddress = this.extractClientIp(req);
             const userAgent = req.headers['user-agent'];
@@ -261,7 +260,7 @@ export class AuthUsersService {
 
             await transManager.startTransaction();
 
-            const updateData: any = {};
+            const updateData: Partial<AuthUsersEntity> = {};
             if (reqModel.fullName) updateData.fullName = reqModel.fullName;
             if (reqModel.phNumber) updateData.phNumber = reqModel.phNumber;
             // Handle other fields if necessary
@@ -314,7 +313,7 @@ export class AuthUsersService {
     async getAllUsers(reqModel: CompanyIdRequestModel): Promise<GetAllUsersModel> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existingUser = await this.authUsersRepo.find({ where: { companyId: reqModel.id } });
+            const existingUser = await this.authUsersRepo.find({ where: { companyId: reqModel.companyId } });
             if (!existingUser) {
                 throw new ErrorResponse(0, "No users found");
             }
@@ -357,7 +356,7 @@ export class AuthUsersService {
             await this.authUsersRepo.save(user);
 
             // Send Reset Email
-            await this.emailService.sendPasswordResetEmail(user.email, token);
+            await this.emailService.sendPasswordResetEmail(new SendPasswordResetEmailModel(user.email, token));
 
             return new GlobalResponse(true, 200, "Password reset instructions sent.");
         } catch (error) {

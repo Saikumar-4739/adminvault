@@ -139,20 +139,20 @@ export class EmployeeResponseModel {
     }
 }
 
-export class GetAllEmployeesModel extends GlobalResponse {
-    employees: EmployeeResponseModel[];
+export class GlobalEmployeeResponseModel extends GlobalResponse<EmployeeResponseModel> {
+    employee!: EmployeeResponseModel;
+    constructor(status: boolean, code: number, message: string, employee: EmployeeResponseModel) {
+        super(status, code, message, employee);
+        this.employee = employee;
+    }
+}
 
+export class GetAllEmployeesResponseModel extends GlobalResponse<EmployeeResponseModel[]> {
+    employees!: EmployeeResponseModel[];
     constructor(status: boolean, code: number, message: string, employees: EmployeeResponseModel[]) {
-        super(status, code, message);
+        super(status, code, message, employees);
         this.employees = employees;
     }
 }
 
-export class GetEmployeeByIdModel extends GlobalResponse {
-    employee: EmployeeResponseModel;
-
-    constructor(status: boolean, code: number, message: string, employee: EmployeeResponseModel) {
-        super(status, code, message);
-        this.employee = employee;
-    }
-}
+export class GetEmployeeResponseModel extends GlobalEmployeeResponseModel { }

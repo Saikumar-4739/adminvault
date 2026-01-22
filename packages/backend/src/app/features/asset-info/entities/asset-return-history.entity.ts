@@ -4,9 +4,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 @Entity('asset_return_history')
 @Index('idx_return_asset', ['assetId'])
 @Index('idx_return_employee', ['employeeId'])
-@Index('idx_return_date', ['returnDate'])
-@Index('idx_return_company', ['companyId'])
-@Index('idx_return_user', ['userId'])
 export class AssetReturnHistoryEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'asset_id', nullable: false, comment: 'Reference to asset_info table' })
     assetId: number;

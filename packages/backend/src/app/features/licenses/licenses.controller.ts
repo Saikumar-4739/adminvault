@@ -1,17 +1,9 @@
-
-import { Body, Controller, Param, Post, Query, Req } from '@nestjs/common';
-import { ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { Body, Controller, Post, Req } from '@nestjs/common';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { LicensesService } from './licenses.service';
-import {
-    CreateLicenseModel,
-    UpdateLicenseModel,
-    DeleteLicenseModel,
-    GetAllLicensesModel,
-    GetLicenseStatsModel,
-    CompanyIdRequestModel
-} from '@adminvault/shared-models';
-
+import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GetLicenseStatisticsResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
 
 @ApiTags('Licenses')
 @Controller('licenses')
@@ -21,30 +13,30 @@ export class LicensesController {
     /**
      * Retrieve all license assignments, optionally filtered by company
      * @param reqModel - Request with company ID
-     * @returns GetAllLicensesModel with license data
+     * @returns GetAllLicensesResponseModel with license data
      */
-    @Post('findAll')
+    @Post('getAllLicenses')
     @ApiBody({ type: CompanyIdRequestModel })
-    async findAll(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllLicensesModel> {
+    async getAllLicenses(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllLicensesResponseModel> {
         try {
-            return await this.licensesService.findAll(reqModel.id);
+            return await this.licensesService.getAllLicenses(reqModel);
         } catch (error) {
-            return returnException(GetAllLicensesModel, error);
+            return returnException(GetAllLicensesResponseModel, error);
         }
     }
 
     /**
      * Get license statistics for dashboard
      * @param reqModel - Request with company ID
-     * @returns GetLicenseStatsModel with license statistics
+     * @returns GetLicenseStatisticsResponseModel with license statistics
      */
-    @Post('stats')
+    @Post('getLicenseStatistics')
     @ApiBody({ type: CompanyIdRequestModel })
-    async getStats(@Body() reqModel: CompanyIdRequestModel): Promise<GetLicenseStatsModel> {
+    async getLicenseStatistics(@Body() reqModel: CompanyIdRequestModel): Promise<GetLicenseStatisticsResponseModel> {
         try {
-            return await this.licensesService.getStats(reqModel.id);
+            return await this.licensesService.getLicenseStatistics(reqModel);
         } catch (error) {
-            return returnException(GetLicenseStatsModel, error);
+            return returnException(GetLicenseStatisticsResponseModel, error);
         }
     }
 
@@ -53,13 +45,13 @@ export class LicensesController {
      * @param reqModel - License assignment creation data
      * @returns GlobalResponse indicating creation success
      */
-    @Post('create')
+    @Post('createLicense')
     @ApiBody({ type: CreateLicenseModel })
-    async create(@Body() reqModel: CreateLicenseModel, @Req() req: any): Promise<GlobalResponse> {
+    async createLicense(@Body() reqModel: CreateLicenseModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.licensesService.create(reqModel, userId, ipAddress);
+            const userId = req.user.userId;
+            const ipAddress = this.extractIp(req);
+            return await this.licensesService.createLicense(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -70,13 +62,13 @@ export class LicensesController {
      * @param reqModel - License update data with ID
      * @returns GlobalResponse indicating update success
      */
-    @Post('update')
+    @Post('updateLicense')
     @ApiBody({ type: UpdateLicenseModel })
-    async update(@Body() reqModel: UpdateLicenseModel, @Req() req: any): Promise<GlobalResponse> {
+    async updateLicense(@Body() reqModel: UpdateLicenseModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.licensesService.update(reqModel, userId, ipAddress);
+            const userId = req.user.userId;
+            const ipAddress = this.extractIp(req);
+            return await this.licensesService.updateLicense(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -87,15 +79,23 @@ export class LicensesController {
      * @param reqModel - Delete request with license ID
      * @returns GlobalResponse indicating deletion success
      */
-    @Post('delete')
+    @Post('deleteLicense')
     @ApiBody({ type: DeleteLicenseModel })
-    async remove(@Body() reqModel: DeleteLicenseModel, @Req() req: any): Promise<GlobalResponse> {
+    async deleteLicense(@Body() reqModel: DeleteLicenseModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.licensesService.remove(reqModel, userId, ipAddress);
+            const userId = req.user.userId;
+            const ipAddress = this.extractIp(req);
+            return await this.licensesService.deleteLicense(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
+    }
+
+    private extractIp(req: any): string {
+        const xForwardedFor = req.headers['x-forwarded-for'];
+        if (xForwardedFor) {
+            return Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor.split(',')[0].trim();
+        }
+        return req.ip || req.connection?.remoteAddress || 'unknown';
     }
 }

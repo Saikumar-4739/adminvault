@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { DeviceInfoRepository } from '../repositories/device-info.repository';
-import { DeviceInfoEntity } from '../entities/device-info.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateDeviceModel, UpdateDeviceModel, DeleteDeviceModel, GetDeviceModel, GetAllDevicesModel, GetDeviceByIdModel, DeviceResponseModel } from '@adminvault/shared-models';
+import { DeviceInfoEntity } from './entities/device-info.entity';
+import { DeviceInfoRepository } from './repositories/device-info.repository';
 
 @Injectable()
 export class DeviceInfoService {

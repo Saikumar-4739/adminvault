@@ -5,13 +5,12 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { TicketsEntity } from './entities/tickets.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum, UserRoleEnum } from '@adminvault/shared-models';
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum, UserRoleEnum, SendTicketCreatedEmailModel, GetTicketStatisticsRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel } from '@adminvault/shared-models';
 import { TicketsGateway } from './tickets.gateway';
 import { EmailInfoService } from '../administration/email-info.service';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { WorkflowService } from '../workflow/workflow.service';
 import { CreateApprovalRequestModel, ApprovalTypeEnum } from '@adminvault/shared-models';
-
 import { TicketWorkLogEntity } from './entities/ticket-work-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -29,35 +28,24 @@ export class TicketsService {
         private workflowService: WorkflowService
     ) { }
 
-    /**
-     * Create a new support ticket
-     * Generates unique ticket code, validates required fields, and links ticket to employee profile
-     * 
-     * @param reqModel - Ticket creation data including category, priority, and subject
-     * @param userEmail - Email of the logged-in user creating the ticket
-     * @returns GlobalResponse indicating success or failure
-     * @throws ErrorResponse if required fields are missing, employee profile not found, or ticket code already exists
-     */
     async createTicket(reqModel: CreateTicketModel, userEmail: string, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
 
             if (!reqModel.categoryEnum) {
-                throw new ErrorResponse(0, "Category is required");
+                throw new ErrorResponse(400, 'Category is required');
             }
             if (!reqModel.priorityEnum) {
-                throw new ErrorResponse(0, "Priority is required");
+                throw new ErrorResponse(400, 'Priority is required');
             }
             if (!reqModel.subject) {
-                throw new ErrorResponse(0, "Subject is required");
+                throw new ErrorResponse(400, 'Subject is required');
             }
 
-            // Look up the employee associated with the logged-in user's email
-            // Assuming AuthUser email matches Employee email
             const employee = await this.employeesRepo.findOne({ where: { email: userEmail } });
 
             if (!employee) {
-                throw new ErrorResponse(0, `No Employee profile found for ${userEmail}. Tickets must be linked to an employee. Please contact your Admin.`);
+                throw new ErrorResponse(404, `No Employee profile found for ${userEmail}. Tickets must be linked to an employee. Please contact your Admin.`);
             }
 
             if (!reqModel.ticketCode) {
@@ -66,7 +54,7 @@ export class TicketsService {
                 // If provided, check for duplicates
                 const existing = await this.ticketsRepo.findOne({ where: { ticketCode: reqModel.ticketCode } });
                 if (existing) {
-                    throw new ErrorResponse(0, "Ticket code already exists");
+                    throw new ErrorResponse(400, 'Ticket code already exists');
                 }
             }
 
@@ -108,7 +96,7 @@ export class TicketsService {
 
             // Send Emails
             // 1. To User
-            await this.emailInfoService.sendTicketCreatedEmail(savedTicket, userEmail, 'User');
+            await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, userEmail, 'User'));
 
             // 2. To Admins & Managers
             const authRepo = this.dataSource.getRepository(AuthUsersEntity);
@@ -121,23 +109,17 @@ export class TicketsService {
 
             for (const recipient of recipients) {
                 if (recipient.email !== userEmail) { // Avoid sending duplicate if user is also admin/manager
-                    await this.emailInfoService.sendTicketCreatedEmail(savedTicket, recipient.email, recipient.userRole);
+                    await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, recipient.email, recipient.userRole));
                 }
             }
 
-            return new GlobalResponse(true, 0, "Ticket created successfully");
+            return new GlobalResponse(true, 201, 'Ticket created successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to create ticket');
         }
     }
 
-    /**
-     * Generate unique ticket code with date-based format
-     * Format: TKT-YYYYMMDD-XXXX where XXXX is auto-incremented sequence number
-     * 
-     * @returns Unique ticket code string
-     */
     private async generateTicketCode(): Promise<string> {
         const today = new Date();
         const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
@@ -162,28 +144,20 @@ export class TicketsService {
         return `TKT-${dateStr}-${sequence.toString().padStart(4, '0')}`;
     }
 
-    /**
-     * Update existing ticket information
-     * Modifies ticket details such as status, priority, or assignment
-     * 
-     * @param reqModel - Ticket update data with ticket ID and fields to update
-     * @returns GlobalResponse indicating success or failure
-     * @throws ErrorResponse if ticket ID is missing or ticket not found
-     */
     async updateTicket(reqModel: UpdateTicketModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
-                throw new ErrorResponse(0, "Ticket ID is required");
+                throw new ErrorResponse(400, 'Ticket ID is required');
             }
             const existing = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
-                throw new ErrorResponse(0, "Ticket not found");
+                throw new ErrorResponse(404, 'Ticket not found');
             }
 
             await transManager.startTransaction();
             await transManager.getRepository(TicketsEntity).update(reqModel.id, reqModel);
-            
+
             // If time spent is provided, optionally create a work log
             if (reqModel.timeSpentMinutes && reqModel.timeSpentMinutes > 0) {
                 const workLog = new TicketWorkLogEntity();
@@ -192,7 +166,7 @@ export class TicketsService {
                 workLog.description = `Work logged during ticket update. Total time spent updated to ${reqModel.timeSpentMinutes}m.`;
                 workLog.startTime = new Date();
                 // If we had a technicianId, we'd use it here. Defaulting for now or using userId.
-                workLog.technicianId = userId; 
+                workLog.technicianId = userId;
                 await transManager.getRepository(TicketWorkLogEntity).save(workLog);
             }
 
@@ -202,29 +176,21 @@ export class TicketsService {
             const updated = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
             this.gateway.emitTicketUpdated(updated);
 
-            return new GlobalResponse(true, 0, "Ticket updated successfully");
+            return new GlobalResponse(true, 200, 'Ticket updated successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update ticket');
         }
     }
 
-    /**
-     * Retrieve a specific ticket by ID
-     * Fetches detailed information for a single ticket
-     * 
-     * @param reqModel - Request containing ticket ID
-     * @returns GetTicketByIdModel with ticket details
-     * @throws ErrorResponse if ticket ID is missing or ticket not found
-     */
     async getTicket(reqModel: GetTicketModel): Promise<GetTicketByIdModel> {
         try {
             if (!reqModel.id) {
-                throw new ErrorResponse(0, "Ticket ID is required");
+                throw new ErrorResponse(400, 'Ticket ID is required');
             }
             const ticket = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
             if (!ticket) {
-                throw new ErrorResponse(0, "Ticket not found");
+                throw new ErrorResponse(404, 'Ticket not found');
             }
 
             const response = new TicketResponseModel(
@@ -233,20 +199,12 @@ export class TicketsService {
                 ticket.createdAt, ticket.updatedAt, ticket.slaDeadline,
                 ticket.timeSpentMinutes
             );
-            return new GetTicketByIdModel(true, 0, "Ticket retrieved successfully", response);
+            return new GetTicketByIdModel(true, 200, 'Ticket retrieved successfully', response);
         } catch (error) {
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to fetch ticket');
         }
     }
 
-    /**
-     * Retrieve all tickets in the system
-     * Fetches complete list of all support tickets with employee details
-     * 
-     * @param companyId - Optional company ID to filter tickets
-     * @returns GetAllTicketsModel with list of all tickets
-     * @throws Error if database query fails
-     */
     async getAllTickets(companyId?: number): Promise<GetAllTicketsModel> {
         try {
             const query = this.ticketsRepo
@@ -277,29 +235,21 @@ export class TicketsService {
                 t.slaDeadline,
                 t.timeSpentMinutes
             ));
-            return new GetAllTicketsModel(true, 0, "Tickets retrieved successfully", responses);
+            return new GetAllTicketsModel(true, 200, 'Tickets retrieved successfully', responses);
         } catch (error) {
-            throw error;
+            throw new ErrorResponse(500, 'Failed to fetch tickets');
         }
     }
 
-    /**
-     * Delete a ticket (soft delete)
-     * Marks ticket as deleted without removing from database
-     * 
-     * @param reqModel - Request containing ticket ID to delete
-     * @returns GlobalResponse indicating success or failure
-     * @throws ErrorResponse if ticket ID is missing or ticket not found
-     */
     async deleteTicket(reqModel: DeleteTicketModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
-                throw new ErrorResponse(0, "Ticket ID is required");
+                throw new ErrorResponse(400, 'Ticket ID is required');
             }
             const existing = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
-                throw new ErrorResponse(0, "Ticket not found");
+                throw new ErrorResponse(404, 'Ticket not found');
             }
 
             await transManager.startTransaction();
@@ -307,30 +257,22 @@ export class TicketsService {
             await transManager.completeTransaction();
 
 
-            return new GlobalResponse(true, 0, "Ticket deleted successfully");
+            return new GlobalResponse(true, 200, 'Ticket deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to delete ticket');
         }
     }
 
-    /**
-     * Retrieve tickets for a specific user
-     * Fetches all tickets raised by the user with the given email
-     * 
-     * @param userEmail - Email of the user whose tickets to retrieve
-     * @returns GetAllTicketsModel with list of user's tickets
-     * @throws ErrorResponse if user email is missing or employee not found
-     */
     async getTicketsByUser(userEmail: string): Promise<GetAllTicketsModel> {
         try {
             if (!userEmail) {
-                throw new ErrorResponse(0, "User email is required");
+                throw new ErrorResponse(400, 'User email is required');
             }
 
             const employee = await this.employeesRepo.findOne({ where: { email: userEmail } });
             if (!employee) {
-                throw new ErrorResponse(0, `No Employee profile found for ${userEmail}`);
+                throw new ErrorResponse(404, `No Employee profile found for ${userEmail}`);
             }
 
             const tickets: any[] = await this.ticketsRepo
@@ -357,9 +299,9 @@ export class TicketsService {
                 t.slaDeadline,
                 t.timeSpentMinutes
             ));
-            return new GetAllTicketsModel(true, 0, "User tickets retrieved successfully", responses);
+            return new GetAllTicketsModel(true, 200, 'User tickets retrieved successfully', responses);
         } catch (error) {
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to fetch user tickets');
         }
     }
 
@@ -372,8 +314,8 @@ export class TicketsService {
         return { total, open, inProgress, resolved };
     }
 
-    async getStatistics(companyId: number): Promise<any> {
-        const tickets = await this.ticketsRepo.find({ where: { companyId } });
+    async getStatistics(reqModel: GetTicketStatisticsRequestModel): Promise<any> {
+        const tickets = await this.ticketsRepo.find({ where: { companyId: reqModel.companyId } });
 
         return {
             total: tickets.length,
@@ -397,39 +339,39 @@ export class TicketsService {
         };
     }
 
-    async assignTicket(id: number, assignAdminId: number): Promise<GlobalResponse> {
-        const ticket = await this.ticketsRepo.findOne({ where: { id } });
-        if (!ticket) throw new ErrorResponse(404, "Ticket not found");
+    async assignTicket(reqModel: AssignTicketRequestModel): Promise<GlobalResponse> {
+        const ticket = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
+        if (!ticket) throw new ErrorResponse(404, 'Ticket not found');
 
-        ticket.assignAdminId = assignAdminId;
+        ticket.assignAdminId = reqModel.assignAdminId;
         ticket.ticketStatus = TicketStatusEnum.IN_PROGRESS;
         const saved = await this.ticketsRepo.save(ticket);
 
         // Notify via WebSocket
         this.gateway.emitTicketUpdated(saved);
 
-        return new GlobalResponse(true, 200, "Ticket assigned successfully");
+        return new GlobalResponse(true, 200, 'Ticket assigned successfully');
     }
 
-    async addResponse(id: number, response: string): Promise<GlobalResponse> {
-        const ticket = await this.ticketsRepo.findOne({ where: { id } });
-        if (!ticket) throw new ErrorResponse(404, "Ticket not found");
+    async addResponse(reqModel: AddTicketResponseRequestModel): Promise<GlobalResponse> {
+        const ticket = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
+        if (!ticket) throw new ErrorResponse(404, 'Ticket not found');
 
-        ticket.response = response;
+        ticket.response = reqModel.response;
         const saved = await this.ticketsRepo.save(ticket);
 
         // Notify via WebSocket
         this.gateway.emitTicketUpdated(saved);
 
-        return new GlobalResponse(true, 200, "Response added successfully");
+        return new GlobalResponse(true, 200, 'Response added successfully');
     }
 
-    async updateStatus(id: number, status: TicketStatusEnum): Promise<GlobalResponse> {
-        const ticket = await this.ticketsRepo.findOne({ where: { id } });
-        if (!ticket) throw new ErrorResponse(404, "Ticket not found");
+    async updateStatus(reqModel: UpdateTicketStatusRequestModel): Promise<GlobalResponse> {
+        const ticket = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
+        if (!ticket) throw new ErrorResponse(404, 'Ticket not found');
 
-        ticket.ticketStatus = status;
-        if (status === TicketStatusEnum.RESOLVED || status === TicketStatusEnum.CLOSED) {
+        ticket.ticketStatus = reqModel.status;
+        if (reqModel.status === TicketStatusEnum.RESOLVED || reqModel.status === TicketStatusEnum.CLOSED) {
             ticket.resolvedAt = new Date();
         }
         const saved = await this.ticketsRepo.save(ticket);
@@ -437,6 +379,6 @@ export class TicketsService {
         // Notify via WebSocket
         this.gateway.emitTicketUpdated(saved);
 
-        return new GlobalResponse(true, 200, "Status updated successfully");
+        return new GlobalResponse(true, 200, 'Status updated successfully');
     }
 }

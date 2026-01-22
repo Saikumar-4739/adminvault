@@ -2,22 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as nodemailer from 'nodemailer';
 import { EmailInfoEntity } from './entities/email-info.entity';
-import {
-    CreateEmailInfoModel,
-    UpdateEmailInfoModel,
-    DeleteEmailInfoModel,
-    GetEmailInfoModel,
-    GetEmailInfoByIdModel,
-    EmailInfoResponseModel,
-    GetAllEmailInfoModel,
-    EmailStatsResponseModel,
-    EmailStatusEnum,
-    RequestAccessModel,
-    GlobalResponse
-} from '@adminvault/shared-models';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel, GetAllEmailInfoModel, EmailStatsResponseModel, EmailStatusEnum, RequestAccessModel, GlobalResponse, CompanyIdRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel } from '@adminvault/shared-models';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse } from '@adminvault/backend-utils';
-
 import { ConfigService } from '@nestjs/config';
 import { EmailInfoRepository } from './repositories/email-info.repository';
 
@@ -25,7 +12,6 @@ import { EmailInfoRepository } from './repositories/email-info.repository';
 export class EmailInfoService {
     private transporter: nodemailer.Transporter;
     private readonly logger = new Logger(EmailInfoService.name);
-
     constructor(
         private readonly emailInfoRepo: EmailInfoRepository,
         private readonly dataSource: DataSource,
@@ -99,14 +85,14 @@ export class EmailInfoService {
         return new GetEmailInfoByIdModel(true, 200, "Email info retrieved successfully", response);
     }
 
-    async getAllEmailInfo(companyId?: number): Promise<GetAllEmailInfoModel> {
-        const data = await this.emailInfoRepo.getEmailsWithEmployee(companyId);
+    async getAllEmailInfo(reqModel: CompanyIdRequestModel): Promise<GetAllEmailInfoModel> {
+        const data = await this.emailInfoRepo.getEmailsWithEmployee(reqModel.companyId);
         const responses = data.map(info => new EmailInfoResponseModel(info.id, info.company_id, info.email_type, info.department, info.email, info.employee_id));
         return new GetAllEmailInfoModel(true, 200, "Email info retrieved successfully", responses);
     }
 
-    async getEmailStats(companyId: number): Promise<EmailStatsResponseModel> {
-        const stats = await this.emailInfoRepo.getEmailStatsByCompany(companyId);
+    async getEmailStats(reqModel: CompanyIdRequestModel): Promise<EmailStatsResponseModel> {
+        const stats = await this.emailInfoRepo.getEmailStatsByCompany(reqModel.companyId);
         return new EmailStatsResponseModel(true, 200, "Email stats retrieved successfully", stats);
     }
 
@@ -150,7 +136,8 @@ export class EmailInfoService {
             return false;
         }
     }
-    async sendTicketCreatedEmail(ticket: any, recipientEmail: string, roleName: string): Promise<boolean> {
+    async sendTicketCreatedEmail(reqModel: SendTicketCreatedEmailModel): Promise<boolean> {
+        const { ticket, recipientEmail, roleName } = reqModel;
         const mailOptions = {
             from: `"AdminVault Support" <no-reply@adminvault.com>`,
             to: recipientEmail,
@@ -184,7 +171,8 @@ export class EmailInfoService {
         }
     }
 
-    async sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
+    async sendPasswordResetEmail(reqModel: SendPasswordResetEmailModel): Promise<boolean> {
+        const { email, token } = reqModel;
         const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
         const mailOptions = {
             from: `"AdminVault Security" <no-reply@adminvault.com>`,

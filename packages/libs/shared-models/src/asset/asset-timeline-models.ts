@@ -34,3 +34,13 @@ export class AssetTimelineResponseModel extends GlobalResponse {
         this.events = events;
     }
 }
+
+export class AssetTimelineRequestModel {
+    id: number;
+    companyId: number;
+
+    constructor(id: number, companyId: number) {
+        this.id = id;
+        this.companyId = companyId;
+    }
+}

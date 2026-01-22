@@ -3,11 +3,8 @@ import { DataSource } from 'typeorm';
 import * as XLSX from 'xlsx';
 import { EmployeesEntity } from './entities/employees.entity';
 import { EmployeesRepository } from './repositories/employees.repository';
-import { DepartmentRepository } from '../masters/repositories/department.repository';
-import {
-    EmployeeStatusEnum,
-    BulkImportResponseModel
-} from '@adminvault/shared-models';
+import { DepartmentRepository } from '../masters/department/repositories/department.repository';
+import { EmployeeStatusEnum, BulkImportResponseModel, BulkImportRequestModel } from '@adminvault/shared-models';
 
 @Injectable()
 export class EmployeesBulkService {
@@ -17,8 +14,9 @@ export class EmployeesBulkService {
         private departmentRepo: DepartmentRepository
     ) { }
 
-    async processBulkImport(fileBuffer: Buffer, companyId: number, userId: number): Promise<BulkImportResponseModel> {
+    async processBulkImport(reqModel: BulkImportRequestModel): Promise<BulkImportResponseModel> {
         try {
+            const { fileBuffer, companyId, userId } = reqModel;
             // 1. Fetch valid departments for lookup
             const departments = await this.departmentRepo.find();
 
@@ -124,15 +122,7 @@ export class EmployeesBulkService {
                 }
             }
 
-            return new BulkImportResponseModel(
-                true,
-                200,
-                `Processed ${rows.length - 1} rows. Success: ${successCount}, Failed: ${errors.length}`,
-                successCount,
-                errors.length,
-                errors
-            );
-
+            return new BulkImportResponseModel(true, 200, `Processed ${rows.length - 1} rows. Success: ${successCount}, Failed: ${errors.length}`, successCount, errors.length, errors);
         } catch (error: any) {
             console.error('Bulk Import Error:', error);
             return new BulkImportResponseModel(false, 500, `Internal Server Error: ${error.message}`, 0, 0, []);

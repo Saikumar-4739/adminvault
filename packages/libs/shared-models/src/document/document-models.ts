@@ -1,25 +1,26 @@
 import { GlobalResponse } from '../common/global-response';
 
-export interface DocumentModel {
-    id: number;
-    fileName: string;
-    originalName: string;
-    fileSize: number;
-    mimeType: string;
-    category?: string;
-    filePath: string;
-    uploadedBy: number;
-    description?: string;
-    tags?: string;
-    companyId: number;
-    createdAt?: Date;
-    updatedAt?: Date;
-}
-
-export class UploadDocumentModel {
+export class DocumentModel {
+    id!: number;
+    fileName!: string;
     originalName!: string;
     fileSize!: number;
     mimeType!: string;
+    category?: string;
+    filePath!: string;
+    uploadedBy!: number;
+    description?: string;
+    tags?: string;
+    companyId!: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+
+    constructor(data: Partial<DocumentModel>) {
+        Object.assign(this, data);
+    }
+}
+
+export class UploadDocumentModel {
     category?: string;
     description?: string;
     tags?: string;
@@ -27,7 +28,7 @@ export class UploadDocumentModel {
     userId!: number;
 }
 
-export class FilterDocumentModel {
+export class GetAllDocumentsRequestModel {
     companyId?: number;
     category?: string;
 }
@@ -41,26 +42,36 @@ export class GetDocumentModel {
     id!: number;
 }
 
-export class GetAllDocumentsModel extends GlobalResponse {
-    documents: DocumentModel[];
+export class DownloadDocumentRequestModel {
+    id!: number;
+}
+
+export class GlobalDocumentResponseModel extends GlobalResponse<DocumentModel> {
+    document!: DocumentModel;
+    constructor(status: boolean, code: number, message: string, document: DocumentModel) {
+        super(status, code, message, document);
+        this.document = document;
+    }
+}
+
+export class GetAllDocumentsResponseModel extends GlobalResponse<DocumentModel[]> {
+    documents!: DocumentModel[];
     constructor(status: boolean, code: number, message: string, documents: DocumentModel[]) {
-        super(status, code, message);
+        super(status, code, message, documents);
         this.documents = documents;
     }
 }
 
-export class GetDocumentByIdModel extends GlobalResponse {
-    document: DocumentModel;
-    constructor(status: boolean, code: number, message: string, document: DocumentModel) {
-        super(status, code, message);
-        this.document = document;
-    }
-}
+export class GetDocumentResponseModel extends GlobalDocumentResponseModel { }
 
-export class UploadDocumentResponseModel extends GlobalResponse {
-    document: DocumentModel;
-    constructor(status: boolean, code: number, message: string, document: DocumentModel) {
+export class UploadDocumentResponseModel extends GlobalDocumentResponseModel { }
+
+export class DownloadDocumentResponseModel extends GlobalResponse {
+    filePath!: string;
+    originalName!: string;
+    constructor(status: boolean, code: number, message: string, filePath: string, originalName: string) {
         super(status, code, message);
-        this.document = document;
+        this.filePath = filePath;
+        this.originalName = originalName;
     }
 }

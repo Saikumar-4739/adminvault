@@ -5,7 +5,7 @@ import { EmployeesService } from './employees.service';
 import { EmployeesController } from './employees.controller';
 import { EmployeesRepository } from './repositories/employees.repository';
 import { EmployeesBulkService } from './employees-bulk.service';
-import { DepartmentRepository } from '../masters/repositories/department.repository';
+import { DepartmentRepository } from '../masters/department/repositories/department.repository';
 
 @Module({
     imports: [TypeOrmModule.forFeature([EmployeesEntity])],

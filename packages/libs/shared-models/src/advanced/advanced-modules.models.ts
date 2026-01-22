@@ -83,48 +83,22 @@ export class AssetSoftwareModel {
     }
 }
 
-// --- Maintenance Models ---
+// --- Software Inventory Models ---
 
-export class CreateMaintenanceModel {
+export class GetAssetSoftwareRequestModel {
     assetId: number;
-    maintenanceType: MaintenanceTypeEnum;
-    scheduledDate: Date;
-    description: string;
-    isRecurring: boolean;
-    frequencyDays?: number;
-    timeSpentMinutes?: number;
 
-    constructor(assetId: number, maintenanceType: MaintenanceTypeEnum, scheduledDate: Date, description: string, isRecurring: boolean = false, frequencyDays?: number, timeSpentMinutes?: number) {
+    constructor(assetId: number) {
         this.assetId = assetId;
-        this.maintenanceType = maintenanceType;
-        this.scheduledDate = scheduledDate;
-        this.description = description;
-        this.isRecurring = isRecurring;
-        this.frequencyDays = frequencyDays;
-        this.timeSpentMinutes = timeSpentMinutes;
     }
 }
 
-export class MaintenanceResponseModel {
-    id: number;
+export class InstallSoftwareRequestModel {
     assetId: number;
-    assetSerial: string;
-    maintenanceType: MaintenanceTypeEnum;
-    scheduledDate: Date;
-    status: MaintenanceStatusEnum;
-    description: string;
-    completedAt?: Date;
-    timeSpentMinutes?: number;
+    softwareId: number;
 
-    constructor(id: number, assetId: number, assetSerial: string, maintenanceType: MaintenanceTypeEnum, scheduledDate: Date, status: MaintenanceStatusEnum, description: string, completedAt?: Date, timeSpentMinutes?: number) {
-        this.id = id;
+    constructor(assetId: number, softwareId: number) {
         this.assetId = assetId;
-        this.assetSerial = assetSerial;
-        this.maintenanceType = maintenanceType;
-        this.scheduledDate = scheduledDate;
-        this.status = status;
-        this.description = description;
-        this.completedAt = completedAt;
-        this.timeSpentMinutes = timeSpentMinutes;
+        this.softwareId = softwareId;
     }
 }

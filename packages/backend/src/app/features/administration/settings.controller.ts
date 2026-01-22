@@ -3,10 +3,7 @@ import { SettingsService } from './settings.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
-import {
-    SettingType, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel,
-    GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel
-} from '@adminvault/shared-models';
+import { SettingType, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel, CompanyIdRequestModel, UserIdNumRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Settings')
 @Controller('administration/settings')
@@ -14,25 +11,27 @@ import {
 export class SettingsController {
     constructor(private readonly settingsService: SettingsService) { }
 
-    @Post('get-all-user-settings')
-    async getUserSettings(@Req() req: any): Promise<GetAllSettingsResponseModel> {
+    @Post('getUserSettings')
+    @ApiBody({ type: UserIdNumRequestModel })
+    async getUserSettings(@Body() reqModel: UserIdNumRequestModel): Promise<GetAllSettingsResponseModel> {
         try {
-            return await this.settingsService.getUserSettings(req.user.id);
+            return await this.settingsService.getUserSettings(reqModel);
         } catch (error) {
             return returnException(GetAllSettingsResponseModel, error);
         }
     }
 
-    @Post('get-all-company-settings')
-    async getCompanySettings(@Req() req: any): Promise<GetAllSettingsResponseModel> {
+    @Post('getCompanySettings')
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getCompanySettings(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllSettingsResponseModel> {
         try {
-            return await this.settingsService.getCompanySettings(req.user.companyId);
+            return await this.settingsService.getCompanySettings(reqModel);
         } catch (error) {
             return returnException(GetAllSettingsResponseModel, error);
         }
     }
 
-    @Post('get-all-system-settings')
+    @Post('getSystemSettings')
     async getSystemSettings(): Promise<GetAllSettingsResponseModel> {
         try {
             return await this.settingsService.getSystemSettings();
@@ -41,53 +40,52 @@ export class SettingsController {
         }
     }
 
-    @Post('set-user-setting')
+    @Post('setUserSetting')
     @ApiBody({ type: CreateSettingModel })
-    async setUserSetting(@Req() req: any, @Body() body: CreateSettingModel): Promise<GlobalResponse> {
+    async setUserSetting(@Body() reqModel: CreateSettingModel): Promise<GlobalResponse> {
         try {
-            body.type = SettingType.JSON;
-            body.userId = req.user.id;
-            return await this.settingsService.setSetting(body);
+            reqModel.type = SettingType.JSON;
+            return await this.settingsService.setSetting(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('bulk-set')
+    @Post('bulkSetSettings')
     @ApiBody({ type: BulkSetSettingsModel })
-    async bulkSetSettings(@Body() model: BulkSetSettingsModel): Promise<GlobalResponse> {
+    async bulkSetSettings(@Body() reqModel: BulkSetSettingsModel): Promise<GlobalResponse> {
         try {
-            return await this.settingsService.bulkSetSettings(model);
+            return await this.settingsService.bulkSetSettings(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('get-setting')
+    @Post('getSetting')
     @ApiBody({ type: GetSettingRequestModel })
-    async getSetting(@Body() model: GetSettingRequestModel): Promise<GetSettingResponseModel> {
+    async getSetting(@Body() reqModel: GetSettingRequestModel): Promise<GetSettingResponseModel> {
         try {
-            return await this.settingsService.getSetting(model);
+            return await this.settingsService.getSetting(reqModel);
         } catch (error) {
             return returnException(GetSettingResponseModel, error);
         }
     }
 
-    @Post('delete')
+    @Post('deleteSetting')
     @ApiBody({ type: DeleteSettingRequestModel })
-    async deleteSetting(@Body() model: DeleteSettingRequestModel): Promise<GlobalResponse> {
+    async deleteSetting(@Body() reqModel: DeleteSettingRequestModel): Promise<GlobalResponse> {
         try {
-            return await this.settingsService.deleteSetting(model);
+            return await this.settingsService.deleteSetting(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
-    @Post('get-by-category')
+    @Post('getAllSettingsByCategory')
     @ApiBody({ type: GetSettingsByCategoryRequestModel })
-    async getAllSettingsByCategory(@Body() model: GetSettingsByCategoryRequestModel): Promise<GetAllSettingsResponseModel> {
+    async getAllSettingsByCategory(@Body() reqModel: GetSettingsByCategoryRequestModel): Promise<GetAllSettingsResponseModel> {
         try {
-            return await this.settingsService.getAllSettingsByCategory(model);
+            return await this.settingsService.getAllSettingsByCategory(reqModel);
         } catch (error) {
             return returnException(GetAllSettingsResponseModel, error);
         }

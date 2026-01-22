@@ -7,15 +7,9 @@ import { DocumentsController } from './documents.controller';
 import { DocumentRepository } from './repositories/document.repository';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([DocumentEntity]),
-        MulterModule.register({}),
-    ],
+    imports: [TypeOrmModule.forFeature([DocumentEntity]), MulterModule.register({})],
     controllers: [DocumentsController],
-    providers: [
-        DocumentsService, 
-        DocumentRepository
-    ],
+    providers: [DocumentsService, DocumentRepository],
     exports: [DocumentsService],
 })
 export class DocumentsModule { }

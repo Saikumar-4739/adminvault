@@ -5,8 +5,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 @Entity('ticket_status_logs')
 @Index('idx_status_log_ticket', ['ticketId'])
 @Index('idx_status_log_admin', ['changedByAdminId'])
-@Index('idx_status_log_company', ['companyId'])
-@Index('idx_status_log_user', ['userId'])
 export class TicketStatusLogsEntity extends CommonBaseEntity {
 
     @Column('bigint', { name: 'ticket_id', nullable: false, comment: 'Reference to tickets table' })

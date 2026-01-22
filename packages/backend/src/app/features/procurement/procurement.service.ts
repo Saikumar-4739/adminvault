@@ -1,75 +1,65 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
-import {
-    CreatePOModel,
-    PurchaseOrderModel,
-    POItemModel,
-    GetAllPOsModel,
-    GetPOByIdModel,
-    POStatusEnum,
-    ApprovalTypeEnum,
-    CreateApprovalRequestModel
-} from '@adminvault/shared-models';
+import { DataSource } from 'typeorm';
+import { CreatePOModel, PurchaseOrderModel, POItemModel, GetAllPOsModel, GetPOByIdModel, POStatusEnum, ApprovalTypeEnum, CreateApprovalRequestModel, GetAllPOsRequestModel, GetPORequestModel, UpdatePOStatusRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { PurchaseOrderEntity } from './entities/purchase-order.entity';
 import { PurchaseOrderItemEntity } from './entities/purchase-order-item.entity';
 import { WorkflowService } from '../workflow/workflow.service';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
-import { EmployeesEntity } from '../employees/entities/employees.entity';
-import { VendorsMasterEntity } from '../masters/entities/vendor.entity';
+import { PurchaseOrderRepository } from './repositories/purchase-order.repository';
+import { PurchaseOrderItemRepository } from './repositories/purchase-order-item.repository';
+import { EmployeesRepository } from '../employees/repositories/employees.repository';
 
 @Injectable()
 export class ProcurementService {
     constructor(
         private dataSource: DataSource,
-        @InjectRepository(PurchaseOrderEntity)
-        private poRepo: Repository<PurchaseOrderEntity>,
-        @InjectRepository(PurchaseOrderItemEntity)
-        private poItemRepo: Repository<PurchaseOrderItemEntity>,
-        @InjectRepository(EmployeesEntity)
-        private employeeRepo: Repository<EmployeesEntity>,
+        private poRepo: PurchaseOrderRepository,
+        private poItemRepo: PurchaseOrderItemRepository,
+        private employeeRepo: EmployeesRepository,
         @Inject(forwardRef(() => WorkflowService))
         private workflowService: WorkflowService
     ) { }
 
-    async createPO(reqModel: CreatePOModel, userId: number, userEmail?: string): Promise<GlobalResponse> {
+    async createPO(data: CreatePOModel, userId?: number, userEmail?: string, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            // Find Requester (Employee)
             const employee = await this.employeeRepo.findOne({ where: { email: userEmail } });
-            if (!employee) throw new ErrorResponse(0, "Employee profile not found for current user.");
+            if (!employee) {
+                throw new ErrorResponse(404, 'Employee profile not found for current user');
+            }
 
             await transManager.startTransaction();
+            const repo = transManager.getRepository(PurchaseOrderEntity);
 
-            const poNumber = `PO-${Date.now()}`; // Simple generation
-            const totalAmount = reqModel.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+            const poNumber = `PO-${Date.now()}`;
+            const totalAmount = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
 
-            const po = new PurchaseOrderEntity();
-            po.poNumber = poNumber;
-            po.vendorId = reqModel.vendorId;
-            po.requesterId = employee.id;
-            po.orderDate = reqModel.orderDate ? new Date(reqModel.orderDate) : new Date();
-            po.expectedDeliveryDate = reqModel.expectedDeliveryDate ? new Date(reqModel.expectedDeliveryDate) : null; // Handle optional
-            po.status = POStatusEnum.PENDING_APPROVAL; // Default to Pending Approval
-            po.totalAmount = totalAmount;
-            po.notes = reqModel.notes;
-            po.items = reqModel.items.map(i => {
-                const item = new PurchaseOrderItemEntity();
-                item.itemName = i.itemName;
-                item.quantity = i.quantity;
-                item.unitPrice = i.unitPrice;
-                item.totalPrice = i.quantity * i.unitPrice;
-                item.sku = i.sku;
-                item.assetTypeId = i.assetTypeId;
-                return item;
+            const po = repo.create({
+                poNumber,
+                vendorId: data.vendorId,
+                requesterId: employee.id,
+                orderDate: data.orderDate ? new Date(data.orderDate) : new Date(),
+                expectedDeliveryDate: data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate) : null,
+                status: POStatusEnum.PENDING_APPROVAL,
+                totalAmount,
+                notes: data.notes,
+                timeSpentMinutes: data.timeSpentMinutes || 0,
+                items: data.items.map(i => {
+                    const item = new PurchaseOrderItemEntity();
+                    item.itemName = i.itemName;
+                    item.quantity = i.quantity;
+                    item.unitPrice = i.unitPrice;
+                    item.totalPrice = i.quantity * i.unitPrice;
+                    item.sku = i.sku;
+                    item.assetTypeId = i.assetTypeId;
+                    return item;
+                })
             });
-            po.timeSpentMinutes = reqModel.timeSpentMinutes || 0;
 
-            const savedPO = await transManager.getRepository(PurchaseOrderEntity).save(po);
+            const savedPO = await repo.save(po);
             await transManager.completeTransaction();
 
-            // Trigger Workflow
             const approvalReq = new CreateApprovalRequestModel(
                 ApprovalTypeEnum.PURCHASE_ORDER,
                 Number(savedPO.id),
@@ -79,23 +69,20 @@ export class ProcurementService {
             );
             await this.workflowService.initiateApproval(approvalReq);
 
-            return new GlobalResponse(true, 0, "Purchase Order created and submitted for approval");
+            return new GlobalResponse(true, 201, 'Purchase Order created and submitted for approval');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to create Purchase Order');
         }
     }
 
-    async getAllPOs(companyId: number): Promise<GetAllPOsModel> {
+    async getAllPOs(reqModel: GetAllPOsRequestModel): Promise<GetAllPOsModel> {
         try {
-            // Assuming POs are linked to company via requester or vendor?
-            // PO Entity doesn't have companyId directly, but Requester/Vendor does.
-            // Let's filter by requester.companyId matching.
             const pos = await this.poRepo.createQueryBuilder('po')
                 .leftJoinAndSelect('po.vendor', 'vendor')
                 .leftJoinAndSelect('po.requester', 'requester')
                 .leftJoinAndSelect('po.items', 'items')
-                .where('requester.companyId = :companyId', { companyId })
+                .where('requester.companyId = :companyId', { companyId: reqModel.companyId })
                 .orderBy('po.createdAt', 'DESC')
                 .getMany();
 
@@ -109,20 +96,22 @@ export class ProcurementService {
                 p.timeSpentMinutes
             ));
 
-            return new GetAllPOsModel(true, 0, "POs retrieved", responses);
+            return new GetAllPOsModel(true, 200, 'Purchase Orders retrieved successfully', responses);
         } catch (error) {
-            throw error;
+            throw new ErrorResponse(500, 'Failed to fetch Purchase Orders');
         }
     }
 
-    async getPO(id: number): Promise<GetPOByIdModel> {
+    async getPO(reqModel: GetPORequestModel): Promise<GetPOByIdModel> {
         try {
             const p = await this.poRepo.findOne({
-                where: { id },
+                where: { id: reqModel.id },
                 relations: ['vendor', 'requester', 'items']
             });
 
-            if (!p) throw new ErrorResponse(0, "PO not found");
+            if (!p) {
+                throw new ErrorResponse(404, 'Purchase Order not found');
+            }
 
             const response = new PurchaseOrderModel(
                 p.id, p.poNumber, p.vendorId, p.requesterId, p.orderDate, p.status, p.totalAmount, p.createdAt,
@@ -134,21 +123,18 @@ export class ProcurementService {
                 p.timeSpentMinutes
             );
 
-            return new GetPOByIdModel(true, 0, "PO retrieved", response);
+            return new GetPOByIdModel(true, 200, 'Purchase Order retrieved successfully', response);
         } catch (error) {
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to fetch Purchase Order');
         }
     }
 
-    // Callbacks from Workflow Service (need to implement these methods in WorkflowService to call specific services based on Type)
-    // Or WorkflowService calls a generic interface? 
-    // Usually WorkflowService handles status updates on the ApprovalRequest entity, 
-    // BUT the business entity (PO) status also needs to update.
-    // I need to expose methods: approvePO, rejectPO that WorkflowService can call, or I call them manually for now.
-    // Ideally WorkflowService should emit an event or call a registered handler.
-    // For simplicity, I'll add methods here that can be called.
-
-    async updatePOStatus(id: number, status: POStatusEnum): Promise<void> {
-        await this.poRepo.update(id, { status });
+    async updatePOStatus(reqModel: UpdatePOStatusRequestModel): Promise<GlobalResponse> {
+        try {
+            await this.poRepo.update(reqModel.id, { status: reqModel.status });
+            return new GlobalResponse(true, 200, 'Purchase Order status updated successfully');
+        } catch (error) {
+            throw new ErrorResponse(500, 'Failed to update Purchase Order status');
+        }
     }
 }

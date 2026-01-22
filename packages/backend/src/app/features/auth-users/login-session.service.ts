@@ -8,6 +8,22 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateLoginSessionModel, LoginSessionResponseModel, GetUserLoginHistoryModel, GetActiveSessionsModel, LogoutSessionModel } from '@adminvault/shared-models';
 
+interface ILocationData {
+    country: string;
+    region: string;
+    city: string;
+    district: string;
+    latitude?: number;
+    longitude?: number;
+    timezone?: string;
+    isLocal?: boolean;
+    locationName?: string;
+    road?: string;
+    suburb?: string;
+    postcode?: string;
+    fullAddress?: string;
+}
+
 @Injectable()
 export class LoginSessionService {
     constructor(
@@ -18,7 +34,7 @@ export class LoginSessionService {
     /**
      * Get geolocation data from IP address using ip-api.com
      */
-    private async getLocationFromIP(ipAddress: string) {
+    private async getLocationFromIP(ipAddress: string): Promise<ILocationData | null> {
         try {
             if (ipAddress === '127.0.0.1' || ipAddress === '::1' || ipAddress.startsWith('192.168.') || ipAddress.startsWith('10.') || ipAddress.startsWith('172.')) {
                 return {
@@ -122,7 +138,7 @@ export class LoginSessionService {
                 // Fallback to IP-based geolocation
                 locationData = await this.getLocationFromIP(reqModel.ipAddress);
 
-                if (locationData && (locationData as any).isLocal) {
+                if (locationData && locationData.isLocal) {
                     console.log('ℹ️ Local development detected (IP: ' + reqModel.ipAddress + '), using default location data');
                 } else if (locationData) {
                     console.log('✅ IP-based location:', locationData);

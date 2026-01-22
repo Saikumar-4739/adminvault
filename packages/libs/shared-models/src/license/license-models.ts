@@ -154,29 +154,23 @@ export class LicenseResponseModel {
     }
 }
 
-/**
- * Response model for getting all licenses
- */
-export class GetAllLicensesModel extends GlobalResponse {
-    override data: LicenseResponseModel[];
-
-    constructor(status: boolean, code: number, message: string, data: LicenseResponseModel[]) {
-        super(status, code, message);
-        this.data = data;
-    }
-}
-
-/**
- * Response model for getting a single license by ID
- */
-export class GetLicenseByIdModel extends GlobalResponse {
-    override data: LicenseResponseModel;
-
+export class GlobalLicenseResponseModel extends GlobalResponse<LicenseResponseModel> {
+    license!: LicenseResponseModel;
     constructor(status: boolean, code: number, message: string, data: LicenseResponseModel) {
-        super(status, code, message);
-        this.data = data;
+        super(status, code, message, data);
+        this.license = data;
     }
 }
+
+export class GetAllLicensesResponseModel extends GlobalResponse<LicenseResponseModel[]> {
+    licenses!: LicenseResponseModel[];
+    constructor(status: boolean, code: number, message: string, data: LicenseResponseModel[]) {
+        super(status, code, message, data);
+        this.licenses = data;
+    }
+}
+
+export class GetLicenseResponseModel extends GlobalLicenseResponseModel { }
 
 /**
  * Response model for license statistics
@@ -198,11 +192,10 @@ export class LicenseStatsModel {
 /**
  * Response model for license statistics endpoint
  */
-export class GetLicenseStatsModel extends GlobalResponse {
-    override data: LicenseStatsModel;
-
+export class GetLicenseStatisticsResponseModel extends GlobalResponse<LicenseStatsModel> {
+    statistics!: LicenseStatsModel;
     constructor(status: boolean, code: number, message: string, data: LicenseStatsModel) {
-        super(status, code, message);
-        this.data = data;
+        super(status, code, message, data);
+        this.statistics = data;
     }
 }

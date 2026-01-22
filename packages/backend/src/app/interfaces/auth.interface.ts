@@ -1,3 +1,5 @@
+import { Request } from 'express';
+
 export interface IUserPayload {
     userId: number;
     email: string;

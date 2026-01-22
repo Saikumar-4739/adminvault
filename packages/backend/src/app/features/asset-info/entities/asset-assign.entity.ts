@@ -3,10 +3,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('asset_assign')
 @Index('idx_assign_asset', ['assetId'])
-@Index('idx_assign_employee', ['employeeId'])
-@Index('idx_assign_by', ['assignedById'])
-@Index('idx_assign_company', ['companyId'])
-@Index('idx_assign_user', ['userId'])
 export class AssetAssignEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'asset_id', nullable: false, comment: 'Reference to asset_info table' })
     assetId: number;
