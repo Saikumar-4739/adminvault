@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { DepartmentService } from './department.service';
-import { CreateDepartmentModel, UpdateDepartmentModel, GetAllDepartmentsResponseModel, CreateDepartmentResponseModel, UpdateDepartmentResponseModel, IdRequestModel } from '@adminvault/shared-models';
+import { CreateDepartmentModel, UpdateDepartmentModel, GetAllDepartmentsResponseModel, CreateDepartmentResponseModel, UpdateDepartmentResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
@@ -12,7 +12,8 @@ export class DepartmentController {
     constructor(private departmentService: DepartmentService) { }
 
     @Post('getAllDepartments')
-    async getAllDepartments(): Promise<GetAllDepartmentsResponseModel> {
+    @ApiBody({ type: CompanyIdRequestModel })
+    async getAllDepartments(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllDepartmentsResponseModel> {
         try {
             return await this.departmentService.getAllDepartments();
         } catch (error) {

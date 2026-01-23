@@ -1,33 +1,32 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { mastersService, companyService } from '@/lib/api/services';
-import { CreateAssetTypeModel, UpdateAssetTypeModel } from '@adminvault/shared-models';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { assetTypeService, companyService } from '@/lib/api/services';
+import { CreateAssetTypeModel, UpdateAssetTypeModel, AssetType } from '@adminvault/shared-models';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface AssetType {
-    id: number;
-    name: string;
-    description?: string;
-    code?: string;
-    status?: string;
-    isActive: boolean;
-    companyId: number;
+
+interface AssetTypesMasterViewProps {
+    onBack?: () => void;
 }
 
-export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }) {
+interface CompanyInfo {
+    id: number;
+    companyName: string;
+}
+
+export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
-    const { success: toastSuccess, error: toastError } = useToast();
     const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
-    const [companies, setCompanies] = useState<any[]>([]);
+    const [companies, setCompanies] = useState<CompanyInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -36,7 +35,7 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
-    const getAllCompanies = async () => {
+    const getAllCompanies = async (): Promise<void> => {
         try {
             const response = await companyService.getAllCompanies();
             if (response.status) {
@@ -47,22 +46,22 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
         }
     };
 
-    const getAllAssetTypes = useCallback(async () => {
+    const getAllAssetTypes = useCallback(async (): Promise<void> => {
         if (!user?.companyId) return;
         setIsLoading(true);
         try {
-            const response = await mastersService.getAllAssetTypes(user.companyId as any);
+            const response = await assetTypeService.getAllAssetTypes({ companyId: user.companyId });
             if (response.status) {
                 setAssetTypes(response.assetTypes || []);
             } else {
-                toastError(response.message || 'Failed to fetch asset types');
+                AlertMessages.getErrorMessage(response.message || 'Failed to fetch asset types');
             }
         } catch (error: any) {
-            toastError(error.message || 'Failed to fetch asset types');
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch asset types');
         } finally {
             setIsLoading(false);
         }
-    }, [toastError, user?.companyId]);
+    }, [user?.companyId]);
 
     useEffect(() => {
         if (user?.companyId) {
@@ -71,7 +70,7 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
         }
     }, [getAllAssetTypes, user?.companyId]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         if (!user) return;
         setIsLoading(true);
@@ -86,13 +85,13 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                     formData.code,
                     companyIdToUse,
                 );
-                const response = await mastersService.updateAssetType(model);
+                const response = await assetTypeService.updateAssetType(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Asset Type Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Asset Type Updated Successfully');
                     handleCloseModal();
                     getAllAssetTypes();
                 } else {
-                    toastError(response.message || 'Failed to Update Asset Type');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Asset Type');
                 }
             } else {
                 const model = new CreateAssetTypeModel(
@@ -104,23 +103,23 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                     formData.code,
                     formData.status
                 );
-                const response = await mastersService.createAssetType(model);
+                const response = await assetTypeService.createAssetType(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Asset Type Created Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Asset Type Created Successfully');
                     handleCloseModal();
                     getAllAssetTypes();
                 } else {
-                    toastError(response.message || 'Failed to Create Asset Type');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Asset Type');
                 }
             }
         } catch (err: any) {
-            toastError(err.message || 'An error occurred');
+            AlertMessages.getErrorMessage(err.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleEdit = (item: any) => {
+    const handleEdit = (item: AssetType): void => {
         setIsEditMode(true);
         setEditingId(item.id);
         setFormData({
@@ -129,29 +128,29 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
             code: item.code || '',
             status: item.status || '',
             isActive: item.isActive ?? true,
-            companyId: item.companyId || ''
+            companyId: item.companyId?.toString() || ''
         });
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: number) => {
+    const handleDeleteClick = (id: number): void => {
         setDeletingId(id);
         setIsDeleteDialogOpen(true);
     };
 
-    const handleDeleteConfirm = async () => {
+    const handleDeleteConfirm = async (): Promise<void> => {
         if (deletingId) {
             setIsLoading(true);
             try {
-                const response = await mastersService.deleteAssetType(deletingId);
+                const response = await assetTypeService.deleteAssetType({ id: deletingId });
                 if (response.status) {
-                    toastSuccess(response.message || 'Asset Type Deleted Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Asset Type Deleted Successfully');
                     getAllAssetTypes();
                 } else {
-                    toastError(response.message || 'Failed to Delete Asset Type');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Delete Asset Type');
                 }
             } catch (err: any) {
-                toastError(err.message || 'An error occurred');
+                AlertMessages.getErrorMessage(err.message || 'An error occurred');
             } finally {
                 setIsLoading(false);
                 setDeletingId(null);
@@ -159,7 +158,7 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
         }
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (): void => {
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
@@ -201,7 +200,7 @@ export default function AssetTypesMasterView({ onBack }: { onBack?: () => void }
                                     {assetTypes?.length === 0 ? (
                                         <tr><td colSpan={5} className="p-8 text-center text-slate-500">No asset types found</td></tr>
                                     ) : (
-                                        assetTypes?.map((item: any) => (
+                                        assetTypes?.map((item: AssetType) => (
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">

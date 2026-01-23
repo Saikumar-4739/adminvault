@@ -2,32 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { companyService } from '@/lib/api/services';
-import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel } from '@adminvault/shared-models';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, CompanyDocs as Company } from '@adminvault/shared-models';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCallback } from 'react';
 
-interface Company {
-    id: number;
-    companyName: string;
-    location?: string;
-    email?: string;
-    phone?: string;
-    estDate?: Date;
-    isActive: boolean;
+
+interface CompaniesMasterViewProps {
+    onAddClick?: () => void;
+    onBack?: () => void;
 }
 
-export default function CompaniesMasterView({ onBack }: { onAddClick?: () => void, onBack?: () => void }) {
-    const { success: toastSuccess, error: toastError } = useToast();
+export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
     const [companies, setCompanies] = useState<Company[]>([]);
-    const [isLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingCompanyId, setEditingCompanyId] = useState<number | null>(null);
@@ -39,79 +35,95 @@ export default function CompaniesMasterView({ onBack }: { onAddClick?: () => voi
         getAllCompanies();
     }, []);
 
-    const getAllCompanies = async () => {
+    const getAllCompanies = useCallback(async (): Promise<void> => {
+        setIsLoading(true);
         try {
             const response = await companyService.getAllCompanies();
             if (response.status) {
                 setCompanies(response.data);
             } else {
-                toastError(response.message);
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (error: any) {
-            toastError(error.message);
+            AlertMessages.getErrorMessage(error.message);
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, []);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
+        setIsLoading(true);
         try {
             if (isEditMode && editingCompanyId) {
                 const model = new UpdateCompanyModel(editingCompanyId, formData.companyName, formData.location, new Date(formData.estDate), formData.email, formData.phone, user?.id);
                 const response = await companyService.updateCompany(model);
                 if (response.status) {
-                    toastSuccess(response.message);
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     getAllCompanies();
                 } else {
-                    toastError(response.message);
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } else {
                 const model = new CreateCompanyModel(formData.companyName, formData.location, new Date(formData.estDate), formData.email, formData.phone, user?.id);
                 const response = await companyService.createCompany(model);
                 if (response.status) {
-                    toastSuccess(response.message);
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     getAllCompanies();
                 } else {
-                    toastError(response.message);
+                    AlertMessages.getErrorMessage(response.message);
                 }
             }
         } catch (err: any) {
-            toastError(err.message);
+            AlertMessages.getErrorMessage(err.message);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleEdit = (company: any) => {
+    const handleEdit = (company: Company): void => {
         setIsEditMode(true);
         setEditingCompanyId(company.id);
         const dateStr = company.estDate ? new Date(company.estDate).toISOString().split('T')[0] : '';
-        setFormData({ companyName: company.companyName, location: company.location, email: company.email, phone: company.phone, estDate: dateStr });
+        setFormData({
+            companyName: company.companyName,
+            location: company.location || '',
+            email: company.email || '',
+            phone: company.phone || '',
+            estDate: dateStr
+        });
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: number) => {
+    const handleDeleteClick = (id: number): void => {
         setDeletingCompanyId(id);
         setIsDeleteDialogOpen(true);
     };
 
-    const handleDeleteConfirm = async () => {
+    const handleDeleteConfirm = async (): Promise<void> => {
         if (deletingCompanyId) {
+            setIsLoading(true);
             try {
                 const model = new DeleteCompanyModel(deletingCompanyId);
                 const response = await companyService.deleteCompany(model);
                 if (response.status) {
-                    toastSuccess(response.message);
+                    AlertMessages.getSuccessMessage(response.message);
                     getAllCompanies();
                 } else {
-                    toastError(response.message);
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } catch (err: any) {
-                toastError(err.message);
+                AlertMessages.getErrorMessage(err.message);
+            } finally {
+                setIsLoading(false);
+                setIsDeleteDialogOpen(false);
             }
         }
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (): void => {
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingCompanyId(null);
@@ -154,7 +166,7 @@ export default function CompaniesMasterView({ onBack }: { onAddClick?: () => voi
                                     {companies?.length === 0 ? (
                                         <tr><td colSpan={7} className="p-8 text-center text-slate-500">No companies found</td></tr>
                                     ) : (
-                                        companies?.map((company: any) => (
+                                        companies?.map((company: Company) => (
                                             <tr key={company.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{company.companyName}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{company.location || '-'}</td>

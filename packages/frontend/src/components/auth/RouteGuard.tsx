@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { PageLoader } from '@/components/ui/Spinner';
 import { useEffect, useState } from 'react';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
@@ -35,10 +36,10 @@ export function RouteGuard({
             // Check if user has required role
             const userRole = user?.role?.toUpperCase() || '';
             const normalizedRequiredRoles = requiredRoles.map(r => r.toUpperCase());
-            
+
             // Flexible check: If ADMIN is required, any role containing "ADMIN" is allowed
             const isAdminPath = normalizedRequiredRoles.includes('ADMIN') || normalizedRequiredRoles.includes('SUPER_ADMIN');
-            const hasPermission = isAdminPath 
+            const hasPermission = isAdminPath
                 ? (userRole.includes('ADMIN') || normalizedRequiredRoles.includes(userRole))
                 : normalizedRequiredRoles.includes(userRole);
 
@@ -55,10 +56,7 @@ export function RouteGuard({
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-slate-950">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-slate-400 text-sm">Loading...</p>
-                </div>
+                <PageLoader message="Verifying access..." />
             </div>
         );
     }

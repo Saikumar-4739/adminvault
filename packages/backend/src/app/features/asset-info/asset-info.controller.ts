@@ -7,7 +7,7 @@ import { AssetTabsService } from './asset-tabs.service';
 import { AssetBulkService } from './asset-bulk.service';
 import { AssetHistoryService } from './asset-history.service';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel, AssetTimelineRequestModel, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel, AssetTimelineRequestModel, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel } from '@adminvault/shared-models';
 
 
 @ApiTags('Asset Info')
@@ -226,6 +226,26 @@ export class AssetInfoController {
     async getAllAssignments(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllAssetAssignsModel | GlobalResponse> {
         try {
             return await this.service.getAllAssignments(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('assignAssetOp')
+    @ApiBody({ type: AssignAssetOpRequestModel })
+    async assignAssetOp(@Body() reqModel: AssignAssetOpRequestModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.assignAssetOp(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('returnAssetOp')
+    @ApiBody({ type: ReturnAssetOpRequestModel })
+    async returnAssetOp(@Body() reqModel: ReturnAssetOpRequestModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.returnAssetOp(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

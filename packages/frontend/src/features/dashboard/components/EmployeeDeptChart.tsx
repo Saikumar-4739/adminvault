@@ -7,7 +7,11 @@ const COLORS = {
     purple: '#A855F7',
 };
 
-export default function EmployeeDeptChart({ data }: { data: any[] }) {
+interface EmployeeDeptChartProps {
+     data: any[] 
+}
+
+export const EmployeeDeptChart: React.FC<EmployeeDeptChartProps> = ({ data  }) => {
     if (!data || data.length === 0) return <div className="h-full w-full flex items-center justify-center text-xs text-slate-400">No data</div>;
 
     return (

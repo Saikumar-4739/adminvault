@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import Input from '@/components/ui/Input';
-import Button from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { EmailTypeEnum } from '@adminvault/shared-models';
 import { employeeService, mastersService } from '@/lib/api/services';
 import { User, Mail, Shield, Building } from 'lucide-react';
@@ -16,7 +16,11 @@ interface AddEmailModalProps {
     initialTab?: 'COMPANY' | 'USER' | 'GROUP';
 }
 
-export default function AddEmailModal({ isOpen, onClose, onSuccess, companyId, initialTab }: AddEmailModalProps) {
+interface AddEmailModalProps {
+    children?: React.ReactNode;
+}
+
+export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, onSuccess, companyId, initialTab }: AddEmailModalProps) => {
     const [employees, setEmployees] = useState<any[]>([]);
     const [departments, setDepartments] = useState<any[]>([]);
 

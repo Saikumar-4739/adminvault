@@ -3,9 +3,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRoleEnum } from '@adminvault/shared-models';
 
-export const HomePage: React.FC = () => {
+import { PageLoader } from '@/components/ui/Spinner';
+
+const HomePage: React.FC = () => {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
 
@@ -29,10 +30,7 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-400 text-sm">Loading...</p>
-      </div>
+      <PageLoader message="Initializing application..." />
     </div>
   );
 };

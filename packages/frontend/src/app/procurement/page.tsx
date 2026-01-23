@@ -2,41 +2,46 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { procurementService } from '@/lib/api/services';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+
 import { PageLoader } from '@/components/ui/Spinner';
-import PageHeader from '@/components/ui/PageHeader';
-import { 
-    ShoppingCart, Plus, Search, Filter, 
-    ChevronRight, Calendar, User, Building,
+import { PageHeader } from '@/components/ui/PageHeader';
+import {
+    ShoppingCart, Plus, Search,
+    Calendar, User, Building,
     DollarSign, Clock, FileText, AlertCircle,
     CheckCircle2, XCircle
 } from 'lucide-react';
-import { POStatusEnum } from '@adminvault/shared-models';
-import { useToast } from '@/contexts/ToastContext';
+import { POStatusEnum, GetAllPOsRequestModel } from '@adminvault/shared-models';
+import { useAuth } from '@/contexts/AuthContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { CreatePOModal } from '@/components/operations/CreatePOModal';
 
-export default function ProcurementPage() {
-    const { success, error: toastError } = useToast();
+const ProcurementPage: React.FC = () => {
+    const { user } = useAuth();
     const [pos, setPos] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const fetchPOs = useCallback(async () => {
+        if (!user?.companyId) return;
         setIsLoading(true);
         try {
-            const response = await procurementService.getAllPOs();
+            const req = new GetAllPOsRequestModel(user.companyId);
+            const response = await procurementService.getAllPOs(req);
             if (response.status) {
-                setPos(response.data || []);
+                setPos(response.pos || []);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (error: any) {
-            toastError(error.message || 'Failed to fetch Purchase Orders');
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch Purchase Orders');
         } finally {
             setIsLoading(false);
         }
-    }, [toastError]);
+    }, [user?.companyId]);
 
     useEffect(() => {
         fetchPOs();
@@ -98,10 +103,10 @@ export default function ProcurementPage() {
                 </div>
             </PageHeader>
 
-            <CreatePOModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                onSuccess={fetchPOs} 
+            <CreatePOModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={fetchPOs}
             />
 
             {isLoading ? (
@@ -154,8 +159,8 @@ export default function ProcurementPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 md:border-l dark:border-slate-800 md:pl-6">
-                                   <Button variant="outline" size="sm" className="font-bold text-xs">View Details</Button>
-                                   <Button variant="primary" size="sm" className="font-bold text-xs px-4">Track</Button>
+                                    <Button variant="outline" size="sm" className="font-bold text-xs">View Details</Button>
+                                    <Button variant="primary" size="sm" className="font-bold text-xs px-4">Track</Button>
                                 </div>
                             </div>
                         </Card>
@@ -165,3 +170,6 @@ export default function ProcurementPage() {
         </div>
     );
 }
+
+
+export default ProcurementPage;

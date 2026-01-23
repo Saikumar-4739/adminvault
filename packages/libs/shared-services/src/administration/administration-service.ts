@@ -1,40 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    BulkSetSettingsModel,
-    CompanyIdRequestModel,
-    CreateEmailInfoModel,
-    CreatePasswordVaultModel,
-    CreateSettingModel,
-    DeleteEmailInfoModel,
-    EmailStatsResponseModel,
-    GetAllEmailInfoModel,
-    GetAllPasswordVaultsResponseModel,
-    GetAllSettingsResponseModel,
-    GetEmailInfoByIdModel,
-    GetEmailInfoModel,
-    GlobalResponse,
-    UpdateEmailInfoModel,
-    UpdatePasswordVaultModel,
-    UserIdNumRequestModel,
-    GetSettingRequestModel,
-    GetSettingResponseModel,
-    DeleteSettingRequestModel,
-    GetSettingsByCategoryRequestModel,
-    GetAllVaultEntriesModel,
-    GetVaultEntryModel,
-    GetVaultEntryResponseModel,
-    DeleteVaultEntryModel,
-    GetDecryptedPasswordModel,
-    GetDecryptedPasswordResponseModel,
-    SearchVaultByCategoryModel,
-    ToggleVaultFavoriteModel,
-    GetVaultCategoriesModel,
-    GetVaultCategoriesResponseModel,
-    SendTicketCreatedEmailModel,
-    SendPasswordResetEmailModel,
-    RequestAccessModel
-} from '@adminvault/shared-models';
+import { BulkSetSettingsModel, CompanyIdRequestModel, CreateEmailInfoModel, CreatePasswordVaultModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, GetAllEmailInfoModel, GetAllPasswordVaultsResponseModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UpdatePasswordVaultModel, UserIdNumRequestModel, GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel, GetAllVaultEntriesModel, GetVaultEntryModel, GetVaultEntryResponseModel, DeleteVaultEntryModel, GetDecryptedPasswordModel, GetDecryptedPasswordResponseModel, SearchVaultByCategoryModel, ToggleVaultFavoriteModel, GetVaultCategoriesModel, GetVaultCategoriesResponseModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel } from '@adminvault/shared-models';
 
 export class AdministrationService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {

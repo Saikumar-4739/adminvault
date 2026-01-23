@@ -1,20 +1,19 @@
 'use client';
 
 import { Moon, Sun, Download, LogOut, Clock, Bell, Mail, Globe, Shield, Lock, Trash2, Key, Languages, HardDrive, Type } from 'lucide-react';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 
-export default function SettingsPage() {
+const SettingsPage: React.FC = () => {
     const { isDarkMode, toggleDarkMode, fontFamily, setFontFamily } = useTheme();
     const { logout, user } = useAuth();
     const router = useRouter();
-    const { success, error } = useToast();
 
     // State management
     // State management with operational persistence
@@ -32,7 +31,7 @@ export default function SettingsPage() {
     };
 
     const handleExportData = () => {
-        success('Data export started. You will receive a download link via email.');
+        AlertMessages.getSuccessMessage('Data export started. You will receive a download link via email.');
     };
 
     const handleClearCache = () => {
@@ -41,7 +40,7 @@ export default function SettingsPage() {
         if (authToken) {
             localStorage.setItem('authToken', authToken);
         }
-        success('Cache cleared successfully');
+        AlertMessages.getSuccessMessage('Cache cleared successfully');
         setTimeout(() => window.location.reload(), 1000);
     };
 
@@ -52,9 +51,9 @@ export default function SettingsPage() {
     const handleEnable2FA = () => {
         setTwoFactorEnabled(!twoFactorEnabled);
         if (!twoFactorEnabled) {
-            success('Two-Factor Authentication enabled successfully');
+            AlertMessages.getSuccessMessage('Two-Factor Authentication enabled successfully');
         } else {
-            success('Two-Factor Authentication disabled');
+            AlertMessages.getSuccessMessage('Two-Factor Authentication disabled');
         }
     };
 
@@ -65,7 +64,7 @@ export default function SettingsPage() {
     };
 
     const confirmDeleteAccount = () => {
-        error('Account deletion requires admin approval. Please contact support.');
+        AlertMessages.getErrorMessage('Account deletion requires admin approval. Please contact support.');
         setIsDeleteOpen(false);
     };
 
@@ -76,7 +75,7 @@ export default function SettingsPage() {
         localStorage.setItem('pref_email_notifications', emailNotifications.toString());
         localStorage.setItem('pref_push_notifications', pushNotifications.toString());
         localStorage.setItem('pref_auto_save', autoSave.toString());
-        success('Global configuration synchronized successfully');
+        AlertMessages.getSuccessMessage('Global configuration synchronized successfully');
     };
 
     return (
@@ -421,3 +420,6 @@ export default function SettingsPage() {
         </div >
     );
 };
+
+
+export default SettingsPage;

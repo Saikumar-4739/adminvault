@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Calendar, User, ArrowLeft, Plus, CheckCircle, AlertTriangle, History } from 'lucide-react';
+import { User, ArrowLeft, Plus, CheckCircle, AlertTriangle, History } from 'lucide-react';
 import { services } from '@/lib/api/services';
-import { AssetTimelineEvent, AssetTimelineEventType } from '@adminvault/shared-models';
+import { AssetTimelineEvent, AssetTimelineEventType, AssetTimelineRequestModel } from '@adminvault/shared-models';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { PageLoader } from '@/components/ui/Spinner';
 import { formatDateTime } from '@/lib/utils';
 import { Modal } from '../../../components/ui/Modal';
@@ -15,7 +16,11 @@ interface AssetTimelineModalProps {
     companyId: number;
 }
 
-export default function AssetTimelineModal({ isOpen, onClose, asset, companyId }: AssetTimelineModalProps) {
+interface AssetTimelineModalProps {
+    children?: React.ReactNode;
+}
+
+export const AssetTimelineModal: React.FC<AssetTimelineModalProps> = ({ isOpen, onClose, asset, companyId }: AssetTimelineModalProps) => {
     const [events, setEvents] = useState<AssetTimelineEvent[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -30,14 +35,17 @@ export default function AssetTimelineModal({ isOpen, onClose, asset, companyId }
         setIsLoading(true);
         setError(null);
         try {
-            const response = await services.asset.getTimeline(asset.id, companyId);
+            const req = new AssetTimelineRequestModel(asset.id, companyId);
+            const response = await services.asset.getTimeline(req);
             if (response.status) {
                 setEvents(response.events);
             } else {
                 setError(response.message || 'Failed to fetch timeline');
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (err: any) {
             setError(err.message || 'Error fetching timeline');
+            AlertMessages.getErrorMessage(err.message || 'Error fetching timeline');
         } finally {
             setIsLoading(false);
         }
@@ -81,7 +89,7 @@ export default function AssetTimelineModal({ isOpen, onClose, asset, companyId }
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={`Asset History - ${asset?.assetName || 'Asset'}`}
+            title={`Asset History - ${asset?.model || 'Asset'}`}
             size="md"
         >
             <div className="p-4">
@@ -113,7 +121,7 @@ export default function AssetTimelineModal({ isOpen, onClose, asset, companyId }
                                             {event.type.replace('_', ' ')}
                                         </span>
                                         <span className="text-xs text-slate-400 flex items-center gap-1">
-                                            <Calendar className="h-3 w-3" />
+                                            <History className="h-3 w-3" />
                                             {formatDateTime(event.date)}
                                         </span>
                                     </div>

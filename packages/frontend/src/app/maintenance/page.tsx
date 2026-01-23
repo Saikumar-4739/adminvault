@@ -2,36 +2,44 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { maintenanceService } from '@/lib/api/services';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { PageLoader } from '@/components/ui/Spinner';
-import PageHeader from '@/components/ui/PageHeader';
-import { 
-    Calendar, Plus, Search, Hammer, 
-    Settings, Clock, CheckCircle2, AlertCircle,
-    ChevronRight, Info, Layers, User
+import { PageHeader } from '@/components/ui/PageHeader';
+import {
+    Calendar, Plus, Hammer,
+    Settings, Clock, CheckCircle2,
+    Info, Layers
 } from 'lucide-react';
-import { MaintenanceStatusEnum, MaintenanceTypeEnum } from '@adminvault/shared-models';
-import { useToast } from '@/contexts/ToastContext';
+import { MaintenanceStatusEnum, MaintenanceTypeEnum, GetMaintenanceSchedulesRequestModel } from '@adminvault/shared-models';
+import { useAuth } from '@/contexts/AuthContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { CreateMaintenanceModal } from '@/components/operations/CreateMaintenanceModal';
 
-export default function MaintenancePage() {
-    const { success, error: toastError } = useToast();
+const MaintenancePage: React.FC = () => {
+    const { user } = useAuth();
     const [schedules, setSchedules] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const fetchSchedules = useCallback(async () => {
+        if (!user?.companyId) return;
         setIsLoading(true);
         try {
-            const data = await maintenanceService.getSchedules();
-            setSchedules(data || []);
+            const req = new GetMaintenanceSchedulesRequestModel();
+            req.companyId = user.companyId;
+            const response = await maintenanceService.getSchedules(req);
+            if (response.status) {
+                setSchedules(response.data || []);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
+            }
         } catch (error: any) {
-            toastError(error.message || 'Failed to fetch maintenance schedules');
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch maintenance schedules');
         } finally {
             setIsLoading(false);
         }
-    }, [toastError]);
+    }, [user?.companyId]);
 
     useEffect(() => {
         fetchSchedules();
@@ -79,10 +87,10 @@ export default function MaintenancePage() {
                 ]}
             />
 
-            <CreateMaintenanceModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                onSuccess={fetchSchedules} 
+            <CreateMaintenanceModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={fetchSchedules}
             />
 
             {isLoading ? (
@@ -101,34 +109,34 @@ export default function MaintenancePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {schedules.map((s) => (
                         <Card key={s.id} className="relative overflow-hidden group">
-                           <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-black uppercase tracking-widest border-l border-b rounded-bl-xl ${getStatusStyle(s.status)}`}>
-                               {s.status}
-                           </div>
-                           
-                           <div className="flex items-center gap-4 mb-4">
-                               <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                   <Settings className="text-slate-600 dark:text-slate-400" />
-                               </div>
-                               <div>
-                                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
-                                       {getTypeIcon(s.maintenanceType)}
-                                       {s.maintenanceType}
-                                   </div>
-                                   <h4 className="font-black text-slate-900 dark:text-white text-lg leading-tight uppercase tracking-tighter shadow-sm">{s.assetSerial}</h4>
-                               </div>
-                           </div>
+                            <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-black uppercase tracking-widest border-l border-b rounded-bl-xl ${getStatusStyle(s.status)}`}>
+                                {s.status}
+                            </div>
 
-                           <div className="space-y-3 mb-6">
-                               <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                                   <Clock size={16} />
-                                   <span>Scheduled: <strong>{new Date(s.scheduledDate).toLocaleDateString()}</strong></span>
-                               </div>
-                               <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 italic">
-                                   "{s.description || 'No additional details provided for this maintenance task.'}"
-                               </p>
-                           </div>
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                    <Settings className="text-slate-600 dark:text-slate-400" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+                                        {getTypeIcon(s.maintenanceType)}
+                                        {s.maintenanceType}
+                                    </div>
+                                    <h4 className="font-black text-slate-900 dark:text-white text-lg leading-tight uppercase tracking-tighter shadow-sm">{s.assetSerial}</h4>
+                                </div>
+                            </div>
 
-                           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                            <div className="space-y-3 mb-6">
+                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                    <Clock size={16} />
+                                    <span>Scheduled: <strong>{new Date(s.scheduledDate).toLocaleDateString()}</strong></span>
+                                </div>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 italic">
+                                    "{s.description || 'No additional details provided for this maintenance task.'}"
+                                </p>
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                                 {s.status === MaintenanceStatusEnum.SCHEDULED && (
                                     <Button variant="outline" size="sm" className="w-full font-bold">Start Work</Button>
                                 )}
@@ -141,7 +149,7 @@ export default function MaintenancePage() {
                                         Completed on {new Date(s.completedAt).toLocaleDateString()}
                                     </div>
                                 )}
-                           </div>
+                            </div>
                         </Card>
                     ))}
                 </div>
@@ -149,3 +157,6 @@ export default function MaintenancePage() {
         </div>
     );
 }
+
+
+export default MaintenancePage;

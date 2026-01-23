@@ -89,7 +89,11 @@ const isWarrantyExpired = (warrantyDate?: string) => {
     return new Date(warrantyDate) < new Date();
 };
 
-export default function AssetCard({ asset, onEdit, onDelete, onQRCode, onHistory, onAssign }: AssetCardProps) {
+interface AssetCardProps {
+    children?: React.ReactNode;
+}
+
+export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onQRCode, onHistory, onAssign }: AssetCardProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const AssetIcon = getAssetIcon(asset.assetName || 'Device');
     const statusConfig = getStatusConfig(asset.status);

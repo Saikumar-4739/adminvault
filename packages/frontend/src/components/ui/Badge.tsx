@@ -50,4 +50,4 @@ const Badge: React.FC<BadgeProps> = ({ className, variant = 'neutral', size = 'm
 
 Badge.displayName = 'Badge';
 
-export default Badge;
+export { Badge };

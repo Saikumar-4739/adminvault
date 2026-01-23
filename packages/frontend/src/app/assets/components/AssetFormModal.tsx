@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal } from '../../../components/ui/Modal';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@adminvault/shared-models';
 import { assetService, companyService, mastersService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
@@ -16,7 +16,11 @@ interface AssetFormModalProps {
     onSuccess: () => void;
 }
 
-export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }: AssetFormModalProps) {
+interface AssetFormModalProps {
+    children?: React.ReactNode;
+}
+
+export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose, asset, onSuccess }: AssetFormModalProps) => {
     const { success, error: toastError } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [companies, setCompanies] = useState<any[]>([]);

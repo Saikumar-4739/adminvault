@@ -1,18 +1,18 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import dynamic from 'next/dynamic';
 
-const CompaniesMasterView = dynamic(() => import('./components/companies-master-view'), { loading: () => <p>Loading Companies...</p> });
-const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view'), { loading: () => <p>Loading Departments...</p> });
-const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view'), { loading: () => <p>Loading Asset Types...</p> });
-const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view'), { loading: () => <p>Loading Device Brands...</p> });
-const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view'), { loading: () => <p>Loading Applications...</p> });
-const TicketCategoriesMasterView = dynamic(() => import('./components/ticket-categories-master-view'), { loading: () => <p>Loading Categories...</p> });
-const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view'), { loading: () => <p>Loading Slack Users...</p> });
-const VendorsMasterView = dynamic(() => import('./components/vendors-master-view'), { loading: () => <p>Loading Vendors...</p> });
+const CompaniesMasterView = dynamic(() => import('./components/companies-master-view').then(mod => mod.CompaniesMasterView), { loading: () => <p>Loading Companies...</p> });
+const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view').then(mod => mod.DepartmentsMasterView), { loading: () => <p>Loading Departments...</p> });
+const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view').then(mod => mod.AssetTypesMasterView), { loading: () => <p>Loading Asset Types...</p> });
+const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view').then(mod => mod.DeviceBrandsMasterView), { loading: () => <p>Loading Device Brands...</p> });
+const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p>Loading Applications...</p> });
+const TicketCategoriesMasterView = dynamic(() => import('./components/ticket-categories-master-view').then(mod => mod.TicketCategoriesMasterView), { loading: () => <p>Loading Categories...</p> });
+const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p>Loading Slack Users...</p> });
+const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p>Loading Vendors...</p> });
 import { Building2, Users, Package, Smartphone, Tag, AppWindow, MessageSquare, Store, Lock } from 'lucide-react';
 
 interface MasterItem {
@@ -25,7 +25,7 @@ interface MasterItem {
     href?: string;
 }
 
-export default function MastersPage() {
+const MastersPage: React.FC = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const selectedMaster = searchParams.get('view');
@@ -155,27 +155,27 @@ export default function MastersPage() {
 
             {/* Scrollable Masters Grid */}
             <div className="flex-1 overflow-y-auto p-4 md:p-6 pt-3 md:pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pb-6">
                     {masters.map((master) => {
                         const Icon = master.icon;
                         return (
                             <Card
                                 key={master.id}
-                                className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-slate-200 dark:border-slate-700"
+                                className="group hover:shadow-md transition-all duration-200 cursor-pointer border-slate-200 dark:border-slate-700"
                                 onClick={() => handleSelectMaster(master)}
                             >
-                                <div className="p-6 space-y-4">
+                                <div className="p-3 space-y-2">
                                     {/* Icon */}
-                                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${master.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                                        <Icon className="h-6 w-6 text-white" />
+                                    <div className={`w-8 h-8 rounded-md bg-gradient-to-br ${master.color} flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-200`}>
+                                        <Icon className="h-4 w-4 text-white" />
                                     </div>
 
                                     {/* Content */}
                                     <div>
-                                        <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors tracking-tight">
+                                        <h3 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors tracking-tight line-clamp-1">
                                             {master.title}
                                         </h3>
-                                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                                        <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
                                             {master.description}
                                         </p>
                                     </div>
@@ -183,13 +183,13 @@ export default function MastersPage() {
                                     {/* Button */}
                                     <Button
                                         variant="outline"
-                                        className="w-full h-9 rounded-xl text-[9px] font-black uppercase tracking-widest group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
+                                        className="w-full h-7 rounded-md text-[9px] font-bold uppercase tracking-wide group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleSelectMaster(master);
                                         }}
                                     >
-                                        Manage {master.title}
+                                        Open
                                     </Button>
                                 </div>
                             </Card>
@@ -202,3 +202,6 @@ export default function MastersPage() {
 };
 
 
+
+
+export default MastersPage;

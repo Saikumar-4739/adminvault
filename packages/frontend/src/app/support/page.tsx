@@ -16,7 +16,7 @@ interface Message {
     createdAt: string;
 }
 
-export default function SupportChatPage() {
+const SupportChatPage: React.FC = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user } = useAuth();
@@ -271,3 +271,6 @@ export default function SupportChatPage() {
 };
 
 
+
+
+export default SupportChatPage;

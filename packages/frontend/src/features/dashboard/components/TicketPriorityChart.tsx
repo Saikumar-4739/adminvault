@@ -7,7 +7,11 @@ const COLORS = {
     orange: '#F97316',
 };
 
-export default function TicketPriorityChart({ data }: { data: any[] }) {
+interface TicketPriorityChartProps {
+     data: any[] 
+}
+
+export const TicketPriorityChart: React.FC<TicketPriorityChartProps> = ({ data  }) => {
     if (!data || data.length === 0) return <div className="h-full w-full flex items-center justify-center text-xs text-slate-400">No data</div>;
 
     return (

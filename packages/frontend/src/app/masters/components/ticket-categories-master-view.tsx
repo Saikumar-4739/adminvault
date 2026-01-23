@@ -1,27 +1,25 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { mastersService } from '@/lib/api/services';
-import { CreateTicketCategoryModel } from '@adminvault/shared-models';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { ticketCategoryService } from '@/lib/api/services';
+import { CreateTicketCategoryModel, TicketCategory } from '@adminvault/shared-models';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface TicketCategory {
-    id: number;
-    name: string;
-    description?: string;
-    defaultPriority?: 'Low' | 'Medium' | 'High' | null;
-    isActive: boolean;
+
+interface TicketCategoriesMasterViewProps {
+    onBack?: () => void;
 }
 
-export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => void }) {
-    const { success: toastSuccess, error: toastError } = useToast();
+export const TicketCategoriesMasterView: React.FC<TicketCategoriesMasterViewProps> = ({ onBack }) => {
+    const { user } = useAuth();
     const [ticketCategories, setTicketCategories] = useState<TicketCategory[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,81 +29,71 @@ export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
-    const getCompanyId = (): number => {
-        const storedUser = localStorage.getItem('auth_user');
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        return user?.companyId || 1;
-    };
 
-    const getUserId = (): number => {
-        const storedUser = localStorage.getItem('auth_user');
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        return user?.id || 1;
-    };
-
-    const getAllTicketCategories = useCallback(async () => {
+    const getAllTicketCategories = useCallback(async (): Promise<void> => {
+        if (!user?.companyId) return;
         setIsLoading(true);
         try {
-            const response: any = await mastersService.getAllTicketCategories(getCompanyId() as any);
+            const response: any = await ticketCategoryService.getAllTicketCategories({ companyId: user.companyId });
             if (response.status) {
                 setTicketCategories(response.ticketCategories || []);
             } else {
-                toastError(response.message || 'Failed to fetch ticket categories');
+                AlertMessages.getErrorMessage(response.message || 'Failed to fetch ticket categories');
             }
         } catch (error: any) {
-            toastError(error.message || 'Failed to fetch ticket categories');
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch ticket categories');
         } finally {
             setIsLoading(false);
         }
-    }, [toastError]);
+    }, [user?.companyId]);
 
     useEffect(() => {
         getAllTicketCategories();
     }, [getAllTicketCategories]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         setIsLoading(true);
         try {
             if (isEditMode && editingId) {
-                const response = await mastersService.updateTicketCategory({
+                const response = await ticketCategoryService.updateTicketCategory({
                     ...formData,
                     id: editingId,
                     isActive: true
                 } as any);
                 if (response.status) {
-                    toastSuccess(response.message || 'Ticket Category Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Ticket Category Updated Successfully');
                     handleCloseModal();
                     getAllTicketCategories();
                 } else {
-                    toastError(response.message || 'Failed to Update Ticket Category');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Ticket Category');
                 }
             } else {
                 const model = new CreateTicketCategoryModel(
-                    getUserId(),
-                    getCompanyId(),
+                    user?.id || 1,
+                    user?.companyId || 1,
                     formData.name,
                     formData.description,
                     true,
                     formData.defaultPriority
                 );
-                const response = await mastersService.createTicketCategory(model);
+                const response = await ticketCategoryService.createTicketCategory(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Ticket Category Created Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Ticket Category Created Successfully');
                     handleCloseModal();
                     getAllTicketCategories();
                 } else {
-                    toastError(response.message || 'Failed to Create Ticket Category');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Ticket Category');
                 }
             }
         } catch (err: any) {
-            toastError(err.message || 'An error occurred');
+            AlertMessages.getErrorMessage(err.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleEdit = (item: any) => {
+    const handleEdit = (item: TicketCategory): void => {
         setIsEditMode(true);
         setEditingId(item.id);
         setFormData({
@@ -116,24 +104,24 @@ export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => 
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: number) => {
+    const handleDeleteClick = (id: number): void => {
         setDeletingId(id);
         setIsDeleteDialogOpen(true);
     };
 
-    const handleConfirmDelete = async () => {
+    const handleConfirmDelete = async (): Promise<void> => {
         if (deletingId) {
             setIsLoading(true);
             try {
-                const response = await mastersService.deleteTicketCategory(deletingId);
+                const response = await ticketCategoryService.deleteTicketCategory({ id: deletingId });
                 if (response.status) {
-                    toastSuccess(response.message || 'Ticket Category Deleted Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Ticket Category Deleted Successfully');
                     getAllTicketCategories();
                 } else {
-                    toastError(response.message || 'Failed to Delete Ticket Category');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Delete Ticket Category');
                 }
             } catch (err: any) {
-                toastError(err.message || 'An error occurred');
+                AlertMessages.getErrorMessage(err.message || 'An error occurred');
             } finally {
                 setIsLoading(false);
                 setIsDeleteDialogOpen(false);
@@ -142,7 +130,7 @@ export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => 
         }
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (): void => {
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
@@ -183,7 +171,7 @@ export default function TicketCategoriesMasterView({ onBack }: { onBack?: () => 
                                     {ticketCategories?.length === 0 ? (
                                         <tr><td colSpan={4} className="p-8 text-center text-slate-500">No ticket categories found</td></tr>
                                     ) : (
-                                        ticketCategories?.map((item: any) => (
+                                        ticketCategories?.map((item: TicketCategory) => (
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.description || '-'}</td>

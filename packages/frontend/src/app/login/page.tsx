@@ -1,35 +1,26 @@
 'use client'
 
-import { useState, useEffect, Suspense, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { useToast } from '@/contexts/ToastContext';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { ShieldCheck, Users, Zap, X, Lock, ArrowRight, Globe, Building2 } from 'lucide-react';
 import { authService } from '@/lib/api/services';
-import { RequestAccessModel, UserRoleEnum, ForgotPasswordModel } from '@adminvault/shared-models';
+import { RequestAccessModel, UserRoleEnum, ForgotPasswordModel, LoginUserModel } from '@adminvault/shared-models';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 
-function LoginContent() {
+const LoginContent: React.FC = () => {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const { login, isLoading } = useAuth();
-    const { success, error: toastError } = useToast();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
-    const processedError = useRef(false);
-
-    // Modals state
     const [showRequestModal, setShowRequestModal] = useState(false);
     const [showForgotModal, setShowForgotModal] = useState(false);
-
-    // Request Access Form State
     const [requestName, setRequestName] = useState('');
     const [requestEmail, setRequestEmail] = useState('');
     const [isRequesting, setIsRequesting] = useState(false);
-
-    // Forgot Password Form State
     const [forgotEmail, setForgotEmail] = useState('');
     const [isResetting, setIsResetting] = useState(false);
 
@@ -50,7 +41,8 @@ function LoginContent() {
                 localStorage.removeItem('remember_email');
             }
 
-            const user = await login({ email, password });
+            const req = new LoginUserModel(email, password);
+            const user = await login(req);
 
             if (user) {
                 await new Promise(resolve => setTimeout(resolve, 300));
@@ -61,10 +53,10 @@ function LoginContent() {
                     router.push('/dashboard');
                 }
             } else {
-                toastError('Login Failed', 'Unable to retrieve user details.');
+                AlertMessages.getErrorMessage('Login Failed: Unable to retrieve user details.');
             }
         } catch (err: any) {
-            toastError('Login Failed', err.message && err.message !== 'Login failed' ? err.message : 'Invalid email or password. Please try again.');
+            AlertMessages.getErrorMessage(err?.message || 'Login failed');
         }
     };
 
@@ -73,21 +65,21 @@ function LoginContent() {
         e.preventDefault();
         setIsRequesting(true);
         try {
-            const requestModel = new RequestAccessModel(requestName, requestEmail);
-            const response = await authService.requestAccess(requestModel);
+            const req = new RequestAccessModel(requestName, requestEmail);
+            const res = await authService.requestAccess(req);
 
-            if (response.status) {
-                success('Request Sent', 'Your access request has been sent to inolyse@gmail.com');
+            if (res.status) {
+                AlertMessages.getSuccessMessage('Your access request has been sent to inolyse@gmail.com');
                 setIsRequesting(false);
                 setShowRequestModal(false);
                 setRequestName('');
                 setRequestEmail('');
             } else {
-                toastError('Request Failed', response.message || 'Could not send request');
+                AlertMessages.getErrorMessage(res.message || 'Could not send request');
                 setIsRequesting(false);
             }
         } catch (error: any) {
-            toastError('Request Failed', error.message || 'An error occurred');
+            AlertMessages.getErrorMessage(error.message || 'An error occurred');
             setIsRequesting(false);
         }
     };
@@ -96,17 +88,17 @@ function LoginContent() {
         e.preventDefault();
         setIsResetting(true);
         try {
-            const model = new ForgotPasswordModel(forgotEmail);
-            const response = await authService.forgotPassword(model);
-            if (response.status) {
-                success('Reset Link Sent', response.message || `Password reset instructions sent to ${forgotEmail}`);
+            const req = new ForgotPasswordModel(forgotEmail);
+            const res = await authService.forgotPassword(req);
+            if (res.status) {
+                AlertMessages.getSuccessMessage(res.message || `Password reset instructions sent to ${forgotEmail}`);
                 setShowForgotModal(false);
                 setForgotEmail('');
             } else {
-                toastError('Reset Failed', response.message || 'Could not send reset link');
+                AlertMessages.getErrorMessage(res.message || 'Could not send reset link');
             }
         } catch (error: any) {
-            toastError('Reset Failed', error.message || 'An error occurred');
+            AlertMessages.getErrorMessage(error.message || 'An error occurred');
         } finally {
             setIsResetting(false);
         }
@@ -324,12 +316,14 @@ function LoginContent() {
             )}
         </div>
     );
-}
-
-export default function LoginPage() {
+};
+const LoginPage: React.FC = () => {
     return (
         <Suspense fallback={<div className="min-h-screen bg-white dark:bg-[#020617]"></div>}>
             <LoginContent />
         </Suspense>
     );
 }
+
+
+export default LoginPage;

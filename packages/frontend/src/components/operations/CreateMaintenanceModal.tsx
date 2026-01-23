@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
-import { Calendar, Hammer, Info, Clock, RefreshCw } from 'lucide-react';
-import { CreateMaintenanceModel, MaintenanceTypeEnum, AssetResponseModel } from '@adminvault/shared-models';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Info, Clock, RefreshCw } from 'lucide-react';
+import { CreateMaintenanceRequestModel, MaintenanceTypeEnum, AssetResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { maintenanceService, assetService } from '@/lib/api/services';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface CreateMaintenanceModalProps {
@@ -18,12 +18,11 @@ interface CreateMaintenanceModalProps {
 }
 
 export function CreateMaintenanceModal({ isOpen, onClose, onSuccess }: CreateMaintenanceModalProps) {
-    const { success, error: toastError } = useToast();
     const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [assets, setAssets] = useState<AssetResponseModel[]>([]);
 
-    const [formData, setFormData] = useState<CreateMaintenanceModel>({
+    const [formData, setFormData] = useState<CreateMaintenanceRequestModel>({
         assetId: 0,
         maintenanceType: MaintenanceTypeEnum.PREVENTIVE,
         scheduledDate: new Date(),
@@ -42,8 +41,10 @@ export function CreateMaintenanceModal({ isOpen, onClose, onSuccess }: CreateMai
     }, [isOpen]);
 
     const fetchAssets = async () => {
+        if (!user?.companyId) return;
         try {
-            const res = await assetService.getAllAssets(user?.companyId || 0);
+            const req = new CompanyIdRequestModel(user.companyId);
+            const res = await assetService.getAllAssets(req);
             setAssets(res.data || []);
         } catch (err: any) {
             console.error('Failed to fetch assets', err);
@@ -53,12 +54,12 @@ export function CreateMaintenanceModal({ isOpen, onClose, onSuccess }: CreateMai
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (formData.assetId === 0) {
-            toastError("Please select an asset");
+            AlertMessages.getErrorMessage("Please select an asset");
             return;
         }
 
         if (!formData.description) {
-            toastError("Please provide a description of the maintenance");
+            AlertMessages.getErrorMessage("Please provide a description of the maintenance");
             return;
         }
 
@@ -70,9 +71,9 @@ export function CreateMaintenanceModal({ isOpen, onClose, onSuccess }: CreateMai
                 scheduledDate: new Date(dateString)
             };
 
-            const res = await maintenanceService.createSchedule(submissionData);
+            const res = await maintenanceService.createSchedule(submissionData as any);
             if (res.status) {
-                success("Maintenance scheduled successfully");
+                AlertMessages.getSuccessMessage("Maintenance scheduled successfully");
                 onSuccess();
                 onClose();
                 // Reset form
@@ -85,10 +86,10 @@ export function CreateMaintenanceModal({ isOpen, onClose, onSuccess }: CreateMai
                     frequencyDays: 30
                 });
             } else {
-                toastError(res.message);
+                AlertMessages.getErrorMessage(res.message);
             }
         } catch (err: any) {
-            toastError(err.message || "Failed to schedule maintenance");
+            AlertMessages.getErrorMessage(err.message || "Failed to schedule maintenance");
         } finally {
             setIsSubmitting(false);
         }
@@ -116,12 +117,11 @@ export function CreateMaintenanceModal({ isOpen, onClose, onSuccess }: CreateMai
                         value={formData.assetId}
                         onChange={(e) => setFormData({ ...formData, assetId: Number(e.target.value) })}
                         required
-                    >
-                        <option value={0}>Select Asset to maintain</option>
-                        {assets.map(a => (
-                            <option key={a.id} value={a.id}>{a.serialNumber} - {a.assetName}</option>
-                        ))}
-                    </Select>
+                        options={[
+                            { label: 'Select Asset to maintain', value: 0 },
+                            ...assets.map(a => ({ label: `${a.serialNumber} - ${a.model || 'Unknown Model'}`, value: a.id }))
+                        ]}
+                    />
 
                     <div className="grid grid-cols-2 gap-4">
                         <Select
@@ -129,11 +129,8 @@ export function CreateMaintenanceModal({ isOpen, onClose, onSuccess }: CreateMai
                             value={formData.maintenanceType}
                             onChange={(e) => setFormData({ ...formData, maintenanceType: e.target.value as MaintenanceTypeEnum })}
                             required
-                        >
-                            {Object.values(MaintenanceTypeEnum).map(type => (
-                                <option key={type} value={type}>{type}</option>
-                            ))}
-                        </Select>
+                            options={Object.values(MaintenanceTypeEnum).map(type => ({ label: type, value: type }))}
+                        />
 
                         <Input
                             label="Scheduled Date"
@@ -146,7 +143,7 @@ export function CreateMaintenanceModal({ isOpen, onClose, onSuccess }: CreateMai
 
                     <div>
                         <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                           <Info size={14} className="text-emerald-500" /> Maintenance Description
+                            <Info size={14} className="text-emerald-500" /> Maintenance Description
                         </label>
                         <textarea
                             className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 transition-all min-h-[120px]"

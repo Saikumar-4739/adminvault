@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { Printer } from 'lucide-react';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -14,7 +14,11 @@ interface AssetQRModalProps {
     onPrint?: () => void;
 }
 
-export default function AssetQRModal({ isOpen, onClose, asset, onPrint }: AssetQRModalProps) {
+interface AssetQRModalProps {
+    children?: React.ReactNode;
+}
+
+export const AssetQRModal: React.FC<AssetQRModalProps> = ({ isOpen, onClose, asset, onPrint }: AssetQRModalProps) => {
     const componentRef = useRef<HTMLDivElement>(null);
 
     if (!asset) return null;

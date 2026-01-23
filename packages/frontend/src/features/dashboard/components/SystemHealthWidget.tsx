@@ -1,14 +1,18 @@
 'use client';
 
 import { Activity, Server, Database, Cloud } from 'lucide-react';
-import Card from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { DashboardStats } from '@adminvault/shared-models';
 
 interface SystemHealthWidgetProps {
     stats: DashboardStats | null;
 }
 
-export default function SystemHealthWidget({ stats }: SystemHealthWidgetProps) {
+interface SystemHealthWidgetProps {
+    children?: React.ReactNode;
+}
+
+export const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ stats }: SystemHealthWidgetProps) => {
     const health = stats?.systemHealth || {
         assetUtilization: 0,
         ticketResolutionRate: 0,

@@ -3,13 +3,14 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { mastersService, employeeService } from '@/lib/api/services';
 import { UserRoleEnum, CreatePasswordVaultModel } from '@adminvault/shared-models';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import PageHeader from '@/components/ui/PageHeader';
 import { Search, Plus, Lock, Eye, EyeOff, Copy, Check, ShieldCheck, Globe, User, Wand2, LayoutGrid, List, ArrowUpRight, Users, Activity } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { CompanyIdRequestModel, IdRequestModel } from '@adminvault/shared-models';
 import PasswordGenerator from '@/components/vault/PasswordGenerator';
 
 interface PasswordVault {
@@ -30,14 +31,13 @@ interface Employee {
     email: string;
 }
 
-export default function PasswordVaultPage() {
-    const { success, error: toastError } = useToast();
+const PasswordVaultPage: React.FC = () => {
+    const { user } = useAuth();
     const [passwordVaults, setPasswordVaults] = useState<PasswordVault[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [applications, setApplications] = useState<any[]>([]);
     const [isVaultLoading, setIsVaultLoading] = useState(false);
     const [isEmployeesLoading, setIsEmployeesLoading] = useState(false);
-    const [isAppsLoading, setIsAppsLoading] = useState(false);
 
     // UI State
     const [searchQuery, setSearchQuery] = useState('');
@@ -55,63 +55,54 @@ export default function PasswordVaultPage() {
         name: '', password: '', username: '', url: '', notes: '', description: '', employeeId: ''
     });
 
-    const getCompanyId = (): number => {
-        const storedUser = localStorage.getItem('auth_user');
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        return user?.companyId || 1;
-    };
-
-    const getUserId = (): number => {
-        const storedUser = localStorage.getItem('auth_user');
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        return user?.id || 1;
-    };
-
     const fetchPasswordVaults = useCallback(async () => {
+        if (!user?.companyId) return;
         setIsVaultLoading(true);
         try {
-            const response: any = await mastersService.getAllPasswordVaults({ id: getCompanyId() } as any);
+            const req = new CompanyIdRequestModel(user.companyId);
+            const response: any = await mastersService.getAllPasswordVaults(req);
             if (response.status) {
                 setPasswordVaults(response.passwordVaults || []);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
-        } catch (error) {
-            console.error('Failed to fetch password vaults:', error);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch password vaults');
         } finally {
             setIsVaultLoading(false);
         }
-    }, []);
+    }, [user?.companyId]);
 
     const fetchEmployees = useCallback(async () => {
+        if (!user?.companyId) return;
         setIsEmployeesLoading(true);
         try {
-            const response = await employeeService.getAllEmployees(undefined);
+            const req = new CompanyIdRequestModel(user.companyId);
+            const response = await employeeService.getAllEmployees(req as any);
             if (response.status) {
                 const data = (response as any).employees || (response as any).data || [];
                 setEmployees(data);
             }
-        } catch (error) {
-            console.error('Failed to fetch employees:', error);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch employees');
         } finally {
             setIsEmployeesLoading(false);
         }
-    }, []);
+    }, [user?.companyId]);
 
     const fetchApplications = useCallback(async () => {
-        setIsAppsLoading(true);
+        if (!user?.companyId) return;
         try {
-            // Updated to pass company context for targeted asset lookup
-            const response = await mastersService.getAllApplications({ id: getCompanyId() } as any);
+            const req = new CompanyIdRequestModel(user.companyId);
+            const response = await mastersService.getAllApplications(req);
             if (response.status) {
-                // Support both .applications and .data response structures
                 const data = (response as any).applications || (response as any).data || [];
                 setApplications(data);
             }
-        } catch (error) {
-            console.error('Failed to fetch applications:', error);
-        } finally {
-            setIsAppsLoading(false);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch applications');
         }
-    }, []);
+    }, [user?.companyId]);
 
     useEffect(() => {
         fetchPasswordVaults();
@@ -177,16 +168,16 @@ export default function PasswordVaultPage() {
                     isActive: true
                 } as any);
                 if (response.status) {
-                    success('Vault record updated');
+                    AlertMessages.getSuccessMessage('Vault record updated');
                     setIsModalOpen(false);
                     fetchPasswordVaults();
                 } else {
-                    toastError(response.message || 'Operation failed');
+                    AlertMessages.getErrorMessage(response.message || 'Operation failed');
                 }
             } else {
                 const model = new CreatePasswordVaultModel(
-                    getUserId(),
-                    getCompanyId(),
+                    user?.id || 1,
+                    user?.companyId || 1,
                     payload.name,
                     payload.password,
                     payload.description,
@@ -197,15 +188,15 @@ export default function PasswordVaultPage() {
                 );
                 const response = await mastersService.createPasswordVault(model);
                 if (response.status) {
-                    success('Added to vault successfully');
+                    AlertMessages.getSuccessMessage('Added to vault successfully');
                     setIsModalOpen(false);
                     fetchPasswordVaults();
                 } else {
-                    toastError(response.message || 'Operation failed');
+                    AlertMessages.getErrorMessage(response.message || 'Operation failed');
                 }
             }
         } catch (err: any) {
-            toastError(err.message || 'Operation failed');
+            AlertMessages.getErrorMessage(err.message || 'Operation failed');
         } finally {
             setIsVaultLoading(false);
         }
@@ -215,15 +206,16 @@ export default function PasswordVaultPage() {
         if (confirm('Are you sure you want to permanently remove this from your vault?')) {
             setIsVaultLoading(true);
             try {
-                const response = await mastersService.deletePasswordVault(id);
+                const req = new IdRequestModel(id);
+                const response = await mastersService.deletePasswordVault(req);
                 if (response.status) {
-                    success('Removed from vault');
+                    AlertMessages.getSuccessMessage('Removed from vault');
                     fetchPasswordVaults();
                 } else {
-                    toastError(response.message || 'Delete failed');
+                    AlertMessages.getErrorMessage(response.message || 'Delete failed');
                 }
             } catch (err: any) {
-                toastError(err.message || 'Delete failed');
+                AlertMessages.getErrorMessage(err.message || 'Delete failed');
             } finally {
                 setIsVaultLoading(false);
             }
@@ -430,7 +422,7 @@ export default function PasswordVaultPage() {
                                         <div className="mt-4 flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/50">
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Access Identity</p>
-                                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{vault.username || 'â€”'}</p>
+                                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{vault.username || '—'}</p>
                                             </div>
                                             <button
                                                 onClick={() => copyToClipboard(vault.username || '', vault.id)}
@@ -605,3 +597,4 @@ export default function PasswordVaultPage() {
 };
 
 
+export default PasswordVaultPage;

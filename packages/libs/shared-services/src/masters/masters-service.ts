@@ -16,8 +16,8 @@ export class MastersService extends CommonAxiosService {
     async updateDepartment(data: UpdateDepartmentModel, config?: AxiosRequestConfig): Promise<UpdateDepartmentResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateDepartment'), data, config);
     }
-    async deleteDepartment(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteDepartment'), { id }, config);
+    async deleteDepartment(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteDepartment'), reqObj, config);
     }
 
     async getAllAssetTypes(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetTypesResponseModel> {
@@ -29,8 +29,8 @@ export class MastersService extends CommonAxiosService {
     async updateAssetType(data: UpdateAssetTypeModel, config?: AxiosRequestConfig): Promise<UpdateAssetTypeResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateAssetType'), data, config);
     }
-    async deleteAssetType(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteAssetType'), { id }, config);
+    async deleteAssetType(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteAssetType'), reqObj, config);
     }
 
     async getAllBrands(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllBrandsResponseModel> {
@@ -42,8 +42,8 @@ export class MastersService extends CommonAxiosService {
     async updateBrand(data: UpdateBrandModel, config?: AxiosRequestConfig): Promise<UpdateBrandResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateBrand'), data, config);
     }
-    async deleteBrand(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteBrand'), { id }, config);
+    async deleteBrand(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteBrand'), reqObj, config);
     }
 
     async getAllVendors(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllVendorsResponseModel> {
@@ -55,8 +55,8 @@ export class MastersService extends CommonAxiosService {
     async updateVendor(data: UpdateVendorModel, config?: AxiosRequestConfig): Promise<UpdateVendorResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateVendor'), data, config);
     }
-    async deleteVendor(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteVendor'), { id }, config);
+    async deleteVendor(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteVendor'), reqObj, config);
     }
 
     async getAllApplications(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllApplicationsResponseModel> {
@@ -68,8 +68,8 @@ export class MastersService extends CommonAxiosService {
     async updateApplication(data: UpdateApplicationModel, config?: AxiosRequestConfig): Promise<UpdateApplicationResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateApplication'), data, config);
     }
-    async deleteApplication(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteApplication'), { id }, config);
+    async deleteApplication(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteApplication'), reqObj, config);
     }
 
     async getAllTicketCategories(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllTicketCategoriesResponseModel> {
@@ -81,8 +81,8 @@ export class MastersService extends CommonAxiosService {
     async updateTicketCategory(data: UpdateTicketCategoryModel, config?: AxiosRequestConfig): Promise<UpdateTicketCategoryResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateTicketCategory'), data, config);
     }
-    async deleteTicketCategory(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteTicketCategory'), { id }, config);
+    async deleteTicketCategory(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteTicketCategory'), reqObj, config);
     }
 
     async getAllExpenseCategories(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllExpenseCategoriesResponseModel> {
@@ -94,8 +94,8 @@ export class MastersService extends CommonAxiosService {
     async updateExpenseCategory(data: UpdateExpenseCategoryModel, config?: AxiosRequestConfig): Promise<UpdateExpenseCategoryResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateExpenseCategory'), data, config);
     }
-    async deleteExpenseCategory(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteExpenseCategory'), { id }, config);
+    async deleteExpenseCategory(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteExpenseCategory'), reqObj, config);
     }
 
     async getAllPasswordVaults(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllPasswordVaultsResponseModel> {
@@ -107,8 +107,8 @@ export class MastersService extends CommonAxiosService {
     async updatePasswordVault(data: UpdatePasswordVaultModel, config?: AxiosRequestConfig): Promise<UpdatePasswordVaultResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updatePasswordVault'), data, config);
     }
-    async deletePasswordVault(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deletePasswordVault'), { id }, config);
+    async deletePasswordVault(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deletePasswordVault'), reqObj, config);
     }
 
     async getAllLocations(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllLocationsResponseModel> {
@@ -120,8 +120,8 @@ export class MastersService extends CommonAxiosService {
     async updateLocation(data: UpdateLocationModel, config?: AxiosRequestConfig): Promise<UpdateLocationResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateLocation'), data, config);
     }
-    async deleteLocation(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteLocation'), { id }, config);
+    async deleteLocation(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteLocation'), reqObj, config);
     }
 
     async getAllSlackUsers(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllSlackUsersResponseModel> {
@@ -133,7 +133,7 @@ export class MastersService extends CommonAxiosService {
     async updateSlackUser(data: UpdateSlackUserModel, config?: AxiosRequestConfig): Promise<UpdateSlackUserResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateSlackUser'), data, config);
     }
-    async deleteSlackUser(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteSlackUser'), { id }, config);
+    async deleteSlackUser(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteSlackUser'), reqObj, config);
     }
 }

@@ -2,7 +2,7 @@
 
 import { PageLoader } from '@/components/ui/Spinner';
 import { Package } from 'lucide-react';
-import AssetCard from './AssetCard';
+import { AssetCard } from './AssetCard';
 
 interface AllAssetsTabProps {
     assets: any[];
@@ -15,7 +15,9 @@ interface AllAssetsTabProps {
     onAssign: (asset: any) => void;
 }
 
-export default function AllAssetsTab({ assets, isLoading, status, onEdit, onDelete, onPrint, onHistory, onAssign }: AllAssetsTabProps) {
+
+
+export const AllAssetsTab: React.FC<AllAssetsTabProps> = ({ assets, isLoading, status, onEdit, onDelete, onPrint, onHistory, onAssign }: AllAssetsTabProps) => {
 
     const filteredAssets = status
         ? assets.filter(a => {

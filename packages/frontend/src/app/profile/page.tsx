@@ -3,18 +3,19 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, Mail, Building, Shield, Calendar, MapPin, Phone, Edit, Lock, Key, Smartphone, AlertCircle } from 'lucide-react';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { authService } from '@/lib/api/services';
 import { UpdateUserModel } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
+import { PageLoader } from '@/components/ui/Spinner';
 
 type TabType = 'profile' | 'security';
 
-export default function ProfilePage() {
+const ProfilePage: React.FC = () => {
     const { user } = useAuth();
     const searchParams = useSearchParams();
     const toast = useToast();
@@ -61,7 +62,7 @@ export default function ProfilePage() {
     if (!user) {
         return (
             <div className="h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-600"></div>
+                <PageLoader />
             </div>
         );
     }
@@ -338,3 +339,6 @@ function StatusItem({ label, value, status }: { label: string; value: string; st
         </div>
     );
 }
+
+
+export default ProfilePage;

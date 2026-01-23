@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Upload, FileUp, AlertCircle, CheckCircle, Download, X } from 'lucide-react';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/contexts/ToastContext';
 import { services } from '@/lib/api/services';
@@ -15,7 +15,11 @@ interface EmployeeBulkImportModalProps {
     onSuccess: () => void;
 }
 
-export default function EmployeeBulkImportModal({ isOpen, onClose, companyId, onSuccess }: EmployeeBulkImportModalProps) {
+interface EmployeeBulkImportModalProps {
+    children?: React.ReactNode;
+}
+
+export const EmployeeBulkImportModal: React.FC<EmployeeBulkImportModalProps> = ({ isOpen, onClose, companyId, onSuccess }: EmployeeBulkImportModalProps) => {
     const [file, setFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [importResult, setImportResult] = useState<{ success: boolean; message: string; successCount: number; errorCount: number; errors: { row: number; error: string }[] } | null>(null);

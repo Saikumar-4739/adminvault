@@ -1,11 +1,12 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { PageLoader } from '../ui/Spinner';
 import { memo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import AiAssistant from '../ui/AiAssistant';
-import Sidebar from './Sidebar';
-import TopBar from './TopBar';
+import { AiAssistant } from '../ui/AiAssistant';
+import { Sidebar } from './Sidebar';
+import { TopBar } from './TopBar';
 
 // Memoize the layout shell to prevent unnecessary re-renders
 const LayoutShell = memo(function LayoutShell({ children, isLoading }: { children: React.ReactNode, isLoading: boolean }) {
@@ -16,9 +17,7 @@ const LayoutShell = memo(function LayoutShell({ children, isLoading }: { childre
                 <TopBar />
                 <main className="flex-1 overflow-y-auto scrollbar-hide">
                     {isLoading ? (
-                        <div className="flex h-full items-center justify-center">
-                            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
+                        <PageLoader message="Loading content..." />
                     ) : (
                         children
                     )}
@@ -29,7 +28,11 @@ const LayoutShell = memo(function LayoutShell({ children, isLoading }: { childre
     );
 });
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+interface MainLayoutProps {
+    children: React.ReactNode
+}
+
+export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const pathname = usePathname();
     const { isAuthenticated, isLoading } = useAuth();
 
@@ -41,7 +44,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         if (isLoading) {
             return (
                 <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
-                    <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <PageLoader message="Initializing public access..." />
                 </div>
             );
         }

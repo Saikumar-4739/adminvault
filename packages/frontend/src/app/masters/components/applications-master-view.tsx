@@ -1,31 +1,24 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { mastersService } from '@/lib/api/services';
-import { CreateApplicationModel, UpdateApplicationModel } from '@adminvault/shared-models';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Modal } from '@/components/ui/Modal';
+import { applicationService } from '@/lib/api/services';
+import { CreateApplicationModel, UpdateApplicationModel, Application } from '@adminvault/shared-models';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 
-interface Application {
-    id: number;
-    name: string;
-    description?: string;
-    ownerName?: string;
-    appReleaseDate?: Date;
-    createdAt?: Date;
-    updatedAt?: Date;
-    isActive: boolean;
+
+interface ApplicationsMasterViewProps {
+    onBack?: () => void;
 }
 
-export default function ApplicationsMasterView({ onBack }: { onBack?: () => void }) {
-    const { success: toastSuccess, error: toastError } = useToast();
+export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
     const [applications, setApplications] = useState<Application[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -36,22 +29,22 @@ export default function ApplicationsMasterView({ onBack }: { onBack?: () => void
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
-    const getAllApplications = useCallback(async () => {
+    const getAllApplications = useCallback(async (): Promise<void> => {
         if (!user?.companyId) return;
         setIsLoading(true);
         try {
-            const response = await mastersService.getAllApplications(user.companyId as any);
+            const response = await applicationService.getAllApplications({ companyId: user.companyId });
             if (response.status) {
                 setApplications(response.applications || []);
             } else {
-                toastError(response.message || 'Failed to fetch applications');
+                AlertMessages.getErrorMessage(response.message || 'Failed to fetch applications');
             }
         } catch (error: any) {
-            toastError(error.message || 'Failed to fetch applications');
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch applications');
         } finally {
             setIsLoading(false);
         }
-    }, [toastError, user?.companyId]);
+    }, [user?.companyId]);
 
     useEffect(() => {
         if (user?.companyId) {
@@ -59,7 +52,7 @@ export default function ApplicationsMasterView({ onBack }: { onBack?: () => void
         }
     }, [getAllApplications, user?.companyId]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         if (!user) return;
         setIsLoading(true);
@@ -76,13 +69,13 @@ export default function ApplicationsMasterView({ onBack }: { onBack?: () => void
                 );
 
                 // Assuming updateApplication handles the model correctly
-                const response = await mastersService.updateApplication(model as any);
+                const response = await applicationService.updateApplication(model as any);
                 if (response.status) {
-                    toastSuccess(response.message || 'Application Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Application Updated Successfully');
                     handleCloseModal();
                     getAllApplications();
                 } else {
-                    toastError(response.message || 'Failed to Update Application');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Application');
                 }
             } else {
                 const model = new CreateApplicationModel(
@@ -94,23 +87,23 @@ export default function ApplicationsMasterView({ onBack }: { onBack?: () => void
                     formData.ownerName,
                     formData.appReleaseDate ? new Date(formData.appReleaseDate) : undefined
                 );
-                const response = await mastersService.createApplication(model);
+                const response = await applicationService.createApplication(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Application Created Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Application Created Successfully');
                     handleCloseModal();
                     getAllApplications();
                 } else {
-                    toastError(response.message || 'Failed to Create Application');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Application');
                 }
             }
         } catch (err: any) {
-            toastError(err.message || 'An error occurred');
+            AlertMessages.getErrorMessage(err.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleEdit = (item: any) => {
+    const handleEdit = (item: Application): void => {
         setIsEditMode(true);
         setEditingId(item.id);
         setFormData({
@@ -122,24 +115,24 @@ export default function ApplicationsMasterView({ onBack }: { onBack?: () => void
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: number) => {
+    const handleDeleteClick = (id: number): void => {
         setDeletingId(id);
         setIsDeleteDialogOpen(true);
     };
 
-    const handleConfirmDelete = async () => {
+    const handleConfirmDelete = async (): Promise<void> => {
         if (deletingId) {
             setIsLoading(true);
             try {
-                const response = await mastersService.deleteApplication(deletingId);
+                const response = await applicationService.deleteApplication({ id: deletingId });
                 if (response.status) {
-                    toastSuccess(response.message || 'Application Deleted Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Application Deleted Successfully');
                     getAllApplications();
                 } else {
-                    toastError(response.message || 'Failed to Delete Application');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Delete Application');
                 }
             } catch (err: any) {
-                toastError(err.message || 'An error occurred');
+                AlertMessages.getErrorMessage(err.message || 'An error occurred');
             } finally {
                 setIsLoading(false);
                 setIsDeleteDialogOpen(false);
@@ -148,14 +141,14 @@ export default function ApplicationsMasterView({ onBack }: { onBack?: () => void
         }
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (): void => {
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
         setFormData({ name: '', description: '', ownerName: '', appReleaseDate: '' });
     };
 
-    const formatDate = (date: any) => {
+    const formatDate = (date: Date | string | null | undefined): string => {
         if (!date) return '-';
         return new Date(date).toLocaleDateString();
     };
@@ -196,7 +189,7 @@ export default function ApplicationsMasterView({ onBack }: { onBack?: () => void
                                     {applications?.length === 0 ? (
                                         <tr><td colSpan={6} className="p-8 text-center text-slate-500">No applications found</td></tr>
                                     ) : (
-                                        applications?.map((item: any) => (
+                                        applications?.map((item: Application) => (
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.ownerName || '-'}</td>

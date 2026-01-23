@@ -22,6 +22,7 @@ interface ILocationData {
     suburb?: string;
     postcode?: string;
     fullAddress?: string;
+    ip?: string;
 }
 
 @Injectable()
@@ -31,49 +32,79 @@ export class LoginSessionService {
         private loginSessionRepo: UserLoginSessionRepository
     ) { }
 
+    private async discoverPublicIP(): Promise<string | null> {
+        const services = ['https://api.ipify.org?format=json', 'https://ifconfig.me/ip', 'https://api64.ipify.org?format=json'];
+        for (const service of services) {
+            try {
+                const res = await axios.get(service, { timeout: 3000 });
+                const ip = res.data.ip || (typeof res.data === 'string' ? res.data.trim() : null);
+                if (ip && !ip.includes(':') && ip.split('.').length === 4) return ip; // Prefer IPv4 for compatibility
+                if (ip) return ip;
+            } catch (e) {
+                continue;
+            }
+        }
+        return null;
+    }
+
+    private isPrivateIP(ip: string): boolean {
+        if (!ip) return false;
+        // IPv4 checks
+        if (ip.includes('.')) {
+            const parts = ip.split('.').map(Number);
+            if (parts.length !== 4 || parts.some(isNaN)) return false;
+
+        }
+        // IPv6 checks
+        if (ip.includes(':')) {
+            const lowIp = ip.toLowerCase();
+            return (lowIp === '::1' || lowIp.startsWith('fe80:') || lowIp.startsWith('fc') || lowIp.startsWith('fd'));
+        }
+        return false;
+    }
+
     /**
      * Get geolocation data from IP address using ip-api.com
      */
     private async getLocationFromIP(ipAddress: string): Promise<ILocationData | null> {
         try {
-            if (ipAddress === '127.0.0.1' || ipAddress === '::1' || ipAddress.startsWith('192.168.') || ipAddress.startsWith('10.') || ipAddress.startsWith('172.')) {
-                return {
-                    country: 'Localhost',
-                    region: 'Local Development',
-                    city: 'Localhost',
-                    district: 'Localhost',
-                    latitude: 0,
-                    longitude: 0,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                    isLocal: true
-                };
+            if (this.isPrivateIP(ipAddress)) {
+                const publicIp = await this.discoverPublicIP();
+                if (publicIp && publicIp !== ipAddress) {
+                    return await this.getLocationFromIP(publicIp);
+                }
+                // Final fallback if public IP discovery fails
+                return { country: 'Localhost', region: 'Local Development', city: 'Localhost', district: 'Localhost', latitude: 0, longitude: 0, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, isLocal: true, ip: ipAddress };
             }
 
-            const response = await axios.get(`http://ip-api.com/json/${ipAddress}`, { timeout: 5000 });
-            if (response.data.status === 'success') {
-                return {
-                    country: response.data.country,
-                    region: response.data.regionName,
-                    city: response.data.city,
-                    district: response.data.district || response.data.regionName,
-                    latitude: response.data.lat,
-                    longitude: response.data.lon,
-                    timezone: response.data.timezone
-                };
+            // Try multiple IP geolocation providers for better reliability
+            const providers = [`http://ip-api.com/json/${ipAddress}`, `https://ipwho.is/${ipAddress}`];
+            for (const url of providers) {
+                try {
+                    const response = await axios.get(url, { timeout: 5000 });
+                    const data = response.data;
+                    if (data.status === 'success' || data.success) {
+                        return {
+                            country: data.country || data.country_name,
+                            region: data.regionName || data.region,
+                            city: data.city,
+                            district: data.district || data.regionName || data.region,
+                            latitude: data.lat || data.latitude,
+                            longitude: data.lon || data.longitude,
+                            timezone: data.timezone,
+                            ip: ipAddress
+                        };
+                    }
+                } catch (e) {
+                    continue;
+                }
             }
         } catch (error) {
-            console.error('Location lookup error:', (error as Error).message);
-            return null;
+            throw error;
         }
         return null;
     }
 
-    /**
-     * Reverse geocode GPS coordinates to get address using Nominatim (OpenStreetMap)
-     * FREE alternative - no API key required!
-     * @param latitude - GPS latitude
-     * @param longitude - GPS longitude
-     */
     private async reverseGeocode(latitude: number, longitude: number) {
         try {
             // Nominatim API endpoint (OpenStreetMap - FREE!)
@@ -106,13 +137,12 @@ export class LoginSessionService {
         if (!userAgent) {
             return { browser: null, os: null, deviceType: null };
         }
-
         const parser = new UAParser.UAParser(userAgent);
         const result = parser.getResult();
         return {
             browser: result.browser.name ? `${result.browser.name} ${result.browser.version || ''}`.trim() : null,
             os: result.os.name ? `${result.os.name} ${result.os.version || ''}`.trim() : null,
-            deviceType: result.device.type || 'Desktop'
+            deviceType: result.device.type
         };
     }
 
@@ -124,26 +154,27 @@ export class LoginSessionService {
         try {
             let locationData = null;
             let usesFrontendLocation = false;
-            // Check if frontend provided exact GPS coordinates
-            if (reqModel.latitude && reqModel.longitude) {
+            // 1. Get location data (either from GPS or IP)
+            if (reqModel.latitude !== undefined && reqModel.latitude !== null && reqModel.longitude !== undefined && reqModel.longitude !== null) {
                 usesFrontendLocation = true;
-                // Use Google Geocoding API to get address from GPS coordinates
-                locationData = await this.reverseGeocode(reqModel.latitude, reqModel.longitude);
-                if (locationData) {
-                } else {
-                    locationData = await this.getLocationFromIP(reqModel.ipAddress);
-                }
+                locationData = {
+                    country: '', region: '', city: '', district: '',
+                    latitude: reqModel.latitude,
+                    longitude: reqModel.longitude
+                };
             } else {
-                console.log('⚠️ No GPS coordinates from frontend, using IP-based location');
-                // Fallback to IP-based geolocation
                 locationData = await this.getLocationFromIP(reqModel.ipAddress);
+            }
 
-                if (locationData && locationData.isLocal) {
-                    console.log('ℹ️ Local development detected (IP: ' + reqModel.ipAddress + '), using default location data');
-                } else if (locationData) {
-                    console.log('✅ IP-based location:', locationData);
-                } else {
-                    console.log('❌ IP-based location lookup failed');
+            // 2. Enrich location data with detailed address via reverse geocoding
+            if (locationData && locationData.latitude !== undefined && locationData.longitude !== undefined) {
+                try {
+                    const enriched = await this.reverseGeocode(locationData.latitude, locationData.longitude);
+                    if (enriched) {
+                        locationData = { ...locationData, ...enriched };
+                    }
+                } catch (e) {
+                    throw e;
                 }
             }
 
@@ -151,7 +182,6 @@ export class LoginSessionService {
             const deviceInfo = this.parseUserAgent(reqModel.userAgent || '');
 
             await transManager.startTransaction();
-
             const session = new UserLoginSessionsEntity();
             session.userId = reqModel.userId;
             session.ipAddress = reqModel.ipAddress;
@@ -298,8 +328,7 @@ export class LoginSessionService {
             }
             return false;
         } catch (error) {
-            console.error('Error detecting suspicious activity:', error);
-            return false;
+            throw error;
         }
     }
 
@@ -322,65 +351,75 @@ export class LoginSessionService {
      */
     async createFailedLoginAttempt(data: { userId: number; companyId: number; ipAddress: string; userAgent?: string; loginMethod?: string; failureReason: string; attemptedEmail?: string; latitude?: number; longitude?: number; }): Promise<void> {
         const transManager = new GenericTransactionManager(this.dataSource);
+        let locationData: any = null;
+
         try {
-            // Get location data from IP (or use GPS if provided)
-            let locationData = null;
-            if (data.latitude && data.longitude) {
-                locationData = await this.reverseGeocode(data.latitude, data.longitude);
-                if (!locationData) {
-                    locationData = await this.getLocationFromIP(data.ipAddress);
-                }
+            /* 1️⃣ Resolve location */
+            if (
+                data.latitude != null &&
+                data.longitude != null
+            ) {
+                locationData = { country: '', region: '', city: '', district: '', latitude: data.latitude, longitude: data.longitude };
             } else {
-                // Use IP-based geolocation
                 locationData = await this.getLocationFromIP(data.ipAddress);
             }
 
-            // Parse user agent
-            const deviceInfo = this.parseUserAgent(data.userAgent || '');
+            /* 2️⃣ Reverse geocode (best-effort) */
+            if (locationData?.latitude != null && locationData?.longitude != null) {
+                try {
+                    const enriched = await this.reverseGeocode(
+                        locationData.latitude,
+                        locationData.longitude
+                    );
+                    if (enriched) {
+                        locationData = { ...locationData, ...enriched };
+                    }
+                } catch (e) {
+                    throw e;
+                }
+            }
+
+            /* 3️⃣ Parse device info */
+            const deviceInfo = this.parseUserAgent(data.userAgent ?? '');
 
             await transManager.startTransaction();
-
             const session = new UserLoginSessionsEntity();
             session.userId = data.userId;
-            session.ipAddress = data.ipAddress;
+            session.ipAddress = locationData?.ip ?? data.ipAddress;
             session.sessionToken = `failed_${Date.now()}`;
             session.loginTimestamp = new Date();
-            session.isActive = false;
             session.logoutTimestamp = new Date();
-            session.userAgent = data.userAgent || '';
-            session.loginMethod = data.loginMethod || 'email_password';
+            session.isActive = false;
             session.failedAttempts = 1;
+            session.userAgent = data.userAgent ?? '';
+            session.loginMethod = data.loginMethod ?? 'email_password';
 
-            // Store GPS coordinates if provided
-            if (data.latitude && data.longitude) {
-                session.latitude = data.latitude;
-                session.longitude = data.longitude;
-            } else if (locationData && 'latitude' in locationData) {
+            /* 4️⃣ Coordinates */
+            if (locationData?.latitude != null && locationData?.longitude != null) {
                 session.latitude = locationData.latitude;
                 session.longitude = locationData.longitude;
             }
 
-            // Add location data if available
+            /* 5️⃣ Location fields */
             if (locationData) {
-                session.country = locationData.country;
-                session.region = locationData.region;
-                session.city = locationData.city;
-                session.district = locationData.district;
-                session.timezone = ('timezone' in locationData) ? locationData.timezone : null;
-
-                // Store detailed location info from Nominatim
-                if ('locationName' in locationData) {
-                    session.locationName = locationData.locationName;
-                    session.road = locationData.road;
-                    session.suburb = locationData.suburb;
-                    session.postcode = locationData.postcode;
-                    session.fullAddress = locationData.fullAddress;
-                }
+                session.country = locationData.country ?? null;
+                session.region = locationData.region ?? null;
+                session.city = locationData.city ?? null;
+                session.district = locationData.district ?? null;
+                session.timezone = locationData.timezone ?? null;
+                session.locationName = locationData.locationName ?? null;
+                session.road = locationData.road ?? null;
+                session.suburb = locationData.suburb ?? null;
+                session.postcode = locationData.postcode ?? null;
+                session.fullAddress = locationData.fullAddress ?? null;
             }
 
-            session.browser = deviceInfo.browser || '';
-            session.os = deviceInfo.os || '';
-            session.deviceType = deviceInfo.deviceType || 'Desktop';
+            /* 6️⃣ Device info */
+            session.browser = deviceInfo.browser ?? '';
+            session.os = deviceInfo.os ?? '';
+            session.deviceType = deviceInfo.deviceType ?? 'Desktop';
+
+            /* 7️⃣ Security flag */
             session.isSuspicious = await this.detectSuspiciousFailedAttempts(data.ipAddress);
             await transManager.getRepository(UserLoginSessionsEntity).save(session);
             await transManager.completeTransaction();
@@ -389,6 +428,7 @@ export class LoginSessionService {
             throw error;
         }
     }
+
 
     /**
      * Detect suspicious failed login attempts from same IP

@@ -1,97 +1,39 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import {
-    loginUser,
-    selectIsAuthenticated,
-    selectAuthLoading,
-    selectAuthError,
-    selectIsLockedOut,
-    selectLockoutTimeRemaining,
-    selectLoginAttempts,
-    clearError,
-    resetLoginAttempts,
-} from '@/store/slices/authSlice';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { LogIn, AlertCircle, Lock, Mail } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/Button';
+import { LogIn, Lock, Mail } from 'lucide-react';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { LoginUserModel } from '@adminvault/shared-models';
 
-export default function LoginPageExample() {
+const LoginPage: React.FC = () => {
     const router = useRouter();
-    const dispatch = useAppDispatch();
-    const { success, error: toastError } = useToast();
+    const { login, isLoading, isAuthenticated } = useAuth();
+    const [formData, setFormData] = useState({ email: '', password: '' });
 
-    // Redux selectors
-    const isAuthenticated = useAppSelector(selectIsAuthenticated);
-    const isLoading = useAppSelector(selectAuthLoading);
-    const authError = useAppSelector(selectAuthError);
-    const isLockedOut = useAppSelector(selectIsLockedOut);
-    const lockoutTimeRemaining = useAppSelector(selectLockoutTimeRemaining);
-    const loginAttempts = useAppSelector(selectLoginAttempts);
-
-    // Form state
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-    });
-
-    // Redirect if already authenticated
     useEffect(() => {
         if (isAuthenticated) {
             router.push('/dashboard');
         }
     }, [isAuthenticated, router]);
 
-    // Clear error when component unmounts
-    useEffect(() => {
-        return () => {
-            dispatch(clearError());
-        };
-    }, [dispatch]);
-
-    // Handle lockout timer
-    useEffect(() => {
-        if (isLockedOut && lockoutTimeRemaining > 0) {
-            const timer = setInterval(() => {
-                // Timer will automatically update through selector
-            }, 1000);
-
-            return () => clearInterval(timer);
-        }
-
-        if (!isLockedOut && loginAttempts > 0) {
-            // Reset attempts when lockout expires
-            const timer = setTimeout(() => {
-                dispatch(resetLoginAttempts());
-            }, 1000);
-
-            return () => clearTimeout(timer);
-        }
-    }, [isLockedOut, lockoutTimeRemaining, loginAttempts, dispatch]);
-
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (isLockedOut) {
-            toastError('Account Locked', `Too many failed attempts. Try again in ${Math.ceil(lockoutTimeRemaining / 60)} minutes.`);
-            return;
-        }
-
         try {
-            const result = await dispatch(loginUser({
-                email: formData.email,
-                password: formData.password,
-            })).unwrap();
-
-            success('Success', 'Logged in successfully!');
-            router.push('/dashboard');
+            const req = new LoginUserModel(formData.email, formData.password);
+            const user = await login(req);
+            if (user) {
+                AlertMessages.getSuccessMessage('Logged in successfully!');
+                router.push('/dashboard');
+            } else {
+                AlertMessages.getErrorMessage('Login Failed: Unable to retrieve user details.');
+            }
         } catch (error: any) {
-            toastError('Login Failed', error || 'Invalid credentials');
+            AlertMessages.getErrorMessage(error?.message || 'Invalid credentials');
         }
-    }, [dispatch, formData, isLockedOut, lockoutTimeRemaining, router, success, toastError]);
+    }, [login, formData, router]);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -100,12 +42,6 @@ export default function LoginPageExample() {
             [name]: value,
         }));
     }, []);
-
-    const formatLockoutTime = (seconds: number): string => {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 p-4">
@@ -121,46 +57,6 @@ export default function LoginPageExample() {
 
                 {/* Login Form */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 border border-slate-200 dark:border-slate-700">
-                    {/* Lockout Warning */}
-                    {isLockedOut && (
-                        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                            <div className="flex items-start gap-3">
-                                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                                <div>
-                                    <h3 className="font-semibold text-red-900 dark:text-red-200 text-sm">Account Temporarily Locked</h3>
-                                    <p className="text-xs text-red-700 dark:text-red-300 mt-1">
-                                        Too many failed login attempts. Please try again in {formatLockoutTime(lockoutTimeRemaining)}.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Login Attempts Warning */}
-                    {!isLockedOut && loginAttempts > 0 && loginAttempts < 5 && (
-                        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                            <div className="flex items-start gap-3">
-                                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="text-xs text-amber-700 dark:text-amber-300">
-                                        {loginAttempts} failed attempt{loginAttempts > 1 ? 's' : ''}.
-                                        {5 - loginAttempts} attempt{5 - loginAttempts > 1 ? 's' : ''} remaining before lockout.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Error Message */}
-                    {authError && !isLockedOut && (
-                        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                            <div className="flex items-start gap-3">
-                                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                                <p className="text-sm text-red-700 dark:text-red-300">{authError}</p>
-                            </div>
-                        </div>
-                    )}
-
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
@@ -175,7 +71,7 @@ export default function LoginPageExample() {
                                     onChange={handleInputChange}
                                     placeholder="you@example.com"
                                     required
-                                    disabled={isLoading || isLockedOut}
+                                    disabled={isLoading}
                                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
@@ -194,7 +90,7 @@ export default function LoginPageExample() {
                                     onChange={handleInputChange}
                                     placeholder="••••••••"
                                     required
-                                    disabled={isLoading || isLockedOut}
+                                    disabled={isLoading}
                                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
@@ -205,7 +101,7 @@ export default function LoginPageExample() {
                                 <input
                                     type="checkbox"
                                     className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                    disabled={isLoading || isLockedOut}
+                                    disabled={isLoading}
                                 />
                                 <span className="text-sm text-slate-600 dark:text-slate-400">Remember me</span>
                             </label>
@@ -218,7 +114,7 @@ export default function LoginPageExample() {
                             type="submit"
                             variant="primary"
                             className="w-full py-3"
-                            disabled={isLoading || isLockedOut}
+                            disabled={isLoading}
                             leftIcon={isLoading ? undefined : <LogIn className="h-5 w-5" />}
                         >
                             {isLoading ? (
@@ -226,8 +122,6 @@ export default function LoginPageExample() {
                                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                                     Signing in...
                                 </div>
-                            ) : isLockedOut ? (
-                                `Locked (${formatLockoutTime(lockoutTimeRemaining)})`
                             ) : (
                                 'Sign In'
                             )}
@@ -251,4 +145,6 @@ export default function LoginPageExample() {
             </div>
         </div>
     );
-}
+};
+
+export default LoginPage;

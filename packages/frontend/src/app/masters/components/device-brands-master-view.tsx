@@ -1,34 +1,32 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { mastersService, companyService } from '@/lib/api/services';
-import { CreateBrandModel, UpdateBrandModel } from '@adminvault/shared-models';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { brandService, companyService } from '@/lib/api/services';
+import { CreateBrandModel, UpdateBrandModel, DeviceBrand } from '@adminvault/shared-models';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface DeviceBrand {
-    id: number;
-    name: string;
-    description?: string;
-    website?: string;
-    rating?: number;
-    code?: string;
-    isActive: boolean;
-    companyId: number;
+
+interface DeviceBrandsMasterViewProps {
+    onBack?: () => void;
 }
 
-export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void }) {
+interface CompanyInfo {
+    id: number;
+    companyName: string;
+}
+
+export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
-    const { success: toastSuccess, error: toastError } = useToast();
     const [brands, setBrands] = useState<DeviceBrand[]>([]);
-    const [companies, setCompanies] = useState<any[]>([]);
+    const [companies, setCompanies] = useState<CompanyInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -37,7 +35,7 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
-    const getAllCompanies = async () => {
+    const getAllCompanies = async (): Promise<void> => {
         try {
             const response = await companyService.getAllCompanies();
             if (response.status) {
@@ -48,22 +46,22 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
         }
     };
 
-    const getAllBrands = useCallback(async () => {
+    const getAllBrands = useCallback(async (): Promise<void> => {
         if (!user?.companyId) return;
         setIsLoading(true);
         try {
-            const response = await mastersService.getAllBrands(user.companyId as any);
+            const response = await brandService.getAllBrands({ companyId: user.companyId });
             if (response.status) {
                 setBrands(response.brands || []);
             } else {
-                toastError(response.message || 'Failed to fetch brands');
+                AlertMessages.getErrorMessage(response.message || 'Failed to fetch brands');
             }
         } catch (error: any) {
-            toastError(error.message || 'Failed to fetch brands');
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch brands');
         } finally {
             setIsLoading(false);
         }
-    }, [toastError, user?.companyId]);
+    }, [user?.companyId]);
 
     useEffect(() => {
         if (user?.companyId) {
@@ -72,7 +70,7 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
         }
     }, [getAllBrands, user?.companyId]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         if (!user) return;
         setIsLoading(true);
@@ -90,13 +88,13 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
                     companyIdToUse
                 );
 
-                const response = await mastersService.updateBrand(model);
+                const response = await brandService.updateBrand(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Brand Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Brand Updated Successfully');
                     handleCloseModal();
                     getAllBrands();
                 } else {
-                    toastError(response.message || 'Failed to Update Brand');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Brand');
                 }
             } else {
                 const model = new CreateBrandModel(
@@ -109,23 +107,23 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
                     formData.rating ? parseFloat(formData.rating) : undefined,
                     formData.code
                 );
-                const response = await mastersService.createBrand(model);
+                const response = await brandService.createBrand(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Brand Created Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Brand Created Successfully');
                     handleCloseModal();
                     getAllBrands();
                 } else {
-                    toastError(response.message || 'Failed to Create Brand');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Brand');
                 }
             }
         } catch (err: any) {
-            toastError(err.message || 'An error occurred');
+            AlertMessages.getErrorMessage(err.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleEdit = (item: any) => {
+    const handleEdit = (item: DeviceBrand): void => {
         setIsEditMode(true);
         setEditingId(item.id);
         setFormData({
@@ -134,29 +132,29 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
             website: item.website || '',
             rating: item.rating?.toString() || '',
             code: item.code || '',
-            companyId: item.companyId || ''
+            companyId: item.companyId?.toString() || ''
         });
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: number) => {
+    const handleDeleteClick = (id: number): void => {
         setDeletingId(id);
         setIsDeleteDialogOpen(true);
     };
 
-    const handleDeleteConfirm = async () => {
+    const handleDeleteConfirm = async (): Promise<void> => {
         if (deletingId) {
             setIsLoading(true);
             try {
-                const response = await mastersService.deleteBrand(deletingId);
+                const response = await brandService.deleteBrand({ id: deletingId });
                 if (response.status) {
-                    toastSuccess(response.message || 'Brand Deleted Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Brand Deleted Successfully');
                     getAllBrands();
                 } else {
-                    toastError(response.message || 'Failed to Delete Brand');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Delete Brand');
                 }
             } catch (err: any) {
-                toastError(err.message || 'An error occurred');
+                AlertMessages.getErrorMessage(err.message || 'An error occurred');
             } finally {
                 setIsLoading(false);
                 setDeletingId(null);
@@ -164,7 +162,7 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
         }
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (): void => {
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
@@ -207,7 +205,7 @@ export default function DeviceBrandsMasterView({ onBack }: { onBack?: () => void
                                     {brands?.length === 0 ? (
                                         <tr><td colSpan={6} className="p-8 text-center text-slate-500">No brands found</td></tr>
                                     ) : (
-                                        brands?.map((item: any, index: number) => (
+                                        brands?.map((item: DeviceBrand, index: number) => (
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">

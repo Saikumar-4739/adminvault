@@ -4,10 +4,10 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { dashboardService, companyService } from '@/lib/api/services';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
-import Select from '@/components/ui/Select';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Select } from '@/components/ui/Select';
 import {
     Users, Package, Ticket, Lock, RefreshCcw, TrendingUp, Activity,
     PieChart as PieChartIcon, BarChart2, Mail, FileText, Settings,
@@ -16,39 +16,39 @@ import {
 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
-import { useToast } from '@/contexts/ToastContext';
+import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Lazy load chart components
-const AssetDistributionChart = dynamic(() => import('@/features/dashboard/components/AssetDistributionChart'), {
+const AssetDistributionChart = dynamic(() => import('@/features/dashboard/components/AssetDistributionChart').then(mod => mod.AssetDistributionChart), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const TicketPriorityChart = dynamic(() => import('@/features/dashboard/components/TicketPriorityChart'), {
+const TicketPriorityChart = dynamic(() => import('@/features/dashboard/components/TicketPriorityChart').then(mod => mod.TicketPriorityChart), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const EmployeeDeptChart = dynamic(() => import('@/features/dashboard/components/EmployeeDeptChart'), {
+const EmployeeDeptChart = dynamic(() => import('@/features/dashboard/components/EmployeeDeptChart').then(mod => mod.EmployeeDeptChart), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const TicketStatusChart = dynamic(() => import('@/features/dashboard/components/TicketStatusChart'), {
+const TicketStatusChart = dynamic(() => import('@/features/dashboard/components/TicketStatusChart').then(mod => mod.TicketStatusChart), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
 
 // Lazy load Enterprise Widgets
-const SystemHealthWidget = dynamic(() => import('@/features/dashboard/components/SystemHealthWidget'), {
+const SystemHealthWidget = dynamic(() => import('@/features/dashboard/components/SystemHealthWidget').then(mod => mod.SystemHealthWidget), {
     ssr: false,
     loading: () => <div className="h-full animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg p-4"></div>
 });
-const RenewalsWidget = dynamic(() => import('@/features/dashboard/components/RenewalsWidget'), {
+const RenewalsWidget = dynamic(() => import('@/features/dashboard/components/RenewalsWidget').then(mod => mod.RenewalsWidget), {
     ssr: false,
     loading: () => <div className="h-full animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg p-4"></div>
 });
 
-const SecurityScoreCard = dynamic(() => import('@/features/dashboard/components/SecurityScoreCard'), {
+const SecurityScoreCard = dynamic(() => import('@/features/dashboard/components/SecurityScoreCard').then(mod => mod.SecurityScoreCard), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
@@ -92,8 +92,7 @@ export interface DashboardStats {
     };
 }
 
-export default function DashboardPage() {
-    const { error: toastError } = useToast();
+const DashboardPage: React.FC = () => {
     const { isAuthenticated, user } = useAuth();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -107,17 +106,19 @@ export default function DashboardPage() {
             setIsLoading(true);
             const id = companyId || selectedCompanyId || user?.companyId;
             if (!id) {
-                toastError('No company selected');
+                AlertMessages.getErrorMessage('No company selected');
                 return;
             }
-            const response = await dashboardService.getDashboardStats({ id });
+            const req = new CompanyIdRequestModel(id);
+            const response = await dashboardService.getDashboardStats(req);
             if (response && response.status && response.data) {
-                setStats(response.data);
+                setStats(response.data as any);
                 setLastUpdated(new Date());
+            } else {
+                AlertMessages.getErrorMessage(response?.message || 'Failed to fetch dashboard data');
             }
         } catch (err: any) {
-            console.error(err);
-            toastError('Failed to load dashboard data');
+            AlertMessages.getErrorMessage(err.message || 'Failed to load dashboard data');
         } finally {
             setIsLoading(false);
         }
@@ -537,3 +538,6 @@ export default function DashboardPage() {
         </RouteGuard>
     );
 }
+
+
+export default DashboardPage;

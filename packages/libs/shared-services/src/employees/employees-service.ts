@@ -1,26 +1,10 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    CreateEmployeeModel,
-    UpdateEmployeeModel,
-    DeleteEmployeeModel,
-    GetEmployeeModel,
-    GetEmployeeResponseModel,
-    GetAllEmployeesResponseModel,
-    GlobalResponse,
-    CreateSlackUserModel,
-    UpdateSlackUserModel,
-    GetAllSlackUsersResponseModel,
-    IdRequestModel
-} from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetEmployeeResponseModel, GetAllEmployeesResponseModel, GlobalResponse, CompanyIdRequestModel } from '@adminvault/shared-models';
 
 export class EmployeesService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
         return '/employees/' + childUrl;
-    }
-
-    private getMastersURL(childUrl: string) {
-        return '/masters/' + childUrl;
     }
 
     async createEmployee(reqObj: CreateEmployeeModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
@@ -35,8 +19,8 @@ export class EmployeesService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getEmployee'), reqObj, config);
     }
 
-    async getAllEmployees(companyId: number, config?: AxiosRequestConfig): Promise<GetAllEmployeesResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllEmployees'), { companyId }, config);
+    async getAllEmployees(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllEmployeesResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllEmployees'), reqObj, config);
     }
 
     async deleteEmployee(reqObj: DeleteEmployeeModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
@@ -56,21 +40,5 @@ export class EmployeesService extends CommonAxiosService {
                 'Content-Type': 'multipart/form-data'
             }
         });
-    }
-
-    async createSlackUser(reqObj: CreateSlackUserModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getMastersURL('createSlackUser'), reqObj, config);
-    }
-
-    async updateSlackUser(reqObj: UpdateSlackUserModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getMastersURL('updateSlackUser'), reqObj, config);
-    }
-
-    async deleteSlackUser(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getMastersURL('deleteSlackUser'), reqObj, config);
-    }
-
-    async getAllSlackUsers(companyId: number, config?: AxiosRequestConfig): Promise<GetAllSlackUsersResponseModel> {
-        return await this.axiosPostCall(this.getMastersURL('getAllSlackUsers'), { companyId }, config);
     }
 }

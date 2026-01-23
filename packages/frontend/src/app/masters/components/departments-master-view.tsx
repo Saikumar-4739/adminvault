@@ -1,32 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { mastersService, companyService } from '@/lib/api/services';
-import { CreateDepartmentModel, UpdateDepartmentModel } from '@adminvault/shared-models';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { useState, useEffect, useCallback } from 'react';
+import { departmentService, companyService } from '@/lib/api/services';
+import { CreateDepartmentModel, UpdateDepartmentModel, Department } from '@adminvault/shared-models';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface Department {
-    id: number;
-    name: string;
-    description?: string;
-    code?: string;
-    status?: string;
-    isActive: boolean;
-    companyId: number;
+
+interface DepartmentsMasterViewProps {
+    onBack?: () => void;
 }
 
-export default function DepartmentsMasterView({ onBack }: { onBack?: () => void }) {
-    const { success: toastSuccess, error: toastError } = useToast();
+interface CompanyInfo {
+    id: number;
+    companyName: string;
+}
+
+export const DepartmentsMasterView: React.FC<DepartmentsMasterViewProps> = ({ onBack }) => {
+    const { user } = useAuth();
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [companies, setCompanies] = useState<any[]>([]);
-    const [isLoading] = useState(false);
+    const [companies, setCompanies] = useState<CompanyInfo[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingDepartmentId, setEditingDepartmentId] = useState<number | null>(null);
@@ -37,48 +38,42 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
     useEffect(() => {
         getAllDepartments();
         getAllCompanies();
-    }, []);
+    }, [user?.companyId]);
 
-    const getCompanyId = (): number => {
-        const storedUser = localStorage.getItem('auth_user');
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        return user?.companyId || 1;
-    };
 
-    const getUserId = (): number => {
-        const storedUser = localStorage.getItem('auth_user');
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        return user?.id || 1;
-    };
-
-    const getAllCompanies = async () => {
+    const getAllCompanies = useCallback(async (): Promise<void> => {
         try {
             const response = await companyService.getAllCompanies();
             if (response.status) {
                 setCompanies(response.data);
             } else {
-                toastError(response.message);
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (error: any) {
-            toastError(error.message);
+            AlertMessages.getErrorMessage(error.message);
         }
-    };
+    }, []);
 
-    const getAllDepartments = async () => {
+    const getAllDepartments = useCallback(async (): Promise<void> => {
+        if (!user?.companyId) return;
+        setIsLoading(true);
         try {
-            const response = await mastersService.getAllDepartments(getCompanyId() as any);
+            const response = await departmentService.getAllDepartments({ companyId: user.companyId });
             if (response.status) {
                 setDepartments(response.departments || []);
             } else {
-                toastError(response.message);
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (error: any) {
-            toastError(error.message);
+            AlertMessages.getErrorMessage(error.message);
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, [user?.companyId]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
+        setIsLoading(true);
         try {
             if (isEditMode && editingDepartmentId) {
                 const model = new UpdateDepartmentModel(
@@ -88,69 +83,81 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                     formData.isActive,
                     formData.code
                 );
-                const response = await mastersService.updateDepartment(model);
+                const response = await departmentService.updateDepartment(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Department Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Department Updated Successfully');
                     handleCloseModal();
                     getAllDepartments();
                 } else {
-                    toastError(response.message || 'Failed to Update Department');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Department');
                 }
             } else {
                 const model = new CreateDepartmentModel(
-                    getUserId(),
-                    Number(formData.companyId) || getCompanyId(),
+                    user?.id || 1,
+                    Number(formData.companyId) || user?.companyId || 1,
                     formData.name,
                     formData.description,
                     formData.isActive,
                     formData.code,
                     formData.status as any
                 );
-                const response = await mastersService.createDepartment(model);
+                const response = await departmentService.createDepartment(model);
                 if (response.status) {
-                    toastSuccess(response.message);
+                    AlertMessages.getSuccessMessage(response.message || 'Department Created Successfully');
                     handleCloseModal();
                     getAllDepartments();
                 } else {
-                    toastError(response.message);
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Department');
                 }
             }
         } catch (error: any) {
-            toastError(error.message);
+            AlertMessages.getErrorMessage(error.message);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleEdit = (dept: any) => {
+    const handleEdit = (dept: Department): void => {
         setIsEditMode(true);
         setEditingDepartmentId(dept.id);
-        setFormData({ name: dept.name, description: dept.description, code: dept.code, companyId: dept.companyId, status: dept.status, isActive: dept.isActive });
+        setFormData({
+            name: dept.name,
+            description: dept.description || '',
+            code: dept.code || '',
+            companyId: dept.companyId?.toString() || '',
+            status: '',
+            isActive: dept.isActive
+        });
         setIsModalOpen(true);
     };
 
-    const handleDelete = (dept: any) => {
+    const handleDelete = (dept: Department): void => {
         setDepartmentToDelete({ id: dept.id, name: dept.name });
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDelete = async () => {
+    const confirmDelete = async (): Promise<void> => {
         if (departmentToDelete) {
+            setIsLoading(true);
             try {
-                const response = await mastersService.deleteDepartment(departmentToDelete.id);
+                const response = await departmentService.deleteDepartment({ id: departmentToDelete.id });
                 if (response.status) {
-                    toastSuccess(response.message);
+                    AlertMessages.getSuccessMessage(response.message || 'Department Deleted Successfully');
                     setIsDeleteModalOpen(false);
                     setDepartmentToDelete(null);
                     getAllDepartments();
                 } else {
-                    toastError(response.message);
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } catch (error: any) {
-                toastError(error.message);
+                AlertMessages.getErrorMessage(error.message);
+            } finally {
+                setIsLoading(false);
             }
         }
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (): void => {
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingDepartmentId(null);
@@ -192,7 +199,7 @@ export default function DepartmentsMasterView({ onBack }: { onBack?: () => void 
                                     {departments?.length === 0 ? (
                                         <tr><td colSpan={7} className="p-8 text-center text-slate-500">No departments found</td></tr>
                                     ) : (
-                                        departments?.map((d: any) => (
+                                        departments?.map((d: Department) => (
                                             <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{d.name}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">

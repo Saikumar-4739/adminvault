@@ -3,17 +3,15 @@
 import { useState, useEffect } from 'react';
 import { workflowService } from '@/lib/api/services';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, ApprovalStatusEnum, ApprovalTypeEnum } from '@adminvault/shared-models';
-import Card, { CardHeader, CardContent } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { Check, X, Clock, AlertCircle, Package } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { UserRoleEnum, ApprovalTypeEnum, GetPendingApprovalsRequestModel } from '@adminvault/shared-models';
+import { Button } from '@/components/ui/Button';
+import { Check, Clock, AlertCircle, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { PageLoader } from '@/components/ui/Spinner';
 
-export default function ApprovalsPage() {
+const ApprovalsPage: React.FC = () => {
     const { user } = useAuth();
-    const { success, error } = useToast();
     const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -26,10 +24,15 @@ export default function ApprovalsPage() {
     const fetchPendingApprovals = async () => {
         try {
             setLoading(true);
-            const data = await workflowService.getPendingApprovals(user!.companyId);
-            setPendingApprovals(data);
+            const req = new GetPendingApprovalsRequestModel(user!.companyId);
+            const res = await workflowService.getPendingApprovals(req);
+            if (res.status) {
+                setPendingApprovals(res.approvals || []);
+            } else {
+                AlertMessages.getErrorMessage(res.message);
+            }
         } catch (err: any) {
-            console.error(err);
+            AlertMessages.getErrorMessage(err.message || 'Failed to fetch pending approvals');
         } finally {
             setLoading(false);
         }
@@ -43,13 +46,13 @@ export default function ApprovalsPage() {
                 remarks: 'Approved via Portal'
             });
             if (res.status) {
-                success(res.message);
+                AlertMessages.getSuccessMessage(res.message);
                 fetchPendingApprovals();
             } else {
-                error(res.message);
+                AlertMessages.getErrorMessage(res.message);
             }
         } catch (err: any) {
-            error(err.message || 'Failed to approve');
+            AlertMessages.getErrorMessage(err.message || 'Failed to approve');
         }
     };
 
@@ -61,13 +64,13 @@ export default function ApprovalsPage() {
                 remarks: 'Rejected via Portal'
             });
             if (res.status) {
-                success(res.message);
+                AlertMessages.getSuccessMessage(res.message);
                 fetchPendingApprovals();
             } else {
-                error(res.message);
+                AlertMessages.getErrorMessage(res.message);
             }
         } catch (err: any) {
-            error(err.message || 'Failed to reject');
+            AlertMessages.getErrorMessage(err.message || 'Failed to reject');
         }
     };
 
@@ -210,3 +213,5 @@ export default function ApprovalsPage() {
         </RouteGuard>
     );
 }
+
+export default ApprovalsPage;

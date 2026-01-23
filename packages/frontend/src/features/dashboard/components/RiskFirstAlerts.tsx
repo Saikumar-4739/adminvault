@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { AlertCircle, ShieldAlert, WifiOff, UserX, ChevronRight, X } from 'lucide-react';
-import Card from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 
 interface Alert {
     id: string;
@@ -13,7 +13,7 @@ interface Alert {
     icon: React.ElementType;
 }
 
-export default function RiskFirstAlerts() {
+export const RiskFirstAlerts: React.FC = () => {
     const alerts: Alert[] = [
         {
             id: '1',

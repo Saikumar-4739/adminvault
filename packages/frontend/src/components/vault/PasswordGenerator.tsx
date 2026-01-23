@@ -2,14 +2,18 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { RefreshCcw, Copy, Check, ShieldCheck, ShieldAlert, Shield } from 'lucide-react';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 interface PasswordGeneratorProps {
     onPasswordGenerated: (password: string) => void;
     className?: string;
 }
 
-export default function PasswordGenerator({ onPasswordGenerated, className = '' }: PasswordGeneratorProps) {
+interface PasswordGeneratorProps {
+    children?: React.ReactNode;
+}
+
+export const PasswordGenerator: React.FC<PasswordGeneratorProps> = ({ onPasswordGenerated, className = '' }: PasswordGeneratorProps) => {
     const [length, setLength] = useState(16);
     const [includeUppercase, setIncludeUppercase] = useState(true);
     const [includeNumbers, setIncludeNumbers] = useState(true);

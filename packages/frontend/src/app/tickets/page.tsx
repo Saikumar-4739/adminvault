@@ -3,23 +3,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ticketService } from '@/lib/api/services';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import StatCard from '@/components/ui/StatCard';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { StatCard } from '@/components/ui/StatCard';
 import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/Spinner';
-import PageHeader from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 import {
     Search, Edit, Trash2, Ticket, Clock, MessageSquare,
     Monitor, Cpu, Wifi, Mail, Lock, HelpCircle,
     AlertTriangle, CheckCircle, User, Users, Filter,
     Tag, PlusCircle
 } from 'lucide-react';
-import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, UserRoleEnum } from '@adminvault/shared-models';
-import Input from '@/components/ui/Input';
+import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, UserRoleEnum, CompanyIdRequestModel, CreateTicketModel, UpdateTicketModel, DeleteTicketModel } from '@adminvault/shared-models';
+import { Input } from '@/components/ui/Input';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { getSocket } from '@/lib/socket';
 
 const CategoryConfig: Record<string, { icon: any, color: string, bg: string, gradient: string }> = {
@@ -77,10 +77,9 @@ interface TicketData {
     timeSpentMinutes?: number;
 }
 
-export default function TicketsPage() {
+const TicketsPage: React.FC = () => {
     const router = useRouter();
     const { user } = useAuth();
-    const { success, error: toastError } = useToast();
 
     const [tickets, setTickets] = useState<TicketData[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -119,19 +118,22 @@ export default function TicketsPage() {
             if (viewMode === 'my') {
                 response = await ticketService.getMyTickets();
             } else {
-                response = await ticketService.getAllTickets(getCompanyId());
+                const req = new CompanyIdRequestModel(getCompanyId());
+                response = await ticketService.getAllTickets(req);
             }
 
             if (response.status) {
                 const ticketData = (response as any).tickets || response.data || [];
                 setTickets(ticketData);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (error: any) {
-            toastError(error.message || 'Failed to fetch tickets');
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch tickets');
         } finally {
             setIsLoading(false);
         }
-    }, [viewMode, getCompanyId, toastError]);
+    }, [viewMode, getCompanyId]);
 
     useEffect(() => {
         fetchTickets();
@@ -147,13 +149,13 @@ export default function TicketsPage() {
         socket.on('ticketCreated', (newTicket: any) => {
             // Refresh tickets to get full details including employee name
             fetchTickets();
-            success('New ticket received!');
+            AlertMessages.getSuccessMessage('New ticket received!');
         });
 
         return () => {
             socket.off('ticketCreated');
         };
-    }, [isAdmin, fetchTickets, success]);
+    }, [isAdmin, fetchTickets]);
 
     const filteredTickets = tickets.filter((ticket) => {
         const matchesSearch = ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -170,50 +172,47 @@ export default function TicketsPage() {
         setIsLoading(true);
         try {
             if (editingTicket) {
-                const response = await ticketService.updateTicket({ ...formData, id: editingTicket.id } as any);
+                const req = new UpdateTicketModel(
+                    editingTicket.id,
+                    formData.ticketCode,
+                    formData.categoryEnum,
+                    formData.priorityEnum,
+                    formData.subject,
+                    formData.ticketStatus,
+                    undefined, // employeeId
+                    undefined, // assignAdminId
+                    undefined, // resolvedAt
+                    formData.timeSpentMinutes
+                );
+                const response = await ticketService.updateTicket(req);
                 if (response.status) {
-                    success(response.message || 'Ticket updated successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Ticket updated successfully');
                     handleCloseModal();
                     fetchTickets();
                 } else {
-                    toastError(response.message || 'Operation failed');
+                    AlertMessages.getErrorMessage(response.message || 'Operation failed');
                 }
             } else {
                 // Create Ticket with PENDING Status
-                const response = await ticketService.createTicket({
-                    subject: formData.subject,
-                    categoryEnum: formData.categoryEnum,
-                    priorityEnum: formData.priorityEnum,
-                    ticketStatus: TicketStatusEnum.PENDING, // Changed from OPEN to PENDING
-                } as any);
+                const req = new CreateTicketModel(
+                    '', // ticketCode - backend will generate
+                    formData.categoryEnum,
+                    formData.priorityEnum,
+                    formData.subject,
+                    TicketStatusEnum.PENDING
+                );
+                const response = await ticketService.createTicket(req);
 
-                if (response.status && response.data) {
-                    // Trigger Workflow Approval
-                    // Assuming response.data contains the created ticket details or ID
-                    // Need to fetch latest to get ID if not returned directly, but assuming 'createTicket' returns GlobalResponse which might not have ID?
-                    // Let's assume createTicket returns ID or we fetch latest. 
-                    // Actually createTicket logic in backend returns GlobalResponse without ID usually. 
-                    // But we need ID to link. 
-                    // Let's trust backend handles workflow trigger automatically IF configured there?
-                    // WAIT: I previously modified backend tickets.service.ts to trigger workflow for HIGH priority.
-                    // But user asked for workflow integration "all over".
-                    // Let's rely on backend logic if I already added it there.
-                    // Checking backend logic... 
-                    // In tickets.service.ts (Step 1142), I saw:
-                    // if (savedTicket.priorityEnum === TicketPriorityEnum.HIGH) { ... initiateApproval ... }
-                    // So it's ALREADY handled for High Priority tickets in backend!
-
-                    // IF I want it for ALL tickets, I should update backend.
-                    // BUT for now, let's just show success message.
-                    success(response.message || 'Ticket created successfully');
+                if (response.status) {
+                    AlertMessages.getSuccessMessage(response.message || 'Ticket created successfully');
                     handleCloseModal();
                     fetchTickets();
                 } else {
-                    toastError(response.message || 'Operation failed');
+                    AlertMessages.getErrorMessage(response.message || 'Operation failed');
                 }
             }
         } catch (error: any) {
-            toastError(error.message || 'An error occurred');
+            AlertMessages.getErrorMessage(error.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }
@@ -241,15 +240,16 @@ export default function TicketsPage() {
         if (!ticketToDelete) return;
         setIsLoading(true);
         try {
-            const response = await ticketService.deleteTicket({ id: ticketToDelete.id });
+            const req = new DeleteTicketModel(ticketToDelete.id);
+            const response = await ticketService.deleteTicket(req);
             if (response.status) {
-                success(response.message || 'Ticket deleted successfully');
+                AlertMessages.getSuccessMessage(response.message || 'Ticket deleted successfully');
                 fetchTickets();
             } else {
-                toastError(response.message || 'Delete failed');
+                AlertMessages.getErrorMessage(response.message || 'Delete failed');
             }
         } catch (error: any) {
-            toastError(error.message || 'An error occurred');
+            AlertMessages.getErrorMessage(error.message || 'An error occurred');
         } finally {
             setIsLoading(false);
             setDeleteConfirmOpen(false);
@@ -770,3 +770,6 @@ export default function TicketsPage() {
         </div>
     );
 }
+
+
+export default TicketsPage;

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal } from '../../../components/ui/Modal';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
-import { administrationService, employeeService, workflowService } from '@/lib/api/services';
-import { useToast } from '@/contexts/ToastContext';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { assetService, employeeService, workflowService } from '@/lib/api/services';
+import { ApprovalTypeEnum, CreateApprovalRequestModel, CompanyIdRequestModel, AssignAssetOpRequestModel } from '@adminvault/shared-models';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
-import { ApprovalTypeEnum, CreateApprovalRequestModel } from '@adminvault/shared-models';
 
 interface AssignAssetModalProps {
     isOpen: boolean;
@@ -15,8 +15,11 @@ interface AssignAssetModalProps {
     onSuccess: () => void;
 }
 
-export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: AssignAssetModalProps) {
-    const { success, error: toastError } = useToast();
+interface AssignAssetModalProps {
+    children?: React.ReactNode;
+}
+
+export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onClose, asset, onSuccess }: AssignAssetModalProps) => {
     const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [employees, setEmployees] = useState<any[]>([]);
@@ -31,12 +34,13 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
     const fetchEmployees = useCallback(async () => {
         if (!user?.companyId) return;
         try {
-            const response = await employeeService.getAllEmployees(user.companyId);
+            const req = new CompanyIdRequestModel(user.companyId);
+            const response = await employeeService.getAllEmployees(req as any);
             if (response.status) {
                 setEmployees(response.employees || []);
             }
-        } catch (error) {
-            console.error('Failed to fetch employees:', error);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch employees');
         }
     }, [user?.companyId]);
 
@@ -67,7 +71,7 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
         setIsLoading(true);
 
         if (!user?.id) {
-            toastError('Error', 'User session not found');
+            AlertMessages.getErrorMessage('User session not found');
             setIsLoading(false);
             return;
         }
@@ -85,31 +89,33 @@ export default function AssignAssetModal({ isOpen, onClose, asset, onSuccess }: 
 
                 const response = await workflowService.initiateApproval(approvalReq);
                 if (response.status) {
-                    success('Success', 'Approval request submitted');
+                    AlertMessages.getSuccessMessage('Approval request submitted');
                     onSuccess();
                     onClose();
                 } else {
-                    toastError('Error', response.message || 'Failed to submit approval');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to submit approval');
                 }
 
             } else {
                 // Direct Assignment Flow
-                const response = await administrationService.assignAssetOp(
+                const req = new AssignAssetOpRequestModel(
                     asset.id,
                     Number(formData.employeeId),
+                    user.id,
                     formData.remarks
                 );
+                const response = await assetService.assignAssetOp(req);
 
                 if (response.status) {
-                    success('Success', 'Asset assigned successfully');
+                    AlertMessages.getSuccessMessage('Asset assigned successfully');
                     onSuccess();
                     onClose();
                 } else {
-                    toastError('Error', response.message || 'Failed to assign asset');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to assign asset');
                 }
             }
         } catch (error: any) {
-            toastError('Error', error.message || 'An error occurred');
+            AlertMessages.getErrorMessage(error.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }

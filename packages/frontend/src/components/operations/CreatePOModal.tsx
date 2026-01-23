@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
-import { Plus, Trash2, ShoppingCart, DollarSign } from 'lucide-react';
-import { CreatePOModel, POItemModel, VendorModel, AssetTypeModel } from '@adminvault/shared-models';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Plus, Trash2, ShoppingCart } from 'lucide-react';
+import { CreatePOModel, POItemModel, Vendor, AssetType, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { mastersService, procurementService } from '@/lib/api/services';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface CreatePOModalProps {
@@ -18,13 +18,12 @@ interface CreatePOModalProps {
 }
 
 export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps) {
-    const { success, error: toastError } = useToast();
     const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [vendors, setVendors] = useState<VendorModel[]>([]);
-    const [assetTypes, setAssetTypes] = useState<AssetTypeModel[]>([]);
+    const [vendors, setVendors] = useState<Vendor[]>([]);
+    const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
 
-    const [formData, setFormData] = useState<CreatePOModel>({
+    const [formData, setFormData] = useState<any>({
         vendorId: 0,
         orderDate: new Date().toISOString().split('T')[0],
         expectedDeliveryDate: '',
@@ -39,11 +38,13 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
     }, [isOpen]);
 
     const fetchMasters = async () => {
+        if (!user?.companyId) return;
         try {
-            const vRes = await mastersService.getAllVendors({ id: user?.companyId || 0 });
-            const aRes = await mastersService.getAllAssetTypes({ id: user?.companyId || 0 });
-            setVendors(vRes.data || []);
-            setAssetTypes(aRes.data || []);
+            const req = new CompanyIdRequestModel(user.companyId);
+            const vRes = await mastersService.getAllVendors(req);
+            const aRes = await mastersService.getAllAssetTypes(req);
+            setVendors(vRes.vendors || []);
+            setAssetTypes(aRes.assetTypes || []);
         } catch (err: any) {
             console.error('Failed to fetch masters', err);
         }
@@ -58,7 +59,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
 
     const removeItem = (index: number) => {
         if (formData.items.length === 1) return;
-        const newItems = formData.items.filter((_, i) => i !== index);
+        const newItems = formData.items.filter((_: any, i: number) => i !== index);
         setFormData({ ...formData, items: newItems });
     };
 
@@ -69,26 +70,33 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
     };
 
     const calculateTotal = () => {
-        return formData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+        return formData.items.reduce((sum: number, item: any) => sum + (item.quantity * item.unitPrice), 0);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (formData.vendorId === 0) {
-            toastError("Please select a vendor");
+            AlertMessages.getErrorMessage("Please select a vendor");
             return;
         }
 
-        if (formData.items.some(i => !i.itemName || i.quantity <= 0)) {
-            toastError("Please fill in all item details correctly");
+        if (formData.items.some((i: any) => !i.itemName || i.quantity <= 0)) {
+            AlertMessages.getErrorMessage("Please fill in all item details correctly");
             return;
         }
 
         setIsSubmitting(true);
         try {
-            const res = await procurementService.createPO(formData);
+            const model = new CreatePOModel(
+                formData.vendorId,
+                new Date(formData.orderDate),
+                formData.items.map((i: any) => new POItemModel(i.itemName, i.quantity, i.unitPrice, i.sku, i.assetTypeId)),
+                formData.expectedDeliveryDate ? new Date(formData.expectedDeliveryDate) : undefined,
+                formData.notes
+            );
+            const res = await procurementService.createPO(model);
             if (res.status) {
-                success("Purchase Order created successfully");
+                AlertMessages.getSuccessMessage("Purchase Order created successfully");
                 onSuccess();
                 onClose();
                 // Reset form
@@ -100,10 +108,10 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                     items: [{ itemName: '', quantity: 1, unitPrice: 0, sku: '', assetTypeId: undefined }]
                 });
             } else {
-                toastError(res.message);
+                AlertMessages.getErrorMessage(res.message);
             }
         } catch (err: any) {
-            toastError(err.message || "Failed to create Purchase Order");
+            AlertMessages.getErrorMessage(err.message || "Failed to create Purchase Order");
         } finally {
             setIsSubmitting(false);
         }
@@ -135,12 +143,11 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                         value={formData.vendorId}
                         onChange={(e) => setFormData({ ...formData, vendorId: Number(e.target.value) })}
                         required
-                    >
-                        <option value={0}>Select Vendor</option>
-                        {vendors.map(v => (
-                            <option key={v.id} value={v.id}>{v.name}</option>
-                        ))}
-                    </Select>
+                        options={[
+                            { label: 'Select Vendor', value: 0 },
+                            ...vendors.map(v => ({ label: v.name, value: v.id }))
+                        ]}
+                    />
 
                     <Input
                         label="Order Date"
@@ -177,7 +184,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                     </div>
 
                     <div className="space-y-3">
-                        {formData.items.map((item, index) => (
+                        {formData.items.map((item: any, index: number) => (
                             <div key={index} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 grid grid-cols-12 gap-3 items-end group">
                                 <div className="col-span-12 md:col-span-4">
                                     <Input
@@ -214,12 +221,11 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                                         value={item.assetTypeId || 0}
                                         onChange={(e) => updateItem(index, 'assetTypeId', Number(e.target.value))}
                                         className="bg-white dark:bg-slate-900"
-                                    >
-                                        <option value={0}>Assign Later</option>
-                                        {assetTypes.map(at => (
-                                            <option key={at.id} value={at.id}>{at.name}</option>
-                                        ))}
-                                    </Select>
+                                        options={[
+                                            { label: 'Assign Later', value: 0 },
+                                            ...assetTypes.map(at => ({ label: at.name, value: at.id }))
+                                        ]}
+                                    />
                                 </div>
                                 <div className="col-span-2 md:col-span-1 pb-1 flex justify-center">
                                     <button

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/lib/api/services';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
 import {
     ShieldCheck,
@@ -19,7 +19,7 @@ import {
 import { RegisterUserModel, UserRoleEnum } from '@adminvault/shared-models';
 import Link from 'next/link';
 
-export default function RegisterPage() {
+const RegisterPage: React.FC = () => {
     const router = useRouter();
     const { success, error: toastError } = useToast();
     const [isLoading, setIsLoading] = useState(false);
@@ -258,3 +258,6 @@ export default function RegisterPage() {
         </div>
     );
 }
+
+
+export default RegisterPage;

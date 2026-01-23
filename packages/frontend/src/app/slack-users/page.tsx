@@ -3,16 +3,20 @@
 import { useState, useEffect } from 'react';
 import { employeeService, mastersService } from '@/lib/api/services';
 import { SlackUserModel, CreateSlackUserModel, UpdateSlackUserModel, EmployeeResponseModel, Department } from '@adminvault/shared-models';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import Input from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Search, Plus, MessageSquare, Pencil, Trash2, User, Users } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum } from '@adminvault/shared-models';
+import { UserRoleEnum, CompanyIdRequestModel, IdRequestModel } from '@adminvault/shared-models';
+import { useAuth } from '@/contexts/AuthContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
+import { PageLoader } from '@/components/ui/Spinner';
 
-export default function SlackUsersPage() {
+const SlackUsersPage: React.FC = () => {
+    const { user } = useAuth();
     const [users, setUsers] = useState<SlackUserModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,29 +44,34 @@ export default function SlackUsersPage() {
     }, []);
 
     const fetchInitialData = async () => {
+        if (!user?.companyId) return;
         try {
-            const companyId = 1; // Default companyId
+            const req = new CompanyIdRequestModel(user.companyId);
             const [empRes, deptRes] = await Promise.all([
-                employeeService.getAllEmployees(companyId),
-                mastersService.getAllDepartments({ companyId: 1 } as any)
+                employeeService.getAllEmployees(req as any),
+                mastersService.getAllDepartments(req)
             ]);
 
             if (empRes.status) setEmployees(empRes.employees);
             if (deptRes.status) setDepartments(deptRes.departments);
-        } catch (error) {
-            console.error('Failed to fetch initial data:', error);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch initial data');
         }
     };
 
     const fetchUsers = async () => {
+        if (!user?.companyId) return;
         try {
             setIsLoading(true);
-            const response = await mastersService.getAllSlackUsers({ id: 1 }); // Hardcoded companyId 1 as per original code context
+            const req = new CompanyIdRequestModel(user.companyId);
+            const response = await mastersService.getAllSlackUsers(req);
             if (response.status) {
                 setUsers(response.slackUsers || []);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
-        } catch (error) {
-            console.error('Failed to fetch Slack users:', error);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch Slack users');
         } finally {
             setIsLoading(false);
         }
@@ -117,8 +126,8 @@ export default function SlackUsersPage() {
 
     const handleSubmit = async () => {
         try {
-            const userId = 1;
-            const companyId = 1;
+            const currentUserId = user?.id || 1;
+            const currentCompanyId = user?.companyId || 1;
 
             if (editingUser) {
                 const updateModel = new UpdateSlackUserModel(
@@ -133,13 +142,18 @@ export default function SlackUsersPage() {
                     formData.department,
                     formData.phone,
                     formData.notes, // notes
-                    companyId
+                    currentCompanyId
                 );
-                await mastersService.updateSlackUser(updateModel);
+                const response = await mastersService.updateSlackUser(updateModel);
+                if (response.status) {
+                    AlertMessages.getSuccessMessage('Slack user updated successfully');
+                } else {
+                    AlertMessages.getErrorMessage(response.message);
+                }
             } else {
                 const createModel = new CreateSlackUserModel(
-                    userId,
-                    companyId,
+                    currentUserId,
+                    currentCompanyId,
                     formData.name,
                     formData.email,
                     formData.notes, // description
@@ -151,12 +165,17 @@ export default function SlackUsersPage() {
                     formData.phone,
                     formData.notes // notes
                 );
-                await mastersService.createSlackUser(createModel);
+                const response = await mastersService.createSlackUser(createModel);
+                if (response.status) {
+                    AlertMessages.getSuccessMessage('Slack user created successfully');
+                } else {
+                    AlertMessages.getErrorMessage(response.message);
+                }
             }
             setIsModalOpen(false);
             fetchUsers();
-        } catch (error) {
-            console.error('Failed to save Slack user:', error);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to save Slack user');
         }
     };
 
@@ -168,10 +187,16 @@ export default function SlackUsersPage() {
     const confirmDelete = async () => {
         if (!userToDelete) return;
         try {
-            await mastersService.deleteSlackUser(userToDelete);
-            fetchUsers();
-        } catch (error) {
-            console.error('Failed to delete user:', error);
+            const req = new IdRequestModel(userToDelete);
+            const response = await mastersService.deleteSlackUser(req);
+            if (response.status) {
+                AlertMessages.getSuccessMessage('Slack user deleted successfully');
+                fetchUsers();
+            } else {
+                AlertMessages.getErrorMessage(response.message);
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to delete user');
         } finally {
             setDeleteConfirmOpen(false);
             setUserToDelete(null);
@@ -223,7 +248,7 @@ export default function SlackUsersPage() {
 
                 {/* Table */}
                 {isLoading ? (
-                    <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div></div>
+                    <PageLoader />
                 ) : filteredUsers.length === 0 ? (
                     <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
@@ -380,3 +405,6 @@ export default function SlackUsersPage() {
 };
 
 
+
+
+export default SlackUsersPage;

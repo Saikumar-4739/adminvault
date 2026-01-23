@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { DeleteDocumentModel, GetDocumentModel, GetAllDocumentsResponseModel, GetDocumentResponseModel, UploadDocumentResponseModel, UploadDocumentModel, GlobalResponse } from '@adminvault/shared-models';
+import { DeleteDocumentModel, GetDocumentModel, GetAllDocumentsResponseModel, GetDocumentResponseModel, UploadDocumentResponseModel, UploadDocumentModel, GlobalResponse, GetAllDocumentsRequestModel } from '@adminvault/shared-models';
 
 export class DocumentsService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -33,8 +33,8 @@ export class DocumentsService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getDocument'), reqObj, config);
     }
 
-    async getAllDocuments(companyId: number, category?: string, config?: AxiosRequestConfig): Promise<GetAllDocumentsResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllDocuments'), { companyId, category }, config);
+    async getAllDocuments(reqObj: GetAllDocumentsRequestModel, config?: AxiosRequestConfig): Promise<GetAllDocumentsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllDocuments'), reqObj, config);
     }
 
     getDownloadUrl(id: number): string {

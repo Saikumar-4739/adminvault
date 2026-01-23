@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Card from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Shield, ShieldCheck, ShieldAlert, Info } from 'lucide-react';
 
 interface SecurityScoreCardProps {
@@ -13,7 +13,11 @@ interface SecurityScoreCardProps {
     };
 }
 
-export default function SecurityScoreCard({ score, metrics }: SecurityScoreCardProps) {
+interface SecurityScoreCardProps {
+    children?: React.ReactNode;
+}
+
+export const SecurityScoreCard: React.FC<SecurityScoreCardProps> = ({ score, metrics }: SecurityScoreCardProps) => {
     const getScoreColor = (s: number) => {
         if (s >= 90) return 'text-emerald-500';
         if (s >= 70) return 'text-amber-500';

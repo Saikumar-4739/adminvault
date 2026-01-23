@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 
 interface AddLicenseModalProps {
@@ -14,7 +14,9 @@ interface AddLicenseModalProps {
     employees: any[];
 }
 
-export default function AddLicenseModal({ isOpen, onClose, onSuccess, companies, applications, employees }: AddLicenseModalProps) {
+
+
+export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClose, onSuccess, companies, applications, employees }: AddLicenseModalProps) => {
     const [formData, setFormData] = useState({
         applicationId: '',
         companyId: '',

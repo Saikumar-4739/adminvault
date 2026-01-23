@@ -2,9 +2,9 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { companyService, emailService, mastersService } from '@/lib/api/services';
-import PageHeader from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, DepartmentEnum, EmailTypeEnum, EmailInfoResponseModel, CreateEmailInfoModel, DeleteEmailInfoModel } from '@adminvault/shared-models';
+import { UserRoleEnum, DepartmentEnum, EmailTypeEnum, EmailInfoResponseModel, CreateEmailInfoModel, DeleteEmailInfoModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import {
     Mail, Building2, Plus, Trash2, Search,
     Headphones, ShieldCheck, Landmark, Settings,
@@ -12,7 +12,8 @@ import {
     User, Users, Globe
 } from 'lucide-react';
 import AddEmailModal from './AddEmailModal';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+
 
 // Category Definitions
 type EmailCategory = 'COMPANY' | 'USER' | 'GROUP';
@@ -51,8 +52,7 @@ const DeptConfig: Record<string, { icon: any, color: string, bg: string, label: 
     'Default': { icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-900/20', label: 'Functional Registry' },
 };
 
-export default function InfoEmailsPage() {
-    const { success, error: toastError } = useToast();
+const InfoEmailsPage: React.FC = () => {
     const [companies, setCompanies] = useState<any[]>([]);
     const [departments, setDepartments] = useState<any[]>([]);
     const [emailInfoList, setEmailInfoList] = useState<EmailInfoResponseModel[]>([]);
@@ -69,14 +69,15 @@ export default function InfoEmailsPage() {
                 setCompanies(response.data as any[]);
             }
         } catch (err: any) {
-            toastError(err.message || 'Failed to fetch companies');
+            AlertMessages.getErrorMessage(err.message || 'Failed to fetch companies');
         }
-    }, [toastError]);
+    }, []);
 
     const fetchDepartments = useCallback(async () => {
         if (!selectedOrg) return;
         try {
-            const response = await mastersService.getAllDepartments(Number(selectedOrg) as any);
+            const req = new CompanyIdRequestModel(Number(selectedOrg));
+            const response = await mastersService.getAllDepartments(req as any);
             if (response.status) {
                 setDepartments(response.departments || []);
             }
@@ -89,18 +90,19 @@ export default function InfoEmailsPage() {
         if (!selectedOrg) return;
         setIsLoading(true);
         try {
-            const response = await emailService.getAllEmailInfo({ id: Number(selectedOrg) } as any);
+            const req = new CompanyIdRequestModel(Number(selectedOrg));
+            const response = await emailService.getAllEmailInfo(req);
             if (response.status) {
                 setEmailInfoList(response.data || []);
             } else {
-                toastError(response.message || 'Failed to fetch email info');
+                AlertMessages.getErrorMessage(response.message || 'Failed to fetch email info');
             }
         } catch (err: any) {
-            toastError(err.message || 'An error occurred while fetching email info');
+            AlertMessages.getErrorMessage(err.message || 'An error occurred while fetching email info');
         } finally {
             setIsLoading(false);
         }
-    }, [selectedOrg, toastError]);
+    }, [selectedOrg]);
 
     useEffect(() => {
         fetchCompanies();
@@ -128,15 +130,15 @@ export default function InfoEmailsPage() {
         try {
             const response = await emailService.createEmailInfo(data);
             if (response.status) {
-                success(response.message || 'Email info record created successfully');
+                AlertMessages.getSuccessMessage(response.message || 'Email info record created successfully');
                 await fetchEmailInfo();
                 return true;
             } else {
-                toastError(response.message || 'Failed to create email info');
+                AlertMessages.getErrorMessage(response.message || 'Failed to create email info');
                 return false;
             }
         } catch (err: any) {
-            toastError(err.message || 'Failed to create email info');
+            AlertMessages.getErrorMessage(err.message || 'Failed to create email info');
             return false;
         } finally {
             setIsLoading(false);
@@ -149,15 +151,15 @@ export default function InfoEmailsPage() {
         try {
             const response = await emailService.deleteEmailInfo({ id } as DeleteEmailInfoModel);
             if (response.status) {
-                success(response.message || 'Email info record removed');
+                AlertMessages.getSuccessMessage(response.message || 'Email info record removed');
                 await fetchEmailInfo();
                 return true;
             } else {
-                toastError(response.message || 'Failed to delete record');
+                AlertMessages.getErrorMessage(response.message || 'Failed to delete record');
                 return false;
             }
         } catch (err: any) {
-            toastError(err.message || 'Failed to delete record');
+            AlertMessages.getErrorMessage(err.message || 'Failed to delete record');
             return false;
         } finally {
             setIsLoading(false);
@@ -375,3 +377,6 @@ export default function InfoEmailsPage() {
         </RouteGuard>
     );
 }
+
+
+export default InfoEmailsPage;

@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { mastersService, employeeService } from '@/lib/api/services';
-import { CreateSlackUserModel, UpdateSlackUserModel, SlackUserModel } from '@adminvault/shared-models';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { slackUserService, departmentService, employeeService } from '@/lib/api/services';
+import { CreateSlackUserModel, UpdateSlackUserModel, SlackUserModel, CompanyIdRequestModel, IdRequestModel } from '@adminvault/shared-models';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft, User, Search } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface EmployeeOption {
@@ -21,12 +21,20 @@ interface EmployeeOption {
     department: string;
 }
 
-export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }) {
+interface SlackUsersMasterViewProps {
+    onBack?: () => void;
+}
+
+interface DepartmentInfo {
+    id: number;
+    name: string;
+}
+
+export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
-    const { success: toastSuccess, error: toastError } = useToast();
     const [users, setUsers] = useState<SlackUserModel[]>([]);
     const [employees, setEmployees] = useState<EmployeeOption[]>([]);
-    const [departments, setDepartments] = useState<any[]>([]);
+    const [departments, setDepartments] = useState<DepartmentInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -48,29 +56,32 @@ export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
-    const getAllSlackUsers = useCallback(async () => {
+    const getAllSlackUsers = useCallback(async (): Promise<void> => {
         if (!user?.companyId) return;
         setIsLoading(true);
         try {
-            const response = await mastersService.getAllSlackUsers({ id: user.companyId });
+            const req = new CompanyIdRequestModel(user.companyId);
+            const response = await slackUserService.getAllSlackUsers(req);
             if (response.status) {
                 setUsers(response.slackUsers || []);
             } else {
-                toastError(response.message || 'Failed to fetch slack users');
+                AlertMessages.getErrorMessage(response.message || 'Failed to fetch slack users');
             }
         } catch (error: any) {
-            toastError(error.message || 'Failed to fetch slack users');
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch slack users');
         } finally {
+            setIsLoading(true); // Should be false but let's follow the logic or fix it
             setIsLoading(false);
         }
-    }, [toastError, user?.companyId]);
+    }, [user?.companyId]);
 
-    const fetchDependencies = useCallback(async () => {
+    const fetchDependencies = useCallback(async (): Promise<void> => {
         if (!user?.companyId) return;
         try {
+            const req = new CompanyIdRequestModel(user.companyId);
             const [empRes, deptRes] = await Promise.all([
-                employeeService.getAllEmployees(user.companyId),
-                mastersService.getAllDepartments({ id: user.companyId })
+                employeeService.getAllEmployees(req as any),
+                departmentService.getAllDepartments(req as any)
             ]);
 
             if (empRes.status && empRes.employees) {
@@ -98,7 +109,7 @@ export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }
         }
     }, [getAllSlackUsers, fetchDependencies, user?.companyId]);
 
-    const handleEmployeeSelect = (employeeId: string) => {
+    const handleEmployeeSelect = (employeeId: string): void => {
         const emp = employees.find(e => e.id.toString() === employeeId);
         if (emp) {
             setFormData(prev => ({
@@ -111,7 +122,7 @@ export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         if (!user) return;
         setIsLoading(true);
@@ -134,13 +145,13 @@ export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }
                     companyIdToUse
                 );
 
-                const response = await mastersService.updateSlackUser(model);
+                const response = await slackUserService.updateSlackUser(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Slack User Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Slack User Updated Successfully');
                     handleCloseModal();
                     getAllSlackUsers();
                 } else {
-                    toastError(response.message || 'Failed to Update Slack User');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Slack User');
                 }
             } else {
                 const model = new CreateSlackUserModel(
@@ -157,23 +168,23 @@ export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }
                     formData.phone,
                     formData.notes
                 );
-                const response = await mastersService.createSlackUser(model);
+                const response = await slackUserService.createSlackUser(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Slack User Created Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Slack User Created Successfully');
                     handleCloseModal();
                     getAllSlackUsers();
                 } else {
-                    toastError(response.message || 'Failed to Create Slack User');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Slack User');
                 }
             }
         } catch (err: any) {
-            toastError(err.message || 'An error occurred');
+            AlertMessages.getErrorMessage(err.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleEdit = (item: SlackUserModel) => {
+    const handleEdit = (item: SlackUserModel): void => {
         setIsEditMode(true);
         setEditingId(item.id);
         setFormData({
@@ -190,24 +201,25 @@ export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: number) => {
+    const handleDeleteClick = (id: number): void => {
         setDeletingId(id);
         setIsDeleteDialogOpen(true);
     };
 
-    const handleDeleteConfirm = async () => {
+    const handleDeleteConfirm = async (): Promise<void> => {
         if (deletingId) {
             setIsLoading(true);
             try {
-                const response = await mastersService.deleteSlackUser(deletingId);
+                const req = new IdRequestModel(deletingId);
+                const response = await slackUserService.deleteSlackUser(req);
                 if (response.status) {
-                    toastSuccess(response.message || 'Slack User Deleted Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Slack User Deleted Successfully');
                     getAllSlackUsers();
                 } else {
-                    toastError(response.message || 'Failed to Delete Slack User');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Delete Slack User');
                 }
             } catch (err: any) {
-                toastError(err.message || 'An error occurred');
+                AlertMessages.getErrorMessage(err.message || 'An error occurred');
             } finally {
                 setIsLoading(false);
                 setDeletingId(null);
@@ -215,7 +227,7 @@ export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }
         }
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (): void => {
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
@@ -225,7 +237,7 @@ export default function SlackUsersMasterView({ onBack }: { onBack?: () => void }
         });
     };
 
-    const filteredUsers = users.filter(user =>
+    const filteredUsers = users.filter((user: SlackUserModel) =>
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (user.displayName && user.displayName.toLowerCase().includes(searchQuery.toLowerCase()))

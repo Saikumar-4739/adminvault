@@ -44,7 +44,7 @@ const TopBar: React.FC = () => {
 
         // Specific listener for admins to refresh lists
         if (isAdmin) {
-            socket.on('ticketCreated', (ticket) => {
+            socket.on('ticketCreated', (ticket: any) => {
                 // This can be used by pages to refresh, but for TopBar 
                 // we mainly care about the notification badge
             });
@@ -196,4 +196,4 @@ const TopBar: React.FC = () => {
     );
 };
 
-export default TopBar;
+export { TopBar };

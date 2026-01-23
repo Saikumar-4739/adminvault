@@ -1,36 +1,32 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { mastersService, companyService } from '@/lib/api/services';
-import { CreateVendorModel, UpdateVendorModel } from '@adminvault/shared-models';
-import Card, { CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { vendorService, companyService } from '@/lib/api/services';
+import { CreateVendorModel, UpdateVendorModel, Vendor } from '@adminvault/shared-models';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface Vendor {
-    id: number;
-    name: string;
-    description?: string;
-    contactPerson?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    code?: string;
-    isActive: boolean;
-    companyId: number;
+
+interface VendorsMasterViewProps {
+    onBack?: () => void;
 }
 
-export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
+interface CompanyInfo {
+    id: number;
+    companyName: string;
+}
+
+export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
-    const { success: toastSuccess, error: toastError } = useToast();
     const [vendors, setVendors] = useState<Vendor[]>([]);
-    const [companies, setCompanies] = useState<any[]>([]);
+    const [companies, setCompanies] = useState<CompanyInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -48,7 +44,7 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
-    const getAllCompanies = async () => {
+    const getAllCompanies = async (): Promise<void> => {
         try {
             const response = await companyService.getAllCompanies();
             if (response.status) {
@@ -59,22 +55,22 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
         }
     };
 
-    const getAllVendors = useCallback(async () => {
+    const getAllVendors = useCallback(async (): Promise<void> => {
         if (!user?.companyId) return;
         setIsLoading(true);
         try {
-            const response = await mastersService.getAllVendors(user.companyId as any);
+            const response = await vendorService.getAllVendors({ companyId: user.companyId });
             if (response.status) {
                 setVendors(response.vendors as any);
             } else {
-                toastError(response.message || 'Failed to fetch vendors');
+                AlertMessages.getErrorMessage(response.message || 'Failed to fetch vendors');
             }
         } catch (error: any) {
-            toastError(error.message || 'Failed to fetch vendors');
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch vendors');
         } finally {
             setIsLoading(false);
         }
-    }, [toastError, user?.companyId]);
+    }, [user?.companyId]);
 
     useEffect(() => {
         if (user?.companyId) {
@@ -83,7 +79,7 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
         }
     }, [getAllVendors, user?.companyId]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         if (!user) return;
         setIsLoading(true);
@@ -103,13 +99,13 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
                     companyIdToUse
                 );
 
-                const response = await mastersService.updateVendor(model);
+                const response = await vendorService.updateVendor(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Vendor Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Vendor Updated Successfully');
                     handleCloseModal();
                     getAllVendors();
                 } else {
-                    toastError(response.message || 'Failed to Update Vendor');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Vendor');
                 }
             } else {
                 const model = new CreateVendorModel(
@@ -124,23 +120,23 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
                     formData.address,
                     formData.code
                 );
-                const response = await mastersService.createVendor(model);
+                const response = await vendorService.createVendor(model);
                 if (response.status) {
-                    toastSuccess(response.message || 'Vendor Created Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Vendor Created Successfully');
                     handleCloseModal();
                     getAllVendors();
                 } else {
-                    toastError(response.message || 'Failed to Create Vendor');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Vendor');
                 }
             }
         } catch (err: any) {
-            toastError(err.message || 'An error occurred');
+            AlertMessages.getErrorMessage(err.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleEdit = (item: any) => {
+    const handleEdit = (item: Vendor): void => {
         setIsEditMode(true);
         setEditingId(item.id);
         setFormData({
@@ -151,29 +147,29 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
             phone: item.phone || '',
             address: item.address || '',
             code: item.code || '',
-            companyId: item.companyId || ''
+            companyId: item.companyId?.toString() || ''
         });
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: number) => {
+    const handleDeleteClick = (id: number): void => {
         setDeletingId(id);
         setIsDeleteDialogOpen(true);
     };
 
-    const handleDeleteConfirm = async () => {
+    const handleDeleteConfirm = async (): Promise<void> => {
         if (deletingId) {
             setIsLoading(true);
             try {
-                const response = await mastersService.deleteVendor(deletingId);
+                const response = await vendorService.deleteVendor({ id: deletingId });
                 if (response.status) {
-                    toastSuccess(response.message || 'Vendor Deleted Successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Vendor Deleted Successfully');
                     getAllVendors();
                 } else {
-                    toastError(response.message || 'Failed to Delete Vendor');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to Delete Vendor');
                 }
             } catch (err: any) {
-                toastError(err.message || 'An error occurred');
+                AlertMessages.getErrorMessage(err.message || 'An error occurred');
             } finally {
                 setIsLoading(false);
                 setDeletingId(null);
@@ -181,7 +177,7 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
         }
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (): void => {
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
@@ -224,7 +220,7 @@ export default function VendorsMasterView({ onBack }: { onBack?: () => void }) {
                                     {vendors?.length === 0 ? (
                                         <tr><td colSpan={6} className="p-8 text-center text-slate-500">No vendors found</td></tr>
                                     ) : (
-                                        vendors?.map((item: any, index: number) => (
+                                        vendors?.map((item: Vendor, index: number) => (
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">

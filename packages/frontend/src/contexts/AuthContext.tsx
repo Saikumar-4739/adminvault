@@ -66,16 +66,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         return;
                     }
                     navigator.geolocation.getCurrentPosition(resolve, reject, {
-                        enableHighAccuracy: false,
-                        timeout: 3000,
-                        maximumAge: 1000 * 60 * 5 // 5 minutes
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0 // Fetch fresh position
                     });
                 });
                 latitude = position.coords.latitude;
                 longitude = position.coords.longitude;
+                console.log('✅ GPS obtained:', latitude, longitude);
             } catch (geoError) {
-                console.warn('Geolocation failed:', geoError);
-                // Continue with login even if geolocation fails
+                console.warn('⚠️ Geolocation fallback to IP:', geoError);
+                // Continue with login even if geolocation fails - backend will fallback to IP lookup
             }
 
             const loginData = new LoginUserModel(

@@ -5,24 +5,24 @@ import {
     Package, Warehouse, History, Plus, FileUp, Filter,
     Activity, CheckCircle2, AlertCircle, User, AlertTriangle
 } from 'lucide-react';
-import Card, { CardContent } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 
-import ModernTabs from './components/ModernTabs';
-import AllAssetsTab from './components/AllAssetsTab';
+import { ModernTabs } from './components/ModernTabs';
+import { AllAssetsTab } from './components/AllAssetsTab';
 import dynamic from 'next/dynamic';
 
-const AssetQRModal = dynamic(() => import('./components/AssetQRModal'), { ssr: false });
-const AssetTimelineModal = dynamic(() => import('./components/AssetTimelineModal'), { ssr: false });
-const BulkImportModal = dynamic(() => import('./components/BulkImportModal'), { ssr: false });
-const AdvancedFilterModal = dynamic(() => import('./components/AdvancedFilterModal'), { ssr: false });
-const AssetFormModal = dynamic(() => import('./components/AssetFormModal'), { ssr: false });
-const AssignAssetModal = dynamic(() => import('./components/AssignAssetModal'), { ssr: false });
+const AssetQRModal = dynamic(() => import('./components/AssetQRModal').then(mod => mod.AssetQRModal), { ssr: false });
+const AssetTimelineModal = dynamic(() => import('./components/AssetTimelineModal').then(mod => mod.AssetTimelineModal), { ssr: false });
+const BulkImportModal = dynamic(() => import('./components/BulkImportModal').then(mod => mod.BulkImportModal), { ssr: false });
+const AdvancedFilterModal = dynamic(() => import('./components/AdvancedFilterModal').then(mod => mod.AdvancedFilterModal), { ssr: false });
+const AssetFormModal = dynamic(() => import('./components/AssetFormModal').then(mod => mod.AssetFormModal), { ssr: false });
+const AssignAssetModal = dynamic(() => import('./components/AssignAssetModal').then(mod => mod.AssignAssetModal), { ssr: false });
 
-import PageHeader from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { assetService } from '@/lib/api/services';
-import { useToast } from '@/contexts/ToastContext';
-import { AssetSearchRequestModel } from '@adminvault/shared-models';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { AssetSearchRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 
 interface Asset {
     id: number;
@@ -55,9 +55,8 @@ interface AssetStatistics {
     retired: number;
 }
 
-export default function AssetsPage() {
+const AssetsPage: React.FC = () => {
     const { user } = useAuth();
-    const { success, error: toastError } = useToast();
     const companyId = Number(user?.companyId || 1);
     const [activeTab, setActiveTab] = useState('store');
 
@@ -78,7 +77,8 @@ export default function AssetsPage() {
         if (!companyId) return;
         setIsLoading(true);
         try {
-            const response = await assetService.getAssetsWithAssignments(companyId);
+            const req = new CompanyIdRequestModel(companyId);
+            const response = await assetService.getAssetsWithAssignments(req);
             if (response.status) {
                 const data = (response as any).assets || [];
                 const mappedAssets: Asset[] = data.map((item: any) => ({
@@ -105,10 +105,10 @@ export default function AssetsPage() {
                 }));
                 setAssets(mappedAssets);
             } else {
-                setFetchError(response.message || 'Failed to fetch assets');
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (err: any) {
-            setFetchError(err.message || 'An error occurred while fetching assets');
+            AlertMessages.getErrorMessage(err.message || 'An error occurred while fetching assets');
         } finally {
             setIsLoading(false);
         }
@@ -117,12 +117,13 @@ export default function AssetsPage() {
     const fetchStatistics = React.useCallback(async () => {
         if (!companyId) return;
         try {
-            const response = await assetService.getAssetStatistics(companyId);
+            const req = new CompanyIdRequestModel(companyId);
+            const response = await assetService.getAssetStatistics(req);
             if (response.status) {
                 setStatistics(response.statistics);
             }
         } catch (err: any) {
-            console.error('Failed to fetch statistics:', err);
+            AlertMessages.getErrorMessage(err.message || 'Failed to fetch statistics');
         }
     }, [companyId]);
 
@@ -137,10 +138,10 @@ export default function AssetsPage() {
 
     React.useEffect(() => {
         if (fetchError) {
-            toastError('Error', fetchError);
+            AlertMessages.getErrorMessage(fetchError);
             setFetchError(null);
         }
-    }, [fetchError, toastError]);
+    }, [fetchError]);
 
     const searchAssets = React.useCallback(async (filters: any) => {
         if (!companyId) return;
@@ -182,9 +183,11 @@ export default function AssetsPage() {
                     previousUser: item.previousUser
                 }));
                 setAssets(mappedAssets);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (err: any) {
-            setFetchError(err.message || 'Failed to search assets');
+            AlertMessages.getErrorMessage(err.message || 'Failed to search assets');
         } finally {
             setIsLoading(false);
         }
@@ -217,11 +220,13 @@ export default function AssetsPage() {
             try {
                 const response = await assetService.deleteAsset({ id: asset.id });
                 if (response.status) {
-                    success('Success', 'Asset deleted successfully');
+                    AlertMessages.getSuccessMessage('Asset deleted successfully');
                     refresh();
+                } else {
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } catch (err: any) {
-                toastError('Error', err.message || 'Failed to delete asset');
+                AlertMessages.getErrorMessage(err.message || 'Failed to delete asset');
             }
         }
     };
@@ -420,3 +425,6 @@ export default function AssetsPage() {
         </div>
     );
 }
+
+
+export default AssetsPage;

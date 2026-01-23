@@ -3,17 +3,18 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { documentsService } from '@/lib/api/services';
 import { DocumentModel, UploadDocumentModel } from '@adminvault/shared-models';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { FileText, Upload, Download, Trash2, Search, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Plus, File as FileIcon } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/ToastContext';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { GetAllDocumentsRequestModel } from '@adminvault/shared-models';
+import { PageLoader } from '@/components/ui/Spinner';
 
-export default function DocumentsPage() {
+const DocumentsPage: React.FC = () => {
     const { user } = useAuth();
-    const { success, error: toastError } = useToast();
     const [documents, setDocuments] = useState<DocumentModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -28,12 +29,15 @@ export default function DocumentsPage() {
         if (!user) return;
         try {
             setIsLoading(true);
-            const response = await documentsService.getAllDocuments(user.companyId);
+            const req: GetAllDocumentsRequestModel = { companyId: user.companyId };
+            const response = await documentsService.getAllDocuments(req);
             if (response.status) {
                 setDocuments(response.documents || []);
+            } else {
+                AlertMessages.getErrorMessage(response.message || 'Failed to fetch documents');
             }
-        } catch (error) {
-            console.error('Failed to fetch documents:', error);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch documents');
         } finally {
             setIsLoading(false);
         }
@@ -57,9 +61,6 @@ export default function DocumentsPage() {
 
         try {
             const uploadModel: UploadDocumentModel = {
-                originalName: selectedFile.name,
-                fileSize: selectedFile.size,
-                mimeType: selectedFile.type,
                 category: category || 'General',
                 description: description || undefined,
                 tags: tags || undefined,
@@ -69,20 +70,22 @@ export default function DocumentsPage() {
 
             const response = await documentsService.uploadDocument(selectedFile, uploadModel);
             if (response.status) {
-                success('Document integrated into vault successfully');
+                AlertMessages.getSuccessMessage('Document integrated into vault successfully');
                 setSelectedFile(null);
                 setCategory('');
                 setDescription('');
                 setTags('');
                 setIsUploadModalOpen(false);
                 fetchDocuments();
+            } else {
+                AlertMessages.getErrorMessage(response.message || 'Failed to synchronize document with vault');
             }
-        } catch (error) {
-            toastError('Failed to synchronize document with vault');
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to synchronize document with vault');
         } finally {
             setIsLoading(false);
         }
-    }, [selectedFile, category, description, tags, fetchDocuments, user, success, toastError]);
+    }, [selectedFile, category, description, tags, fetchDocuments, user]);
 
     const formatFileSize = useCallback((bytes: number) => {
         if (bytes === 0) return '0 Bytes';
@@ -108,13 +111,18 @@ export default function DocumentsPage() {
     const handleDelete = useCallback(async (id: number) => {
         if (confirm('Are you sure you want to delete this document?')) {
             try {
-                await documentsService.deleteDocument({ id, userId: 1 });
-                fetchDocuments();
-            } catch (error) {
-                console.error('Failed to delete document:', error);
+                const response = await documentsService.deleteDocument({ id, userId: user?.id || 1 });
+                if (response.status) {
+                    AlertMessages.getSuccessMessage('Document removed from vault');
+                    fetchDocuments();
+                } else {
+                    AlertMessages.getErrorMessage(response.message || 'Failed to delete document');
+                }
+            } catch (error: any) {
+                AlertMessages.getErrorMessage(error.message || 'Failed to delete document');
             }
         }
-    }, [fetchDocuments]);
+    }, [fetchDocuments, user]);
 
     const handleDownload = useCallback((id: number) => {
         const url = documentsService.getDownloadUrl(id);
@@ -217,7 +225,7 @@ export default function DocumentsPage() {
 
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                        <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                        <PageLoader />
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">Synchronizing Secure Vault...</p>
                     </div>
                 ) : filteredDocuments.length === 0 ? (
@@ -400,3 +408,6 @@ export default function DocumentsPage() {
 };
 
 
+
+
+export default DocumentsPage;

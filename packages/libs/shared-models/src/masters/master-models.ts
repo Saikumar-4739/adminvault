@@ -31,6 +31,8 @@ export interface AssetType extends MasterBase {
 
 export interface DeviceBrand extends MasterBase {
     website?: string;
+    code?: string;
+    rating?: any;
 }
 
 export interface Vendor extends MasterBase {
@@ -38,6 +40,7 @@ export interface Vendor extends MasterBase {
     email?: string;
     phone?: string;
     address?: string;
+    code?: string;
 }
 
 export interface Location extends MasterBase {

@@ -18,7 +18,9 @@ interface ModernTabsProps {
     children?: ReactNode;
 }
 
-export default function ModernTabs({ tabs, activeTab, onTabChange, children }: ModernTabsProps) {
+
+
+export const ModernTabs: React.FC<ModernTabsProps> = ({ tabs, activeTab, onTabChange, children }: ModernTabsProps) => {
     return (
         <div className="relative">
             {/* Tab Navigation */}

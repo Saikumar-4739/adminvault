@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { FileText, Users, Package, Ticket, TrendingUp, BarChart3, FileSpreadsheet, CheckCircle2, Clock, AlertCircle, ArrowLeft, FileDown, Search, Zap } from 'lucide-react';
 import { reportsService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
-import PageHeader from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 interface ReportItem {
     name: string;
@@ -29,7 +29,7 @@ interface ReportCategory {
     reports: ReportItem[];
 }
 
-export default function ReportsPage() {
+const ReportsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState('assets');
     const [selectedReport, setSelectedReport] = useState<string | null>(null);
     const [reportData, setReportData] = useState<any>(null);
@@ -431,3 +431,6 @@ export default function ReportsPage() {
         </RouteGuard>
     );
 }
+
+
+export default ReportsPage;

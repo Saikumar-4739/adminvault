@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ticketService } from '@/lib/api/services';
-import { useToast } from '@/contexts/ToastContext';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '@adminvault/shared-models';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, CreateTicketModel } from '@adminvault/shared-models';
 import { Building2, CheckCircle, Ticket, Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, AlertTriangle, Send, MessageSquare, List, Plus, Clock, ChevronRight, Hash, Layers, Zap } from 'lucide-react';
 import { getSocket } from '@/lib/socket';
 
@@ -52,10 +52,9 @@ interface TicketData {
     createdAt?: string;
 }
 
-export default function CreateTicketPage() {
+const CreateTicketPage: React.FC = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { success, error: toastError } = useToast();
 
     const [tickets, setTickets] = useState<TicketData[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -81,12 +80,13 @@ export default function CreateTicketPage() {
         try {
             const response = await ticketService.getMyTickets();
             if (response.status) {
-                // Support both standard 'data' and explicit 'tickets' fields for robustness
                 const ticketData = (response as any).tickets || response.data || [];
                 setTickets(ticketData);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (error: any) {
-            console.error('Failed to fetch tickets:', error);
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch tickets');
         } finally {
             setIsLoading(false);
         }
@@ -114,16 +114,18 @@ export default function CreateTicketPage() {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const response = await ticketService.createTicket({
-                subject: formData.subject,
-                categoryEnum: formData.categoryEnum,
-                priorityEnum: formData.priorityEnum,
-                ticketStatus: TicketStatusEnum.OPEN,
-            } as any);
+            const req = new CreateTicketModel(
+                '', // ticketCode - backend will generate
+                formData.categoryEnum,
+                formData.priorityEnum,
+                formData.subject,
+                TicketStatusEnum.OPEN
+            );
+            const response = await ticketService.createTicket(req);
 
             if (response.status) {
                 setIsSuccess(true);
-                success(response.message || 'Ticket created successfully');
+                AlertMessages.getSuccessMessage(response.message || 'Ticket created successfully');
                 setFormData({
                     subject: '',
                     categoryEnum: TicketCategoryEnum.OTHER,
@@ -139,10 +141,10 @@ export default function CreateTicketPage() {
                     router.push('/create-ticket?tab=tickets');
                 }, 1500);
             } else {
-                toastError(response.message || 'Failed to create ticket');
+                AlertMessages.getErrorMessage(response.message || 'Failed to create ticket');
             }
         } catch (error: any) {
-            toastError(error.message || 'An error occurred');
+            AlertMessages.getErrorMessage(error.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }
@@ -489,3 +491,6 @@ export default function CreateTicketPage() {
         </div>
     );
 }
+
+
+export default CreateTicketPage;

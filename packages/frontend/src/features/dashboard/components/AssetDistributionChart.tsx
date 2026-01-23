@@ -20,7 +20,11 @@ const CHART_COLORS = [
     COLORS.cyan, COLORS.fuchsia, COLORS.orange, COLORS.blue
 ];
 
-export default function AssetDistributionChart({ data }: { data: any[] }) {
+interface AssetDistributionChartProps {
+     data: any[] 
+}
+
+export const AssetDistributionChart: React.FC<AssetDistributionChartProps> = ({ data  }) => {
     // If data is empty or invalid, show empty state or return null
     if (!data || data.length === 0) return <div className="h-full w-full flex items-center justify-center text-xs text-slate-400">No data</div>;
 

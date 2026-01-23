@@ -1,8 +1,8 @@
 'use client';
 
 import { Calendar, AlertTriangle, ArrowRight, CheckCircle } from 'lucide-react';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { DashboardStats } from '@adminvault/shared-models';
 import Link from 'next/link';
 
@@ -10,7 +10,11 @@ interface RenewalsWidgetProps {
     stats: DashboardStats | null;
 }
 
-export default function RenewalsWidget({ stats }: RenewalsWidgetProps) {
+interface RenewalsWidgetProps {
+    children?: React.ReactNode;
+}
+
+export const RenewalsWidget: React.FC<RenewalsWidgetProps> = ({ stats }: RenewalsWidgetProps) => {
     const renewals = stats?.licenses.expiringSoon || [];
 
     const calculateDaysRemaining = (expiryDate: Date | string) => {

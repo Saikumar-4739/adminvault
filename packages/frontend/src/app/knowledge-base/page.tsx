@@ -4,19 +4,18 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { kbService } from '@/lib/api/services';
 import { PageLoader } from '@/components/ui/Spinner';
-import PageHeader from '@/components/ui/PageHeader';
-import Button from '@/components/ui/Button';
-import Card, { CardContent } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Book, Search, Plus, Tag, BookOpen, ChevronRight, FileText, Globe, Lock } from 'lucide-react';
-import { KnowledgeCategoryEnum, CreateArticleModel, SearchArticleModel } from '@adminvault/shared-models';
+import { KnowledgeCategoryEnum, CreateArticleRequestModel, SearchArticleRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
-import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
-import { useToast } from '@/contexts/ToastContext';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 
-export default function KnowledgeBasePage() {
+const KnowledgeBasePage: React.FC = () => {
     const { user } = useAuth();
-    const { success, error: toastError } = useToast();
 
     const [articles, setArticles] = useState<any[]>([]);
     const [stats, setStats] = useState<any>(null);
@@ -43,25 +42,41 @@ export default function KnowledgeBasePage() {
 
     const fetchStats = async () => {
         try {
-            const res = await kbService.getStats(user!.companyId);
-            setStats(res);
-        } catch (err) {
-            console.error(err);
+            const req = new CompanyIdRequestModel(user!.companyId);
+            const res: any = await kbService.getStats(req);
+            if (res && res.byCategory) {
+                setStats(res);
+            } else if (res && res.data && res.data.byCategory) {
+                setStats(res.data);
+            } else if (res && res.stats && res.stats.byCategory) {
+                setStats(res.stats);
+            } else {
+                setStats(null);
+            }
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to fetch statistics');
         }
     };
 
     const searchArticles = async () => {
         setIsLoading(true);
         try {
-            const req = new SearchArticleModel(
-                user!.companyId,
-                searchQuery,
-                selectedCategory ? selectedCategory as KnowledgeCategoryEnum : undefined
-            );
-            const res = await kbService.searchArticles(req);
-            setArticles(res || []);
-        } catch (err) {
-            console.error(err);
+            const req = new SearchArticleRequestModel();
+            req.companyId = user!.companyId;
+            req.query = searchQuery;
+            req.category = selectedCategory ? selectedCategory as KnowledgeCategoryEnum : undefined;
+            const res: any = await kbService.searchArticles(req);
+            if (Array.isArray(res)) {
+                setArticles(res);
+            } else if (res && Array.isArray(res.data)) {
+                setArticles(res.data);
+            } else if (res && Array.isArray(res.articles)) {
+                setArticles(res.articles);
+            } else {
+                setArticles([]);
+            }
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to search articles');
         } finally {
             setIsLoading(false);
         }
@@ -71,26 +86,27 @@ export default function KnowledgeBasePage() {
         e.preventDefault();
         try {
             const tagsArray = newArticle.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t);
-            const req = new CreateArticleModel(
-                newArticle.title,
-                newArticle.content,
-                newArticle.category,
-                tagsArray,
-                newArticle.isPublished
-            );
+            const req = new CreateArticleRequestModel();
+            req.title = newArticle.title;
+            req.content = newArticle.content;
+            req.category = newArticle.category;
+            req.tags = tagsArray;
+            req.isPublished = newArticle.isPublished;
+            req.authorId = user!.id;
+            req.companyId = user!.companyId;
 
             const res = await kbService.createArticle(req);
             if (res.status) {
-                success('Article created successfully');
+                AlertMessages.getSuccessMessage('Article created successfully');
                 setIsCreateOpen(false);
                 setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true });
                 searchArticles();
                 fetchStats();
             } else {
-                toastError(res.message);
+                AlertMessages.getErrorMessage(res.message);
             }
         } catch (err: any) {
-            toastError(err.message || 'Failed to create article');
+            AlertMessages.getErrorMessage(err.message || 'Failed to create article');
         }
     };
 
@@ -307,3 +323,6 @@ export default function KnowledgeBasePage() {
         </div>
     );
 }
+
+
+export default KnowledgeBasePage;

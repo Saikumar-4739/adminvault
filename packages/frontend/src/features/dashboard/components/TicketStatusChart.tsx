@@ -7,7 +7,11 @@ const COLORS = {
     cyan: '#06B6D4',
 };
 
-export default function TicketStatusChart({ data }: { data: any[] }) {
+interface TicketStatusChartProps {
+     data: any[] 
+}
+
+export const TicketStatusChart: React.FC<TicketStatusChartProps> = ({ data  }) => {
     if (!data || data.length === 0) return <div className="h-full w-full flex items-center justify-center text-xs text-slate-400">No data</div>;
 
     return (

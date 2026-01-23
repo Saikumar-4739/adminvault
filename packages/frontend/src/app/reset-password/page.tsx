@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
 import { Lock, Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react';
 import { authService } from '@/lib/api/services';
@@ -145,10 +145,13 @@ function ResetPasswordContent() {
     );
 }
 
-export default function ResetPasswordPage() {
+const ResetPasswordPage: React.FC = () => {
     return (
         <Suspense fallback={<div className="min-h-screen bg-[#020617]"></div>}>
             <ResetPasswordContent />
         </Suspense>
     );
 }
+
+
+export default ResetPasswordPage;

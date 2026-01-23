@@ -15,7 +15,7 @@ interface Message {
     entity?: string;
 }
 
-export default function AiAssistant() {
+export const AiAssistant: React.FC = () => {
     const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const firstName = user?.fullName?.split(' ')[0] || 'there';

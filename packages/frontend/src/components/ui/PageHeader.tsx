@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Button from './Button';
+import { Button } from './Button';
 
 interface Action {
     label: string;
@@ -19,14 +19,18 @@ interface PageHeaderProps {
     children?: React.ReactNode;
 }
 
-export default function PageHeader({
+interface PageHeaderProps {
+    children?: React.ReactNode;
+}
+
+export const PageHeader: React.FC<PageHeaderProps> = ({
     title,
     description,
     icon: Icon,
     gradient = 'from-indigo-500 to-purple-600',
     actions = [],
     children
-}: PageHeaderProps) {
+}: PageHeaderProps) => {
     // Process actions if it's passed as a React node instead of an array (common for custom layouts)
     const customActions = React.isValidElement(actions) ? actions : null;
     const structuredActions = Array.isArray(actions) ? actions : [];

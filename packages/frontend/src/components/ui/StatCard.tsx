@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import Card from './Card';
+import { Card } from './Card';
 import { LucideIcon } from 'lucide-react';
 // import { cn } from '@/lib/utils';
 
@@ -21,7 +21,9 @@ interface StatCardProps {
     isLoading?: boolean;
 }
 
-export default function StatCard({
+
+
+export const StatCard: React.FC<StatCardProps> = ({
     title,
     value,
     icon: Icon,
@@ -33,7 +35,7 @@ export default function StatCard({
     subText,
     className = '',
     isLoading = false
-}: StatCardProps) {
+}: StatCardProps) => {
 
     // Base classes matching Dashboard's look
     const cardClasses = `relative overflow-hidden border-none shadow-lg shadow-slate-200/50 dark:shadow-none transition-all duration-300 ${onClick ? 'cursor-pointer hover:-translate-y-1' : ''} ${className} ${isActive ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-900' : ''}`;

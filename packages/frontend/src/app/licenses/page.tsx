@@ -3,16 +3,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { companyService, employeeService, mastersService, licensesService } from '@/lib/api/services';
 import { UserRoleEnum, CreateLicenseModel, DeleteLicenseModel } from '@adminvault/shared-models';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Plus, Search, Key, Trash2, Calendar, Shield, Pencil } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import AddLicenseModal from './AddLicenseModal';
-import { useToast } from '@/contexts/ToastContext';
+import { AddLicenseModal } from './AddLicenseModal';
+
 import { PageLoader } from '@/components/ui/Spinner';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDate } from '@/lib/utils';
-import Card, { CardContent } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { CompanyIdRequestModel } from '@adminvault/shared-models';
 
 interface License {
     id: number;
@@ -40,12 +42,6 @@ interface License {
     createdAt: string;
 }
 
-interface LicenseStats {
-    totalLicenses: number;
-    usedLicenses: number;
-    totalCost: number;
-    expiringSoon: number;
-}
 
 interface Company {
     id: number;
@@ -63,8 +59,7 @@ interface Application {
     name: string;
 }
 
-export default function LicensesPage() {
-    const { success, error: toastError } = useToast();
+const LicensesPage: React.FC = () => {
     const { user } = useAuth();
     const [companies, setCompanies] = useState<Company[]>([]);
     const [licenses, setLicenses] = useState<License[]>([]);
@@ -73,14 +68,7 @@ export default function LicensesPage() {
     const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [stats, setStats] = useState<LicenseStats>({
-        totalLicenses: 0,
-        usedLicenses: 0,
-        totalCost: 0,
-        expiringSoon: 0
-    });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -103,32 +91,17 @@ export default function LicensesPage() {
         if (!selectedCompanyId) return;
         setIsLoading(true);
         try {
-            const response: any = await licensesService.findAll(Number(selectedCompanyId));
+            const req = new CompanyIdRequestModel(Number(selectedCompanyId));
+            const response: any = await licensesService.getAllLicenses(req);
             if (response.status) {
                 const data = response.data || [];
                 setLicenses(data);
 
-                // Calculate stats locally
-                const today = new Date();
-                const thirtyDaysLater = new Date();
-                thirtyDaysLater.setDate(today.getDate() + 30);
-
-                const usedCount = data.filter((l: any) => l.assignedEmployeeId).length;
-                const expiringCount = data.filter((l: any) => {
-                    if (!l.expiryDate) return false;
-                    const exp = new Date(l.expiryDate);
-                    return exp > today && exp <= thirtyDaysLater;
-                }).length;
-
-                setStats({
-                    totalLicenses: data.length,
-                    usedLicenses: usedCount,
-                    totalCost: 0,
-                    expiringSoon: expiringCount
-                });
+            } else {
+                AlertMessages.getErrorMessage(response.message || 'Failed to fetch licenses');
             }
-        } catch (error) {
-            console.error('Failed to fetch licenses:', error);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch licenses');
         } finally {
             setIsLoading(false);
         }
@@ -137,12 +110,13 @@ export default function LicensesPage() {
     const fetchEmployees = useCallback(async () => {
         if (!user?.companyId) return;
         try {
-            const response = await employeeService.getAllEmployees(user.companyId);
+            const req = new CompanyIdRequestModel(user.companyId);
+            const response = await employeeService.getAllEmployees(req as any);
             if (response.status) {
                 setAllEmployees(response.employees || []);
             }
-        } catch (error) {
-            console.error('Failed to fetch employees:', error);
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to fetch employees');
         }
     }, [user?.companyId]);
 
@@ -193,16 +167,16 @@ export default function LicensesPage() {
             try {
                 // Use correct service method 'remove' and pass DeleteLicenseModel
                 const model = new DeleteLicenseModel(deletingId);
-                const response: any = await licensesService.remove(model);
+                const response: any = await licensesService.deleteLicense(model);
 
                 if (response.status) {
-                    success('Success', 'License deleted successfully');
+                    AlertMessages.getSuccessMessage('License deleted successfully');
                     fetchLicenses();
                 } else {
-                    toastError('Error', response.message || 'Failed to delete license');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to delete license');
                 }
             } catch (err: any) {
-                toastError('Error', err.message || 'An error occurred');
+                AlertMessages.getErrorMessage(err.message || 'An error occurred');
             } finally {
                 setIsLoading(false);
                 setIsDeleteDialogOpen(false);
@@ -249,7 +223,6 @@ export default function LicensesPage() {
                         <Button
                             variant="primary"
                             onClick={() => {
-                                setSelectedLicense(null);
                                 setIsModalOpen(true);
                             }}
                             leftIcon={<Plus className="h-3.5 w-3.5" />}
@@ -352,7 +325,6 @@ export default function LicensesPage() {
                                                         <div className="flex items-center justify-end gap-2">
                                                             <button
                                                                 onClick={() => {
-                                                                    setSelectedLicense(license);
                                                                     setIsModalOpen(true);
                                                                 }}
                                                                 className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-400 hover:text-blue-600 transition-colors"
@@ -396,17 +368,17 @@ export default function LicensesPage() {
                                 data.remarks || undefined
                             );
 
-                            const response: any = await licensesService.create(model);
+                            const response: any = await licensesService.createLicense(model);
                             if (response.status) {
-                                success('Success', 'License created successfully');
+                                AlertMessages.getSuccessMessage('License created successfully');
                                 fetchLicenses();
                                 return true;
                             } else {
-                                toastError('Error', response.message || 'Failed to create license');
+                                AlertMessages.getErrorMessage(response.message || 'Failed to create license');
                                 return false;
                             }
                         } catch (err: any) {
-                            toastError('Error', err.message || 'An error occurred');
+                            AlertMessages.getErrorMessage(err.message || 'An error occurred');
                             return false;
                         }
                     }}
@@ -425,3 +397,6 @@ export default function LicensesPage() {
         </RouteGuard>
     );
 }
+
+
+export default LicensesPage;

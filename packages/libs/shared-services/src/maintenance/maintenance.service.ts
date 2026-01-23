@@ -1,9 +1,5 @@
 import { CommonAxiosService } from '../common-axios-service';
-import {
-    CreateMaintenanceRequestModel,
-    GetMaintenanceSchedulesResponseModel,
-    GlobalResponse
-} from '@adminvault/shared-models';
+import { CreateMaintenanceRequestModel, GetMaintenanceSchedulesRequestModel, GetMaintenanceSchedulesResponseModel, GlobalResponse, UpdateMaintenanceStatusRequestModel } from '@adminvault/shared-models';
 import { AxiosRequestConfig } from 'axios';
 
 export class MaintenanceService extends CommonAxiosService {
@@ -15,12 +11,11 @@ export class MaintenanceService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURL('createSchedule'), model, config);
     }
 
-    async getSchedules(assetId?: number, config?: AxiosRequestConfig): Promise<GetMaintenanceSchedulesResponseModel> {
-        // Backend seems to use POST based on logs in Step 148 for getSchedules
-        return await this.axiosPostCall(this.getURL('getSchedules'), { assetId }, config);
+    async getSchedules(reqObj: GetMaintenanceSchedulesRequestModel, config?: AxiosRequestConfig): Promise<GetMaintenanceSchedulesResponseModel> {
+        return await this.axiosPostCall(this.getURL('getSchedules'), reqObj, config);
     }
 
-    async updateStatus(id: number, status: string, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURL('updateStatus'), { id, status }, config);
+    async updateStatus(reqObj: UpdateMaintenanceStatusRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURL('updateStatus'), reqObj, config);
     }
 }

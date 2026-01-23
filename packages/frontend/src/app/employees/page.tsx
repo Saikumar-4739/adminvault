@@ -2,18 +2,19 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { employeeService, companyService, mastersService } from '@/lib/api/services';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import {
     Plus, Users, Edit, Trash2, Mail, Phone,
     LayoutGrid, List, Search, Building2, Upload
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-const EmployeeBulkImportModal = dynamic(() => import('./components/EmployeeBulkImportModal'), { ssr: false });
+const EmployeeBulkImportModal = dynamic(() => import('./components/EmployeeBulkImportModal').then(mod => mod.EmployeeBulkImportModal), { ssr: false });
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum } from '@adminvault/shared-models';
-import { useToast } from '@/contexts/ToastContext';
+import { UserRoleEnum, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Employee {
     id: number;
@@ -41,32 +42,24 @@ interface Department {
     isActive: boolean;
 }
 
-export default function EmployeesPage() {
-    const { success, error: toastError } = useToast();
+const EmployeesPage: React.FC = () => {
+    const { user } = useAuth();
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [companies, setCompanies] = useState<Company[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    const getCompanyId = (): number => {
-        const storedUser = localStorage.getItem('auth_user');
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        return user?.companyId || 1;
-    };
-
-
-    const getDefaultCompanyId = (): string => {
-        return String(getCompanyId());
-    };
 
     const [selectedOrg, setSelectedOrg] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
 
     const fetchEmployees = useCallback(async () => {
+        if (!selectedOrg) return;
         setIsLoading(true);
         try {
-            const response = await employeeService.getAllEmployees(selectedOrg ? Number(selectedOrg) : undefined as any);
+            const req = new CompanyIdRequestModel(Number(selectedOrg));
+            const response = await employeeService.getAllEmployees(req);
             if (response.status) {
                 const data = (response as any).employees || response.data || [];
                 const mappedEmployees: Employee[] = data.map((item: any) => ({
@@ -84,13 +77,15 @@ export default function EmployeesPage() {
                     createdAt: item.createdAt || new Date().toISOString()
                 }));
                 setEmployees(mappedEmployees);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (err: any) {
-            toastError('Error', err.message || 'Failed to fetch employees');
+            AlertMessages.getErrorMessage(err.message || 'Failed to fetch employees');
         } finally {
             setIsLoading(false);
         }
-    }, [selectedOrg, toastError]);
+    }, [selectedOrg]);
 
     const fetchCompanies = useCallback(async () => {
         try {
@@ -104,8 +99,10 @@ export default function EmployeesPage() {
     }, []);
 
     const fetchDepartments = useCallback(async () => {
+        if (!user?.companyId) return;
         try {
-            const response = await mastersService.getAllDepartments(getCompanyId() as any);
+            const req = new CompanyIdRequestModel(user.companyId);
+            const response = await mastersService.getAllDepartments(req);
             if (response.status) {
                 setDepartments(response.departments || []);
             }
@@ -132,11 +129,10 @@ export default function EmployeesPage() {
     });
 
     useEffect(() => {
-        const defaultCompany = getDefaultCompanyId();
-        if (defaultCompany && !selectedOrg) {
-            setSelectedOrg(defaultCompany);
+        if (user?.companyId && !selectedOrg) {
+            setSelectedOrg(String(user.companyId));
         }
-    }, [selectedOrg]);
+    }, [user?.companyId, selectedOrg]);
 
     useEffect(() => {
         fetchEmployees();
@@ -151,11 +147,11 @@ export default function EmployeesPage() {
         e.preventDefault();
         const companyId = Number(formData.companyId || selectedOrg);
         if (!companyId) {
-            toastError('Validation Error', 'Please select a company');
+            AlertMessages.getErrorMessage('Please select a company');
             return;
         }
         if (!formData.departmentId) {
-            toastError('Validation Error', 'Please select a department');
+            AlertMessages.getErrorMessage('Please select a department');
             return;
         }
 
@@ -176,24 +172,24 @@ export default function EmployeesPage() {
             if (editingEmployee) {
                 const response = await employeeService.updateEmployee({ id: editingEmployee.id, ...payload } as any);
                 if (response.status) {
-                    success('Success', response.message || 'Employee updated successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Employee updated successfully');
                     handleCloseModal();
                     fetchEmployees();
                 } else {
-                    toastError('Error', response.message || 'Failed to update employee');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to update employee');
                 }
             } else {
                 const response = await employeeService.createEmployee(payload as any);
                 if (response.status) {
-                    success('Success', response.message || 'Employee created successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Employee created successfully');
                     handleCloseModal();
                     fetchEmployees();
                 } else {
-                    toastError('Error', response.message || 'Failed to create employee');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to create employee');
                 }
             }
         } catch (err: any) {
-            toastError('Error', err.message || 'An error occurred');
+            AlertMessages.getErrorMessage(err.message || 'An error occurred');
         } finally {
             setIsLoading(false);
         }
@@ -221,13 +217,13 @@ export default function EmployeesPage() {
             try {
                 const response = await employeeService.deleteEmployee({ id: employee.id });
                 if (response.status) {
-                    success('Success', response.message || 'Employee deleted successfully');
+                    AlertMessages.getSuccessMessage(response.message || 'Employee deleted successfully');
                     fetchEmployees();
                 } else {
-                    toastError('Error', response.message || 'Failed to delete employee');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to delete employee');
                 }
             } catch (err: any) {
-                toastError('Error', err.message || 'Failed to delete employee');
+                AlertMessages.getErrorMessage(err.message || 'Failed to delete employee');
             } finally {
                 setIsLoading(false);
             }
@@ -620,3 +616,6 @@ export default function EmployeesPage() {
 };
 
 
+
+
+export default EmployeesPage;
