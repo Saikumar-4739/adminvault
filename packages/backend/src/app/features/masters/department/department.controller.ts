@@ -1,57 +1,69 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { DepartmentService } from './department.service';
-import { CreateDepartmentModel, UpdateDepartmentModel, GetAllDepartmentsResponseModel, CreateDepartmentResponseModel, UpdateDepartmentResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateDepartmentModel, UpdateDepartmentModel, GetAllDepartmentsResponseModel, CreateDepartmentResponseModel, DepartmentDropdownResponse, UpdateDepartmentResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
 
 @ApiTags('Departments Master')
-@Controller('masters')
+@Controller('department')
 @UseGuards(JwtAuthGuard)
 export class DepartmentController {
-    constructor(private departmentService: DepartmentService) { }
+    constructor(private service: DepartmentService) { }
 
-    @Post('getAllDepartments')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllDepartments(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllDepartmentsResponseModel> {
-        try {
-            return await this.departmentService.getAllDepartments();
-        } catch (error) {
-            return returnException(GetAllDepartmentsResponseModel, error);
-        }
-    }
-
-    @Post('departments')
+    @Post('createDepartment')
     @ApiBody({ type: CreateDepartmentModel })
-    async createDepartment(@Body() data: CreateDepartmentModel, @Req() req: any): Promise<CreateDepartmentResponseModel> {
+    async createDepartment(@Body() reqModel: CreateDepartmentModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.departmentService.createDepartment(data, userId, ipAddress);
+            return await this.service.createDepartment(reqModel);
         } catch (error) {
-            return returnException(CreateDepartmentResponseModel, error);
+            return returnException(GlobalResponse, error);
         }
     }
 
     @Post('updateDepartment')
     @ApiBody({ type: UpdateDepartmentModel })
-    async updateDepartment(@Body() data: UpdateDepartmentModel, @Req() req: any): Promise<UpdateDepartmentResponseModel> {
+    async updateDepartment(@Body() reqModel: UpdateDepartmentModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.departmentService.updateDepartment(data, userId, ipAddress);
+            return await this.service.updateDepartment(reqModel);
         } catch (error) {
-            return returnException(UpdateDepartmentResponseModel, error);
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('getDepartment')
+    @ApiBody({ type: IdRequestModel })
+    async getDepartment(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.getDepartment(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('getAllDepartments')
+    async getAllDepartments(): Promise<GlobalResponse> {
+        try {
+            return await this.service.getAllDepartments();
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('getAllDepartmentsDropdown')
+    async getAllDepartmentsDropdown(): Promise<DepartmentDropdownResponse> {
+        try {
+            return await this.service.getAllDepartmentsDropdown();
+        } catch (error) {
+            return returnException(DepartmentDropdownResponse, error);
         }
     }
 
     @Post('deleteDepartment')
     @ApiBody({ type: IdRequestModel })
-    async deleteDepartment(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
+    async deleteDepartment(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.departmentService.deleteDepartment(reqModel, userId, ipAddress);
+            return await this.service.deleteDepartment(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

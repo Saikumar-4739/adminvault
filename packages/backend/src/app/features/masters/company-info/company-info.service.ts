@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Not } from 'typeorm';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateCompanyModel, DeleteCompanyModel, GetCompanyModel, UpdateCompanyModel, CompanyDocs } from '@adminvault/shared-models';
+import { CompanyResponse, CompanyResponseModel, CreateCompanyModel, DeleteCompanyModel, GetCompanyModel, UpdateCompanyModel, CompanyDropdownResponse, CompanyDropdownModel } from '@adminvault/shared-models';
 import { CompanyInfoEntity } from './entities/company-info.entity';
 import { CompanyInfoRepository } from './repositories/company-info.repository';
 
@@ -16,10 +16,6 @@ export class CompanyInfoService {
     /**
      * Create a new company
      * Validates required fields and ensures company name uniqueness
-     * 
-     * @param reqModel - Company creation data
-     * @returns GlobalResponse indicating success or failure
-     * @throws ErrorResponse if validation fails or company name already exists
      */
     async createCompany(reqModel: CreateCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
@@ -33,13 +29,27 @@ export class CompanyInfoService {
                 throw new ErrorResponse(0, "Company with this name already exists");
             }
 
+            if (reqModel.email) {
+                const emailExists = await this.companyInfoRepo.findOne({ where: { email: reqModel.email } });
+                if (emailExists) {
+                    throw new ErrorResponse(0, 'Email already in use');
+                }
+            }
+
+            if (reqModel.phone) {
+                const phoneExists = await this.companyInfoRepo.findOne({ where: { phone: reqModel.phone } });
+                if (phoneExists) {
+                    throw new ErrorResponse(0, 'Phone number already in use');
+                }
+            }
+
             await transManager.startTransaction();
             const newCompany = new CompanyInfoEntity();
             newCompany.companyName = reqModel.companyName;
             newCompany.location = reqModel.location;
             newCompany.estDate = reqModel.estDate;
-            newCompany.email = reqModel.email && reqModel.email.trim() !== '' ? reqModel.email : null;
-            newCompany.phone = reqModel.phone && reqModel.phone.trim() !== '' ? reqModel.phone : null;
+            newCompany.email = reqModel.email;
+            newCompany.phone = reqModel.phone;
             newCompany.userId = reqModel.userId;
             await transManager.getRepository(CompanyInfoEntity).save(newCompany);
             await transManager.completeTransaction();
@@ -53,54 +63,60 @@ export class CompanyInfoService {
     /**
      * Update an existing company
      * Modifies company information for an existing company record
-     * 
-     * @param reqModel - Company update data
-     * @returns GlobalResponse indicating success or failure
-     * @throws ErrorResponse if company not found or update fails
      */
     async updateCompany(reqModel: UpdateCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
+
         try {
             if (!reqModel.id) {
-                throw new ErrorResponse(0, "Company ID is required");
+                throw new ErrorResponse(0, 'Company ID is required');
             }
 
             const existingCompany = await this.companyInfoRepo.findOne({ where: { id: reqModel.id } });
             if (!existingCompany) {
-                throw new ErrorResponse(0, "Company not found");
+                throw new ErrorResponse(0, 'Company not found');
+            }
+
+            if (reqModel.companyName !== undefined && reqModel.companyName.trim() === '') {
+                throw new ErrorResponse(0, 'Company name cannot be empty');
+            }
+
+            if (reqModel.email) {
+                const emailExists = await this.companyInfoRepo.findOne({ where: { email: reqModel.email, id: Not(reqModel.id) } });
+                if (emailExists) {
+                    throw new ErrorResponse(0, 'Email already in use');
+                }
+            }
+
+            if (reqModel.phone) {
+                const phoneExists = await this.companyInfoRepo.findOne({ where: { phone: reqModel.phone, id: Not(reqModel.id) } });
+                if (phoneExists) {
+                    throw new ErrorResponse(0, 'Phone number already in use');
+                }
             }
 
             await transManager.startTransaction();
             const updateData: Partial<CompanyInfoEntity> = {};
-            updateData.companyName = reqModel.companyName;
-            updateData.location = reqModel.location;
-            updateData.userId = reqModel.userId;
-            if (reqModel.estDate) updateData.estDate = reqModel.estDate as any;
-            if (reqModel.email !== undefined) {
-                updateData.email = reqModel.email && reqModel.email.trim() !== '' ? reqModel.email : null;
-            }
-            if (reqModel.phone !== undefined) {
-                updateData.phone = reqModel.phone && reqModel.phone.trim() !== '' ? reqModel.phone : null;
+            if (Object.keys(updateData).length === 0) {
+                throw new ErrorResponse(0, 'No valid fields provided for update');
             }
 
             await transManager.getRepository(CompanyInfoEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 0, "Company updated successfully");
+            return new GlobalResponse(true, 0, 'Company updated successfully');
         } catch (error) {
             await transManager.releaseTransaction();
             throw error;
         }
     }
 
+
     /**
      * Get a specific company by ID
      * Retrieves detailed information about a single company
-     * 
-     * @param reqModel - Request model containing company ID
-     * @returns GlobalResponse with company data
-     * @throws ErrorResponse if company not found
+     *
      */
-    async getCompany(reqModel: GetCompanyModel): Promise<GlobalResponse> {
+    async getCompany(reqModel: GetCompanyModel): Promise<CompanyResponse> {
         try {
             if (!reqModel.id) {
                 throw new ErrorResponse(0, "Company ID is required");
@@ -110,25 +126,24 @@ export class CompanyInfoService {
             if (!company) {
                 throw new ErrorResponse(0, "Company not found");
             }
-            const companyDoc = new CompanyDocs(company.id, company.companyName, company.location, company.estDate as any, company.email, company.phone);
-            return new GlobalResponse(true, 0, "Company retrieved successfully", companyDoc);
+
+            const companyDoc = new CompanyResponseModel(company.id, company.companyName, company.location, company.estDate as any, company.email, company.phone);
+            return new CompanyResponse(true, 0, "Company retrieved successfully", [companyDoc]);
         } catch (error) {
             throw error;
         }
     }
 
+
     /**
      * Get all companies in the system
      * Retrieves a list of all registered companies
-     * 
-     * @returns GlobalResponse with array of company documents
-     * @throws Error if retrieval fails
      */
-    async getAllCompanies(): Promise<GlobalResponse<CompanyDocs[]>> {
+    async getAllCompanies(): Promise<CompanyResponse> {
         try {
             const companies = await this.companyInfoRepo.find();
-            const companyDocs = companies.map(company => new CompanyDocs(company.id, company.companyName, company.location, company.estDate as any, company.email, company.phone));
-            return new GlobalResponse(true, 0, "Companies retrieved successfully", companyDocs);
+            const companyDocs = companies.map(company => new CompanyResponseModel(company.id, company.companyName, company.location, company.estDate, company.email, company.phone));
+            return new CompanyResponse(true, 0, "Companies retrieved successfully", companyDocs);
         } catch (error) {
             throw error;
         }
@@ -137,15 +152,12 @@ export class CompanyInfoService {
     /**
      * Get all companies for dropdown (lightweight)
      * Returns only id and name for dropdown/select components
-     * 
-     * @returns GlobalResponse with array of {id, name} objects
-     * @throws Error if retrieval fails
      */
-    async getAllCompaniesDropdown(): Promise<GlobalResponse<{ id: number; name: string }[]>> {
+    async getAllCompaniesDropdown(): Promise<CompanyDropdownResponse> {
         try {
             const companies = await this.companyInfoRepo.find({ select: ['id', 'companyName'] });
-            const dropdownData = companies.map(company => ({ id: company.id, name: company.companyName }));
-            return new GlobalResponse(true, 0, "Companies retrieved successfully", dropdownData);
+            const dropdownData = companies.map(company => new CompanyDropdownModel(company.id, company.companyName));
+            return new CompanyDropdownResponse(true, 0, "Companies retrieved successfully", dropdownData);
         } catch (error) {
             throw error;
         }
@@ -155,10 +167,6 @@ export class CompanyInfoService {
      * Delete a company (hard delete)
      * Permanently removes a company from the database
      * Note: This is a hard delete, not a soft delete
-     * 
-     * @param reqModel - Request model containing company ID to delete
-     * @returns GlobalResponse indicating success or failure
-     * @throws ErrorResponse if company not found or deletion fails
      */
     async deleteCompany(reqModel: DeleteCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);

@@ -75,10 +75,10 @@ export class LogoutUserModel {
 }
 
 export class ResetPasswordModel {
-    token: string;
+    email: string;
     newPassword: string;
-    constructor(token: string, newPassword: string) {
-        this.token = token;
+    constructor(email: string, newPassword: string) {
+        this.email = email;
         this.newPassword = newPassword;
     }
 }

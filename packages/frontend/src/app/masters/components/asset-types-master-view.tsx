@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { assetTypeService, companyService } from '@/lib/api/services';
+import { useState, useEffect } from 'react';
+import { assetTypeService } from '@/lib/api/services';
 import { CreateAssetTypeModel, UpdateAssetTypeModel, AssetType } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,104 +17,61 @@ interface AssetTypesMasterViewProps {
     onBack?: () => void;
 }
 
-interface CompanyInfo {
-    id: number;
-    companyName: string;
-}
-
 export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
     const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
-    const [companies, setCompanies] = useState<CompanyInfo[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', code: '', status: '', isActive: true, companyId: '' });
+    const [formData, setFormData] = useState({ name: '', description: '', code: '', status: '', isActive: true, sortOrder: '0', isSystem: false });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
-    const getAllCompanies = async (): Promise<void> => {
-        try {
-            const response = await companyService.getAllCompanies();
-            if (response.status) {
-                setCompanies(response.data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch companies', error);
-        }
-    };
+    useEffect(() => {
+        getAllAssetTypes();
+    }, []);
 
-    const getAllAssetTypes = useCallback(async (): Promise<void> => {
-        if (!user?.companyId) return;
-        setIsLoading(true);
+    const getAllAssetTypes = async (): Promise<void> => {
         try {
-            const response = await assetTypeService.getAllAssetTypes({ companyId: user.companyId });
+            const response = await assetTypeService.getAllAssetTypes();
             if (response.status) {
                 setAssetTypes(response.assetTypes || []);
             } else {
-                AlertMessages.getErrorMessage(response.message || 'Failed to fetch asset types');
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'Failed to fetch asset types');
-        } finally {
-            setIsLoading(false);
+            AlertMessages.getErrorMessage(error.message);
         }
-    }, [user?.companyId]);
-
-    useEffect(() => {
-        if (user?.companyId) {
-            getAllAssetTypes();
-            getAllCompanies();
-        }
-    }, [getAllAssetTypes, user?.companyId]);
+    };
 
     const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         if (!user) return;
-        setIsLoading(true);
         try {
-            const companyIdToUse = Number(formData.companyId) || user.companyId;
+            const sortOrderVal = parseInt(formData.sortOrder);
             if (isEditMode && editingId) {
-                const model = new UpdateAssetTypeModel(
-                    editingId,
-                    formData.name,
-                    formData.description,
-                    formData.isActive,
-                    formData.code,
-                    companyIdToUse,
-                );
+                const model = new UpdateAssetTypeModel(editingId, formData.name, formData.description, formData.isActive, formData.code, sortOrderVal, formData.isSystem);
                 const response = await assetTypeService.updateAssetType(model);
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Asset Type Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     getAllAssetTypes();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Asset Type');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateAssetTypeModel(
-                    user.id,
-                    companyIdToUse,
-                    formData.name,
-                    formData.description,
-                    formData.isActive ?? true,
-                    formData.code,
-                    formData.status
-                );
+                const model = new CreateAssetTypeModel(user.id, 0, formData.name, formData.description, formData.isActive ?? true, formData.code, formData.status, sortOrderVal, formData.isSystem);
                 const response = await assetTypeService.createAssetType(model);
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Asset Type Created Successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     getAllAssetTypes();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Asset Type');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'An error occurred');
-        } finally {
-            setIsLoading(false);
+            AlertMessages.getErrorMessage(err.message);
         }
     };
 
@@ -128,7 +84,8 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
             code: item.code || '',
             status: item.status || '',
             isActive: item.isActive ?? true,
-            companyId: item.companyId?.toString() || ''
+            sortOrder: item.sortOrder?.toString() || '0',
+            isSystem: item.isSystem || false
         });
         setIsModalOpen(true);
     };
@@ -140,20 +97,16 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
 
     const handleDeleteConfirm = async (): Promise<void> => {
         if (deletingId) {
-            setIsLoading(true);
             try {
                 const response = await assetTypeService.deleteAssetType({ id: deletingId });
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Asset Type Deleted Successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     getAllAssetTypes();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to Delete Asset Type');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } catch (err: any) {
-                AlertMessages.getErrorMessage(err.message || 'An error occurred');
-            } finally {
-                setIsLoading(false);
-                setDeletingId(null);
+                AlertMessages.getErrorMessage(err.message);
             }
         }
     };
@@ -162,7 +115,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', code: '', status: '', isActive: true, companyId: '' });
+        setFormData({ name: '', description: '', code: '', status: '', isActive: true, sortOrder: '0', isSystem: false });
     };
 
     return (
@@ -182,49 +135,41 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-4">
-                    {isLoading ? (
-                        <PageLoader />
-                    ) : (
-                        <div className="overflow-x-auto h-full">
-                            <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
-                                <thead className="bg-slate-50/80 dark:bg-slate-800/80">
-                                    <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Asset Type</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Asset Code</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-gray-900">
-                                    {assetTypes?.length === 0 ? (
-                                        <tr><td colSpan={5} className="p-8 text-center text-slate-500">No asset types found</td></tr>
-                                    ) : (
-                                        assetTypes?.map((item: AssetType) => (
-                                            <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
-                                                    {companies.find(c => c.id === item.companyId)?.companyName || '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.description || '-'}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
-                                                            <Pencil className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    <div className="overflow-x-auto h-full">
+                        <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
+                            <thead className="bg-slate-50/80 dark:bg-slate-800/80">
+                                <tr>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Asset Type</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Asset Code</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-900">
+                                {assetTypes?.length === 0 ? (
+                                    <tr><td colSpan={4} className="p-8 text-center text-slate-500">No asset types found</td></tr>
+                                ) : (
+                                    assetTypes?.map((item: AssetType) => (
+                                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.description || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                <div className="flex justify-center gap-2">
+                                                    <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -243,22 +188,6 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                         onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                     />
 
-                    <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Company</label>
-                        <select
-                            value={formData.companyId}
-                            onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                        >
-                            <option value="">Select Company</option>
-                            {companies.map((company) => (
-                                <option key={company.id} value={company.id}>
-                                    {company.companyName}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Description
@@ -270,6 +199,26 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
                             placeholder="Enter asset type description..."
                         />
+                    </div>
+
+                    <Input
+                        label="Sort Order"
+                        type="number"
+                        value={formData.sortOrder}
+                        onChange={(e) => setFormData({ ...formData, sortOrder: e.target.value })}
+                    />
+
+                    <div className="flex items-center gap-2 mb-4">
+                        <input
+                            type="checkbox"
+                            id="isSystem"
+                            checked={formData.isSystem}
+                            onChange={(e) => setFormData({ ...formData, isSystem: e.target.checked })}
+                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                        <label htmlFor="isSystem" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Is System
+                        </label>
                     </div>
 
                     <Input

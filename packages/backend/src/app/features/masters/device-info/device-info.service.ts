@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Not } from 'typeorm';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateDeviceModel, UpdateDeviceModel, DeleteDeviceModel, GetDeviceModel, GetAllDevicesModel, GetDeviceByIdModel, DeviceResponseModel } from '@adminvault/shared-models';
@@ -13,56 +13,69 @@ export class DeviceInfoService {
         private deviceInfoRepo: DeviceInfoRepository
     ) { }
 
-    async createDevice(reqModel: CreateDeviceModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async createDevice(reqModel: CreateDeviceModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            if (!reqModel.deviceType) {
-                throw new ErrorResponse(0, "Device type is required");
+            if (!reqModel.deviceId) {
+                throw new ErrorResponse(0, "Device ID is required");
             }
-            if (!reqModel.deviceName) {
-                throw new ErrorResponse(0, "Device name is required");
+
+            const existing = await this.deviceInfoRepo.findOne({ where: { deviceId: reqModel.deviceId } });
+            if (existing) {
+                throw new ErrorResponse(0, "Device ID already exists");
             }
 
             await transManager.startTransaction();
-            const newDevice = new DeviceInfoEntity();
-            newDevice.deviceType = reqModel.deviceType;
-            newDevice.deviceName = reqModel.deviceName;
-            const savedDevice = await transManager.getRepository(DeviceInfoEntity).save(newDevice);
+            const repo = transManager.getRepository(DeviceInfoEntity);
+            const { id, companyId, userId, ...createData } = reqModel;
+            const newItem = repo.create(createData);
+            await repo.save(newItem);
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 0, "Device created successfully");
+            return new GlobalResponse(true, 201, "Device created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
             throw error;
         }
     }
 
-    async updateDevice(reqModel: UpdateDeviceModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async updateDevice(reqModel: UpdateDeviceModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
-                throw new ErrorResponse(0, "Device ID is required");
+                throw new ErrorResponse(0, "Device ID/Primary Key is required");
             }
 
-            // Check if device exists
-            const existingDevice = await this.deviceInfoRepo.findOne({ where: { id: reqModel.id } });
-            if (!existingDevice) {
-                throw new ErrorResponse(0, "Device not found");
+            const existing = await this.deviceInfoRepo.findOne({ where: { id: reqModel.id } });
+            if (!existing) {
+                throw new ErrorResponse(404, "Device not found");
+            }
+
+            if (reqModel.deviceId) {
+                const existingCode = await this.deviceInfoRepo.findOne({ where: { deviceId: reqModel.deviceId, id: Not(reqModel.id) } });
+                if (existingCode) {
+                    throw new ErrorResponse(0, "Device ID already in use");
+                }
             }
 
             await transManager.startTransaction();
-            const updateData: Partial<DeviceInfoEntity> = {};
-            updateData.deviceType = reqModel.deviceType;
-            updateData.deviceName = reqModel.deviceName;
-            updateData.model = reqModel.model;
-            updateData.brandName = reqModel.brandName;
-            updateData.servicesTag = reqModel.servicesTag;
-            updateData.configuration = reqModel.configuration;
-            await transManager.getRepository(DeviceInfoEntity).update(reqModel.id, updateData);
+            const repo = transManager.getRepository(DeviceInfoEntity);
+            await repo.save({
+                id: reqModel.id,
+                deviceId: reqModel.deviceId,
+                deviceType: reqModel.deviceType,
+                deviceName: reqModel.deviceName,
+                model: reqModel.model,
+                brandName: reqModel.brandName,
+                servicesTag: reqModel.servicesTag,
+                configuration: reqModel.configuration,
+                assetTypeId: reqModel.assetTypeId
+            });
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 0, "Device updated successfully");
+
+            return new GlobalResponse(true, 200, "Device updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update Device');
         }
     }
 
@@ -72,16 +85,13 @@ export class DeviceInfoService {
                 throw new ErrorResponse(0, "Device ID is required");
             }
 
-            const device = await this.deviceInfoRepo.findOne({
-                where: { id: reqModel.id }
-            });
-
+            const device = await this.deviceInfoRepo.findOne({ where: { id: reqModel.id } });
             if (!device) {
-                throw new ErrorResponse(0, "Device not found");
+                throw new ErrorResponse(404, "Device not found");
             }
 
             const deviceResponse = new DeviceResponseModel(device.id, device.deviceType, device.deviceName, device.model, device.brandName, device.servicesTag, device.configuration);
-            return new GetDeviceByIdModel(true, 0, "Device retrieved successfully", deviceResponse);
+            return new GetDeviceByIdModel(true, 200, "Device retrieved successfully", deviceResponse);
         } catch (error) {
             throw error;
         }
@@ -90,34 +100,33 @@ export class DeviceInfoService {
     async getAllDevices(): Promise<GetAllDevicesModel> {
         try {
             const devices = await this.deviceInfoRepo.find();
-
             const deviceResponses = devices.map(device => new DeviceResponseModel(device.id, device.deviceType, device.deviceName, device.model, device.brandName, device.servicesTag, device.configuration));
-            return new GetAllDevicesModel(true, 0, "Devices retrieved successfully", deviceResponses);
+            return new GetAllDevicesModel(true, 200, "Devices retrieved successfully", deviceResponses);
         } catch (error) {
-            throw error;
+            throw new ErrorResponse(500, "Failed to fetch Devices");
         }
     }
 
-    async deleteDevice(reqModel: DeleteDeviceModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async deleteDevice(reqModel: DeleteDeviceModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             if (!reqModel.id) {
                 throw new ErrorResponse(0, "Device ID is required");
             }
 
-            const existingDevice = await this.deviceInfoRepo.findOne({ where: { id: reqModel.id } });
-
-            if (!existingDevice) {
-                throw new ErrorResponse(0, "Device not found");
+            const existing = await this.deviceInfoRepo.findOne({ where: { id: reqModel.id } });
+            if (!existing) {
+                throw new ErrorResponse(404, "Device not found");
             }
 
             await transManager.startTransaction();
-            await transManager.getRepository(DeviceInfoEntity).delete(reqModel.id);
+            const repo = transManager.getRepository(DeviceInfoEntity);
+            await repo.delete(reqModel.id);
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 0, "Device deleted successfully");
+            return new GlobalResponse(true, 200, "Device deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();
-            throw error;
+            throw new ErrorResponse(500, 'Failed to delete Device');
         }
     }
 }

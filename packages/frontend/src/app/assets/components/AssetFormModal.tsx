@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@adminvault/shared-models';
-import { assetService, companyService, mastersService } from '@/lib/api/services';
+import { assetService, companyService, mastersService, assetTypeService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 
 interface AssetFormModalProps {
@@ -67,14 +67,14 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
 
     const fetchAssetTypes = useCallback(async () => {
         try {
-            const response = await mastersService.getAllAssetTypes(getCompanyId() as any);
+            const response = await assetTypeService.getAllAssetTypesDropdown();
             if (response.status) {
-                setAssetTypes(response.assetTypes || []);
+                setAssetTypes(response.data || []);
             }
         } catch (error) {
             console.error('Failed to fetch asset types:', error);
         }
-    }, [getCompanyId]);
+    }, []);
 
     const fetchCompanies = useCallback(async () => {
         try {

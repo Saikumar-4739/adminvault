@@ -1,4 +1,5 @@
 import { GlobalResponse } from '../common/global-response';
+import { DeviceTypeEnum } from '../enums';
 
 // ============================================
 // BASE INTERFACES
@@ -27,6 +28,9 @@ export interface AssetType extends MasterBase {
     code?: string;
     companyName?: string;
     status?: string;
+    sortOrder?: number;
+    isSystem?: boolean;
+
 }
 
 export interface DeviceBrand extends MasterBase {
@@ -94,7 +98,7 @@ export class CreateMasterModel {
     description?: string;
     isActive?: boolean = true;
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, id?: number) {
         this.userId = userId;
         this.companyId = companyId;
         this.name = name;
@@ -107,7 +111,7 @@ export class CreateMasterModel {
 export class CreateDepartmentModel extends CreateMasterModel {
     code?: string;
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, code?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.code = code;
     }
@@ -116,7 +120,7 @@ export class CreateDepartmentModel extends CreateMasterModel {
 export class CreateDesignationModel extends CreateMasterModel {
     level?: string;
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, level?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, level?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.level = level;
     }
@@ -125,11 +129,15 @@ export class CreateDesignationModel extends CreateMasterModel {
 export class CreateAssetTypeModel extends CreateMasterModel {
     code?: string;
     status?: string;
+    sortOrder?: number;
+    isSystem?: boolean;
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, code?: string, status?: string, id?: number) {
-        super(userId, companyId, name, description, isActive, id);
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, status?: string, sortOrder: number = 0, isSystem: boolean = false, id?: number) {
+        super(userId, 0, name, description, isActive, id);
         this.code = code;
         this.status = status;
+        this.sortOrder = sortOrder;
+        this.isSystem = isSystem;
     }
 }
 
@@ -138,8 +146,8 @@ export class CreateBrandModel extends CreateMasterModel {
     rating?: number;
     code?: string;
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string, id?: number) {
-        super(userId, companyId, name, description, isActive, id);
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string, id?: number) {
+        super(userId, 0, name, description, isActive, id);
         this.website = website;
         this.rating = rating;
         this.code = code;
@@ -156,7 +164,7 @@ export class CreateSlackUserModel extends CreateMasterModel {
     notes?: string;
     avatar?: string;
 
-    constructor(userId: number, companyId: number | undefined, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatar?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatar?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.email = email;
         this.slackUserId = slackUserId;
@@ -176,7 +184,7 @@ export class CreateVendorModel extends CreateMasterModel {
     address?: string;
     code?: string;
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, code?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.contactPerson = contactPerson;
         this.email = email;
@@ -191,7 +199,7 @@ export class CreateLocationModel extends CreateMasterModel {
     city?: string;
     country?: string;
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, address?: string, city?: string, country?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, address?: string, city?: string, country?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.address = address;
         this.city = city;
@@ -202,7 +210,7 @@ export class CreateLocationModel extends CreateMasterModel {
 export class CreateTicketCategoryModel extends CreateMasterModel {
     defaultPriority?: 'Low' | 'Medium' | 'High';
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.defaultPriority = defaultPriority;
     }
@@ -212,7 +220,7 @@ export class CreateApplicationModel extends CreateMasterModel {
     ownerName?: string;
     appReleaseDate?: Date;
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, ownerName?: string, appReleaseDate?: Date, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, ownerName?: string, appReleaseDate?: Date, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.ownerName = ownerName;
         this.appReleaseDate = appReleaseDate;
@@ -223,7 +231,7 @@ export class CreateExpenseCategoryModel extends CreateMasterModel {
     categoryType?: string;
     budgetLimit?: number;
 
-    constructor(userId: number, companyId: number | undefined, name: string, description?: string, isActive?: boolean, categoryType?: string, budgetLimit?: number, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, categoryType?: string, budgetLimit?: number, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.categoryType = categoryType;
         this.budgetLimit = budgetLimit;
@@ -236,7 +244,7 @@ export class CreatePasswordVaultModel extends CreateMasterModel {
     url?: string;
     notes?: string;
 
-    constructor(userId: number, companyId: number | undefined, name: string, password: string, description?: string, isActive?: boolean, username?: string, url?: string, notes?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, password: string, description?: string, isActive?: boolean, username?: string, url?: string, notes?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.password = password;
         this.username = username;
@@ -270,15 +278,17 @@ export class UpdateAssetTypeModel {
     description?: string;
     isActive: boolean;
     code?: string;
-    companyId?: number;
+    sortOrder?: number;
+    isSystem?: boolean;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string, companyId?: number) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string, sortOrder: number = 0, isSystem: boolean = false) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
         this.code = code;
-        this.companyId = companyId;
+        this.sortOrder = sortOrder;
+        this.isSystem = isSystem;
     }
 }
 
@@ -290,9 +300,8 @@ export class UpdateBrandModel {
     website?: string;
     rating?: number;
     code?: string;
-    companyId?: number;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string, companyId?: number) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -300,7 +309,6 @@ export class UpdateBrandModel {
         this.website = website;
         this.rating = rating;
         this.code = code;
-        this.companyId = companyId;
     }
 }
 
@@ -802,6 +810,260 @@ export class SearchVaultByCategoryModel {
         this.category = category;
         this.companyId = companyId;
         this.userId = userId;
+    }
+}
+
+
+// ============================================
+// DEVICE MODELS
+// ============================================
+
+export class CreateDeviceModel {
+    id?: number;
+    companyId?: number;
+    userId?: number;
+    deviceId: string;
+    deviceType: DeviceTypeEnum;
+    deviceName: string;
+    model?: string;
+    brandName?: string;
+    servicesTag?: string;
+    configuration?: string;
+    assetTypeId?: number;
+
+    constructor(
+        deviceId: string,
+        deviceType: DeviceTypeEnum,
+        deviceName: string,
+        model?: string,
+        brandName?: string,
+        servicesTag?: string,
+        configuration?: string,
+        assetTypeId?: number,
+        companyId?: number,
+        userId?: number,
+        id?: number
+    ) {
+        this.deviceId = deviceId;
+        this.deviceType = deviceType;
+        this.deviceName = deviceName;
+        this.model = model;
+        this.brandName = brandName;
+        this.servicesTag = servicesTag;
+        this.configuration = configuration;
+        this.assetTypeId = assetTypeId;
+        this.companyId = companyId;
+        this.userId = userId;
+        this.id = id;
+    }
+}
+
+export class UpdateDeviceModel extends CreateDeviceModel {
+    id: number;
+
+    constructor(
+        id: number,
+        deviceId: string,
+        deviceType: DeviceTypeEnum,
+        deviceName: string,
+        model?: string,
+        brandName?: string,
+        servicesTag?: string,
+        configuration?: string,
+        assetTypeId?: number,
+        companyId?: number,
+        userId?: number
+    ) {
+        super(deviceId, deviceType, deviceName, model, brandName, servicesTag, configuration, assetTypeId, companyId, userId, id);
+        this.id = id;
+    }
+}
+
+export class DeleteDeviceModel {
+    id: number;
+
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+export class GetDeviceModel {
+    id: number;
+
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+export class DeviceResponseModel {
+    id: number;
+    deviceType: DeviceTypeEnum;
+    deviceName: string;
+    model?: string;
+    brandName?: string;
+    servicesTag?: string;
+    configuration?: string;
+
+    constructor(
+        id: number,
+        deviceType: DeviceTypeEnum,
+        deviceName: string,
+        model?: string,
+        brandName?: string,
+        servicesTag?: string,
+        configuration?: string
+    ) {
+        this.id = id;
+        this.deviceType = deviceType;
+        this.deviceName = deviceName;
+        this.model = model;
+        this.brandName = brandName;
+        this.servicesTag = servicesTag;
+        this.configuration = configuration;
+    }
+}
+
+export class GetAllDevicesModel extends GlobalResponse {
+    devices: DeviceResponseModel[];
+
+    constructor(status: boolean, code: number, message: string, devices: DeviceResponseModel[]) {
+        super(status, code, message);
+        this.devices = devices;
+    }
+}
+
+export class GetDeviceByIdModel extends GlobalResponse {
+    device: DeviceResponseModel;
+
+    constructor(status: boolean, code: number, message: string, device: DeviceResponseModel) {
+        super(status, code, message);
+        this.device = device;
+    }
+}
+
+
+// ============================================
+// COMPANY MODELS
+// ============================================
+export class CreateCompanyModel {
+    companyName: string;
+    location: string;
+    estDate: Date;
+    email?: string;
+    phone?: string;
+    userId?: number;
+    constructor(companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number) {
+        this.companyName = companyName;
+        this.location = location;
+        this.estDate = estDate;
+        this.email = email;
+        this.phone = phone;
+        this.userId = userId;
+    }
+}
+
+export class UpdateCompanyModel extends CreateCompanyModel {
+    id: number;
+    constructor(id: number, companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number) {
+        super(companyName, location, estDate, email, phone, userId);
+        this.id = id;
+    }
+}
+
+export class DeleteCompanyModel {
+    id: number;
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+export class GetCompanyModel {
+    id: number;
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+export class CompanyResponseModel {
+    id: number;
+    companyName: string;
+    location: string;
+    estDate: Date;
+    email: string;
+    phone: string;
+    constructor(
+        id: number,
+        companyName: string,
+        location: string,
+        estDate: Date,
+        email: string,
+        phone: string
+    ) {
+        this.id = id;
+        this.companyName = companyName;
+        this.location = location;
+        this.estDate = estDate;
+        this.email = email;
+        this.phone = phone;
+    }
+}
+
+export class CompanyResponse extends GlobalResponse {
+    data: CompanyResponseModel[];
+    constructor(status: boolean, code: number, message: string, data: CompanyResponseModel[]) {
+        super(status, code, message);
+        this.data = data;
+    }
+}
+
+export class CompanyDropdownModel {
+    id: number;
+    name: string;
+    constructor(id: number, name: string) {
+        this.id = id;
+        this.name = name;
+    }
+}
+
+export class CompanyDropdownResponse extends GlobalResponse {
+    data: CompanyDropdownModel[];
+    constructor(status: boolean, code: number, message: string, data: CompanyDropdownModel[]) {
+        super(status, code, message);
+        this.data = data;
+    }
+}
+
+export class DepartmentDropdownModel {
+    id: number;
+    name: string;
+    constructor(id: number, name: string) {
+        this.id = id;
+        this.name = name;
+    }
+}
+
+export class DepartmentDropdownResponse extends GlobalResponse {
+    data: DepartmentDropdownModel[];
+    constructor(status: boolean, code: number, message: string, data: DepartmentDropdownModel[]) {
+        super(status, code, message);
+        this.data = data;
+    }
+}
+
+export class AssetTypeDropdownModel {
+    id: number;
+    name: string;
+    constructor(id: number, name: string) {
+        this.id = id;
+        this.name = name;
+    }
+}
+
+export class AssetTypeDropdownResponse extends GlobalResponse {
+    data: AssetTypeDropdownModel[];
+    constructor(status: boolean, code: number, message: string, data: AssetTypeDropdownModel[]) {
+        super(status, code, message);
+        this.data = data;
     }
 }
 

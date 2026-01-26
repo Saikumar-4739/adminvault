@@ -2,17 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { companyService } from '@/lib/api/services';
-import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, CompanyDocs as Company } from '@adminvault/shared-models';
+import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, CompanyResponseModel } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCallback } from 'react';
 
 
 interface CompaniesMasterViewProps {
@@ -22,8 +20,7 @@ interface CompaniesMasterViewProps {
 
 export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
-    const [companies, setCompanies] = useState<Company[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [companies, setCompanies] = useState<CompanyResponseModel[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingCompanyId, setEditingCompanyId] = useState<number | null>(null);
@@ -35,8 +32,7 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
         getAllCompanies();
     }, []);
 
-    const getAllCompanies = useCallback(async (): Promise<void> => {
-        setIsLoading(true);
+    const getAllCompanies = async (): Promise<void> => {
         try {
             const response = await companyService.getAllCompanies();
             if (response.status) {
@@ -46,14 +42,11 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
             }
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message);
-        } finally {
-            setIsLoading(false);
         }
-    }, []);
+    };
 
     const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
-        setIsLoading(true);
         try {
             if (isEditMode && editingCompanyId) {
                 const model = new UpdateCompanyModel(editingCompanyId, formData.companyName, formData.location, new Date(formData.estDate), formData.email, formData.phone, user?.id);
@@ -78,20 +71,18 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
             }
         } catch (err: any) {
             AlertMessages.getErrorMessage(err.message);
-        } finally {
-            setIsLoading(false);
         }
     };
 
-    const handleEdit = (company: Company): void => {
+    const handleEdit = (company: CompanyResponseModel): void => {
         setIsEditMode(true);
         setEditingCompanyId(company.id);
         const dateStr = company.estDate ? new Date(company.estDate).toISOString().split('T')[0] : '';
         setFormData({
             companyName: company.companyName,
-            location: company.location || '',
-            email: company.email || '',
-            phone: company.phone || '',
+            location: company.location,
+            email: company.email,
+            phone: company.phone,
             estDate: dateStr
         });
         setIsModalOpen(true);
@@ -104,7 +95,6 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
 
     const handleDeleteConfirm = async (): Promise<void> => {
         if (deletingCompanyId) {
-            setIsLoading(true);
             try {
                 const model = new DeleteCompanyModel(deletingCompanyId);
                 const response = await companyService.deleteCompany(model);
@@ -116,9 +106,6 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
                 }
             } catch (err: any) {
                 AlertMessages.getErrorMessage(err.message);
-            } finally {
-                setIsLoading(false);
-                setIsDeleteDialogOpen(false);
             }
         }
     };
@@ -147,55 +134,51 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-4">
-                    {isLoading ? (
-                        <PageLoader />
-                    ) : (
-                        <div className="overflow-x-auto h-full">
-                            <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
-                                <thead className="bg-slate-50/80 dark:bg-slate-800/80">
-                                    <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company Name</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Location</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Email</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Phone Number</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Establishment Date</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-gray-900">
-                                    {companies?.length === 0 ? (
-                                        <tr><td colSpan={7} className="p-8 text-center text-slate-500">No companies found</td></tr>
-                                    ) : (
-                                        companies?.map((company: Company) => (
-                                            <tr key={company.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{company.companyName}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{company.location || '-'}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
-                                                    {company.email || '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
-                                                    {company.phone || '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
-                                                    {new Date(company.estDate).toLocaleDateString() || '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleEdit(company)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
-                                                            <Pencil className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleDeleteClick(company.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    <div className="overflow-x-auto h-full">
+                        <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
+                            <thead className="bg-slate-50/80 dark:bg-slate-800/80">
+                                <tr>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company Name</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Location</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Email</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Phone Number</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Establishment Date</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-900">
+                                {companies?.length === 0 ? (
+                                    <tr><td colSpan={7} className="p-8 text-center text-slate-500">No companies found</td></tr>
+                                ) : (
+                                    companies?.map((company: CompanyResponseModel) => (
+                                        <tr key={company.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{company.companyName}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{company.location || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
+                                                {company.email || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
+                                                {company.phone || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
+                                                {new Date(company.estDate).toLocaleDateString() || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                <div className="flex justify-center gap-2">
+                                                    <button onClick={() => handleEdit(company)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteClick(company.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
 

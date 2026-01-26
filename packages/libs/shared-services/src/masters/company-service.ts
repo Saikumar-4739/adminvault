@@ -1,4 +1,4 @@
-import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, GetCompanyModel, GlobalResponse } from '@adminvault/shared-models';
+import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, GetCompanyModel, GlobalResponse, CompanyResponse, CompanyDropdownResponse } from '@adminvault/shared-models';
 import { CommonAxiosService } from '../common-axios-service';
 import { AxiosRequestConfig } from 'axios';
 
@@ -7,27 +7,27 @@ export class CompanyService extends CommonAxiosService {
         return '/company-info/' + childUrl;
     }
 
-    async createCompany(data: CreateCompanyModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('createCompany'), data, config);
+    async createCompany(reqModel: CreateCompanyModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('createCompany'), reqModel, config);
     }
 
-    async updateCompany(data: UpdateCompanyModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateCompany'), data, config);
+    async updateCompany(reqModel: UpdateCompanyModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateCompany'), reqModel, config);
     }
 
-    async getCompany(data: GetCompanyModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('getCompany'), data, config);
+    async getCompany(reqModel: GetCompanyModel, config?: AxiosRequestConfig): Promise<CompanyResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getCompany'), reqModel, config);
     }
 
-    async getAllCompanies(config?: AxiosRequestConfig): Promise<GlobalResponse> {
+    async getAllCompanies(config?: AxiosRequestConfig): Promise<CompanyResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllCompanies'), {}, config);
     }
 
-    async getAllCompaniesDropdown(config?: AxiosRequestConfig): Promise<GlobalResponse> {
+    async getAllCompaniesDropdown(config?: AxiosRequestConfig): Promise<CompanyDropdownResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllCompaniesDropdown'), {}, config);
     }
 
-    async deleteCompany(data: DeleteCompanyModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteCompany'), data, config);
+    async deleteCompany(reqModel: DeleteCompanyModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteCompany'), reqModel, config);
     }
 }

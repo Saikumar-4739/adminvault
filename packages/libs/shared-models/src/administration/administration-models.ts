@@ -83,23 +83,5 @@ export class GetSettingRequestModel {
 
 // --- Additional Administration Models ---
 
-export class PrincipalResponseModel {
-    id!: number;
-    userId!: number | null;
-    firstName!: string;
-    lastName!: string;
-    email!: string;
-    role!: string;
-    roleIds!: number[];
-    departmentId!: number;
-    status!: boolean;
-    phNumber!: string;
-    isUserActive!: boolean;
-}
 
-export class GetAllPrincipalsResponseModel extends GlobalResponse<PrincipalResponseModel[]> {
-    constructor(status: boolean, code: number, message: string, data: PrincipalResponseModel[]) {
-        super(status, code, message, data);
-    }
-}
 

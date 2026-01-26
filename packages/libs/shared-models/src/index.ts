@@ -1,9 +1,9 @@
 export * from './enums';
 export * from './auth';
 export * from './auth/login-session-models';
-export * from './comapany';
+
 export * from './employee';
-export * from './device';
+
 export * from './masters/master-models';
 export * from './email';
 export * from './asset';
@@ -26,4 +26,4 @@ export * from './workflow/approval-models';
 export * from './ai';
 export * from './knowledge-base/knowledge-base.models';
 export * from './procurement/procurement.models';
-export * from './advanced/advanced-modules.models';export * from './maintenance/maintenance-models';
+export * from './advanced/advanced-modules.models'; export * from './maintenance/maintenance-models';

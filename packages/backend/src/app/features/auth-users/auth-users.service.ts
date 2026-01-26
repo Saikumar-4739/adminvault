@@ -147,9 +147,11 @@ export class AuthUsersService {
                     const ipAddress = this.extractClientIp(req);
                     const userAgent = req.headers['user-agent'];
                     const loginSessionModel = new CreateLoginSessionModel(user.id, user.companyId, ipAddress, userAgent, 'email_password', accessToken, reqModel.latitude, reqModel.longitude);
-                    await this.loginSessionService.createLoginSession(loginSessionModel);
+                    // Run async to not block response
+                    this.loginSessionService.createLoginSession(loginSessionModel)
+                        .catch(err => console.error("Failed to create login session", err));
                 } catch (sessionError) {
-                    throw sessionError;
+                    console.error("Error initiating session tracking", sessionError);
                 }
             }
             const userInfo = new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole);
@@ -368,16 +370,16 @@ export class AuthUsersService {
         try {
             const user = await this.authUsersRepo.findOne({
                 where: {
-                    resetToken: model.token,
-                    resetTokenExpiry: MoreThan(new Date())
+                    email: model.email
                 }
             });
 
             if (!user) {
-                throw new ErrorResponse(400, "Invalid or expired reset token.");
+                throw new ErrorResponse(400, "User email not found.");
             }
 
             user.passwordHash = await bcrypt.hash(model.newPassword, 10);
+            // Optionally clear reset token fields if they were used in a mixed flow, though not strictly necessary here
             user.resetToken = null;
             user.resetTokenExpiry = null;
             await this.authUsersRepo.save(user);

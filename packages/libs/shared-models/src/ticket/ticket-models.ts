@@ -113,13 +113,7 @@ export class GetTicketModel {
     }
 }
 
-export class GetTicketsByUserModel {
-    userEmail: string;
 
-    constructor(userEmail: string) {
-        this.userEmail = userEmail;
-    }
-}
 
 export class GetTicketStatisticsRequestModel {
     companyId: number;

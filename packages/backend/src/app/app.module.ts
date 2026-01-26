@@ -22,7 +22,9 @@ import { ProcurementModule } from './features/procurement/procurement.module';
 import { MaintenanceModule } from './features/maintenance/maintenance.module';
 import configuration from '../config/configuration';
 import { APP_GUARD } from '@nestjs/core';
+
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RedisCoreModule } from './core/redis/redis.module';
 
 
 @Module({
@@ -49,7 +51,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     AiBotModule,
     KnowledgeBaseModule,
     ProcurementModule,
-    MaintenanceModule
+    MaintenanceModule,
+    RedisCoreModule
   ],
   controllers: [AppController],
   providers: [

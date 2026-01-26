@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Not } from 'typeorm';
 import { DepartmentRepository } from './repositories/department.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
-import { CreateDepartmentModel, UpdateDepartmentModel, GetAllDepartmentsResponseModel, CreateDepartmentResponseModel, UpdateDepartmentResponseModel, IdRequestModel } from '@adminvault/shared-models';
+import { CreateDepartmentModel, UpdateDepartmentModel, GetAllDepartmentsResponseModel, CreateDepartmentResponseModel, DepartmentDropdownModel, DepartmentDropdownResponse, UpdateDepartmentResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { DepartmentsMasterEntity } from './entities/department.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 
@@ -13,12 +13,118 @@ export class DepartmentService {
         private deptRepo: DepartmentRepository
     ) { }
 
+    /**
+     * Create a new department
+     * Validates required fields and ensures department name uniqueness
+     */
+    async createDepartment(reqModel: CreateDepartmentModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            if (!reqModel.name) {
+                throw new ErrorResponse(0, "Department name is required");
+            }
+
+            const existingDepartment = await this.deptRepo.findOne({ where: { name: reqModel.name } });
+            if (existingDepartment) {
+                throw new ErrorResponse(0, "Department with this name already exists");
+            }
+
+            if (reqModel.code) {
+                const codeExists = await this.deptRepo.findOne({ where: { code: reqModel.code } });
+                if (codeExists) {
+                    throw new ErrorResponse(0, 'Department code already in use');
+                }
+            }
+
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(DepartmentsMasterEntity);
+            const { id, companyId, ...createData } = reqModel;
+            const newItem = repo.create(createData);
+            await repo.save(newItem);
+            await transManager.completeTransaction();
+
+            return new GlobalResponse(true, 201, 'Department created successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    /**
+     * Update an existing department
+     * Modifies department information for an existing department record
+     */
+    async updateDepartment(reqModel: UpdateDepartmentModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            if (!reqModel.id) {
+                throw new ErrorResponse(0, 'Department ID is required');
+            }
+
+            const existing = await this.deptRepo.findOne({ where: { id: reqModel.id } });
+            if (!existing) {
+                throw new ErrorResponse(404, 'Department not found');
+            }
+
+            if (reqModel.name !== undefined && reqModel.name.trim() === '') {
+                throw new ErrorResponse(0, 'Department name cannot be empty');
+            }
+
+            if (reqModel.code) {
+                const codeExists = await this.deptRepo.findOne({ where: { code: reqModel.code, id: Not(reqModel.id) } });
+                if (codeExists) {
+                    throw new ErrorResponse(0, 'Department code already in use');
+                }
+            }
+
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(DepartmentsMasterEntity);
+            await repo.update(reqModel.id, {
+                name: reqModel.name,
+                description: reqModel.description,
+                code: reqModel.code,
+                isActive: reqModel.isActive
+            });
+            await transManager.completeTransaction();
+
+            return new GlobalResponse(true, 200, 'Department updated successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    /**
+     * Get a specific department by ID
+     * Retrieves detailed information about a single department
+     */
+    async getDepartment(reqModel: IdRequestModel): Promise<CreateDepartmentResponseModel> {
+        try {
+            if (!reqModel.id) {
+                throw new ErrorResponse(0, "Department ID is required");
+            }
+
+            const department = await this.deptRepo.findOne({ where: { id: reqModel.id } });
+            if (!department) {
+                throw new ErrorResponse(0, "Department not found");
+            }
+
+            return new CreateDepartmentResponseModel(true, 200, "Department retrieved successfully", department);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Get all departments in the system
+     * Retrieves a list of all registered departments
+     */
     async getAllDepartments(): Promise<GetAllDepartmentsResponseModel> {
         try {
             const departments = await this.deptRepo.find();
             const departmentsWithCompanyName = departments.map(dept => ({
                 id: dept.id,
-                userId: dept.userId,
+                userId: dept.userId || 0,
                 createdAt: dept.createdAt,
                 updatedAt: dept.updatedAt,
                 name: dept.name,
@@ -28,71 +134,49 @@ export class DepartmentService {
             }));
             return new GetAllDepartmentsResponseModel(true, 200, 'Departments retrieved successfully', departmentsWithCompanyName);
         } catch (error) {
-            console.error('Error fetching departments:', error);
-            throw new ErrorResponse(500, 'Failed to fetch Departments');
+            throw error;;
         }
     }
 
-    async createDepartment(data: CreateDepartmentModel, userId?: number, ipAddress?: string): Promise<CreateDepartmentResponseModel> {
-        const transManager = new GenericTransactionManager(this.dataSource);
+    /**
+     * Get all departments for dropdown (lightweight)
+     * Returns only id and name for dropdown/select components
+     */
+    async getAllDepartmentsDropdown(): Promise<DepartmentDropdownResponse> {
         try {
-            await transManager.startTransaction();
-            const repo = transManager.getRepository(DepartmentsMasterEntity);
-            const { id, companyId, ...createData } = data;
-            const newItem = repo.create(createData);
-            const savedItem = await repo.save(newItem);
-            await transManager.completeTransaction();
-
-            return new CreateDepartmentResponseModel(true, 201, 'Department created successfully', savedItem);
+            const departments = await this.deptRepo.find({ select: ['id', 'name'] });
+            const dropdownData = departments.map(dept => new DepartmentDropdownModel(dept.id, dept.name));
+            return new DepartmentDropdownResponse(true, 200, "Departments retrieved successfully", dropdownData);
         } catch (error) {
-            await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to create Department');
+            throw error;
         }
     }
 
-    async updateDepartment(data: UpdateDepartmentModel, userId?: number, ipAddress?: string): Promise<UpdateDepartmentResponseModel> {
+    /**
+     * Delete a department (hard delete)
+     * Permanently removes a department from the database
+     */
+    async deleteDepartment(reqModel: IdRequestModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existing = await this.deptRepo.findOne({ where: { id: data.id } });
+            if (!reqModel.id) {
+                throw new ErrorResponse(0, "Department ID is required");
+            }
+
+            const existing = await this.deptRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
-                throw new ErrorResponse(404, 'Department not found');
+                throw new ErrorResponse(0, 'Department not found');
             }
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(DepartmentsMasterEntity);
-            await repo.save({
-                id: data.id,
-                name: data.name,
-                description: data.description,
-                code: data.code,
-                isActive: data.isActive
-            });
-            const updated = await repo.findOne({ where: { id: data.id } });
-            if (!updated) {
-                throw new ErrorResponse(500, 'Failed to retrieve updated department');
-            }
-            await transManager.completeTransaction();
-
-            return new UpdateDepartmentResponseModel(true, 200, 'Department updated successfully', updated);
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update Department');
-        }
-    }
-
-    async deleteDepartment(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            await transManager.startTransaction();
-            const repo = transManager.getRepository(DepartmentsMasterEntity);
-            const delEntity = await repo.findOne({ where: { id: reqModel.id } });
-            if (delEntity) await repo.remove(delEntity);
+            await repo.delete(reqModel.id);
             await transManager.completeTransaction();
 
             return new GlobalResponse(true, 200, 'Department deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to delete Department');
+            throw error;
         }
     }
 }

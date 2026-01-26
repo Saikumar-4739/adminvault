@@ -20,8 +20,8 @@ export class MastersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteDepartment'), reqObj, config);
     }
 
-    async getAllAssetTypes(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetTypesResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllAssetTypes'), reqObj, config);
+    async getAllAssetTypes(config?: AxiosRequestConfig): Promise<GetAllAssetTypesResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllAssetTypes'), {}, config);
     }
     async createAssetType(data: CreateAssetTypeModel, config?: AxiosRequestConfig): Promise<CreateAssetTypeResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('asset-types'), data, config);

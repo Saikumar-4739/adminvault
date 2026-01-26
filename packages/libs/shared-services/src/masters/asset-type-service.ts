@@ -1,25 +1,33 @@
 import { CommonAxiosService } from '../common-axios-service';
 import { AxiosRequestConfig } from 'axios';
-import { CreateAssetTypeModel, CreateAssetTypeResponseModel, GetAllAssetTypesResponseModel, CompanyIdRequestModel, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, GlobalResponse } from '@adminvault/shared-models';
+import { CreateAssetTypeModel, CreateAssetTypeResponseModel, GetAllAssetTypesResponseModel, CompanyIdRequestModel, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, AssetTypeDropdownResponse, GlobalResponse } from '@adminvault/shared-models';
 
 export class AssetTypeService extends CommonAxiosService {
-    private getURL(childUrl: string) {
-        return '/masters/' + childUrl;
+    private getURLwithMainEndPoint(childUrl: string) {
+        return '/asset-type/' + childUrl;
     }
 
-    async getAllAssetTypes(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetTypesResponseModel> {
-        return await this.axiosPostCall(this.getURL('getAllAssetTypes'), reqObj, config);
+    async createAssetType(reqModel: CreateAssetTypeModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('createAssetType'), reqModel, config);
     }
 
-    async createAssetType(data: CreateAssetTypeModel, config?: AxiosRequestConfig): Promise<CreateAssetTypeResponseModel> {
-        return await this.axiosPostCall(this.getURL('asset-types'), data, config);
+    async updateAssetType(reqModel: UpdateAssetTypeModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateAssetType'), reqModel, config);
     }
 
-    async updateAssetType(data: UpdateAssetTypeModel, config?: AxiosRequestConfig): Promise<UpdateAssetTypeResponseModel> {
-        return await this.axiosPostCall(this.getURL('updateAssetType'), data, config);
+    async getAssetType(reqModel: IdRequestModel, config?: AxiosRequestConfig): Promise<CreateAssetTypeResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAssetType'), reqModel, config);
     }
 
-    async deleteAssetType(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURL('deleteAssetType'), reqObj, config);
+    async getAllAssetTypes(config?: AxiosRequestConfig): Promise<GetAllAssetTypesResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllAssetTypes'), {}, config);
+    }
+
+    async getAllAssetTypesDropdown(config?: AxiosRequestConfig): Promise<AssetTypeDropdownResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllAssetTypesDropdown'), {}, config);
+    }
+
+    async deleteAssetType(reqModel: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteAssetType'), reqModel, config);
     }
 }

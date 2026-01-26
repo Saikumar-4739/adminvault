@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { brandService, companyService } from '@/lib/api/services';
+import { brandService } from '@/lib/api/services';
 import { CreateBrandModel, UpdateBrandModel, DeviceBrand } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -18,33 +18,16 @@ interface DeviceBrandsMasterViewProps {
     onBack?: () => void;
 }
 
-interface CompanyInfo {
-    id: number;
-    companyName: string;
-}
-
 export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
     const [brands, setBrands] = useState<DeviceBrand[]>([]);
-    const [companies, setCompanies] = useState<CompanyInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', website: '', rating: '', code: '', companyId: '' });
+    const [formData, setFormData] = useState({ name: '', description: '', website: '', rating: '', code: '' });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
-
-    const getAllCompanies = async (): Promise<void> => {
-        try {
-            const response = await companyService.getAllCompanies();
-            if (response.status) {
-                setCompanies(response.data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch companies', error);
-        }
-    };
 
     const getAllBrands = useCallback(async (): Promise<void> => {
         if (!user?.companyId) return;
@@ -66,7 +49,6 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
     useEffect(() => {
         if (user?.companyId) {
             getAllBrands();
-            getAllCompanies();
         }
     }, [getAllBrands, user?.companyId]);
 
@@ -75,7 +57,6 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
         if (!user) return;
         setIsLoading(true);
         try {
-            const companyIdToUse = Number(formData.companyId) || user.companyId;
             if (isEditMode && editingId) {
                 const model = new UpdateBrandModel(
                     editingId,
@@ -84,8 +65,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                     true, // isActive, not in form currently so defaulting to true or existing
                     formData.website,
                     formData.rating ? parseFloat(formData.rating) : undefined,
-                    formData.code,
-                    companyIdToUse
+                    formData.code
                 );
 
                 const response = await brandService.updateBrand(model);
@@ -99,7 +79,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
             } else {
                 const model = new CreateBrandModel(
                     user.id,
-                    companyIdToUse,
+                    0,
                     formData.name,
                     formData.description,
                     true,
@@ -131,8 +111,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
             description: item.description || '',
             website: item.website || '',
             rating: item.rating?.toString() || '',
-            code: item.code || '',
-            companyId: item.companyId?.toString() || ''
+            code: item.code || ''
         });
         setIsModalOpen(true);
     };
@@ -166,7 +145,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', website: '', rating: '', code: '', companyId: '' });
+        setFormData({ name: '', description: '', website: '', rating: '', code: '' });
     };
 
     return (
@@ -194,7 +173,6 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                                 <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                     <tr>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Brand Name</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Brand Code</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Website</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Rating</th>
@@ -203,14 +181,11 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                                 </thead>
                                 <tbody className="bg-white dark:bg-gray-900">
                                     {brands?.length === 0 ? (
-                                        <tr><td colSpan={6} className="p-8 text-center text-slate-500">No brands found</td></tr>
+                                        <tr><td colSpan={5} className="p-8 text-center text-slate-500">No brands found</td></tr>
                                     ) : (
                                         brands?.map((item: DeviceBrand, index: number) => (
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
-                                                    {companies.find(c => c.id === item.companyId)?.companyName || '-'}
-                                                </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
                                                     {item.website ? (
@@ -251,22 +226,6 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                     <Input label="Brand Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
 
                     <Input label="Brand Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
-
-                    <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Company</label>
-                        <select
-                            value={formData.companyId}
-                            onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                        >
-                            <option value="">Select Company</option>
-                            {companies.map((company) => (
-                                <option key={company.id} value={company.id}>
-                                    {company.companyName}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
 
                     <Input label="Website" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
                     <Input

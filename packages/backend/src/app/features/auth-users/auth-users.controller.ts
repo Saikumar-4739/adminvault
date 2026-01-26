@@ -107,9 +107,9 @@ export class AuthUsersController {
     @Post('reset-password')
     @Public()
     @ApiBody({ type: ResetPasswordModel })
-    async resetPassword(@Body() reqModel: ResetPasswordModel): Promise<GlobalResponse> {
+    async resetPassword(@Body() resetPasswordDto: ResetPasswordModel): Promise<GlobalResponse> {
         try {
-            return await this.service.resetPassword(reqModel);
+            return await this.service.resetPassword(resetPasswordDto);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

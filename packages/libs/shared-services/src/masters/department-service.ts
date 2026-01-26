@@ -1,25 +1,33 @@
 import { CommonAxiosService } from '../common-axios-service';
 import { AxiosRequestConfig } from 'axios';
-import { CreateDepartmentModel, CreateDepartmentResponseModel, GetAllDepartmentsResponseModel, CompanyIdRequestModel, IdRequestModel, UpdateDepartmentModel, UpdateDepartmentResponseModel, GlobalResponse } from '@adminvault/shared-models';
+import { CreateDepartmentModel, CreateDepartmentResponseModel, DepartmentDropdownResponse, GetAllDepartmentsResponseModel, IdRequestModel, UpdateDepartmentModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class DepartmentService extends CommonAxiosService {
-    private getURL(childUrl: string) {
-        return '/masters/' + childUrl;
+    private getURLwithMainEndPoint(childUrl: string) {
+        return '/department/' + childUrl;
     }
 
-    async getAllDepartments(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllDepartmentsResponseModel> {
-        return await this.axiosPostCall(this.getURL('getAllDepartments'), reqObj, config);
+    async createDepartment(reqModel: CreateDepartmentModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('createDepartment'), reqModel, config);
     }
 
-    async createDepartment(data: CreateDepartmentModel, config?: AxiosRequestConfig): Promise<CreateDepartmentResponseModel> {
-        return await this.axiosPostCall(this.getURL('departments'), data, config);
+    async updateDepartment(reqModel: UpdateDepartmentModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateDepartment'), reqModel, config);
     }
 
-    async updateDepartment(data: UpdateDepartmentModel, config?: AxiosRequestConfig): Promise<UpdateDepartmentResponseModel> {
-        return await this.axiosPostCall(this.getURL('updateDepartment'), data, config);
+    async getDepartment(reqModel: IdRequestModel, config?: AxiosRequestConfig): Promise<CreateDepartmentResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getDepartment'), reqModel, config);
     }
 
-    async deleteDepartment(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURL('deleteDepartment'), reqObj, config);
+    async getAllDepartments(config?: AxiosRequestConfig): Promise<GetAllDepartmentsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllDepartments'), {}, config);
+    }
+
+    async getAllDepartmentsDropdown(config?: AxiosRequestConfig): Promise<DepartmentDropdownResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllDepartmentsDropdown'), {}, config);
+    }
+
+    async deleteDepartment(reqModel: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteDepartment'), reqModel, config);
     }
 }

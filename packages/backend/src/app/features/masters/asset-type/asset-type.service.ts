@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Not } from 'typeorm';
 import { AssetTypeRepository } from './repositories/asset-type.repository';
-import { CompanyInfoRepository } from '../company-info/repositories/company-info.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
-import { CreateAssetTypeModel, UpdateAssetTypeModel, GetAllAssetTypesResponseModel, CreateAssetTypeResponseModel, UpdateAssetTypeResponseModel, CompanyIdRequestModel, IdRequestModel } from '@adminvault/shared-models';
+import { CreateAssetTypeModel, UpdateAssetTypeModel, GetAllAssetTypesResponseModel, CreateAssetTypeResponseModel, AssetTypeDropdownModel, AssetTypeDropdownResponse, IdRequestModel } from '@adminvault/shared-models';
 import { AssetTypeMasterEntity } from './entities/asset-type.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 
@@ -12,13 +11,117 @@ export class AssetTypeService {
     constructor(
         private dataSource: DataSource,
         private assetTypeRepo: AssetTypeRepository,
-        private companyRepo: CompanyInfoRepository
     ) { }
 
-    async getAllAssetTypes(reqModel: CompanyIdRequestModel): Promise<GetAllAssetTypesResponseModel> {
+    /**
+     * Create a new asset type
+     * Validates required fields and ensures uniqueness
+     */
+    async createAssetType(reqModel: CreateAssetTypeModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            if (!reqModel.name) {
+                throw new ErrorResponse(0, "Asset Type name is required");
+            }
+
+            const existingName = await this.assetTypeRepo.findOne({ where: { name: reqModel.name } });
+            if (existingName) {
+                throw new ErrorResponse(0, "Asset Type with this name already exists");
+            }
+
+            if (reqModel.code) {
+                const existingCode = await this.assetTypeRepo.findOne({ where: { code: reqModel.code } });
+                if (existingCode) {
+                    throw new ErrorResponse(0, "Asset Type code already in use");
+                }
+            }
+
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(AssetTypeMasterEntity);
+            const { id, companyId, isSystem, sortOrder, ...createData } = reqModel;
+            const newItem = repo.create({ ...createData, isSystem: isSystem || false, sortOrder: sortOrder || 0 });
+            await repo.save(newItem);
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 201, 'Asset Type created successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    /**
+     * Update an existing asset type
+     * Modifies asset type information for an existing record
+     */
+    async updateAssetType(reqModel: UpdateAssetTypeModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            if (!reqModel.id) {
+                throw new ErrorResponse(0, 'Asset Type ID is required');
+            }
+
+            const existing = await this.assetTypeRepo.findOne({ where: { id: reqModel.id } });
+            if (!existing) {
+                throw new ErrorResponse(404, 'Asset Type not found');
+            }
+
+            if (reqModel.name !== undefined && reqModel.name.trim() === '') {
+                throw new ErrorResponse(0, 'Asset Type name cannot be empty');
+            }
+
+            if (reqModel.code) {
+                const codeExists = await this.assetTypeRepo.findOne({ where: { code: reqModel.code, id: Not(reqModel.id) } });
+                if (codeExists) {
+                    throw new ErrorResponse(0, 'Asset Type code already in use');
+                }
+            }
+
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(AssetTypeMasterEntity);
+            await repo.update(reqModel.id, {
+                name: reqModel.name,
+                description: reqModel.description,
+                code: reqModel.code,
+                isActive: reqModel.isActive,
+                sortOrder: reqModel.sortOrder,
+                isSystem: reqModel.isSystem
+            });
+            await transManager.completeTransaction();
+
+            return new GlobalResponse(true, 200, 'Asset Type updated successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update Asset Type');
+        }
+    }
+
+    /**
+     * Get a specific asset type by ID
+     */
+    async getAssetType(reqModel: IdRequestModel): Promise<CreateAssetTypeResponseModel> {
+        try {
+            if (!reqModel.id) {
+                throw new ErrorResponse(0, "Asset Type ID is required");
+            }
+
+            const assetType = await this.assetTypeRepo.findOne({ where: { id: reqModel.id } });
+            if (!assetType) {
+                throw new ErrorResponse(0, "Asset Type not found");
+            }
+
+            return new CreateAssetTypeResponseModel(true, 200, "Asset Type retrieved successfully", assetType);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Get all asset types in the system
+     */
+    async getAllAssetTypes(): Promise<GetAllAssetTypesResponseModel> {
         try {
             const assetTypes = await this.assetTypeRepo.find();
-            const company = await this.companyRepo.findOne({ where: { id: reqModel.companyId } });
+            // Assuming no specific company filter for now since request arg is removed from signature basically
             const assetTypesWithCompanyName = assetTypes.map(asset => ({
                 id: asset.id,
                 userId: asset.userId,
@@ -28,68 +131,46 @@ export class AssetTypeService {
                 description: asset.description,
                 isActive: asset.isActive,
                 code: asset.code,
-                companyName: company?.companyName
+                companyName: '' // Simplified for now
             }));
             return new GetAllAssetTypesResponseModel(true, 200, 'Asset Types retrieved successfully', assetTypesWithCompanyName);
         } catch (error) {
+            console.error('Error fetching asset types:', error);
             throw new ErrorResponse(500, 'Failed to fetch Asset Types');
         }
     }
 
-    async createAssetType(data: CreateAssetTypeModel, userId?: number, ipAddress?: string): Promise<CreateAssetTypeResponseModel> {
-        const transManager = new GenericTransactionManager(this.dataSource);
+    /**
+     * Get all asset types for dropdown (lightweight)
+     */
+    async getAllAssetTypesDropdown(): Promise<AssetTypeDropdownResponse> {
         try {
-            await transManager.startTransaction();
-            const repo = transManager.getRepository(AssetTypeMasterEntity);
-            const { companyId, ...createData } = data;
-            const newItem = repo.create(createData);
-            const savedItem = await repo.save(newItem);
-            await transManager.completeTransaction();
-
-            return new CreateAssetTypeResponseModel(true, 201, 'Asset Type created successfully', savedItem);
+            const assetTypes = await this.assetTypeRepo.find({ select: ['id', 'name'] });
+            const dropdownData = assetTypes.map(asset => new AssetTypeDropdownModel(asset.id, asset.name));
+            return new AssetTypeDropdownResponse(true, 200, "Asset Types retrieved successfully", dropdownData);
         } catch (error) {
-            await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to create Asset Type');
+            throw error;
         }
     }
 
-    async updateAssetType(data: UpdateAssetTypeModel, userId?: number, ipAddress?: string): Promise<UpdateAssetTypeResponseModel> {
+    /**
+     * Delete an asset type (hard delete)
+     */
+    async deleteAssetType(reqModel: IdRequestModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existing = await this.assetTypeRepo.findOne({ where: { id: data.id } });
+            if (!reqModel.id) {
+                throw new ErrorResponse(0, "Asset Type ID is required");
+            }
+
+            const existing = await this.assetTypeRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
-                throw new ErrorResponse(404, 'Asset Type not found');
+                throw new ErrorResponse(0, 'Asset Type not found');
             }
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(AssetTypeMasterEntity);
-            await repo.save({
-                id: data.id,
-                name: data.name,
-                description: data.description,
-                isActive: data.isActive,
-                code: data.code,
-            });
-            const updated = await repo.findOne({ where: { id: data.id } });
-            if (!updated) {
-                throw new ErrorResponse(500, 'Failed to retrieve updated asset type');
-            }
-            await transManager.completeTransaction();
-
-            return new UpdateAssetTypeResponseModel(true, 200, 'Asset Type updated successfully', updated);
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update Asset Type');
-        }
-    }
-
-    async deleteAssetType(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            await transManager.startTransaction();
-            const repo = transManager.getRepository(AssetTypeMasterEntity);
-            const delEntity = await repo.findOne({ where: { id: reqModel.id } });
-            if (delEntity) await repo.remove(delEntity);
+            await repo.delete(reqModel.id);
             await transManager.completeTransaction();
 
             return new GlobalResponse(true, 200, 'Asset Type deleted successfully');
