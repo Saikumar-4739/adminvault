@@ -50,7 +50,8 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         department: '',
         phone: '',
         notes: '',
-        companyId: ''
+        companyId: '',
+        employeeId: ''
     });
 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -117,7 +118,8 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                 name: emp.name,
                 email: emp.email,
                 phone: emp.phone || prev.phone,
-                department: emp.department || prev.department
+                department: emp.department || prev.department,
+                employeeId: emp.id.toString()
             }));
         }
     };
@@ -135,14 +137,16 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                     formData.name,
                     formData.email,
                     formData.notes,
-                    true,
+                    true, // isActive
                     formData.slackUserId,
                     formData.displayName,
                     formData.role,
                     formData.department,
                     formData.phone,
-                    formData.notes,
-                    companyIdToUse
+                    formData.notes, // notes
+                    companyIdToUse,
+                    undefined, // avatar
+                    formData.employeeId ? Number(formData.employeeId) : undefined
                 );
 
                 const response = await slackUserService.updateSlackUser(model);
@@ -166,7 +170,9 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                     formData.role,
                     formData.department,
                     formData.phone,
-                    formData.notes
+                    formData.notes,
+                    undefined, // avatar
+                    formData.employeeId ? Number(formData.employeeId) : undefined
                 );
                 const response = await slackUserService.createSlackUser(model);
                 if (response.status) {
@@ -196,7 +202,8 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
             department: item.department || '',
             phone: item.phone || '',
             notes: item.notes || '',
-            companyId: item.companyId?.toString() || ''
+            companyId: item.companyId?.toString() || '',
+            employeeId: item.employeeId?.toString() || ''
         });
         setIsModalOpen(true);
     };
@@ -233,7 +240,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         setEditingId(null);
         setFormData({
             name: '', email: '', slackUserId: '', displayName: '',
-            role: '', department: '', phone: '', notes: '', companyId: ''
+            role: '', department: '', phone: '', notes: '', companyId: '', employeeId: ''
         });
     };
 
@@ -349,6 +356,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                         <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800/50">
                             <label className="block text-sm font-bold text-indigo-900 dark:text-indigo-100 mb-2">Auto-fill from Employee</label>
                             <select
+                                value={formData.employeeId}
                                 onChange={(e) => handleEmployeeSelect(e.target.value)}
                                 className="w-full px-4 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
                             >

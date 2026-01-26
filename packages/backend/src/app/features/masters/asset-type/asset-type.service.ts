@@ -38,8 +38,8 @@ export class AssetTypeService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(AssetTypeMasterEntity);
-            const { id, companyId, isSystem, sortOrder, ...createData } = reqModel;
-            const newItem = repo.create({ ...createData, isSystem: isSystem || false, sortOrder: sortOrder || 0 });
+            const { id, companyId, ...createData } = reqModel;
+            const newItem = repo.create({ ...createData });
             await repo.save(newItem);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 201, 'Asset Type created successfully');
@@ -82,16 +82,14 @@ export class AssetTypeService {
                 name: reqModel.name,
                 description: reqModel.description,
                 code: reqModel.code,
-                isActive: reqModel.isActive,
-                sortOrder: reqModel.sortOrder,
-                isSystem: reqModel.isSystem
+                isActive: reqModel.isActive
             });
             await transManager.completeTransaction();
 
             return new GlobalResponse(true, 200, 'Asset Type updated successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update Asset Type');
+            throw error;
         }
     }
 
@@ -135,8 +133,7 @@ export class AssetTypeService {
             }));
             return new GetAllAssetTypesResponseModel(true, 200, 'Asset Types retrieved successfully', assetTypesWithCompanyName);
         } catch (error) {
-            console.error('Error fetching asset types:', error);
-            throw new ErrorResponse(500, 'Failed to fetch Asset Types');
+            throw error;
         }
     }
 
@@ -176,7 +173,7 @@ export class AssetTypeService {
             return new GlobalResponse(true, 200, 'Asset Type deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to delete Asset Type');
+            throw error;
         }
     }
 }

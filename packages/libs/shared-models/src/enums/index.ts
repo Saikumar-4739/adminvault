@@ -2,7 +2,6 @@ export * from './user-role.enum';
 export * from './employee-status.enum';
 export * from './department.enum';
 export * from './email-type.enum';
-export * from './device-type.enum';
 export * from './ticket-category.enum';
 export * from './ticket-priority.enum';
 export * from './ticket-status.enum';

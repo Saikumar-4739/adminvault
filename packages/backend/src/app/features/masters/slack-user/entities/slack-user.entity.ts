@@ -31,4 +31,10 @@ export class SlackUsersMasterEntity extends MasterBaseEntity {
 
     @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether user is active' })
     isActive: boolean;
+
+    @Column('bigint', { name: 'company_id', nullable: false, comment: 'Company ID Reference' })
+    companyId: number;
+
+    @Column('bigint', { name: 'employee_id', nullable: true, comment: 'Linked Employee ID' })
+    employeeId: number;
 }

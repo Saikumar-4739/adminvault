@@ -23,7 +23,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', code: '', status: '', isActive: true, sortOrder: '0', isSystem: false });
+    const [formData, setFormData] = useState({ name: '', description: '', code: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -48,9 +48,8 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
         e.preventDefault();
         if (!user) return;
         try {
-            const sortOrderVal = parseInt(formData.sortOrder);
             if (isEditMode && editingId) {
-                const model = new UpdateAssetTypeModel(editingId, formData.name, formData.description, formData.isActive, formData.code, sortOrderVal, formData.isSystem);
+                const model = new UpdateAssetTypeModel(editingId, formData.name, formData.description, formData.isActive, formData.code);
                 const response = await assetTypeService.updateAssetType(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -60,7 +59,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateAssetTypeModel(user.id, 0, formData.name, formData.description, formData.isActive ?? true, formData.code, formData.status, sortOrderVal, formData.isSystem);
+                const model = new CreateAssetTypeModel(user.id, 0, formData.name, formData.description, formData.isActive ?? true, formData.code);
                 const response = await assetTypeService.createAssetType(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -82,10 +81,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
             name: item.name,
             description: item.description || '',
             code: item.code || '',
-            status: item.status || '',
-            isActive: item.isActive ?? true,
-            sortOrder: item.sortOrder?.toString() || '0',
-            isSystem: item.isSystem || false
+            isActive: item.isActive ?? true
         });
         setIsModalOpen(true);
     };
@@ -115,7 +111,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', code: '', status: '', isActive: true, sortOrder: '0', isSystem: false });
+        setFormData({ name: '', description: '', code: '', isActive: true });
     };
 
     return (
@@ -201,32 +197,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                         />
                     </div>
 
-                    <Input
-                        label="Sort Order"
-                        type="number"
-                        value={formData.sortOrder}
-                        onChange={(e) => setFormData({ ...formData, sortOrder: e.target.value })}
-                    />
 
-                    <div className="flex items-center gap-2 mb-4">
-                        <input
-                            type="checkbox"
-                            id="isSystem"
-                            checked={formData.isSystem}
-                            onChange={(e) => setFormData({ ...formData, isSystem: e.target.checked })}
-                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                        />
-                        <label htmlFor="isSystem" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Is System
-                        </label>
-                    </div>
-
-                    <Input
-                        label="Status Label (Optional)"
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        placeholder="e.g. In Use, Returned"
-                    />
 
                     <div className="flex items-center gap-2">
                         <input

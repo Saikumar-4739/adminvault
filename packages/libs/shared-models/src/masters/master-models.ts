@@ -1,5 +1,4 @@
 import { GlobalResponse } from '../common/global-response';
-import { DeviceTypeEnum } from '../enums';
 
 // ============================================
 // BASE INTERFACES
@@ -27,9 +26,6 @@ export interface Designation extends MasterBase {
 export interface AssetType extends MasterBase {
     code?: string;
     companyName?: string;
-    status?: string;
-    sortOrder?: number;
-    isSystem?: boolean;
 
 }
 
@@ -54,7 +50,7 @@ export interface Location extends MasterBase {
 }
 
 export interface TicketCategory extends MasterBase {
-    status?: string;
+    code?: string;
     defaultPriority?: 'Low' | 'Medium' | 'High' | null;
 }
 
@@ -62,6 +58,7 @@ export interface Application extends MasterBase {
     ownerName?: string;
     appReleaseDate?: Date;
     companyName?: string;
+    code?: string;
 }
 
 export interface ExpenseCategory extends MasterBase {
@@ -85,6 +82,7 @@ export interface SlackUserModel extends MasterBase {
     phone?: string;
     notes?: string;
     avatar?: string;
+    employeeId?: number;
 }
 
 // ============================================
@@ -128,16 +126,10 @@ export class CreateDesignationModel extends CreateMasterModel {
 
 export class CreateAssetTypeModel extends CreateMasterModel {
     code?: string;
-    status?: string;
-    sortOrder?: number;
-    isSystem?: boolean;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, status?: string, sortOrder: number = 0, isSystem: boolean = false, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, id?: number) {
         super(userId, 0, name, description, isActive, id);
         this.code = code;
-        this.status = status;
-        this.sortOrder = sortOrder;
-        this.isSystem = isSystem;
     }
 }
 
@@ -163,8 +155,9 @@ export class CreateSlackUserModel extends CreateMasterModel {
     phone?: string;
     notes?: string;
     avatar?: string;
+    employeeId?: number;
 
-    constructor(userId: number, companyId: number, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatar?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatar?: string, employeeId?: number, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.email = email;
         this.slackUserId = slackUserId;
@@ -174,6 +167,7 @@ export class CreateSlackUserModel extends CreateMasterModel {
         this.phone = phone;
         this.notes = notes;
         this.avatar = avatar;
+        this.employeeId = employeeId;
     }
 }
 
@@ -209,21 +203,25 @@ export class CreateLocationModel extends CreateMasterModel {
 
 export class CreateTicketCategoryModel extends CreateMasterModel {
     defaultPriority?: 'Low' | 'Medium' | 'High';
+    code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.defaultPriority = defaultPriority;
+        this.code = code;
     }
 }
 
 export class CreateApplicationModel extends CreateMasterModel {
     ownerName?: string;
     appReleaseDate?: Date;
+    code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, ownerName?: string, appReleaseDate?: Date, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, ownerName?: string, appReleaseDate?: Date, code?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.ownerName = ownerName;
         this.appReleaseDate = appReleaseDate;
+        this.code = code;
     }
 }
 
@@ -278,17 +276,13 @@ export class UpdateAssetTypeModel {
     description?: string;
     isActive: boolean;
     code?: string;
-    sortOrder?: number;
-    isSystem?: boolean;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string, sortOrder: number = 0, isSystem: boolean = false) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
         this.code = code;
-        this.sortOrder = sortOrder;
-        this.isSystem = isSystem;
     }
 }
 
@@ -364,13 +358,15 @@ export class UpdateTicketCategoryModel {
     description?: string;
     isActive: boolean;
     defaultPriority?: 'Low' | 'Medium' | 'High';
+    code?: string;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High') {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', code?: string) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
         this.defaultPriority = defaultPriority;
+        this.code = code;
     }
 }
 
@@ -381,14 +377,16 @@ export class UpdateApplicationModel {
     isActive: boolean;
     ownerName?: string;
     appReleaseDate?: Date;
+    code?: string;
 
-    constructor(id: number, name: string, description?: string, isActive: boolean = true, ownerName?: string, appReleaseDate?: Date) {
+    constructor(id: number, name: string, description?: string, isActive: boolean = true, ownerName?: string, appReleaseDate?: Date, code?: string) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive;
         this.ownerName = ownerName;
         this.appReleaseDate = appReleaseDate;
+        this.code = code;
     }
 }
 
@@ -743,8 +741,9 @@ export class UpdateSlackUserModel {
     notes?: string;
     companyId?: number;
     avatar?: string;
+    employeeId?: number;
 
-    constructor(id: number, name: string, email: string, description?: string, isActive: boolean = true, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, companyId?: number, avatar?: string) {
+    constructor(id: number, name: string, email: string, description?: string, isActive: boolean = true, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, companyId?: number, avatar?: string, employeeId?: number) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -758,6 +757,7 @@ export class UpdateSlackUserModel {
         this.notes = notes;
         this.companyId = companyId;
         this.avatar = avatar;
+        this.employeeId = employeeId;
     }
 }
 
@@ -814,132 +814,6 @@ export class SearchVaultByCategoryModel {
 }
 
 
-// ============================================
-// DEVICE MODELS
-// ============================================
-
-export class CreateDeviceModel {
-    id?: number;
-    companyId?: number;
-    userId?: number;
-    deviceId: string;
-    deviceType: DeviceTypeEnum;
-    deviceName: string;
-    model?: string;
-    brandName?: string;
-    servicesTag?: string;
-    configuration?: string;
-    assetTypeId?: number;
-
-    constructor(
-        deviceId: string,
-        deviceType: DeviceTypeEnum,
-        deviceName: string,
-        model?: string,
-        brandName?: string,
-        servicesTag?: string,
-        configuration?: string,
-        assetTypeId?: number,
-        companyId?: number,
-        userId?: number,
-        id?: number
-    ) {
-        this.deviceId = deviceId;
-        this.deviceType = deviceType;
-        this.deviceName = deviceName;
-        this.model = model;
-        this.brandName = brandName;
-        this.servicesTag = servicesTag;
-        this.configuration = configuration;
-        this.assetTypeId = assetTypeId;
-        this.companyId = companyId;
-        this.userId = userId;
-        this.id = id;
-    }
-}
-
-export class UpdateDeviceModel extends CreateDeviceModel {
-    id: number;
-
-    constructor(
-        id: number,
-        deviceId: string,
-        deviceType: DeviceTypeEnum,
-        deviceName: string,
-        model?: string,
-        brandName?: string,
-        servicesTag?: string,
-        configuration?: string,
-        assetTypeId?: number,
-        companyId?: number,
-        userId?: number
-    ) {
-        super(deviceId, deviceType, deviceName, model, brandName, servicesTag, configuration, assetTypeId, companyId, userId, id);
-        this.id = id;
-    }
-}
-
-export class DeleteDeviceModel {
-    id: number;
-
-    constructor(id: number) {
-        this.id = id;
-    }
-}
-
-export class GetDeviceModel {
-    id: number;
-
-    constructor(id: number) {
-        this.id = id;
-    }
-}
-
-export class DeviceResponseModel {
-    id: number;
-    deviceType: DeviceTypeEnum;
-    deviceName: string;
-    model?: string;
-    brandName?: string;
-    servicesTag?: string;
-    configuration?: string;
-
-    constructor(
-        id: number,
-        deviceType: DeviceTypeEnum,
-        deviceName: string,
-        model?: string,
-        brandName?: string,
-        servicesTag?: string,
-        configuration?: string
-    ) {
-        this.id = id;
-        this.deviceType = deviceType;
-        this.deviceName = deviceName;
-        this.model = model;
-        this.brandName = brandName;
-        this.servicesTag = servicesTag;
-        this.configuration = configuration;
-    }
-}
-
-export class GetAllDevicesModel extends GlobalResponse {
-    devices: DeviceResponseModel[];
-
-    constructor(status: boolean, code: number, message: string, devices: DeviceResponseModel[]) {
-        super(status, code, message);
-        this.devices = devices;
-    }
-}
-
-export class GetDeviceByIdModel extends GlobalResponse {
-    device: DeviceResponseModel;
-
-    constructor(status: boolean, code: number, message: string, device: DeviceResponseModel) {
-        super(status, code, message);
-        this.device = device;
-    }
-}
 
 
 // ============================================

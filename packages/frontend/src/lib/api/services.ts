@@ -1,4 +1,4 @@
-import { AuthUsersService, AdministrationService, EmployeesService, AssetInfoService, AssetTabsService, TicketsService, MastersService, LicensesService, ReportsService, DashboardService, DocumentsService, CompanyService, WorkflowService, AiService, KnowledgeBaseService, ProcurementService, MaintenanceService, DepartmentService, AssetTypeService, BrandService, VendorService, ApplicationService, TicketCategoryService, LocationService, SlackUserService, PasswordVaultService, DeviceInfoService, ExpenseCategoryService } from '@adminvault/shared-services';
+import { AuthUsersService, AdministrationService, EmployeesService, AssetInfoService, AssetTabsService, TicketsService, MastersService, LicensesService, ReportsService, DashboardService, DocumentsService, CompanyService, WorkflowService, AiService, KnowledgeBaseService, ProcurementService, MaintenanceService, DepartmentService, AssetTypeService, BrandService, VendorService, ApplicationService, LocationService, SlackUserService, PasswordVaultService, ExpenseCategoryService } from '@adminvault/shared-services';
 
 export const authService = new AuthUsersService();
 export const administrationService = new AdministrationService();
@@ -12,11 +12,9 @@ export const assetTypeService = new AssetTypeService();
 export const brandService = new BrandService();
 export const vendorService = new VendorService();
 export const applicationService = new ApplicationService();
-export const ticketCategoryService = new TicketCategoryService();
 export const locationService = new LocationService();
 export const slackUserService = new SlackUserService();
 export const passwordVaultService = new PasswordVaultService();
-export const deviceInfoService = new DeviceInfoService();
 export const expenseCategoryService = new ExpenseCategoryService();
 export const dashboardService = new DashboardService();
 export const licensesService = new LicensesService();
@@ -44,11 +42,9 @@ export const services = {
     brand: brandService,
     vendor: vendorService,
     application: applicationService,
-    ticketCategory: ticketCategoryService,
     location: locationService,
     slackUser: slackUserService,
     passwordVault: passwordVaultService,
-    deviceInfo: deviceInfoService,
     expenseCategory: expenseCategoryService,
     licenses: licensesService,
     reports: reportsService,

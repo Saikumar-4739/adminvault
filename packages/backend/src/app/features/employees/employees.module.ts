@@ -11,6 +11,6 @@ import { DepartmentRepository } from '../masters/department/repositories/departm
     imports: [TypeOrmModule.forFeature([EmployeesEntity])],
     controllers: [EmployeesController],
     providers: [EmployeesService, EmployeesRepository, EmployeesBulkService, DepartmentRepository],
-    exports: [EmployeesService],
+    exports: [EmployeesService, EmployeesRepository],
 })
 export class EmployeesModule { }

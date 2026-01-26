@@ -10,10 +10,9 @@ const DepartmentsMasterView = dynamic(() => import('./components/departments-mas
 const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view').then(mod => mod.AssetTypesMasterView), { loading: () => <p>Loading Asset Types...</p> });
 const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view').then(mod => mod.DeviceBrandsMasterView), { loading: () => <p>Loading Device Brands...</p> });
 const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p>Loading Applications...</p> });
-const TicketCategoriesMasterView = dynamic(() => import('./components/ticket-categories-master-view').then(mod => mod.TicketCategoriesMasterView), { loading: () => <p>Loading Categories...</p> });
 const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p>Loading Slack Users...</p> });
 const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p>Loading Vendors...</p> });
-import { Building2, Users, Package, Smartphone, Tag, AppWindow, MessageSquare, Store, Lock } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock } from 'lucide-react';
 
 interface MasterItem {
     id: string;
@@ -70,14 +69,6 @@ const MastersPage: React.FC = () => {
             icon: AppWindow,
             color: 'from-teal-500 to-teal-600',
             component: ApplicationsMasterView
-        },
-        {
-            id: 'ticket-categories',
-            title: 'Ticket Categories',
-            description: 'Manage ticket categories',
-            icon: Tag,
-            color: 'from-rose-500 to-rose-600',
-            component: TicketCategoriesMasterView
         },
         {
             id: 'slack-users',

@@ -19,4 +19,7 @@ export class ApplicationsMasterEntity extends MasterBaseEntity {
 
     @Column('date', { name: 'app_release_date', nullable: true, comment: 'Application release date' })
     appReleaseDate: Date;
+
+    @Column('varchar', { name: 'code', length: 50, nullable: true, comment: 'Application code' })
+    code: string;
 }

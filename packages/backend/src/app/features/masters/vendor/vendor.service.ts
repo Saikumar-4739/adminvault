@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Not } from 'typeorm';
 import { VendorRepository } from './repositories/vendor.repository';
 import { CompanyInfoRepository } from '../company-info/repositories/company-info.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
@@ -46,6 +46,22 @@ export class VendorService {
             await transManager.startTransaction();
             const repo = transManager.getRepository(VendorsMasterEntity);
             const { companyId, ...createData } = data;
+            if (!data.name) {
+                throw new ErrorResponse(0, "Vendor name is required");
+            }
+
+            const existingName = await repo.findOne({ where: { name: data.name } });
+            if (existingName) {
+                throw new ErrorResponse(0, "Vendor with this name already exists");
+            }
+
+            if (createData.code) {
+                const existingCode = await repo.findOne({ where: { code: createData.code } });
+                if (existingCode) {
+                    throw new ErrorResponse(0, "Vendor code already in use");
+                }
+            }
+
             const newItem = repo.create(createData);
             const savedItem = await repo.save(newItem);
             await transManager.completeTransaction();
@@ -67,6 +83,17 @@ export class VendorService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(VendorsMasterEntity);
+            if (data.name !== undefined && data.name.trim() === '') {
+                throw new ErrorResponse(0, 'Vendor name cannot be empty');
+            }
+
+            if (data.code) {
+                const codeExists = await this.vendorRepo.findOne({ where: { code: data.code, id: Not(data.id) } });
+                if (codeExists) {
+                    throw new ErrorResponse(0, 'Vendor code already in use');
+                }
+            }
+
             await repo.save({
                 id: data.id,
                 name: data.name,

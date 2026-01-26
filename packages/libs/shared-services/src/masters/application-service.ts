@@ -7,8 +7,8 @@ export class ApplicationService extends CommonAxiosService {
         return '/masters/' + childUrl;
     }
 
-    async getAllApplications(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllApplicationsResponseModel> {
-        return await this.axiosPostCall(this.getURL('getAllApplications'), reqObj, config);
+    async getAllApplications(config?: AxiosRequestConfig): Promise<GetAllApplicationsResponseModel> {
+        return await this.axiosPostCall(this.getURL('getAllApplications'), {}, config);
     }
 
     async createApplication(data: CreateApplicationModel, config?: AxiosRequestConfig): Promise<CreateApplicationResponseModel> {

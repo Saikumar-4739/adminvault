@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { SlackUsersRepository } from './repositories/slack-user.repository';
+import { EmployeesRepository } from '../../employees/repositories/employees.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateSlackUserModel, UpdateSlackUserModel, GetAllSlackUsersResponseModel, CreateSlackUserResponseModel, UpdateSlackUserResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { SlackUsersMasterEntity } from './entities/slack-user.entity';
@@ -10,7 +11,8 @@ import { GenericTransactionManager } from '../../../../database/typeorm-transact
 export class SlackUserService {
     constructor(
         private dataSource: DataSource,
-        private slackUserRepo: SlackUsersRepository
+        private slackUserRepo: SlackUsersRepository,
+        private employeeRepo: EmployeesRepository
     ) { }
 
     async getAllSlackUsers(reqModel: CompanyIdRequestModel): Promise<GetAllSlackUsersResponseModel> {
@@ -28,8 +30,20 @@ export class SlackUserService {
             await transManager.startTransaction();
             const repo = transManager.getRepository(SlackUsersMasterEntity);
             const { companyId, ...createData } = data;
+
+            // Validate Company (implicitly done by repo create usually, but let's be safe if we need to check existence)
+            if (!companyId) throw new ErrorResponse(400, 'Company ID is required');
+
+            // Validate Employee
+            if (data.employeeId) {
+                const emp = await this.employeeRepo.findOne({ where: { id: data.employeeId, companyId: companyId } });
+                if (!emp) throw new ErrorResponse(400, 'Invalid Employee ID or Employee does not belong to the Company');
+            }
+
             const newItem = repo.create({
                 ...createData,
+                companyId: companyId,
+                employeeId: data.employeeId,
                 isActive: true
             });
             const savedItem = await repo.save(newItem);
@@ -51,6 +65,20 @@ export class SlackUserService {
 
             await transManager.startTransaction();
             const repo = transManager.getRepository(SlackUsersMasterEntity);
+            // Validate Employee if being updated
+            if (data.employeeId && data.companyId) {
+                const emp = await this.employeeRepo.findOne({ where: { id: data.employeeId, companyId: data.companyId } });
+                if (!emp) throw new ErrorResponse(400, 'Invalid Employee ID or Employee does not belong to the Company');
+            } else if (data.employeeId) {
+                // If companyId is not in update model, maybe fetch from existing? 
+                // Assuming companyId allows passed in update, or we check existing user's company.
+                // For safety, let's fetch existing user's companyId to validate.
+                if (existing.companyId) {
+                    const emp = await this.employeeRepo.findOne({ where: { id: data.employeeId, companyId: existing.companyId } });
+                    if (!emp) throw new ErrorResponse(400, 'Invalid Employee ID or Employee does not belong to the Company');
+                }
+            }
+
             await repo.save({
                 id: data.id,
                 name: data.name,
@@ -62,6 +90,7 @@ export class SlackUserService {
                 phone: data.phone,
                 notes: data.notes,
                 isActive: data.isActive,
+                employeeId: data.employeeId
             });
             const updated = await repo.findOne({ where: { id: data.id } });
             await transManager.completeTransaction();

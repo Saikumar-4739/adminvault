@@ -15,11 +15,6 @@ export class AssetTypeMasterEntity extends MasterBaseEntity {
     @Column('text', { name: 'description', nullable: true, comment: 'Asset type description' })
     description: string;
 
-    @Column('int', { name: 'sort_order', nullable: false, default: 0, comment: 'Display order' })
-    sortOrder: number;
-
-    @Column('boolean', { name: 'is_system', nullable: false, default: false, comment: 'System-defined asset type' })
-    isSystem: boolean;
 
     @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether asset type is active' })
     isActive: boolean;

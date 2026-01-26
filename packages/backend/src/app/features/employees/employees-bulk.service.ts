@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import { EmployeesEntity } from './entities/employees.entity';
 import { EmployeesRepository } from './repositories/employees.repository';
 import { DepartmentRepository } from '../masters/department/repositories/department.repository';
+import { CompanyInfoEntity } from '../masters/company-info/entities/company-info.entity';
 import { EmployeeStatusEnum, BulkImportResponseModel, BulkImportRequestModel } from '@adminvault/shared-models';
 
 @Injectable()
@@ -28,6 +29,16 @@ export class EmployeesBulkService {
                 const normalizedName = d.name.toLowerCase().trim();
                 deptNameMap.set(normalizedName, d.id);
             });
+
+            // 2. Validate Company
+            const companyExists = await this.dataSource.getRepository(CompanyInfoEntity).findOne({ where: { id: companyId } });
+            if (!companyExists) {
+                return new BulkImportResponseModel(false, 400, "Invalid Company ID", 0, 0, []);
+            }
+
+            // 3. Pre-fetch existing emails for optimization
+            const existingEmails = await this.employeesRepo.find({ where: { companyId }, select: ['email'] });
+            const existingEmailSet = new Set(existingEmails.map(e => e.email.toLowerCase()));
 
             const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
             const sheetName = workbook.SheetNames[0];
@@ -92,9 +103,8 @@ export class EmployeesBulkService {
                         throw new Error(`Department '${depInput}' not found. Please provide a valid Department Name or ID.`);
                     }
 
-                    // Check for existing email (optimization: could load all emails first, but row-by-row is safer for duplicates in file itself)
-                    const existing = await this.employeesRepo.findOneBy({ email, companyId });
-                    if (existing) {
+                    // Check for existing email (optimization: using local set)
+                    if (existingEmailSet.has(email.toLowerCase())) {
                         throw new Error(`Email ${email} already exists`);
                     }
 
@@ -116,6 +126,8 @@ export class EmployeesBulkService {
                     newEmployee.createdAt = new Date();
 
                     await this.employeesRepo.save(newEmployee);
+                    // Add to set to catch duplicates WITHIN the file
+                    existingEmailSet.add(email.toLowerCase());
                     successCount++;
                 } catch (err: any) {
                     errors.push({ row: i + 1, error: err.message });

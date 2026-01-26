@@ -4,9 +4,13 @@ import { SlackUserService } from './slack-user.service';
 import { SlackUserController } from './slack-user.controller';
 import { SlackUsersMasterEntity } from './entities/slack-user.entity';
 import { SlackUsersRepository } from './repositories/slack-user.repository';
+import { EmployeesModule } from '../../employees/employees.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([SlackUsersMasterEntity])],
+    imports: [
+        TypeOrmModule.forFeature([SlackUsersMasterEntity]),
+        EmployeesModule
+    ],
     controllers: [SlackUserController],
     providers: [SlackUserService, SlackUsersRepository],
     exports: [SlackUserService],

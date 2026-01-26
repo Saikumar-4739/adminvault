@@ -39,7 +39,8 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
         phone: '',
         address: '',
         code: '',
-        companyId: ''
+        companyId: '',
+        isActive: true
     });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -90,7 +91,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                     editingId,
                     formData.name,
                     formData.description,
-                    true,
+                    formData.isActive,
                     formData.contactPerson,
                     formData.email,
                     formData.phone,
@@ -113,7 +114,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                     companyIdToUse,
                     formData.name,
                     formData.description,
-                    true,
+                    formData.isActive ?? true,
                     formData.contactPerson,
                     formData.email,
                     formData.phone,
@@ -147,7 +148,8 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
             phone: item.phone || '',
             address: item.address || '',
             code: item.code || '',
-            companyId: item.companyId?.toString() || ''
+            companyId: item.companyId?.toString() || '',
+            isActive: item.isActive ?? true
         });
         setIsModalOpen(true);
     };
@@ -181,7 +183,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '', code: '', companyId: '' });
+        setFormData({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '', code: '', companyId: '', isActive: true });
     };
 
     return (
@@ -213,6 +215,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Code</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Contact Person</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Phone</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
                                         <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                     </tr>
                                 </thead>
@@ -229,6 +232,14 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.contactPerson || '-'}</td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.phone || '-'}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.isActive
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                                        }`}>
+                                                        {item.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     <div className="flex justify-center gap-2">
                                                         <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
@@ -279,6 +290,19 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                     <Input label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                     <Input label="Address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
                     <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="isActive"
+                            checked={formData.isActive}
+                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                        <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Active
+                        </label>
+                    </div>
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>

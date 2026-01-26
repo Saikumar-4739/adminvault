@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { EmployeesRepository } from './repositories/employees.repository';
 import { EmployeesEntity } from './entities/employees.entity';
+import { CompanyInfoEntity } from '../masters/company-info/entities/company-info.entity';
+import { DepartmentsMasterEntity } from '../masters/department/entities/department.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, CompanyIdRequestModel, EmployeeStatusEnum } from '@adminvault/shared-models';
 
 @Injectable()
 export class EmployeesService {
@@ -16,10 +18,6 @@ export class EmployeesService {
     /**
      * Create a new employee record
      * Validates required fields and checks for duplicate email addresses
-     * 
-     * @param reqModel - Employee creation data including company ID, name, email, and department
-     * @returns GlobalResponse indicating success or failure
-     * @throws ErrorResponse if company ID, email, or department is missing, or if email already exists
      */
     async createEmployee(reqModel: CreateEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
@@ -38,6 +36,18 @@ export class EmployeesService {
             const existingEmployee = await this.employeesRepo.findOne({ where: { email: reqModel.email } });
             if (existingEmployee) {
                 throw new ErrorResponse(0, "Employee with this email already exists");
+            }
+
+            // Validate Company
+            const companyExists = await this.dataSource.getRepository(CompanyInfoEntity).findOne({ where: { id: reqModel.companyId } });
+            if (!companyExists) {
+                throw new ErrorResponse(0, "Invalid Company ID: Company does not exist");
+            }
+
+            // Validate Department
+            const deptExists = await this.dataSource.getRepository(DepartmentsMasterEntity).findOne({ where: { id: reqModel.departmentId } });
+            if (!deptExists) {
+                throw new ErrorResponse(0, "Invalid Department ID: Department does not exist");
             }
 
             await transManager.startTransaction();
@@ -60,10 +70,6 @@ export class EmployeesService {
     /**
      * Update existing employee information
      * Updates employee details including name, contact info, status, and billing amount
-     * 
-     * @param reqModel - Employee update data with employee ID and fields to update
-     * @returns GlobalResponse indicating success or failure
-     * @throws ErrorResponse if employee ID is missing or employee not found
      */
     async updateEmployee(reqModel: UpdateEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
@@ -99,10 +105,6 @@ export class EmployeesService {
     /**
      * Retrieve a specific employee by ID
      * Fetches detailed information for a single employee
-     * 
-     * @param reqModel - Request containing employee ID
-     * @returns GetEmployeeByIdModel with employee details
-     * @throws ErrorResponse if employee ID is missing or employee not found
      */
     async getEmployee(reqModel: GetEmployeeModel): Promise<GetEmployeeResponseModel> {
         try {
@@ -117,19 +119,13 @@ export class EmployeesService {
                 throw new ErrorResponse(0, "Employee not found");
             }
 
-            const employeeResponse = new EmployeeResponseModel(
-                employee.id,
-                employee.companyId,
-                employee.firstName,
-                employee.lastName,
-                employee.email,
-                employee.departmentId,
-                employee.empStatus,
-                employee.phNumber,
-                employee.billingAmount,
-                employee.remarks,
-                `Dept ID: ${employee.departmentId}` // Placeholder name
-            );
+            let deptName = `Dept ID: ${employee.departmentId}`;
+            const department = await this.dataSource.getRepository(DepartmentsMasterEntity).findOne({ where: { id: employee.departmentId } });
+            if (department) {
+                deptName = department.name;
+            }
+
+            const employeeResponse = new EmployeeResponseModel(employee.id, employee.companyId, employee.firstName, employee.lastName, employee.email, employee.departmentId, employee.empStatus, employee.phNumber, employee.billingAmount, employee.remarks, deptName);
             return new GetEmployeeResponseModel(true, 0, "Employee retrieved successfully", employeeResponse);
         } catch (error) {
             throw error;
@@ -139,10 +135,6 @@ export class EmployeesService {
     /**
      * Retrieve all employees, optionally filtered by company
      * Fetches list of all employees or employees for a specific company
-     * 
-     * @param reqModel - Request containing optional company ID to filter employees
-     * @returns GetAllEmployeesModel with list of employees
-     * @throws Error if database query fails
      */
     async getAllEmployees(reqModel: CompanyIdRequestModel): Promise<GetAllEmployeesResponseModel> {
         try {
@@ -150,26 +142,22 @@ export class EmployeesService {
             const companyId = reqModel.companyId;
 
             if (companyId) {
-                employees = await this.employeesRepo.find({
-                    where: { companyId }
-                });
+                employees = await this.employeesRepo.find({ where: { companyId } });
             } else {
                 employees = await this.employeesRepo.find();
             }
 
-            const employeeResponses = employees.map(emp => new EmployeeResponseModel(
-                emp.id,
-                emp.companyId,
-                emp.firstName,
-                emp.lastName,
-                emp.email,
-                emp.departmentId,
-                emp.empStatus,
-                emp.phNumber,
-                emp.billingAmount,
-                emp.remarks,
-                `Dept ID: ${emp.departmentId}` // Placeholder name
-            ));
+            const deptIds = [...new Set(employees.map(e => e.departmentId))];
+            let deptMap = new Map<number, string>();
+
+            if (deptIds.length > 0) {
+                const departments = await this.dataSource.getRepository(DepartmentsMasterEntity).find({
+                    where: { id: In(deptIds) }
+                });
+                departments.forEach(d => deptMap.set(d.id, d.name));
+            }
+
+            const employeeResponses = employees.map(emp => new EmployeeResponseModel(emp.id, emp.companyId, emp.firstName, emp.lastName, emp.email, emp.departmentId, emp.empStatus, emp.phNumber, emp.billingAmount, emp.remarks, deptMap.get(emp.departmentId) || `Dept ID: ${emp.departmentId}`));
             return new GetAllEmployeesResponseModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {
             throw error;
@@ -178,11 +166,6 @@ export class EmployeesService {
 
     /**
      * Delete an employee record (soft delete)
-     * Marks employee as deleted without removing from database
-     * 
-     * @param reqModel - Request containing employee ID to delete
-     * @returns GlobalResponse indicating success or failure
-     * @throws ErrorResponse if employee ID is missing or employee not found
      */
 
     async deleteEmployee(reqModel: DeleteEmployeeModel): Promise<GlobalResponse> {

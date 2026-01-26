@@ -13,9 +13,9 @@ export class ApplicationController {
 
     @Post('getAllApplications')
     @ApiBody({ type: CompanyIdRequestModel })
-    async getAllApplications(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllApplicationsResponseModel> {
+    async getAllApplications(): Promise<GetAllApplicationsResponseModel> {
         try {
-            return await this.applicationService.getAllApplications(reqModel);
+            return await this.applicationService.getAllApplications();
         } catch (error) {
             return returnException(GetAllApplicationsResponseModel, error);
         }
@@ -56,4 +56,5 @@ export class ApplicationController {
             return returnException(GlobalResponse, error);
         }
     }
+
 }

@@ -5,7 +5,6 @@ import { AppService } from './app.service';
 import { CompanyInfoModule } from './features/masters/company-info/company-info.module';
 import { AuthUsersModule } from './features/auth-users/auth-users.module';
 import { EmployeesModule } from './features/employees/employees.module';
-import { DeviceInfoModule } from './features/masters/device-info/device-info.module';
 import { TicketsModule } from './features/tickets/tickets.module';
 import { AssetInfoModule } from './features/asset-info/asset-info.module';
 import { MastersModule } from './features/masters/masters.module';
@@ -38,7 +37,6 @@ import { RedisCoreModule } from './core/redis/redis.module';
     CompanyInfoModule,
     AuthUsersModule,
     EmployeesModule,
-    DeviceInfoModule,
     TicketsModule,
     AssetInfoModule,
     MastersModule,

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { PageLoader } from '@/components/ui/Spinner';
-import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft, Star } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -196,9 +196,22 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                                                 </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                     {item.rating ? (
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                                            â­  {parseFloat(item.rating).toFixed(1)}
-                                                        </span>
+                                                        <div className="flex justify-center items-center gap-1">
+                                                            <div className="flex">
+                                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                                    <Star
+                                                                        key={star}
+                                                                        className={`h-4 w-4 ${star <= (parseFloat(item.rating) || 0)
+                                                                            ? "fill-yellow-400 text-yellow-400"
+                                                                            : "text-slate-300 dark:text-slate-600"
+                                                                            }`}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                            <span className="text-xs text-slate-500 font-medium ml-1">
+                                                                ({parseFloat(item.rating).toFixed(1)})
+                                                            </span>
+                                                        </div>
                                                     ) : '-'}
                                                 </td>
                                                 <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
@@ -228,15 +241,33 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                     <Input label="Brand Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
 
                     <Input label="Website" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
-                    <Input
-                        label="Rating (0-5)"
-                        type="number"
-                        value={formData.rating}
-                        onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                        min="0"
-                        max="5"
-                        step="0.1"
-                    />
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Rating
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, rating: star.toString() })}
+                                        className="focus:outline-none transition-transform active:scale-95 hover:scale-110"
+                                    >
+                                        <Star
+                                            className={`h-6 w-6 ${star <= (parseFloat(formData.rating) || 0)
+                                                ? "fill-yellow-400 text-yellow-400"
+                                                : "text-slate-300 dark:text-slate-600"
+                                                }`}
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                            <span className="text-sm text-slate-500 font-medium">
+                                {formData.rating ? `${formData.rating}/5` : 'No rating'}
+                            </span>
+                        </div>
+                    </div>
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>
