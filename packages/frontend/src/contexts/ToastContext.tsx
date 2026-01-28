@@ -1,8 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useCallback } from 'react';
-import { toast, ToastContainer, ToastOptions } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import toast, { Toaster, ToastOptions } from 'react-hot-toast';
 
 // Maintaining the interface to prevent breaking changes in consumers
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -35,19 +34,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         </div>
     );
 
-    const showToast = useCallback(({ type, title, message, duration = 2000 }: Omit<Toast, 'id'>) => {
+    const showToast = useCallback(({ type, title, message, duration = 3000 }: Omit<Toast, 'id'>) => {
         const options: ToastOptions = {
-            autoClose: duration,
+            duration: duration,
             position: 'top-center',
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "light",
         };
 
         const content = renderContent(title, message);
-        toast.dismiss(); // Dismiss any existing toasts before showing a new one
+        toast.dismiss(); // Dismiss any existing toasts before showing a new one (imitating previous behavior limit={1})
 
         switch (type) {
             case 'success':
@@ -57,10 +51,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 toast.error(content, options);
                 break;
             case 'warning':
-                toast.warn(content, options);
+                // react-hot-toast doesn't have a 'warn' method by default, reusing custom or using standard with icon
+                toast(content, { ...options, icon: '⚠️' });
                 break;
             case 'info':
-                toast.info(content, options);
+                // react-hot-toast doesn't have 'info' by default, using standard with icon
+                toast(content, { ...options, icon: 'ℹ️' });
                 break;
             default:
                 toast(content, options);
@@ -75,7 +71,38 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     return (
         <ToastContext.Provider value={{ showToast, success, error, warning, info }}>
             {children}
-            <ToastContainer limit={1} />
+            <Toaster
+                position="top-center"
+                toastOptions={{
+                    className: '',
+                    style: {
+                        background: '#1e293b', // slate-800
+                        color: '#f8fafc', // slate-50
+                        padding: '10px 24px', // Reduced vertical padding
+                        borderRadius: '12px',
+                        minWidth: '400px',
+                        maxWidth: '600px',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        fontSize: '15px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                    },
+                    success: {
+                        iconTheme: {
+                            primary: '#22c55e',
+                            secondary: '#f8fafc',
+                        },
+                    },
+                    error: {
+                        style: {
+                            borderLeft: '4px solid #ef4444',
+                        },
+                        iconTheme: {
+                            primary: '#ef4444',
+                            secondary: '#f8fafc',
+                        },
+                    },
+                }}
+            />
         </ToastContext.Provider>
     );
 }

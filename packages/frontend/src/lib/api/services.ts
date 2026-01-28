@@ -1,4 +1,4 @@
-import { AuthUsersService, AdministrationService, EmployeesService, AssetInfoService, AssetTabsService, TicketsService, MastersService, LicensesService, ReportsService, DashboardService, DocumentsService, CompanyService, WorkflowService, AiService, KnowledgeBaseService, ProcurementService, MaintenanceService, DepartmentService, AssetTypeService, BrandService, VendorService, ApplicationService, LocationService, SlackUserService, PasswordVaultService, ExpenseCategoryService } from '@adminvault/shared-services';
+import { AuthUsersService, AdministrationService, EmployeesService, AssetInfoService, AssetTabsService, TicketsService, LicensesService, ReportsService, DashboardService, DocumentsService, CompanyService, WorkflowService, AiService, KnowledgeBaseService, ProcurementService, MaintenanceService, DepartmentService, AssetTypeService, BrandService, VendorService, ApplicationService, SlackUserService, PasswordVaultService } from '@adminvault/shared-services';
 
 export const authService = new AuthUsersService();
 export const administrationService = new AdministrationService();
@@ -6,16 +6,14 @@ export const employeeService = new EmployeesService();
 export const assetService = new AssetInfoService();
 export const assetTabsService = new AssetTabsService();
 export const ticketService = new TicketsService();
-export const mastersService = new MastersService();
 export const departmentService = new DepartmentService();
 export const assetTypeService = new AssetTypeService();
 export const brandService = new BrandService();
 export const vendorService = new VendorService();
 export const applicationService = new ApplicationService();
-export const locationService = new LocationService();
 export const slackUserService = new SlackUserService();
 export const passwordVaultService = new PasswordVaultService();
-export const expenseCategoryService = new ExpenseCategoryService();
+
 export const dashboardService = new DashboardService();
 export const licensesService = new LicensesService();
 export const reportsService = new ReportsService();
@@ -36,16 +34,14 @@ export const services = {
     asset: assetService,
     assetTabs: assetTabsService,
     ticket: ticketService,
-    masters: mastersService,
     department: departmentService,
     assetType: assetTypeService,
     brand: brandService,
     vendor: vendorService,
     application: applicationService,
-    location: locationService,
     slackUser: slackUserService,
     passwordVault: passwordVaultService,
-    expenseCategory: expenseCategoryService,
+
     licenses: licensesService,
     reports: reportsService,
     documents: documentsService,

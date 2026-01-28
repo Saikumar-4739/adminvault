@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { companyService } from '@/lib/api/services';
+import { useState, useEffect, useRef } from 'react';
 import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, CompanyResponseModel } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +10,7 @@ import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { CompanyService } from '@adminvault/shared-services';
 
 
 interface CompaniesMasterViewProps {
@@ -27,9 +27,14 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
     const [formData, setFormData] = useState({ companyName: '', location: '', email: '', phone: '', estDate: '' });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingCompanyId, setDeletingCompanyId] = useState<number | null>(null);
+    const initialized = useRef(false);
+    const companyService = new CompanyService();
 
     useEffect(() => {
-        getAllCompanies();
+        if (!initialized.current) {
+            initialized.current = true;
+            getAllCompanies();
+        }
     }, []);
 
     const getAllCompanies = async (): Promise<void> => {
@@ -119,7 +124,7 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
 
     return (
         <>
-            <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
+            <Card className="border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Companies</h3>
                     <div className="flex items-center gap-3">

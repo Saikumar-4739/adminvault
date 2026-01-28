@@ -14,6 +14,7 @@ export class AssetTypeController {
     @Post('createAssetType')
     @ApiBody({ type: CreateAssetTypeModel })
     async createAssetType(@Body() reqModel: CreateAssetTypeModel, @Req() req: any): Promise<GlobalResponse> {
+        reqModel.userId = req.user.userId;
         try {
             return await this.service.createAssetType(reqModel);
         } catch (error) {

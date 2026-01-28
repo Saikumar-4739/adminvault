@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { assetTypeService } from '@/lib/api/services';
+import { useState, useEffect, useRef } from 'react';
 import { CreateAssetTypeModel, UpdateAssetTypeModel, AssetType } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +10,7 @@ import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { AssetTypeService } from '@adminvault/shared-services';
 
 
 interface AssetTypesMasterViewProps {
@@ -26,9 +26,14 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
     const [formData, setFormData] = useState({ name: '', description: '', code: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const initialized = useRef(false);
+    const assetTypeService = new AssetTypeService();
 
     useEffect(() => {
-        getAllAssetTypes();
+        if (!initialized.current) {
+            initialized.current = true;
+            getAllAssetTypes();
+        }
     }, []);
 
     const getAllAssetTypes = async (): Promise<void> => {
@@ -116,7 +121,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
 
     return (
         <>
-            <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
+            <Card className="border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Asset Types</h3>
                     <div className="flex items-center gap-3">

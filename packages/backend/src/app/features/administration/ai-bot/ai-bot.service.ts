@@ -9,7 +9,6 @@ import { AssetInfoEntity } from '../../asset-info/entities/asset-info.entity';
 import { EmployeesEntity } from '../../employees/entities/employees.entity';
 import { TicketsEntity } from '../../tickets/entities/tickets.entity';
 import { DepartmentsMasterEntity } from '../../masters/department/entities/department.entity';
-import { LocationsMasterEntity } from '../../masters/location/entities/location.entity';
 import { VendorsMasterEntity } from '../../masters/vendor/entities/vendor.entity';
 import { PurchaseOrderEntity } from '../../procurement/entities/purchase-order.entity';
 import { DocumentEntity } from '../../documents/entities/document.entity';
@@ -208,10 +207,6 @@ export class AiBotService {
                 repo = this.dataSource.getRepository(DepartmentsMasterEntity);
                 searchFields = ['name', 'code', 'description'];
                 break;
-            case 'location':
-                repo = this.dataSource.getRepository(LocationsMasterEntity);
-                searchFields = ['name', 'city', 'country', 'address'];
-                break;
             case 'vendor':
                 repo = this.dataSource.getRepository(VendorsMasterEntity);
                 searchFields = ['name', 'email', 'contactPerson', 'code'];
@@ -258,7 +253,6 @@ export class AiBotService {
             case 'employee': repo = this.dataSource.getRepository(EmployeesEntity); break;
             case 'ticket': repo = this.dataSource.getRepository(TicketsEntity); break;
             case 'department': repo = this.dataSource.getRepository(DepartmentsMasterEntity); break;
-            case 'location': repo = this.dataSource.getRepository(LocationsMasterEntity); break;
             case 'vendor': repo = this.dataSource.getRepository(VendorsMasterEntity); break;
             case 'purchase_order': repo = this.dataSource.getRepository(PurchaseOrderEntity); break;
             case 'document': repo = this.dataSource.getRepository(DocumentEntity); break;
@@ -303,7 +297,6 @@ export class AiBotService {
             searchFields = ['name'];
         } else if (cleanQuery.includes('location')) {
             entity = 'location';
-            repo = this.dataSource.getRepository(LocationsMasterEntity);
             searchFields = ['name', 'city'];
         } else if (cleanQuery.includes('vendor')) {
             entity = 'vendor';

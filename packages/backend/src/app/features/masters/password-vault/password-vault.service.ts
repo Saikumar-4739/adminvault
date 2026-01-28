@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { PasswordVaultRepository } from './repositories/password-vault.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
-import { CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel, CreatePasswordVaultResponseModel, UpdatePasswordVaultResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { PasswordVaultMasterEntity } from './entities/password-vault.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 
@@ -13,78 +13,70 @@ export class PasswordVaultService {
         private passwordVaultRepo: PasswordVaultRepository
     ) { }
 
-    async getAllPasswordVaults(reqModel: CompanyIdRequestModel): Promise<GetAllPasswordVaultsResponseModel> {
-        try {
-            const passwordVaults = await this.passwordVaultRepo.find();
-            return new GetAllPasswordVaultsResponseModel(true, 200, 'Password Vaults retrieved successfully', passwordVaults);
-        } catch (error) {
-            throw new ErrorResponse(500, 'Failed to fetch Password Vaults');
-        }
-    }
 
-    async createPasswordVault(data: CreatePasswordVaultModel, userId?: number, ipAddress?: string): Promise<CreatePasswordVaultResponseModel> {
+    async createPasswordVault(reqModel: CreatePasswordVaultModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
-            const repo = transManager.getRepository(PasswordVaultMasterEntity);
-            const { companyId, ...createData } = data;
-            const newItem = repo.create(createData);
-            const savedItem = await repo.save(newItem);
+            const saveEnt = new PasswordVaultMasterEntity();
+            saveEnt.name = reqModel.name;
+            saveEnt.password = reqModel.password;
+            saveEnt.username = reqModel.username;
+            saveEnt.url = reqModel.url;
+            saveEnt.notes = reqModel.notes;
+            saveEnt.description = reqModel.description;
+            saveEnt.isActive = reqModel.isActive;
+            saveEnt.userId = reqModel.userId;
+            await transManager.getRepository(PasswordVaultMasterEntity).save(saveEnt);
             await transManager.completeTransaction();
-
-            return new CreatePasswordVaultResponseModel(true, 201, 'Password Vault created successfully', savedItem);
+            return new GlobalResponse(true, 201, 'Password Vault created successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to create Password Vault');
+            throw error;
         }
     }
 
-    async updatePasswordVault(data: UpdatePasswordVaultModel, userId?: number, ipAddress?: string): Promise<UpdatePasswordVaultResponseModel> {
+    async getAllPasswordVaults(): Promise<GetAllPasswordVaultsResponseModel> {
+        try {
+            const passwordVaults = await this.passwordVaultRepo.find();
+            const passwordVaultsWithCompanyName = passwordVaults.map(vault => ({ id: vault.id, userId: vault.userId, createdAt: vault.createdAt, updatedAt: vault.updatedAt, name: vault.name, description: vault.description, isActive: vault.isActive, password: vault.password, username: vault.username, url: vault.url, notes: vault.notes, }));
+            return new GetAllPasswordVaultsResponseModel(true, 200, 'Password Vaults retrieved successfully', passwordVaultsWithCompanyName);
+        } catch (error) {
+            throw error;
+        }
+    }
+    async updatePasswordVault(reqModel: UpdatePasswordVaultModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existing = await this.passwordVaultRepo.findOne({ where: { id: data.id } });
+            const existing = await this.passwordVaultRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
                 throw new ErrorResponse(404, 'Password Vault not found');
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(PasswordVaultMasterEntity);
-            await repo.save({
-                id: data.id,
-                name: data.name,
-                password: data.password,
-                description: data.description,
-                isActive: data.isActive,
-                username: data.username,
-                url: data.url,
-                notes: data.notes
-            });
-            const updated = await repo.findOne({ where: { id: data.id } });
-            if (!updated) {
-                throw new ErrorResponse(500, 'Failed to retrieve updated password vault');
-            }
+            await transManager.getRepository(PasswordVaultMasterEntity).update(reqModel.id, { name: reqModel.name, password: reqModel.password, description: reqModel.description, isActive: reqModel.isActive, username: reqModel.username, url: reqModel.url, notes: reqModel.notes });
             await transManager.completeTransaction();
-
-            return new UpdatePasswordVaultResponseModel(true, 200, 'Password Vault updated successfully', updated);
+            return new GlobalResponse(true, 200, 'Password Vault updated successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update Password Vault');
+            throw error;
         }
     }
 
-    async deletePasswordVault(reqModel: IdRequestModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async deletePasswordVault(reqModel: IdRequestModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            const findPasswrd = await this.passwordVaultRepo.findOne({ where: { id: reqModel.id } });
+            if (!findPasswrd) {
+                throw new ErrorResponse(404, 'Password Vault not found');
+            }
             await transManager.startTransaction();
-            const repo = transManager.getRepository(PasswordVaultMasterEntity);
-            const delEntity = await repo.findOne({ where: { id: reqModel.id } });
-            if (delEntity) await repo.remove(delEntity);
+            await transManager.getRepository(PasswordVaultMasterEntity).delete(reqModel.id);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 200, 'Password Vault deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw new ErrorResponse(500, 'Failed to delete Password Vault');
+            throw error;
         }
     }
 }

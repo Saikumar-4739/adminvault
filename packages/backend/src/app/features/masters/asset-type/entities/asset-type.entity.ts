@@ -15,7 +15,6 @@ export class AssetTypeMasterEntity extends MasterBaseEntity {
     @Column('text', { name: 'description', nullable: true, comment: 'Asset type description' })
     description: string;
 
-
     @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether asset type is active' })
     isActive: boolean;
 }

@@ -1,11 +1,9 @@
-export * from './masters-service';
 export * from './company-service';
 export * from './department-service';
 export * from './asset-type-service';
 export * from './brand-service';
 export * from './vendor-service';
 export * from './application-service';
-export * from './location-service';
 export * from './slack-user-service';
 export * from './password-vault-service';
-export * from './expense-category-service';
+

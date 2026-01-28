@@ -13,10 +13,6 @@ export class CompanyInfoService {
         private companyInfoRepo: CompanyInfoRepository
     ) { }
 
-    /**
-     * Create a new company
-     * Validates required fields and ensures company name uniqueness
-     */
     async createCompany(reqModel: CreateCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -60,10 +56,6 @@ export class CompanyInfoService {
         }
     }
 
-    /**
-     * Update an existing company
-     * Modifies company information for an existing company record
-     */
     async updateCompany(reqModel: UpdateCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
 
@@ -110,12 +102,6 @@ export class CompanyInfoService {
         }
     }
 
-
-    /**
-     * Get a specific company by ID
-     * Retrieves detailed information about a single company
-     *
-     */
     async getCompany(reqModel: GetCompanyModel): Promise<CompanyResponse> {
         try {
             if (!reqModel.id) {
@@ -134,11 +120,6 @@ export class CompanyInfoService {
         }
     }
 
-
-    /**
-     * Get all companies in the system
-     * Retrieves a list of all registered companies
-     */
     async getAllCompanies(): Promise<CompanyResponse> {
         try {
             const companies = await this.companyInfoRepo.find();
@@ -149,10 +130,6 @@ export class CompanyInfoService {
         }
     }
 
-    /**
-     * Get all companies for dropdown (lightweight)
-     * Returns only id and name for dropdown/select components
-     */
     async getAllCompaniesDropdown(): Promise<CompanyDropdownResponse> {
         try {
             const companies = await this.companyInfoRepo.find({ select: ['id', 'companyName'] });
@@ -163,11 +140,6 @@ export class CompanyInfoService {
         }
     }
 
-    /**
-     * Delete a company (hard delete)
-     * Permanently removes a company from the database
-     * Note: This is a hard delete, not a soft delete
-     */
     async deleteCompany(reqModel: DeleteCompanyModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {

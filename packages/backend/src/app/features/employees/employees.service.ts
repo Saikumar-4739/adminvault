@@ -15,10 +15,6 @@ export class EmployeesService {
         private employeesRepo: EmployeesRepository
     ) { }
 
-    /**
-     * Create a new employee record
-     * Validates required fields and checks for duplicate email addresses
-     */
     async createEmployee(reqModel: CreateEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -38,13 +34,11 @@ export class EmployeesService {
                 throw new ErrorResponse(0, "Employee with this email already exists");
             }
 
-            // Validate Company
             const companyExists = await this.dataSource.getRepository(CompanyInfoEntity).findOne({ where: { id: reqModel.companyId } });
             if (!companyExists) {
                 throw new ErrorResponse(0, "Invalid Company ID: Company does not exist");
             }
 
-            // Validate Department
             const deptExists = await this.dataSource.getRepository(DepartmentsMasterEntity).findOne({ where: { id: reqModel.departmentId } });
             if (!deptExists) {
                 throw new ErrorResponse(0, "Invalid Department ID: Department does not exist");
@@ -67,10 +61,6 @@ export class EmployeesService {
         }
     }
 
-    /**
-     * Update existing employee information
-     * Updates employee details including name, contact info, status, and billing amount
-     */
     async updateEmployee(reqModel: UpdateEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -102,10 +92,6 @@ export class EmployeesService {
         }
     }
 
-    /**
-     * Retrieve a specific employee by ID
-     * Fetches detailed information for a single employee
-     */
     async getEmployee(reqModel: GetEmployeeModel): Promise<GetEmployeeResponseModel> {
         try {
             if (!reqModel.id) {
@@ -132,10 +118,6 @@ export class EmployeesService {
         }
     }
 
-    /**
-     * Retrieve all employees, optionally filtered by company
-     * Fetches list of all employees or employees for a specific company
-     */
     async getAllEmployees(reqModel: CompanyIdRequestModel): Promise<GetAllEmployeesResponseModel> {
         try {
             let employees: EmployeesEntity[];
@@ -163,10 +145,6 @@ export class EmployeesService {
             throw error;
         }
     }
-
-    /**
-     * Delete an employee record (soft delete)
-     */
 
     async deleteEmployee(reqModel: DeleteEmployeeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);

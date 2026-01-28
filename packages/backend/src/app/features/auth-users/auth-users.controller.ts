@@ -1,5 +1,6 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel } from '@adminvault/shared-models';
@@ -110,6 +111,23 @@ export class AuthUsersController {
     async resetPassword(@Body() resetPasswordDto: ResetPasswordModel): Promise<GlobalResponse> {
         try {
             return await this.service.resetPassword(resetPasswordDto);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('verify-password')
+    @ApiOperation({ summary: 'Verify user password' })
+    @ApiBody({ schema: { type: 'object', properties: { password: { type: 'string' } } } })
+    async verifyPassword(@Req() req: any, @Body() body: { password: string }): Promise<GlobalResponse> {
+        try {
+            const isValid = await this.service.verifyPassword(req.user.userId, body.password);
+            if (isValid) {
+                return new GlobalResponse(true, 0, "Password verified");
+            } else {
+                return new GlobalResponse(false, 1, "Invalid password");
+            }
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

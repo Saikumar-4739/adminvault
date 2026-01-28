@@ -13,10 +13,6 @@ export class AssetTypeService {
         private assetTypeRepo: AssetTypeRepository,
     ) { }
 
-    /**
-     * Create a new asset type
-     * Validates required fields and ensures uniqueness
-     */
     async createAssetType(reqModel: CreateAssetTypeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -37,10 +33,13 @@ export class AssetTypeService {
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(AssetTypeMasterEntity);
-            const { id, companyId, ...createData } = reqModel;
-            const newItem = repo.create({ ...createData });
-            await repo.save(newItem);
+            const entiSave = new AssetTypeMasterEntity();
+            entiSave.name = reqModel.name;
+            entiSave.code = reqModel.code;
+            entiSave.description = reqModel.description;
+            entiSave.isActive = reqModel.isActive;
+            entiSave.userId = reqModel.userId;
+            await transManager.getRepository(AssetTypeMasterEntity).save(entiSave);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 201, 'Asset Type created successfully');
         } catch (error) {
@@ -49,10 +48,6 @@ export class AssetTypeService {
         }
     }
 
-    /**
-     * Update an existing asset type
-     * Modifies asset type information for an existing record
-     */
     async updateAssetType(reqModel: UpdateAssetTypeModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -77,15 +72,8 @@ export class AssetTypeService {
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(AssetTypeMasterEntity);
-            await repo.update(reqModel.id, {
-                name: reqModel.name,
-                description: reqModel.description,
-                code: reqModel.code,
-                isActive: reqModel.isActive
-            });
+            await transManager.getRepository(AssetTypeMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, code: reqModel.code, isActive: reqModel.isActive });
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 200, 'Asset Type updated successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -93,9 +81,6 @@ export class AssetTypeService {
         }
     }
 
-    /**
-     * Get a specific asset type by ID
-     */
     async getAssetType(reqModel: IdRequestModel): Promise<CreateAssetTypeResponseModel> {
         try {
             if (!reqModel.id) {
@@ -113,33 +98,16 @@ export class AssetTypeService {
         }
     }
 
-    /**
-     * Get all asset types in the system
-     */
     async getAllAssetTypes(): Promise<GetAllAssetTypesResponseModel> {
         try {
             const assetTypes = await this.assetTypeRepo.find();
-            // Assuming no specific company filter for now since request arg is removed from signature basically
-            const assetTypesWithCompanyName = assetTypes.map(asset => ({
-                id: asset.id,
-                userId: asset.userId,
-                createdAt: asset.createdAt,
-                updatedAt: asset.updatedAt,
-                name: asset.name,
-                description: asset.description,
-                isActive: asset.isActive,
-                code: asset.code,
-                companyName: '' // Simplified for now
-            }));
+            const assetTypesWithCompanyName = assetTypes.map(asset => ({ id: asset.id, userId: asset.userId, createdAt: asset.createdAt, updatedAt: asset.updatedAt, name: asset.name, description: asset.description, isActive: asset.isActive, code: asset.code, companyName: '' }));
             return new GetAllAssetTypesResponseModel(true, 200, 'Asset Types retrieved successfully', assetTypesWithCompanyName);
         } catch (error) {
             throw error;
         }
     }
 
-    /**
-     * Get all asset types for dropdown (lightweight)
-     */
     async getAllAssetTypesDropdown(): Promise<AssetTypeDropdownResponse> {
         try {
             const assetTypes = await this.assetTypeRepo.find({ select: ['id', 'name'] });
@@ -150,9 +118,6 @@ export class AssetTypeService {
         }
     }
 
-    /**
-     * Delete an asset type (hard delete)
-     */
     async deleteAssetType(reqModel: IdRequestModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -166,10 +131,8 @@ export class AssetTypeService {
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(AssetTypeMasterEntity);
-            await repo.delete(reqModel.id);
+            await transManager.getRepository(AssetTypeMasterEntity).delete(reqModel.id);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 200, 'Asset Type deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();

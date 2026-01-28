@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import React from 'react';
 
 export class AlertMessages {
@@ -23,22 +23,22 @@ export class AlertMessages {
     }
 
     static getWarningMessage(message: string | undefined | null) {
-        toast.warn(
+        toast(
             <div className="flex flex-col">
                 <span className="font-bold">Warning</span>
                 {message && <span className="text-sm opacity-90 mt-1">{message}</span>}
             </div>,
-            { position: 'top-center' }
+            { position: 'top-center', icon: '⚠️' }
         );
     }
 
     static getInfoMessage(message: string | undefined | null) {
-        toast.info(
+        toast(
             <div className="flex flex-col">
                 <span className="font-bold">Info</span>
                 {message && <span className="text-sm opacity-90 mt-1">{message}</span>}
             </div>,
-            { position: 'top-center' }
+            { position: 'top-center', icon: 'ℹ️' }
         );
     }
 }

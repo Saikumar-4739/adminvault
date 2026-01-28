@@ -3,7 +3,6 @@ import { MasterBaseEntity } from '../../../../../database/master-base.entity';
 
 @Entity('vendors')
 @Index('idx_vendor_name', ['name'])
-@Index('idx_vendor_user', ['userId'])
 export class VendorsMasterEntity extends MasterBaseEntity {
     @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Vendor name' })
     name: string;

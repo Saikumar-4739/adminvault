@@ -6,13 +6,12 @@ import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
 
 @ApiTags('Applications Master')
-@Controller('masters')
+@Controller('application')
 @UseGuards(JwtAuthGuard)
 export class ApplicationController {
     constructor(private applicationService: ApplicationService) { }
 
     @Post('getAllApplications')
-    @ApiBody({ type: CompanyIdRequestModel })
     async getAllApplications(): Promise<GetAllApplicationsResponseModel> {
         try {
             return await this.applicationService.getAllApplications();
@@ -21,37 +20,33 @@ export class ApplicationController {
         }
     }
 
-    @Post('applications')
+    @Post('createApplication')
     @ApiBody({ type: CreateApplicationModel })
-    async createApplication(@Body() data: CreateApplicationModel, @Req() req: any): Promise<CreateApplicationResponseModel> {
+    async createApplication(@Body() reqModel: CreateApplicationModel, @Req() req: any): Promise<GlobalResponse> {
+        reqModel.userId = req.user.userId;
+        reqModel.companyId = req.user.companyId;
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.applicationService.createApplication(data, userId, ipAddress);
+            return await this.applicationService.createApplication(reqModel);
         } catch (error) {
-            return returnException(CreateApplicationResponseModel, error);
+            return returnException(GlobalResponse, error);
         }
     }
 
     @Post('updateApplication')
     @ApiBody({ type: UpdateApplicationModel })
-    async updateApplication(@Body() data: UpdateApplicationModel, @Req() req: any): Promise<UpdateApplicationResponseModel> {
+    async updateApplication(@Body() reqModel: UpdateApplicationModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.applicationService.updateApplication(data, userId, ipAddress);
+            return await this.applicationService.updateApplication(reqModel);
         } catch (error) {
-            return returnException(UpdateApplicationResponseModel, error);
+            return returnException(GlobalResponse, error);
         }
     }
 
     @Post('deleteApplication')
     @ApiBody({ type: IdRequestModel })
-    async deleteApplication(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
+    async deleteApplication(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.applicationService.deleteApplication(reqModel, userId, ipAddress);
+            return await this.applicationService.deleteApplication(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

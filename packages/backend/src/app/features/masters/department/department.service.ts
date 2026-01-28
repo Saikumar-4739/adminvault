@@ -13,10 +13,6 @@ export class DepartmentService {
         private deptRepo: DepartmentRepository
     ) { }
 
-    /**
-     * Create a new department
-     * Validates required fields and ensures department name uniqueness
-     */
     async createDepartment(reqModel: CreateDepartmentModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -42,7 +38,6 @@ export class DepartmentService {
             const newItem = repo.create(createData);
             await repo.save(newItem);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 201, 'Department created successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -50,10 +45,6 @@ export class DepartmentService {
         }
     }
 
-    /**
-     * Update an existing department
-     * Modifies department information for an existing department record
-     */
     async updateDepartment(reqModel: UpdateDepartmentModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -78,15 +69,8 @@ export class DepartmentService {
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(DepartmentsMasterEntity);
-            await repo.update(reqModel.id, {
-                name: reqModel.name,
-                description: reqModel.description,
-                code: reqModel.code,
-                isActive: reqModel.isActive
-            });
+            await transManager.getRepository(DepartmentsMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, code: reqModel.code, isActive: reqModel.isActive });
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 200, 'Department updated successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -94,10 +78,6 @@ export class DepartmentService {
         }
     }
 
-    /**
-     * Get a specific department by ID
-     * Retrieves detailed information about a single department
-     */
     async getDepartment(reqModel: IdRequestModel): Promise<CreateDepartmentResponseModel> {
         try {
             if (!reqModel.id) {
@@ -115,33 +95,16 @@ export class DepartmentService {
         }
     }
 
-    /**
-     * Get all departments in the system
-     * Retrieves a list of all registered departments
-     */
     async getAllDepartments(): Promise<GetAllDepartmentsResponseModel> {
         try {
             const departments = await this.deptRepo.find();
-            const departmentsWithCompanyName = departments.map(dept => ({
-                id: dept.id,
-                userId: dept.userId || 0,
-                createdAt: dept.createdAt,
-                updatedAt: dept.updatedAt,
-                name: dept.name,
-                description: dept.description,
-                isActive: dept.isActive,
-                code: dept.code,
-            }));
+            const departmentsWithCompanyName = departments.map(dept => ({ id: dept.id, userId: dept.userId, createdAt: dept.createdAt, updatedAt: dept.updatedAt, name: dept.name, description: dept.description, isActive: dept.isActive, code: dept.code }));
             return new GetAllDepartmentsResponseModel(true, 200, 'Departments retrieved successfully', departmentsWithCompanyName);
         } catch (error) {
             throw error;;
         }
     }
 
-    /**
-     * Get all departments for dropdown (lightweight)
-     * Returns only id and name for dropdown/select components
-     */
     async getAllDepartmentsDropdown(): Promise<DepartmentDropdownResponse> {
         try {
             const departments = await this.deptRepo.find({ select: ['id', 'name'] });
@@ -152,10 +115,6 @@ export class DepartmentService {
         }
     }
 
-    /**
-     * Delete a department (hard delete)
-     * Permanently removes a department from the database
-     */
     async deleteDepartment(reqModel: IdRequestModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
@@ -169,10 +128,8 @@ export class DepartmentService {
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(DepartmentsMasterEntity);
-            await repo.delete(reqModel.id);
+            await transManager.getRepository(DepartmentsMasterEntity).delete(reqModel.id);
             await transManager.completeTransaction();
-
             return new GlobalResponse(true, 200, 'Department deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();

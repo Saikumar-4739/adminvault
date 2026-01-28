@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { applicationService } from '@/lib/api/services';
+import { useState, useEffect, useRef } from 'react';
 import { CreateApplicationModel, UpdateApplicationModel, Application } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +10,7 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { ApplicationService } from '@adminvault/shared-services';
 
 
 interface ApplicationsMasterViewProps {
@@ -26,9 +26,14 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
     const [formData, setFormData] = useState({ name: '', description: '', ownerName: '', appReleaseDate: '', code: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const applicationService = new ApplicationService();
+    const initialized = useRef(false);
 
     useEffect(() => {
-        getAllApplications();
+        if (!initialized.current) {
+            initialized.current = true;
+            getAllApplications();
+        }
     }, []);
 
     const getAllApplications = async (): Promise<void> => {
@@ -125,7 +130,7 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
 
     return (
         <>
-            <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
+            <Card className="border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Applications</h3>
                     <div className="flex items-center gap-3">
@@ -163,9 +168,9 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.ownerName || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{formatDate(item.appReleaseDate)}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.isActive
-                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${item.isActive
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
                                                     }`}>
                                                     {item.isActive ? 'Active' : 'Inactive'}
                                                 </span>

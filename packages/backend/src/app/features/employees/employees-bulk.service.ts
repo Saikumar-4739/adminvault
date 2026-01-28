@@ -18,33 +18,24 @@ export class EmployeesBulkService {
     async processBulkImport(reqModel: BulkImportRequestModel): Promise<BulkImportResponseModel> {
         try {
             const { fileBuffer, companyId, userId } = reqModel;
-            // 1. Fetch valid departments for lookup
             const departments = await this.departmentRepo.find();
-
-            // Create lookup maps
             const deptIdSet = new Set<number>(departments.map(d => d.id));
-            const deptNameMap = new Map<string, number>(); // Name -> ID
+            const deptNameMap = new Map<string, number>();
 
             departments.forEach(d => {
                 const normalizedName = d.name.toLowerCase().trim();
                 deptNameMap.set(normalizedName, d.id);
             });
 
-            // 2. Validate Company
             const companyExists = await this.dataSource.getRepository(CompanyInfoEntity).findOne({ where: { id: companyId } });
             if (!companyExists) {
                 return new BulkImportResponseModel(false, 400, "Invalid Company ID", 0, 0, []);
             }
-
-            // 3. Pre-fetch existing emails for optimization
             const existingEmails = await this.employeesRepo.find({ where: { companyId }, select: ['email'] });
             const existingEmailSet = new Set(existingEmails.map(e => e.email.toLowerCase()));
-
             const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-
-            // Convert to JSON (array of arrays)
             const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
             if (!rows || rows.length < 2) {
@@ -54,27 +45,19 @@ export class EmployeesBulkService {
             const errors: { row: number; error: string }[] = [];
             let successCount = 0;
 
-            // Start from index 1 to skip header
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                // Skip empty rows
                 if (!row || row.length === 0) continue;
 
                 try {
-                    // Expected Template:
-                    // 0: First Name, 1: Last Name, 2: Email, 3: Phone, 4: Department (ID or Name), 
-                    // 5: Status (Active/Inactive), 6: Billing Amount, 7: Remarks
-
                     const firstName = row[0]?.toString().trim();
                     const lastName = row[1]?.toString().trim();
                     const email = row[2]?.toString().trim();
                     const phone = row[3]?.toString().trim();
-                    const depInput = row[4]; // Can be string or number
+                    const depInput = row[4];
                     const statusStr = row[5]?.toString().trim().toLowerCase();
                     const billingAmount = Number(row[6]);
                     const remarks = row[7]?.toString().trim();
-
-                    // Validation & Resolution
                     if (!firstName) throw new Error('First Name is required');
                     if (!lastName) throw new Error('Last Name is required');
                     if (!email) throw new Error('Email is required');
@@ -82,7 +65,6 @@ export class EmployeesBulkService {
                     let resolvedDepartmentId: number | undefined;
 
                     if (depInput) {
-                        // Check if input is a valid Number ID
                         if (!isNaN(Number(depInput))) {
                             const idToCheck = Number(depInput);
                             if (deptIdSet.has(idToCheck)) {
@@ -90,7 +72,6 @@ export class EmployeesBulkService {
                             }
                         }
 
-                        // If not resolved yet, check by Name
                         if (!resolvedDepartmentId) {
                             const nameToCheck = depInput.toString().toLowerCase().trim();
                             if (deptNameMap.has(nameToCheck)) {
@@ -103,7 +84,6 @@ export class EmployeesBulkService {
                         throw new Error(`Department '${depInput}' not found. Please provide a valid Department Name or ID.`);
                     }
 
-                    // Check for existing email (optimization: using local set)
                     if (existingEmailSet.has(email.toLowerCase())) {
                         throw new Error(`Email ${email} already exists`);
                     }
@@ -113,7 +93,6 @@ export class EmployeesBulkService {
 
                     const newEmployee = new EmployeesEntity();
                     newEmployee.companyId = companyId;
-                    // Add userId for creation tracking if needed by CommonBaseEntity, though strictly not required by Schema if nullable
                     newEmployee.userId = userId;
                     newEmployee.firstName = firstName;
                     newEmployee.lastName = lastName;
@@ -124,9 +103,7 @@ export class EmployeesBulkService {
                     newEmployee.billingAmount = !isNaN(billingAmount) ? billingAmount : 0;
                     newEmployee.remarks = remarks;
                     newEmployee.createdAt = new Date();
-
                     await this.employeesRepo.save(newEmployee);
-                    // Add to set to catch duplicates WITHIN the file
                     existingEmailSet.add(email.toLowerCase());
                     successCount++;
                 } catch (err: any) {
@@ -136,8 +113,7 @@ export class EmployeesBulkService {
 
             return new BulkImportResponseModel(true, 200, `Processed ${rows.length - 1} rows. Success: ${successCount}, Failed: ${errors.length}`, successCount, errors.length, errors);
         } catch (error: any) {
-            console.error('Bulk Import Error:', error);
-            return new BulkImportResponseModel(false, 500, `Internal Server Error: ${error.message}`, 0, 0, []);
+            throw error;
         }
     }
 }

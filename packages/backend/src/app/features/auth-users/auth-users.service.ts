@@ -161,6 +161,26 @@ export class AuthUsersService {
         }
     }
 
+    /**
+     * Verify user password for sensitive operations (e.g. accessing Password Vault)
+     * 
+     * @param userId - ID of the user to verify
+     * @param password - Password to check
+     * @returns Boolean indicating if password is valid
+     */
+    async verifyPassword(userId: number, password: string): Promise<boolean> {
+        try {
+            const user = await this.authUsersRepo.findOne({ where: { id: userId } });
+            if (!user) {
+                throw new ErrorResponse(0, "User not found");
+            }
+            const isMatch = await bcrypt.compare(password, user.passwordHash);
+            return isMatch;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     private extractClientIp(req: Request): string {
         let ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || '127.0.0.1';
         if (typeof ip === 'string' && ip.includes(',')) {

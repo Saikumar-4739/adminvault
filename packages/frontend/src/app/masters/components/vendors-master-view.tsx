@@ -1,139 +1,85 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { vendorService, companyService } from '@/lib/api/services';
+import { useState, useEffect, useRef } from 'react';
 import { CreateVendorModel, UpdateVendorModel, Vendor } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { VendorService } from '@adminvault/shared-services';
 
 
 interface VendorsMasterViewProps {
     onBack?: () => void;
 }
 
-interface CompanyInfo {
-    id: number;
-    companyName: string;
-}
-
 export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
     const [vendors, setVendors] = useState<Vendor[]>([]);
-    const [companies, setCompanies] = useState<CompanyInfo[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        description: '',
-        contactPerson: '',
-        email: '',
-        phone: '',
-        address: '',
-        code: '',
-        companyId: '',
-        isActive: true
-    });
+    const [formData, setFormData] = useState({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '', code: '', companyId: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const lastFetchedCompanyId = useRef<number | null>(null);
+    const vendorService = new VendorService();
 
-    const getAllCompanies = async (): Promise<void> => {
-        try {
-            const response = await companyService.getAllCompanies();
-            if (response.status) {
-                setCompanies(response.data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch companies', error);
-        }
-    };
-
-    const getAllVendors = useCallback(async (): Promise<void> => {
-        if (!user?.companyId) return;
-        setIsLoading(true);
-        try {
-            const response = await vendorService.getAllVendors({ companyId: user.companyId });
-            if (response.status) {
-                setVendors(response.vendors as any);
-            } else {
-                AlertMessages.getErrorMessage(response.message || 'Failed to fetch vendors');
-            }
-        } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'Failed to fetch vendors');
-        } finally {
-            setIsLoading(false);
+    useEffect(() => {
+        if (user?.companyId && lastFetchedCompanyId.current !== user.companyId) {
+            lastFetchedCompanyId.current = user.companyId;
+            getAllVendors();
         }
     }, [user?.companyId]);
 
-    useEffect(() => {
-        if (user?.companyId) {
-            getAllVendors();
-            getAllCompanies();
+
+
+    const getAllVendors = async (): Promise<void> => {
+        if (!user?.companyId) return;
+        try {
+            const response = await vendorService.getAllVendors();
+            if (response.status) {
+                setVendors(response.vendors as any);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message);
         }
-    }, [getAllVendors, user?.companyId]);
+    }
 
     const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         if (!user) return;
-        setIsLoading(true);
         try {
             const companyIdToUse = Number(formData.companyId) || user.companyId;
             if (isEditMode && editingId) {
-                const model = new UpdateVendorModel(
-                    editingId,
-                    formData.name,
-                    formData.description,
-                    formData.isActive,
-                    formData.contactPerson,
-                    formData.email,
-                    formData.phone,
-                    formData.address,
-                    formData.code,
-                    companyIdToUse
-                );
-
+                const model = new UpdateVendorModel(editingId, formData.name, formData.description, formData.isActive, formData.contactPerson, formData.email, formData.phone, formData.address, formData.code, companyIdToUse);
                 const response = await vendorService.updateVendor(model);
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Vendor Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     getAllVendors();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Vendor');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateVendorModel(
-                    user.id,
-                    companyIdToUse,
-                    formData.name,
-                    formData.description,
-                    formData.isActive ?? true,
-                    formData.contactPerson,
-                    formData.email,
-                    formData.phone,
-                    formData.address,
-                    formData.code
-                );
+                const model = new CreateVendorModel(user.id, companyIdToUse, formData.name, formData.description, formData.isActive ?? true, formData.contactPerson, formData.email, formData.phone, formData.address, formData.code);
                 const response = await vendorService.createVendor(model);
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Vendor Created Successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     getAllVendors();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Vendor');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'An error occurred');
-        } finally {
-            setIsLoading(false);
+            AlertMessages.getErrorMessage(err.message);
         }
     };
 
@@ -161,20 +107,16 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
 
     const handleDeleteConfirm = async (): Promise<void> => {
         if (deletingId) {
-            setIsLoading(true);
             try {
                 const response = await vendorService.deleteVendor({ id: deletingId });
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Vendor Deleted Successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     getAllVendors();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to Delete Vendor');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } catch (err: any) {
-                AlertMessages.getErrorMessage(err.message || 'An error occurred');
-            } finally {
-                setIsLoading(false);
-                setDeletingId(null);
+                AlertMessages.getErrorMessage(err.message);
             }
         }
     };
@@ -188,7 +130,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
 
     return (
         <>
-            <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
+            <Card className="border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Vendors</h3>
                     <div className="flex items-center gap-3">
@@ -203,60 +145,52 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-4">
-                    {isLoading ? (
-                        <PageLoader />
-                    ) : (
-                        <div className="overflow-x-auto h-full">
-                            <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
-                                <thead className="bg-slate-50/80 dark:bg-slate-800/80">
-                                    <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Name</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Company</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Code</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Contact Person</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Phone</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-gray-900">
-                                    {vendors?.length === 0 ? (
-                                        <tr><td colSpan={6} className="p-8 text-center text-slate-500">No vendors found</td></tr>
-                                    ) : (
-                                        vendors?.map((item: Vendor, index: number) => (
-                                            <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
-                                                    {companies.find(c => c.id === item.companyId)?.companyName || '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.contactPerson || '-'}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.phone || '-'}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.isActive
-                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                                        }`}>
-                                                        {item.isActive ? 'Active' : 'Inactive'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
-                                                            <Pencil className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    <div className="overflow-x-auto h-full">
+                        <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
+                            <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Name</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Code</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Contact Person</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Phone</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-900">
+                                {vendors?.length === 0 ? (
+                                    <tr><td colSpan={6} className="p-8 text-center text-slate-500">No vendors found</td></tr>
+                                ) : (
+                                    vendors?.map((item: Vendor, index: number) => (
+                                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.contactPerson || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.phone || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${item.isActive
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                    }`}>
+                                                    {item.isActive ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                <div className="flex justify-center gap-2">
+                                                    <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -267,21 +201,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                         <Input label="Vendor Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Company</label>
-                        <select
-                            value={formData.companyId}
-                            onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                        >
-                            <option value="">Select Company</option>
-                            {companies.map((company) => (
-                                <option key={company.id} value={company.id}>
-                                    {company.companyName}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input label="Contact Person" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} />

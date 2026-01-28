@@ -4,22 +4,22 @@ import { CreateBrandModel, CreateBrandResponseModel, GetAllBrandsResponseModel, 
 
 export class BrandService extends CommonAxiosService {
     private getURL(childUrl: string) {
-        return '/masters/' + childUrl;
+        return '/brands/' + childUrl;
     }
 
-    async getAllBrands(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllBrandsResponseModel> {
-        return await this.axiosPostCall(this.getURL('getAllBrands'), reqObj, config);
+    async getAllBrands(config?: AxiosRequestConfig): Promise<GetAllBrandsResponseModel> {
+        return await this.axiosPostCall(this.getURL('getAllBrands'), {}, config);
     }
 
-    async createBrand(data: CreateBrandModel, config?: AxiosRequestConfig): Promise<CreateBrandResponseModel> {
-        return await this.axiosPostCall(this.getURL('brands'), data, config);
+    async createBrand(reqModel: CreateBrandModel, config?: AxiosRequestConfig): Promise<CreateBrandResponseModel> {
+        return await this.axiosPostCall(this.getURL('createBrand'), reqModel, config);
     }
 
-    async updateBrand(data: UpdateBrandModel, config?: AxiosRequestConfig): Promise<UpdateBrandResponseModel> {
-        return await this.axiosPostCall(this.getURL('updateBrand'), data, config);
+    async updateBrand(reqModel: UpdateBrandModel, config?: AxiosRequestConfig): Promise<UpdateBrandResponseModel> {
+        return await this.axiosPostCall(this.getURL('updateBrand'), reqModel, config);
     }
 
-    async deleteBrand(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURL('deleteBrand'), reqObj, config);
+    async deleteBrand(reqModel: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURL('deleteBrand'), reqModel, config);
     }
 }

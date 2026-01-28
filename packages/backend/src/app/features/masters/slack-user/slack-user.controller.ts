@@ -1,21 +1,20 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { SlackUserService } from './slack-user.service';
-import { CreateSlackUserModel, UpdateSlackUserModel, GetAllSlackUsersResponseModel, CreateSlackUserResponseModel, UpdateSlackUserResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateSlackUserModel, UpdateSlackUserModel, GetAllSlackUsersResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
 
 @ApiTags('Slack Users Master')
-@Controller('masters')
+@Controller('slack-users')
 @UseGuards(JwtAuthGuard)
 export class SlackUserController {
     constructor(private slackUserService: SlackUserService) { }
 
     @Post('getAllSlackUsers')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllSlackUsers(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllSlackUsersResponseModel> {
+    async getAllSlackUsers(): Promise<GetAllSlackUsersResponseModel> {
         try {
-            return await this.slackUserService.getAllSlackUsers(reqModel);
+            return await this.slackUserService.getAllSlackUsers();
         } catch (error) {
             return returnException(GetAllSlackUsersResponseModel, error);
         }
@@ -23,35 +22,30 @@ export class SlackUserController {
 
     @Post('createSlackUser')
     @ApiBody({ type: CreateSlackUserModel })
-    async createSlackUser(@Body() data: CreateSlackUserModel, @Req() req: any): Promise<CreateSlackUserResponseModel> {
+    async createSlackUser(@Body() reqModel: CreateSlackUserModel, @Req() req: any): Promise<GlobalResponse> {
+        reqModel.userId = req.user.userId;
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.slackUserService.createSlackUser(data, userId, ipAddress);
+            return await this.slackUserService.createSlackUser(reqModel);
         } catch (error) {
-            return returnException(CreateSlackUserResponseModel, error);
+            return returnException(GlobalResponse, error);
         }
     }
 
     @Post('updateSlackUser')
     @ApiBody({ type: UpdateSlackUserModel })
-    async updateSlackUser(@Body() data: UpdateSlackUserModel, @Req() req: any): Promise<UpdateSlackUserResponseModel> {
+    async updateSlackUser(@Body() reqModel: UpdateSlackUserModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.slackUserService.updateSlackUser(data, userId, ipAddress);
+            return await this.slackUserService.updateSlackUser(reqModel);
         } catch (error) {
-            return returnException(UpdateSlackUserResponseModel, error);
+            return returnException(GlobalResponse, error);
         }
     }
 
     @Post('deleteSlackUser')
     @ApiBody({ type: IdRequestModel })
-    async deleteSlackUser(@Body() reqModel: IdRequestModel, @Req() req: any): Promise<GlobalResponse> {
+    async deleteSlackUser(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.slackUserService.deleteSlackUser(reqModel, userId, ipAddress);
+            return await this.slackUserService.deleteSlackUser(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

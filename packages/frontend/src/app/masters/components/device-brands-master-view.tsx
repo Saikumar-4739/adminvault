@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { brandService } from '@/lib/api/services';
+import { useState, useEffect, useRef } from 'react';
 import { CreateBrandModel, UpdateBrandModel, DeviceBrand } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { PageLoader } from '@/components/ui/Spinner';
 import { Plus, Pencil, Trash2, ArrowLeft, Star } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { BrandService } from '@adminvault/shared-services';
 
 
 interface DeviceBrandsMasterViewProps {
@@ -21,85 +20,62 @@ interface DeviceBrandsMasterViewProps {
 export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
     const [brands, setBrands] = useState<DeviceBrand[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [formData, setFormData] = useState({ name: '', description: '', website: '', rating: '', code: '' });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const lastFetchedCompanyId = useRef<number | null>(null);
+    const brandService = new BrandService();
 
-    const getAllBrands = useCallback(async (): Promise<void> => {
-        if (!user?.companyId) return;
-        setIsLoading(true);
-        try {
-            const response = await brandService.getAllBrands({ companyId: user.companyId });
-            if (response.status) {
-                setBrands(response.brands || []);
-            } else {
-                AlertMessages.getErrorMessage(response.message || 'Failed to fetch brands');
-            }
-        } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'Failed to fetch brands');
-        } finally {
-            setIsLoading(false);
+    useEffect(() => {
+        if (user?.companyId && lastFetchedCompanyId.current !== user.companyId) {
+            lastFetchedCompanyId.current = user.companyId;
+            getAllBrands();
         }
     }, [user?.companyId]);
 
-    useEffect(() => {
-        if (user?.companyId) {
-            getAllBrands();
+    const getAllBrands = async (): Promise<void> => {
+        try {
+            const response = await brandService.getAllBrands();
+            if (response.status) {
+                setBrands(response.brands || []);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message);
         }
-    }, [getAllBrands, user?.companyId]);
+    };
 
     const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         if (!user) return;
-        setIsLoading(true);
         try {
             if (isEditMode && editingId) {
-                const model = new UpdateBrandModel(
-                    editingId,
-                    formData.name,
-                    formData.description,
-                    true, // isActive, not in form currently so defaulting to true or existing
-                    formData.website,
-                    formData.rating ? parseFloat(formData.rating) : undefined,
-                    formData.code
-                );
-
+                const model = new UpdateBrandModel(editingId, formData.name, formData.description, true, formData.website, formData.rating ? parseFloat(formData.rating) : undefined, formData.code);
                 const response = await brandService.updateBrand(model);
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Brand Updated Successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     getAllBrands();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to Update Brand');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateBrandModel(
-                    user.id,
-                    0,
-                    formData.name,
-                    formData.description,
-                    true,
-                    formData.website,
-                    formData.rating ? parseFloat(formData.rating) : undefined,
-                    formData.code
-                );
+                const model = new CreateBrandModel(user.id, 0, formData.name, formData.description, true, formData.website, formData.rating ? parseFloat(formData.rating) : undefined, formData.code);
                 const response = await brandService.createBrand(model);
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Brand Created Successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     getAllBrands();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to Create Brand');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'An error occurred');
-        } finally {
-            setIsLoading(false);
+            AlertMessages.getErrorMessage(err.message);
         }
     };
 
@@ -123,20 +99,16 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
 
     const handleDeleteConfirm = async (): Promise<void> => {
         if (deletingId) {
-            setIsLoading(true);
             try {
                 const response = await brandService.deleteBrand({ id: deletingId });
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Brand Deleted Successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     getAllBrands();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to Delete Brand');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } catch (err: any) {
-                AlertMessages.getErrorMessage(err.message || 'An error occurred');
-            } finally {
-                setIsLoading(false);
-                setDeletingId(null);
+                AlertMessages.getErrorMessage(err.message);
             }
         }
     };
@@ -150,7 +122,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
 
     return (
         <>
-            <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
+            <Card className="border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Device Brands</h3>
                     <div className="flex items-center gap-3">
@@ -165,72 +137,68 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-4">
-                    {isLoading ? (
-                        <PageLoader />
-                    ) : (
-                        <div className="overflow-x-auto h-full">
-                            <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
-                                <thead className="bg-slate-50/80 dark:bg-slate-800/80">
-                                    <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Brand Name</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Brand Code</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Website</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Rating</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-gray-900">
-                                    {brands?.length === 0 ? (
-                                        <tr><td colSpan={5} className="p-8 text-center text-slate-500">No brands found</td></tr>
-                                    ) : (
-                                        brands?.map((item: DeviceBrand, index: number) => (
-                                            <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
-                                                    {item.website ? (
-                                                        <a href={item.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">
-                                                            {item.website}
-                                                        </a>
-                                                    ) : '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    {item.rating ? (
-                                                        <div className="flex justify-center items-center gap-1">
-                                                            <div className="flex">
-                                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                                    <Star
-                                                                        key={star}
-                                                                        className={`h-4 w-4 ${star <= (parseFloat(item.rating) || 0)
-                                                                            ? "fill-yellow-400 text-yellow-400"
-                                                                            : "text-slate-300 dark:text-slate-600"
-                                                                            }`}
-                                                                    />
-                                                                ))}
-                                                            </div>
-                                                            <span className="text-xs text-slate-500 font-medium ml-1">
-                                                                ({parseFloat(item.rating).toFixed(1)})
-                                                            </span>
+                    <div className="overflow-x-auto h-full">
+                        <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
+                            <thead className="bg-slate-50/80 dark:bg-slate-800/80">
+                                <tr>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Brand Name</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Brand Code</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Website</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Rating</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-900">
+                                {brands?.length === 0 ? (
+                                    <tr><td colSpan={5} className="p-8 text-center text-slate-500">No brands found</td></tr>
+                                ) : (
+                                    brands?.map((item: DeviceBrand, index: number) => (
+                                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
+                                                {item.website ? (
+                                                    <a href={item.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">
+                                                        {item.website}
+                                                    </a>
+                                                ) : '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                {item.rating ? (
+                                                    <div className="flex justify-center items-center gap-1">
+                                                        <div className="flex">
+                                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                                <Star
+                                                                    key={star}
+                                                                    className={`h-4 w-4 ${star <= (parseFloat(item.rating) || 0)
+                                                                        ? "fill-yellow-400 text-yellow-400"
+                                                                        : "text-slate-300 dark:text-slate-600"
+                                                                        }`}
+                                                                />
+                                                            ))}
                                                         </div>
-                                                    ) : '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
-                                                            <Pencil className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
+                                                        <span className="text-xs text-slate-500 font-medium ml-1">
+                                                            ({parseFloat(item.rating).toFixed(1)})
+                                                        </span>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                                ) : '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                <div className="flex justify-center gap-2">
+                                                    <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
 

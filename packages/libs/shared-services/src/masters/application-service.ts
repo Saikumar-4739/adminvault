@@ -4,22 +4,22 @@ import { CreateApplicationModel, CreateApplicationResponseModel, GetAllApplicati
 
 export class ApplicationService extends CommonAxiosService {
     private getURL(childUrl: string) {
-        return '/masters/' + childUrl;
+        return '/application/' + childUrl;
     }
 
     async getAllApplications(config?: AxiosRequestConfig): Promise<GetAllApplicationsResponseModel> {
         return await this.axiosPostCall(this.getURL('getAllApplications'), {}, config);
     }
 
-    async createApplication(data: CreateApplicationModel, config?: AxiosRequestConfig): Promise<CreateApplicationResponseModel> {
-        return await this.axiosPostCall(this.getURL('applications'), data, config);
+    async createApplication(reqModel: CreateApplicationModel, config?: AxiosRequestConfig): Promise<CreateApplicationResponseModel> {
+        return await this.axiosPostCall(this.getURL('createApplication'), reqModel, config);
     }
 
-    async updateApplication(data: UpdateApplicationModel, config?: AxiosRequestConfig): Promise<UpdateApplicationResponseModel> {
-        return await this.axiosPostCall(this.getURL('updateApplication'), data, config);
+    async updateApplication(reqModel: UpdateApplicationModel, config?: AxiosRequestConfig): Promise<UpdateApplicationResponseModel> {
+        return await this.axiosPostCall(this.getURL('updateApplication'), reqModel, config);
     }
 
-    async deleteApplication(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURL('deleteApplication'), reqObj, config);
+    async deleteApplication(reqModel: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURL('deleteApplication'), reqModel, config);
     }
 }

@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { departmentService } from '@/lib/api/services';
+import { useState, useEffect, useRef } from 'react';
 import { CreateDepartmentModel, UpdateDepartmentModel, Department } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +10,7 @@ import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { DepartmentService } from '@adminvault/shared-services';
 
 interface DepartmentsMasterViewProps {
     onBack?: () => void;
@@ -25,9 +25,14 @@ export const DepartmentsMasterView: React.FC<DepartmentsMasterViewProps> = ({ on
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [departmentToDelete, setDepartmentToDelete] = useState<{ id: number; name: string } | null>(null);
     const [formData, setFormData] = useState({ name: '', description: '', code: '', status: '', isActive: true });
+    const initialized = useRef(false);
+    const departmentService = new DepartmentService();
 
     useEffect(() => {
-        getAllDepartments();
+        if (!initialized.current) {
+            initialized.current = true;
+            getAllDepartments();
+        }
     }, []);
 
     const getAllDepartments = async (): Promise<void> => {
@@ -117,7 +122,7 @@ export const DepartmentsMasterView: React.FC<DepartmentsMasterViewProps> = ({ on
 
     return (
         <>
-            <Card className="border-none shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
+            <Card className="border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Departments</h3>
                     <div className="flex items-center gap-3">
@@ -151,7 +156,10 @@ export const DepartmentsMasterView: React.FC<DepartmentsMasterViewProps> = ({ on
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{d.name}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{d.code || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${d.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${d.isActive
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                    }`}>
                                                     {d.isActive ? 'Active' : 'Inactive'}
                                                 </span>
                                             </td>
