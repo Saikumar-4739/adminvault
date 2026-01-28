@@ -1,5 +1,5 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { TicketsService } from './tickets.service';
 import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, CompanyIdRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel, GetTicketStatisticsRequestModel } from '@adminvault/shared-models';

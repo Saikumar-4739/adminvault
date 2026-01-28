@@ -1,5 +1,4 @@
 import { Body, Controller, Post, UseInterceptors, UploadedFile } from '@nestjs/common';
-import { Public } from '../../decorators/public.decorator';
 import { ApiBody, ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';

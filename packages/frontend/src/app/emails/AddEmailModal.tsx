@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { EmailTypeEnum } from '@adminvault/shared-models';
-import { employeeService, mastersService } from '@/lib/api/services';
+import { employeeService, departmentService } from '@/lib/api/services';
 import { User, Mail, Shield, Building } from 'lucide-react';
 
 interface AddEmailModalProps {
@@ -42,7 +42,7 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
             // Use getAllEmployees API with undefined to fetch global identity list
             const response = await employeeService.getAllEmployees(undefined as any);
             if (response.status) {
-                const data = (response as any).employees || (response as any).data || [];
+                const data = response.data || [];
                 setEmployees(data);
             }
         } catch (error) {
@@ -52,7 +52,7 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
 
     const fetchDepartments = useCallback(async () => {
         try {
-            const response = await mastersService.getAllDepartments(companyId as any);
+            const response = await departmentService.getAllDepartments();
             if (response.status) {
                 setDepartments(response.departments || []);
                 if (response.departments?.length > 0 && !formData.department) {
@@ -167,7 +167,7 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                             <option value="">General / System (No Owner)</option>
                             {employees.map(emp => (
                                 <option key={emp.id} value={emp.id}>
-                                    {emp.firstName} {emp.lastName} {emp.company?.companyName ? `[${emp.company.companyName}]` : ''}
+                                    {emp.firstName} {emp.lastName}{emp.managerName ? ` (Mgr: ${emp.managerName})` : ''} {emp.company?.companyName ? `[${emp.company.companyName}]` : ''}
                                 </option>
                             ))}
                         </select>

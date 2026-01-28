@@ -1,20 +1,20 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { employeeService, companyService, mastersService } from '@/lib/api/services';
+import { motion, AnimatePresence } from 'framer-motion';
+import { employeeService, companyService, departmentService } from '@/lib/api/services';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
-import {
-    Plus, Users, Edit, Trash2, Mail, Phone,
-    LayoutGrid, List, Search, Building2, Upload
-} from 'lucide-react';
+import { Plus, Users, Edit, Trash2, Mail, Phone, LayoutGrid, List, Search, Upload } from 'lucide-react';
 import dynamic from 'next/dynamic';
-const EmployeeBulkImportModal = dynamic(() => import('./components/EmployeeBulkImportModal').then(mod => mod.EmployeeBulkImportModal), { ssr: false });
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { UserRoleEnum, CompanyIdRequestModel, CreateEmployeeModel, UpdateEmployeeModel, EmployeeStatusEnum } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
 
 interface Employee {
     id: number;
@@ -28,6 +28,8 @@ interface Employee {
     empStatus: string;
     billingAmount?: number;
     remarks?: string;
+    managerId?: number | null;
+    managerName?: string;
     createdAt?: string;
 }
 
@@ -47,21 +49,25 @@ const EmployeesPage: React.FC = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [companies, setCompanies] = useState<Company[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-
-
     const [selectedOrg, setSelectedOrg] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const EmployeeBulkImportModal = dynamic(() => import('./bulk-import').then(mod => mod.EmployeeBulkImportModal), { ssr: false });
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [editingEmployee, setEditingEmployee] = useState<any>(null);
+    const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', companyId: '', departmentId: '', accountStatus: EmployeeStatusEnum.ACTIVE as string, billingAmount: '', remarks: '', managerId: '' });
+
 
     const fetchEmployees = useCallback(async () => {
         if (!selectedOrg) return;
-        setIsLoading(true);
         try {
             const req = new CompanyIdRequestModel(Number(selectedOrg));
             const response = await employeeService.getAllEmployees(req);
             if (response.status) {
-                const data = (response as any).employees || response.data || [];
+                const data = response.data || [];
                 const mappedEmployees: Employee[] = data.map((item: any) => ({
                     id: item.id,
                     firstName: item.firstName,
@@ -74,6 +80,8 @@ const EmployeesPage: React.FC = () => {
                     empStatus: item.empStatus,
                     billingAmount: item.billingAmount,
                     remarks: item.remarks,
+                    managerId: item.managerId,
+                    managerName: item.managerName,
                     createdAt: item.createdAt || new Date().toISOString()
                 }));
                 setEmployees(mappedEmployees);
@@ -81,9 +89,7 @@ const EmployeesPage: React.FC = () => {
                 AlertMessages.getErrorMessage(response.message);
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'Failed to fetch employees');
-        } finally {
-            setIsLoading(false);
+            AlertMessages.getErrorMessage(err.message);
         }
     }, [selectedOrg]);
 
@@ -92,41 +98,27 @@ const EmployeesPage: React.FC = () => {
             const response = await companyService.getAllCompanies();
             if (response.status && response.data) {
                 setCompanies(response.data as Company[]);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (err: any) {
-            console.error('Failed to fetch companies:', err);
+            AlertMessages.getErrorMessage(err.message);
         }
     }, []);
 
     const fetchDepartments = useCallback(async () => {
         if (!user?.companyId) return;
         try {
-            const req = new CompanyIdRequestModel(user.companyId);
-            const response = await mastersService.getAllDepartments(req);
+            const response = await departmentService.getAllDepartments();
             if (response.status) {
                 setDepartments(response.departments || []);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (err: any) {
-            console.error('Failed to fetch departments:', err);
+            AlertMessages.getErrorMessage(err.message);
         }
     }, []);
-
-    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingEmployee, setEditingEmployee] = useState<any>(null);
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        companyId: '',
-        departmentId: '',
-        accountStatus: 'Active',
-        billingAmount: '',
-        remarks: ''
-    });
 
     useEffect(() => {
         if (user?.companyId && !selectedOrg) {
@@ -155,43 +147,59 @@ const EmployeesPage: React.FC = () => {
             return;
         }
 
-        const payload = {
-            companyId,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            phNumber: formData.phone,
-            departmentId: Number(formData.departmentId),
-            empStatus: formData.accountStatus as any,
-            billingAmount: Number(formData.billingAmount),
-            remarks: formData.remarks
-        };
+        const managerIdValue = formData.managerId ? Number(formData.managerId) : null;
 
-        setIsLoading(true);
         try {
             if (editingEmployee) {
-                const response = await employeeService.updateEmployee({ id: editingEmployee.id, ...payload } as any);
+                const model = new UpdateEmployeeModel(
+                    editingEmployee.id,
+                    user?.id || 0,
+                    companyId,
+                    formData.firstName,
+                    formData.lastName,
+                    formData.email,
+                    Number(formData.departmentId),
+                    formData.accountStatus as EmployeeStatusEnum,
+                    formData.phone,
+                    Number(formData.billingAmount),
+                    formData.remarks,
+                    undefined, undefined, undefined, undefined,
+                    managerIdValue
+                );
+                const response = await employeeService.updateEmployee(model);
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Employee updated successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     fetchEmployees();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to update employee');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const response = await employeeService.createEmployee(payload as any);
+                const model = new CreateEmployeeModel(
+                    user?.id || 0,
+                    companyId,
+                    formData.firstName,
+                    formData.lastName,
+                    formData.email,
+                    Number(formData.departmentId),
+                    formData.accountStatus as EmployeeStatusEnum,
+                    formData.phone,
+                    Number(formData.billingAmount),
+                    formData.remarks,
+                    undefined, undefined, undefined, undefined,
+                    managerIdValue
+                );
+                const response = await employeeService.createEmployee(model);
                 if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Employee created successfully');
+                    AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
                     fetchEmployees();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to create employee');
+                    AlertMessages.getErrorMessage(response.message);
                 }
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'An error occurred');
-        } finally {
-            setIsLoading(false);
+            AlertMessages.getErrorMessage(err.message);
         }
     };
 
@@ -204,29 +212,33 @@ const EmployeesPage: React.FC = () => {
             phone: employee.phNumber || '',
             companyId: String(employee.companyId || ''),
             departmentId: String(employee.departmentId || ''),
-            accountStatus: employee.empStatus || 'Active',
-            billingAmount: employee.billingAmount ? String(employee.billingAmount) : '',
-            remarks: employee.remarks || ''
+            accountStatus: employee.empStatus || EmployeeStatusEnum.ACTIVE,
+            billingAmount: (employee.billingAmount !== undefined && employee.billingAmount !== null) ? String(employee.billingAmount) : '',
+            remarks: employee.remarks || '',
+            managerId: employee.managerId ? String(employee.managerId) : ''
         });
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (employee: any) => {
-        if (confirm(`Delete ${employee.firstName} ${employee.lastName}?`)) {
-            setIsLoading(true);
-            try {
-                const response = await employeeService.deleteEmployee({ id: employee.id });
-                if (response.status) {
-                    AlertMessages.getSuccessMessage(response.message || 'Employee deleted successfully');
-                    fetchEmployees();
-                } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to delete employee');
-                }
-            } catch (err: any) {
-                AlertMessages.getErrorMessage(err.message || 'Failed to delete employee');
-            } finally {
-                setIsLoading(false);
+    const handleDeleteClick = (employee: any) => {
+        setEditingEmployee(employee);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!editingEmployee) return;
+        try {
+            const response = await employeeService.deleteEmployee({ id: editingEmployee.id });
+            if (response.status) {
+                AlertMessages.getSuccessMessage(response.message);
+                fetchEmployees();
+                setIsDeleteModalOpen(false);
+                setEditingEmployee(null);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message);
         }
     };
 
@@ -235,7 +247,7 @@ const EmployeesPage: React.FC = () => {
         setEditingEmployee(null);
         setFormData({
             firstName: '', lastName: '', email: '', phone: '', companyId: '', departmentId: '',
-            accountStatus: 'Active', billingAmount: '', remarks: ''
+            accountStatus: EmployeeStatusEnum.ACTIVE, billingAmount: '', remarks: '', managerId: ''
         });
     };
 
@@ -243,19 +255,11 @@ const EmployeesPage: React.FC = () => {
         return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
     };
 
-    const getStatusColor = (status?: string) => {
-        const s = status?.toLowerCase();
-        if (s === 'active') return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800';
-        if (s === 'inactive') return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800';
-        return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800';
-    };
-
     const getDepartmentName = (emp: any) => {
         if (emp.departmentId && departments.length > 0) {
             const dept = departments.find(d => d.id === Number(emp.departmentId));
             if (dept) return dept.name;
         }
-        // Fallback to the string if it looks like a name, or parse if it's "Dept ID: X"
         if (emp.departmentName && !emp.departmentName.startsWith('Dept ID:')) {
             return emp.departmentName;
         }
@@ -287,7 +291,8 @@ const EmployeesPage: React.FC = () => {
             emp.firstName?.toLowerCase().includes(searchLower) ||
             emp.lastName?.toLowerCase().includes(searchLower) ||
             emp.email?.toLowerCase().includes(searchLower) ||
-            deptName.includes(searchLower)
+            deptName.includes(searchLower) ||
+            emp.managerName?.toLowerCase().includes(searchLower)
         );
 
         const matchesStatus = statusFilter === 'all' ||
@@ -308,299 +313,343 @@ const EmployeesPage: React.FC = () => {
         }).length
     };
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
     return (
-        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-4 lg:p-6 space-y-6 max-w-[1920px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-900/50">
-                {/* Header & Controls */}
-                <div className="flex flex-col gap-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
-                                <Users className="h-5 w-5 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Employees Registry</h1>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                    {stats.total} total Â· {stats.active} active identities
-                                </p>
+        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]} >
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-8">
+                {/* Standardized Header */}
+                <div className="p-4 space-y-4">
+                    <PageHeader
+                        title="Employee Directory"
+                        description="Manage organization members and roles"
+                        icon={<Users />}
+                        gradient="from-indigo-600 to-indigo-700"
+                        actions={[
+                            {
+                                label: 'Import',
+                                onClick: () => setIsImportModalOpen(true),
+                                icon: <Upload className="h-4 w-4" />,
+                                variant: 'outline'
+                            },
+                            {
+                                label: 'Add Employee',
+                                onClick: () => setIsModalOpen(true),
+                                icon: <Plus className="h-4 w-4" />,
+                                variant: 'primary'
+                            }
+                        ]}
+                    >
+                        <div className="flex justify-end w-full">
+                            <div className="hidden md:flex items-center px-3 py-1 bg-slate-100 dark:bg-slate-700/50 rounded-md border border-slate-200 dark:border-slate-600">
+                                <span className="text-xs font-semibold text-slate-500 mr-2">Total:</span>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{stats.total}</span>
+                                <span className="mx-2 text-slate-300">|</span>
+                                <span className="text-xs font-semibold text-emerald-600 mr-2">Active:</span>
+                                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{stats.active}</span>
+                                <span className="mx-2 text-slate-300">|</span>
+                                <span className="text-xs font-semibold text-rose-600 mr-2">Inactive:</span>
+                                <span className="text-sm font-bold text-rose-700 dark:text-rose-400">{stats.inactive}</span>
                             </div>
                         </div>
+                    </PageHeader>
+                </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-2">
-                            <div className="flex bg-white dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shadow-sm mr-2 h-9 items-center">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`p-1 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
-                                >
-                                    <LayoutGrid className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-1 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
-                                >
-                                    <List className="h-3.5 w-3.5" />
-                                </button>
-                            </div>
-
-                            <Button
-                                variant="secondary"
-                                onClick={() => setIsImportModalOpen(true)}
-                                disabled={!selectedOrg}
-                                className="h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest"
-                                leftIcon={<Upload className="h-3.5 w-3.5" />}
-                            >
-                                Import
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onClick={() => setIsModalOpen(true)}
-                                disabled={!selectedOrg}
-                                className="h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md shadow-indigo-500/20"
-                                leftIcon={<Plus className="h-3.5 w-3.5" />}
-                            >
-                                Add Employee
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Filters Bar */}
-                    <div className="flex flex-col sm:flex-row gap-3 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                {/* Toolbar */}
+                <div className="max-w-[1920px] mx-auto px-4 py-4 space-y-4">
+                    <div className="flex flex-col md:flex-row gap-3">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="Search by name, email, or department..."
-                                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                                placeholder="Search employees..."
+                                className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
 
-                        <div className="relative min-w-[160px]">
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="w-full appearance-none px-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer font-medium"
-                            >
-                                <option value="all">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <svg className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
-
-                        <div className="relative min-w-[200px]">
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                        <div className="flex gap-3">
                             <select
                                 value={selectedOrg}
                                 onChange={(e) => setSelectedOrg(e.target.value)}
-                                className="w-full appearance-none pl-9 pr-8 py-1.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer font-bold uppercase tracking-widest"
+                                className="pl-3 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-w-[180px]"
                             >
-                                <option value="">Organization</option>
+                                <option value="">Select Organization</option>
                                 {companies.map((company) => (
-                                    <option key={company.id} value={company.id}>
-                                        {company.companyName}
-                                    </option>
+                                    <option key={company.id} value={company.id}>{company.companyName}</option>
                                 ))}
                             </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <svg className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="pl-3 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                <option value="all">Status: All</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+
+                            <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1 border border-slate-200 dark:border-slate-600">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                >
+                                    <LayoutGrid className="h-4 w-4" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                >
+                                    <List className="h-4 w-4" />
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Main Content */}
-                <div>
-                    {isLoading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                                <div key={i} className="h-32 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
-                            ))}
-                        </div>
-                    ) : filteredEmployees.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
-                            <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-full mb-4">
-                                <Users className="h-8 w-8 text-slate-400" />
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No employees found</h3>
-                            <p className="text-slate-500 text-sm mt-1 max-w-sm text-center">
-                                Try adjusting your search query or select a different organization.
-                            </p>
-                        </div>
-                    ) : viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {filteredEmployees.map((emp) => (
-                                <div key={emp.id} className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg hover:border-indigo-500/30 transition-all duration-300 relative flex gap-4 items-start">
-                                    {/* Action Menu (Always Visible) */}
-                                    <div className="absolute top-2 right-2 flex gap-1">
-                                        <button onClick={() => handleEdit(emp)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-400 hover:text-indigo-600 transition-colors">
-                                            <Edit className="h-3.5 w-3.5" />
-                                        </button>
-                                        <button onClick={() => handleDelete(emp)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full text-slate-400 hover:text-rose-600 transition-colors">
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                    </div>
-
-                                    {/* Avatar with Status Dot */}
-                                    <div className="relative shrink-0">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm bg-gradient-to-br ${getDepartmentBg(emp)}`}>
-                                            {getInitials(emp.firstName, emp.lastName)}
-                                        </div>
-                                        <div className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 border-2 border-white dark:border-slate-800 rounded-full ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
-                                    </div>
-
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-slate-900 dark:text-white truncate text-[15px]">
-                                            {emp.firstName} {emp.lastName}
-                                        </h3>
-                                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate flex items-center gap-1.5">
-                                            {getDepartmentName(emp)}
-                                        </div>
-
-                                        <div className="mt-3 space-y-1">
-                                            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 truncate">
-                                                <Mail className="h-3 w-3 shrink-0 opacity-70" />
-                                                <span className="truncate">{emp.email}</span>
-                                            </div>
-                                            {emp.phNumber && (
-                                                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 truncate">
-                                                    <Phone className="h-3 w-3 shrink-0 opacity-70" />
-                                                    <span className="truncate">{emp.phNumber}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                    {/* Content */}
+                    <AnimatePresence mode="wait">
+                        {filteredEmployees.length === 0 ? (
+                            <motion.div
+                                key="empty"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-lg border border-dashed border-slate-300 dark:border-slate-700"
+                            >
+                                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-full mb-4">
+                                    <Users className="h-8 w-8 text-slate-400" />
                                 </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
-                                    <tr>
-                                        <th className="px-6 py-2.5">Global Identity</th>
-                                        <th className="px-6 py-2.5">Communications</th>
-                                        <th className="px-6 py-2.5">Organizational Unit</th>
-                                        <th className="px-6 py-2.5">Operational State</th>
-                                        <th className="px-6 py-2.5 text-right pr-8">Management</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                    {filteredEmployees.map((emp) => (
-                                        <tr key={emp.id} className="group hover:bg-slate-50/50 dark:hover:bg-indigo-900/10 transition-colors">
-                                            <td className="px-6 py-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br ${getDepartmentBg(emp)}`}>
-                                                        {getInitials(emp.firstName, emp.lastName)}
+                                <h3 className="text-base font-semibold text-slate-900 dark:text-white">No employees found</h3>
+                                <p className="text-slate-500 text-sm mt-1">
+                                    Adjust search or filters to see results.
+                                </p>
+                            </motion.div>
+                        ) : viewMode === 'grid' ? (
+                            <motion.div
+                                key="grid"
+                                variants={containerVariants}
+                                initial="hidden"
+                                animate="visible"
+                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                            >
+                                {filteredEmployees.map((emp) => (
+                                    <motion.div
+                                        key={emp.id}
+                                        className="group relative bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700/50 hover:shadow-md transition-all duration-200"
+                                    >
+                                        <div className="p-4 flex items-start gap-4">
+                                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-sm bg-gradient-to-br ${getDepartmentBg(emp)}`}>
+                                                {getInitials(emp.firstName, emp.lastName)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-start">
+                                                    <h3 className="font-semibold text-slate-900 dark:text-white text-sm truncate pr-2">
+                                                        {emp.firstName} {emp.lastName}
+                                                    </h3>
+                                                    <span className={`inline-block w-2 h-2 rounded-full ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                                                </div>
+                                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate font-medium">
+                                                    {getDepartmentName(emp)}
+                                                </div>
+                                                <div className="mt-2 text-xs text-slate-500 space-y-0.5">
+                                                    <div className="flex items-center gap-1.5 truncate">
+                                                        <Mail className="h-3 w-3 opacity-70" /> {emp.email}
                                                     </div>
-                                                    <div>
-                                                        <div className="font-semibold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</div>
-                                                        <div className="text-xs text-slate-500">{emp.email}</div>
+                                                    <div className="flex items-center gap-1.5 truncate">
+                                                        <Phone className="h-3 w-3 opacity-70" /> {emp.phNumber || '-'}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 truncate text-indigo-600 dark:text-indigo-400 font-medium">
+                                                        <Users className="h-3 w-3 opacity-70" /> Mgr: {emp.managerName || '-'}
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-slate-500 text-xs">
-                                                {emp.phNumber ? (
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Phone className="h-3 w-3" /> {emp.phNumber}
-                                                    </div>
-                                                ) : <span className="text-slate-400">-</span>}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                                                    {getDepartmentName(emp) || 'N/A'}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${getStatusColor(emp.empStatus)}`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
-                                                    {emp.empStatus}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right pr-6">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <button onClick={() => handleEdit(emp)} className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-md text-slate-400 hover:text-indigo-600 shadow-sm border border-transparent hover:border-slate-200"><Edit className="h-3.5 w-3.5" /></button>
-                                                    <button onClick={() => handleDelete(emp)} className="p-1.5 hover:bg-white dark:hover:bg-rose-900/20 rounded-md text-slate-400 hover:text-rose-600 shadow-sm border border-transparent hover:border-rose-200"><Trash2 className="h-3.5 w-3.5" /></button>
-                                                </div>
-                                            </td>
+                                            </div>
+                                        </div>
+                                        <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2 bg-slate-50/50 dark:bg-slate-800/50 rounded-b-lg">
+                                            <button onClick={() => handleEdit(emp)} className="p-1.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md text-slate-400 hover:text-indigo-600 transition-colors" title="Edit">
+                                                <Edit className="h-4 w-4" />
+                                            </button>
+                                            <button onClick={() => handleDeleteClick(emp)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md text-slate-400 hover:text-rose-600 transition-colors" title="Delete">
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="list"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm"
+                            >
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
+                                        <tr>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[280px]">Employee</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[200px]">Contact</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Department</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[150px]">Manager</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[120px]">Status</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Billing</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {filteredEmployees.map((emp) => (
+                                            <tr key={emp.id} className="group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                                <td className="px-4 py-2.5">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br ${getDepartmentBg(emp)}`}>
+                                                            {getInitials(emp.firstName, emp.lastName)}
+                                                        </div>
+                                                        <div>
+                                                            <div className="font-semibold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</div>
+                                                            <div className="text-xs text-slate-500">ID: {emp.id}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    <div className="flex flex-col text-xs space-y-0.5">
+                                                        <div className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                                            <Mail className="h-3 w-3 text-slate-400" />
+                                                            {emp.email}
+                                                        </div>
+                                                        <div className="text-slate-500 flex items-center gap-1.5">
+                                                            <Phone className="h-3 w-3 text-slate-400" />
+                                                            {emp.phNumber || '-'}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                                        {getDepartmentName(emp)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    <div className="text-sm text-slate-700 dark:text-slate-300 font-medium">{emp.managerName || '-'}</div>
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium border ${emp.empStatus?.toLowerCase() === 'active'
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                        }`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                                                        {emp.empStatus}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-2.5 text-right font-medium text-slate-700 dark:text-slate-300">
+                                                    ₹{Number(emp.billingAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                                </td>
+                                                <td className="px-4 py-2.5 text-right">
+                                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => handleEdit(emp)} className="p-1.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded text-slate-400 hover:text-indigo-600 transition-colors">
+                                                            <Edit className="h-3.5 w-3.5" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteClick(emp)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded text-slate-400 hover:text-rose-600 transition-colors">
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {/* Modals */}
-                <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingEmployee ? 'Edit Employee' : 'Add Employee'} size="lg">
+                <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingEmployee ? 'Edit Employee Profile' : 'Add New Employee'} size="lg">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input label="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required placeholder="e.g. John" />
-                            <Input label="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required placeholder="e.g. Doe" />
+                        <div className="grid grid-cols-2 gap-5">
+                            <Input label="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required />
+                            <Input label="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required />
                         </div>
-                        <Input label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required placeholder="john.doe@company.com" />
+                        <Input label="Email Address" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Company</label>
-                                <select
-                                    value={formData.companyId}
-                                    onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500"
-                                    required
-                                    disabled={!!editingEmployee}
-                                >
-                                    <option value="">Select Company</option>
-                                    {companies.map((company) => (
-                                        <option key={company.id} value={company.id}>
-                                            {company.companyName}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <Input label="Phone" type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
+                        <div className="grid grid-cols-2 gap-5">
+                            <Select
+                                label="Organization"
+                                value={formData.companyId}
+                                onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                                options={[
+                                    { value: '', label: 'Select Organization' },
+                                    ...companies.map(c => ({ value: c.id, label: c.companyName }))
+                                ]}
+                                required
+                                disabled={!!editingEmployee}
+                            />
+                            <Input label="Phone Number" type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Department</label>
-                                <select
-                                    value={formData.departmentId}
-                                    onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500"
-                                    required
-                                >
-                                    <option value="">Select Department</option>
-                                    {departments?.filter(d => d.isActive).map((dept) => (
-                                        <option key={dept.id} value={dept.id}>
-                                            {dept.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                        <div className="grid grid-cols-2 gap-5">
+                            <Select
+                                label="Department"
+                                value={formData.departmentId}
+                                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                                options={[
+                                    { value: '', label: 'Select Department' },
+                                    ...(departments?.filter(d => d.isActive).map(d => ({ value: d.id, label: d.name })) || [])
+                                ]}
+                                required
+                            />
 
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Status</label>
-                                <select value={formData.accountStatus} onChange={(e) => setFormData({ ...formData, accountStatus: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500">
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
-                                </select>
-                            </div>
+                            <Select
+                                label="Reporting Manager"
+                                value={formData.managerId}
+                                onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
+                                options={[
+                                    { value: '', label: 'No Manager' },
+                                    ...filteredEmployees
+                                        .filter(emp => !editingEmployee || emp.id !== editingEmployee.id)
+                                        .map(emp => ({ value: emp.id, label: `${emp.firstName} ${emp.lastName}` }))
+                                ]}
+                            />
                         </div>
-                        <Input label="Remarks" value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} placeholder="Any additional notes..." />
 
-                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                            <Button variant="outline" onClick={handleCloseModal} type="button">Cancel</Button>
-                            <Button variant="primary" type="submit">{editingEmployee ? 'Update Employee' : 'Create Employee'}</Button>
+                        <div className="grid grid-cols-2 gap-5">
+                            <Select
+                                label="Account Status"
+                                value={formData.accountStatus}
+                                onChange={(e) => setFormData({ ...formData, accountStatus: e.target.value })}
+                                options={[
+                                    { value: EmployeeStatusEnum.ACTIVE, label: 'Active' },
+                                    { value: EmployeeStatusEnum.INACTIVE, label: 'Inactive' }
+                                ]}
+                            />
+                            <Input
+                                label="Billing Amount"
+                                type="number"
+                                step="0.01"
+                                value={formData.billingAmount}
+                                onChange={(e) => setFormData({ ...formData, billingAmount: e.target.value })}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Additional Remarks</label>
+                            <textarea
+                                value={formData.remarks}
+                                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                                placeholder="Any additional notes or comments..."
+                                rows={3}
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none font-medium resize-none"
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-700">
+                            <Button variant="outline" onClick={handleCloseModal} type="button" className="rounded-xl">Cancel</Button>
+                            <Button variant="primary" type="submit" className="rounded-xl px-6">{editingEmployee ? 'Save Changes' : 'Create Member'}</Button>
                         </div>
                     </form>
                 </Modal>
@@ -608,7 +657,18 @@ const EmployeesPage: React.FC = () => {
                     isOpen={isImportModalOpen}
                     onClose={() => setIsImportModalOpen(false)}
                     companyId={Number(selectedOrg)}
+
                     onSuccess={() => fetchEmployees()}
+                />
+                <DeleteConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => {
+                        setIsDeleteModalOpen(false);
+                        setEditingEmployee(null);
+                    }}
+                    onConfirm={confirmDelete}
+                    title="Delete Employee"
+                    itemName={editingEmployee ? `${editingEmployee.firstName} ${editingEmployee.lastName}` : undefined}
                 />
             </div>
         </RouteGuard >

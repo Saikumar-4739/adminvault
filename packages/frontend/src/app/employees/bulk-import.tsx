@@ -4,9 +4,9 @@ import { useState, useRef } from 'react';
 import { Upload, FileUp, AlertCircle, CheckCircle, Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { useToast } from '@/contexts/ToastContext';
-import { services } from '@/lib/api/services';
 import * as XLSX from 'xlsx';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { EmployeesService } from '@adminvault/shared-services';
 
 interface EmployeeBulkImportModalProps {
     isOpen: boolean;
@@ -21,10 +21,9 @@ interface EmployeeBulkImportModalProps {
 
 export const EmployeeBulkImportModal: React.FC<EmployeeBulkImportModalProps> = ({ isOpen, onClose, companyId, onSuccess }: EmployeeBulkImportModalProps) => {
     const [file, setFile] = useState<File | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
     const [importResult, setImportResult] = useState<{ success: boolean; message: string; successCount: number; errorCount: number; errors: { row: number; error: string }[] } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { success, error: showError } = useToast();
+    const employeeService = new EmployeesService();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -34,21 +33,8 @@ export const EmployeeBulkImportModal: React.FC<EmployeeBulkImportModalProps> = (
     };
 
     const handleDownloadTemplate = () => {
-        const headers = [
-            'First Name',
-            'Last Name',
-            'Email',
-            'Phone',
-            'Department (ID or Name)',
-            'Status (active/inactive)',
-            'Billing Amount',
-            'Remarks'
-        ];
-
-        const exampleRow = [
-            'John', 'Doe', 'john.doe@company.com', '555-0123', 'Engineering', 'active', '5000', 'Senior Dev'
-        ];
-
+        const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Department (ID or Name)', 'Status (active/inactive)', 'Billing Amount', 'Remarks', 'Reporting Manager (ID or Email)'];
+        const exampleRow = ['John', 'Doe', 'john.doe@company.com', '555-0123', 'Engineering', 'active', '5000', 'Senior Dev', 'manager@company.com'];
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
         XLSX.utils.book_append_sheet(wb, ws, 'Template');
@@ -58,52 +44,27 @@ export const EmployeeBulkImportModal: React.FC<EmployeeBulkImportModalProps> = (
     const handleUpload = async () => {
         if (!file || !companyId) return;
 
-        setIsLoading(true);
         try {
             const userData = localStorage.getItem('user');
             const userId = userData ? JSON.parse(userData).id : 1;
-
-            const response = await services.employee.bulkImport(file, companyId, userId);
+            const response = await employeeService.bulkImport(file, companyId, userId);
 
             if (response.status) {
-                setImportResult({
-                    success: true,
-                    message: response.message,
-                    successCount: response.successCount,
-                    errorCount: response.errorCount,
-                    errors: response.errors
-                });
-
+                setImportResult({ success: true, message: response.message, successCount: response.successCount, errorCount: response.errorCount, errors: response.errors });
                 if (response.errorCount === 0) {
-                    success('Import Successful', `Successfully imported ${response.successCount} employees.`);
+                    AlertMessages.getSuccessMessage(response.message);
                     setTimeout(() => {
                         onSuccess();
                         onClose();
                     }, 2000);
                 } else {
-                    showError('Import Completed with Errors', `Imported ${response.successCount} employees, but ${response.errorCount} failed.`);
+                    AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                setImportResult({
-                    success: false,
-                    message: response.message,
-                    successCount: 0,
-                    errorCount: 0,
-                    errors: []
-                });
-                showError('Import Failed', response.message);
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (err: any) {
-            showError('Import Error', err.message || 'Failed to upload file');
-            setImportResult({
-                success: false,
-                message: err.message || 'Unexpected error occurred',
-                successCount: 0,
-                errorCount: 0,
-                errors: []
-            });
-        } finally {
-            setIsLoading(false);
+            AlertMessages.getErrorMessage(err.message);
         }
     };
 
@@ -126,6 +87,7 @@ export const EmployeeBulkImportModal: React.FC<EmployeeBulkImportModalProps> = (
                     <ul className="list-disc list-inside text-sm text-slate-600 dark:text-slate-400 space-y-1">
                         <li>Download the template file to see the required format.</li>
                         <li>Fill in the employee details. Department matches by ID or Name (case-insensitive).</li>
+                        <li>Reporting Manager can be specified by their ID or Email address.</li>
                         <li>Email must be unique.</li>
                         <li>Status must be one of: active, inactive.</li>
                     </ul>
@@ -205,14 +167,12 @@ export const EmployeeBulkImportModal: React.FC<EmployeeBulkImportModalProps> = (
                 )}
 
                 <div className="flex justify-end gap-3 pt-2">
-                    <Button variant="outline" onClick={onClose} disabled={isLoading}>
+                    <Button variant="outline" onClick={onClose}>
                         Cancel
                     </Button>
                     <Button
                         variant="primary"
                         onClick={handleUpload}
-                        disabled={!file || isLoading}
-                        isLoading={isLoading}
                     >
                         Import Employees
                     </Button>

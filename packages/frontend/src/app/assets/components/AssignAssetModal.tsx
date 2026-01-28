@@ -37,7 +37,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
             const req = new CompanyIdRequestModel(user.companyId);
             const response = await employeeService.getAllEmployees(req as any);
             if (response.status) {
-                setEmployees(response.employees || []);
+                setEmployees(response.data || []);
             }
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message || 'Failed to fetch employees');
@@ -138,7 +138,10 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
                         onChange={handleChange}
                         options={[
                             { value: '', label: 'Select Employee' },
-                            ...employees.map(e => ({ value: e.id, label: `${e.firstName} ${e.lastName} (${e.employeeId})` }))
+                            ...employees.map(e => ({
+                                value: e.id,
+                                label: `${e.firstName} ${e.lastName}${e.managerName ? ` (Mgr: ${e.managerName})` : ''}`
+                            }))
                         ]}
                         required
                     />

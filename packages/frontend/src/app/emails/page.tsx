@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { companyService, emailService, mastersService } from '@/lib/api/services';
+import { companyService, emailService, departmentService } from '@/lib/api/services';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, DepartmentEnum, EmailTypeEnum, EmailInfoResponseModel, CreateEmailInfoModel, DeleteEmailInfoModel, CompanyIdRequestModel } from '@adminvault/shared-models';
@@ -11,8 +11,9 @@ import {
     TrendingUp, Megaphone, Users2,
     User, Users, Globe
 } from 'lucide-react';
-import AddEmailModal from './AddEmailModal';
+import { AddEmailModal } from './AddEmailModal';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
 
 
 // Category Definitions
@@ -61,6 +62,8 @@ const InfoEmailsPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<any>(null);
 
     const fetchCompanies = useCallback(async () => {
         try {
@@ -76,8 +79,8 @@ const InfoEmailsPage: React.FC = () => {
     const fetchDepartments = useCallback(async () => {
         if (!selectedOrg) return;
         try {
-            const req = new CompanyIdRequestModel(Number(selectedOrg));
-            const response = await mastersService.getAllDepartments(req as any);
+            // const req = new CompanyIdRequestModel(Number(selectedOrg));
+            const response = await departmentService.getAllDepartments();
             if (response.status) {
                 setDepartments(response.departments || []);
             }
@@ -145,22 +148,29 @@ const InfoEmailsPage: React.FC = () => {
         }
     };
 
-    const handleDeleteEmailInfo = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this record?')) return;
+    const handleDeleteEmailInfo = (id: number) => {
+        const item = emailInfoList.find(e => e.id === id);
+        if (item) {
+            setItemToDelete(item);
+            setIsDeleteModalOpen(true);
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
         setIsLoading(true);
         try {
-            const response = await emailService.deleteEmailInfo({ id } as DeleteEmailInfoModel);
+            const response = await emailService.deleteEmailInfo({ id: itemToDelete.id } as DeleteEmailInfoModel);
             if (response.status) {
                 AlertMessages.getSuccessMessage(response.message || 'Email info record removed');
                 await fetchEmailInfo();
-                return true;
+                setIsDeleteModalOpen(false);
+                setItemToDelete(null);
             } else {
                 AlertMessages.getErrorMessage(response.message || 'Failed to delete record');
-                return false;
             }
         } catch (err: any) {
             AlertMessages.getErrorMessage(err.message || 'Failed to delete record');
-            return false;
         } finally {
             setIsLoading(false);
         }
@@ -202,7 +212,7 @@ const InfoEmailsPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
-            <div className="p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
+            <div className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
                 {/* Header */}
                 <PageHeader
                     icon={<Mail />}
@@ -372,6 +382,16 @@ const InfoEmailsPage: React.FC = () => {
                     companyId={Number(selectedOrg)}
                     onSuccess={handleCreateEmailInfo}
                     initialTab={activeTab}
+                />
+                <DeleteConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => {
+                        setIsDeleteModalOpen(false);
+                        setItemToDelete(null);
+                    }}
+                    onConfirm={confirmDelete}
+                    title="Delete Email"
+                    itemName={itemToDelete ? itemToDelete.email : undefined}
                 />
             </div>
         </RouteGuard>

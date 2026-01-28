@@ -51,7 +51,7 @@ const ReportsPage: React.FC = () => {
             reports: [
                 { name: 'Asset Inventory Report', description: 'Global inventory status and lifecycle metrics', icon: BarChart3, stats: 'All Assets' },
                 { name: 'Asset Allocation Plan', description: 'Resource distribution across operational units', icon: Users, stats: 'Assigned' },
-                { name: 'Warranty Watchlist', description: 'Predictive maintenance and warranty coverage', icon: Clock, stats: 'Active' },
+                { name: 'Warranty Watchlist', description: 'Predictive tracking and warranty coverage', icon: Clock, stats: 'Active' },
                 { name: 'Operational Intensity', description: 'Asset utilization by key departments', icon: TrendingUp, stats: 'Utilization' },
                 { name: 'Device Diversity', description: 'Segmented breakdown by brand and type', icon: Package, stats: 'Breakdown' },
                 { name: 'Liquid Assets (Unassigned)', description: 'Available resources for immediate deployment', icon: AlertCircle, stats: 'Available' },
@@ -156,7 +156,7 @@ const ReportsPage: React.FC = () => {
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
             {selectedReport ? (
                 // Detailed Report View
-                <div className="min-h-screen bg-white dark:bg-[#020617] p-3 lg:p-6 animate-in fade-in duration-500">
+                <div className="min-h-screen bg-white dark:bg-[#020617] p-4 animate-in fade-in duration-500">
                     {/* Back Navigation */}
                     <div className="mb-8">
                         <button
@@ -317,9 +317,9 @@ const ReportsPage: React.FC = () => {
                 </div>
             ) : (
                 // Reports Hub List View
-                <div className="min-h-screen bg-slate-50/30 dark:bg-[#020617] p-3 lg:p-6 animate-in fade-in duration-500">
+                <div className="min-h-screen bg-slate-50/30 dark:bg-[#020617] p-4 space-y-4 animate-in fade-in duration-500">
                     <PageHeader
-                        title="Reports Hub"
+                        title="All Reports"
                         description="Enterprise Operational Intelligence & Advanced Audit Systems"
                         icon={<BarChart3 />}
                         gradient="from-indigo-600 to-blue-500"

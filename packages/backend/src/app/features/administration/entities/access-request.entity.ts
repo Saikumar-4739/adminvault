@@ -1,5 +1,4 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 export enum AccessRequestStatus {
     PENDING = 'PENDING',

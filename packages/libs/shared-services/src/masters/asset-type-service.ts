@@ -1,6 +1,6 @@
 import { CommonAxiosService } from '../common-axios-service';
 import { AxiosRequestConfig } from 'axios';
-import { CreateAssetTypeModel, CreateAssetTypeResponseModel, GetAllAssetTypesResponseModel, CompanyIdRequestModel, IdRequestModel, UpdateAssetTypeModel, UpdateAssetTypeResponseModel, AssetTypeDropdownResponse, GlobalResponse } from '@adminvault/shared-models';
+import { CreateAssetTypeModel, CreateAssetTypeResponseModel, GetAllAssetTypesResponseModel, IdRequestModel, UpdateAssetTypeModel, AssetTypeDropdownResponse, GlobalResponse } from '@adminvault/shared-models';
 
 export class AssetTypeService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {

@@ -2,13 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, DeleteAssetAssignModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, GetExpiringWarrantyRequestModel } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, GetExpiringWarrantyRequestModel } from '@adminvault/shared-models';
 import { AssetInfoEntity } from './entities/asset-info.entity';
 import { AssetAssignEntity } from './entities/asset-assign.entity';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
 import { AssetAssignRepository } from './repositories/asset-assign.repository';
-import { LessThan, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
+import { LessThan } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
 
@@ -203,7 +202,7 @@ export class AssetInfoService {
 
     /**
      * Get asset statistics grouped by status
-     * Provides counts of assets in each status (Available, In Use, Maintenance, Retired)
+     * Provides counts of assets in each status (Available, In Use, Retired)
      * Uses repository method for efficient aggregation
      * 
      * @param companyId - Company ID to get statistics for
@@ -219,13 +218,13 @@ export class AssetInfoService {
 
             const statsData = await this.assetInfoRepo.getAssetStatistics(reqModel);
             // Transform to expected format
-            const statistics = {
-                total: statsData.reduce((sum, item) => sum + parseInt(item.count), 0),
-                available: statsData.find(s => s.status === AssetStatusEnum.AVAILABLE)?.count || 0,
-                inUse: statsData.find(s => s.status === AssetStatusEnum.IN_USE)?.count || 0,
-                maintenance: statsData.find(s => s.status === AssetStatusEnum.MAINTENANCE)?.count || 0,
-                retired: statsData.find(s => s.status === AssetStatusEnum.RETIRED)?.count || 0
-            };
+            const available = parseInt(statsData.find(s => s.status === AssetStatusEnum.AVAILABLE)?.count || '0');
+            const inUse = parseInt(statsData.find(s => s.status === AssetStatusEnum.IN_USE)?.count || '0');
+            const maintenance = parseInt(statsData.find(s => s.status === AssetStatusEnum.MAINTENANCE)?.count || '0');
+            const retired = parseInt(statsData.find(s => s.status === AssetStatusEnum.RETIRED)?.count || '0');
+            const total = available + inUse + maintenance + retired;
+
+            const statistics = { total, available, inUse, maintenance, retired };
 
             return new AssetStatisticsResponseModel(true, 0, "Statistics retrieved successfully", statistics);
         } catch (error) {

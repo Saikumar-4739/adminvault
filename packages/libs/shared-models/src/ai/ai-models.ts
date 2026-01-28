@@ -20,8 +20,8 @@ export class AiQueryResponse extends GlobalResponse {
         code: number,
         message: string,
         response: string,
-        intent: string = 'unknown',
-        entity: string = 'none',
+        intent = 'unknown',
+        entity = 'none',
         data: any[] = []
     ) {
         super(status, code, message);

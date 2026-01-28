@@ -58,7 +58,6 @@ export class AssetBulkService {
 
                     let status = AssetStatusEnum.AVAILABLE;
                     if (statusStr === 'in_use' || statusStr === 'in use') status = AssetStatusEnum.IN_USE;
-                    else if (statusStr === 'maintenance') status = AssetStatusEnum.MAINTENANCE;
                     else if (statusStr === 'retired') status = AssetStatusEnum.RETIRED;
 
                     let purchaseDate: Date | null = null;

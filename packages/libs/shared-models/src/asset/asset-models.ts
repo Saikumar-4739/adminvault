@@ -385,7 +385,7 @@ export class GetExpiringWarrantyRequestModel {
     companyId: number;
     months?: number;
 
-    constructor(companyId: number, months: number = 3) {
+    constructor(companyId: number, months = 3) {
         this.companyId = companyId;
         this.months = months;
     }

@@ -9,6 +9,7 @@ import { Check, Clock, AlertCircle, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { PageLoader } from '@/components/ui/Spinner';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const ApprovalsPage: React.FC = () => {
     const { user } = useAuth();
@@ -80,23 +81,14 @@ const ApprovalsPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 space-y-6 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950/30">
+            <div className="p-4 space-y-4 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950/30">
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
-                            <Check className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Approval Center
-                            </h1>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-bold uppercase tracking-widest">
-                                Workflow Management
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <PageHeader
+                    icon={<Check />}
+                    title="Approval Center"
+                    description="Workflow Management"
+                    gradient="from-indigo-500 to-purple-600"
+                />
 
                 {/* Tabs */}
                 <div>

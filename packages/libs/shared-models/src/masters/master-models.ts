@@ -379,7 +379,7 @@ export class UpdateApplicationModel {
     appReleaseDate?: Date;
     code?: string;
 
-    constructor(id: number, name: string, description?: string, isActive: boolean = true, ownerName?: string, appReleaseDate?: Date, code?: string) {
+    constructor(id: number, name: string, description?: string, isActive = true, ownerName?: string, appReleaseDate?: Date, code?: string) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -398,7 +398,7 @@ export class UpdateExpenseCategoryModel {
     categoryType?: string;
     budgetLimit?: number;
 
-    constructor(id: number, name: string, description?: string, isActive: boolean = true, categoryType?: string, budgetLimit?: number) {
+    constructor(id: number, name: string, description?: string, isActive = true, categoryType?: string, budgetLimit?: number) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -418,7 +418,7 @@ export class UpdatePasswordVaultModel {
     url?: string;
     notes?: string;
 
-    constructor(id: number, name: string, password: string, description?: string, isActive: boolean = true, username?: string, url?: string, notes?: string) {
+    constructor(id: number, name: string, password: string, description?: string, isActive = true, username?: string, url?: string, notes?: string) {
         this.id = id;
         this.name = name;
         this.password = password;
@@ -743,7 +743,7 @@ export class UpdateSlackUserModel {
     avatar?: string;
     employeeId?: number;
 
-    constructor(id: number, name: string, email: string, description?: string, isActive: boolean = true, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, companyId?: number, avatar?: string, employeeId?: number) {
+    constructor(id: number, name: string, email: string, description?: string, isActive = true, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, companyId?: number, avatar?: string, employeeId?: number) {
         this.id = id;
         this.name = name;
         this.email = email;

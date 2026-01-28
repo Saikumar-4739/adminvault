@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Plus, Trash2, ShoppingCart } from 'lucide-react';
-import { CreatePOModel, POItemModel, Vendor, AssetType, CompanyIdRequestModel } from '@adminvault/shared-models';
-import { mastersService, procurementService } from '@/lib/api/services';
+import { CreatePOModel, POItemModel, Vendor, AssetType } from '@adminvault/shared-models';
+import { vendorService, assetTypeService, procurementService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -40,9 +40,8 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
     const fetchMasters = async () => {
         if (!user?.companyId) return;
         try {
-            const req = new CompanyIdRequestModel(user.companyId);
-            const vRes = await mastersService.getAllVendors(req);
-            const aRes = await mastersService.getAllAssetTypes(req);
+            const vRes = await vendorService.getAllVendors();
+            const aRes = await assetTypeService.getAllAssetTypes();
             setVendors(vRes.vendors || []);
             setAssetTypes(aRes.assetTypes || []);
         } catch (err: any) {

@@ -121,7 +121,7 @@ const KnowledgeBasePage: React.FC = () => {
     };
 
     return (
-        <div className="p-6 space-y-6 min-h-screen bg-slate-50/50 dark:bg-slate-950">
+        <div className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
             <PageHeader
                 title="Knowledge Base"
                 description="Centralized repository for IT documentation, guides, and policies."
@@ -138,7 +138,7 @@ const KnowledgeBasePage: React.FC = () => {
             />
 
             {/* Hero Search Section */}
-            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 to-slate-800 p-10 text-center shadow-xl">
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-slate-900 to-slate-800 p-8 text-center shadow-xl">
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
                 <h2 className="text-3xl font-black text-white mb-4 relative z-10">
                     How can we help you today?

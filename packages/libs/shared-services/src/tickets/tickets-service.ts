@@ -8,7 +8,6 @@ import {
     GetTicketByIdModel,
     GetAllTicketsModel,
     GlobalResponse,
-    TicketStatusEnum,
     CompanyIdRequestModel,
     GetTicketStatisticsRequestModel,
     UpdateTicketStatusRequestModel,

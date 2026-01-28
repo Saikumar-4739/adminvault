@@ -5,7 +5,7 @@ import { Check } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { AssetStatusEnum } from '@adminvault/shared-models';
-import { mastersService } from '@/lib/api/services';
+import { brandService, assetTypeService } from '@/lib/api/services';
 
 interface AdvancedFilterModalProps {
     isOpen: boolean;
@@ -29,33 +29,27 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen
         purchaseDateTo: ''
     });
 
-    const getCompanyId = useCallback((): number => {
-        const storedUser = localStorage.getItem('auth_user');
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        return user?.companyId || 1;
-    }, []);
-
     const fetchBrands = useCallback(async () => {
         try {
-            const response = await mastersService.getAllBrands(getCompanyId() as any);
+            const response = await brandService.getAllBrands();
             if (response.status) {
                 setBrands(response.brands || []);
             }
         } catch (error) {
             console.error('Failed to fetch brands:', error);
         }
-    }, [getCompanyId]);
+    }, []);
 
     const fetchAssetTypes = useCallback(async () => {
         try {
-            const response = await mastersService.getAllAssetTypes(getCompanyId() as any);
+            const response = await assetTypeService.getAllAssetTypes();
             if (response.status) {
                 setAssetTypes(response.assetTypes || []);
             }
         } catch (error) {
             console.error('Failed to fetch asset types:', error);
         }
-    }, [getCompanyId]);
+    }, []);
 
     useEffect(() => {
         if (isOpen) {

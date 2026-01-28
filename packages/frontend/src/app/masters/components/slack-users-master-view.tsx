@@ -18,6 +18,7 @@ interface EmployeeOption {
     email: string;
     phone: string;
     department: string;
+    manager?: string;
 }
 
 interface SlackUsersMasterViewProps {
@@ -71,13 +72,14 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         try {
             const req = new CompanyIdRequestModel(user?.companyId || 0);
             const [empRes, deptRes] = await Promise.all([employeeService.getAllEmployees(req), departmentService.getAllDepartments()]);
-            if (empRes.status && empRes.employees) {
-                setEmployees(empRes.employees.map((e: any) => ({
+            if (empRes.status && empRes.data) {
+                setEmployees(empRes.data.map((e: any) => ({
                     id: e.id,
                     name: `${e.firstName} ${e.lastName}`,
                     email: e.email,
                     phone: e.phNumber,
-                    department: e.departmentName
+                    department: e.departmentName,
+                    manager: e.managerName
                 })));
             }
 
@@ -297,7 +299,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                         >
                             <option value="">Select Employee</option>
                             {employees.map(emp => (
-                                <option key={emp.id} value={emp.id}>{emp.name} ({emp.department})</option>
+                                <option key={emp.id} value={emp.id}>{emp.name} ({emp.department}){emp.manager ? ` - Mgr: ${emp.manager}` : ''}</option>
                             ))}
                         </select>
                     </div>

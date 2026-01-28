@@ -23,8 +23,8 @@ export class ErrorResponse extends HttpException {
 export class SuccessResponse<T = any> {
     constructor(
         public readonly data: T,
-        public readonly message: string = 'Success',
-        public readonly code: number = 1
+        public readonly message = 'Success',
+        public readonly code = 1
     ) { }
 
     toJSON() {

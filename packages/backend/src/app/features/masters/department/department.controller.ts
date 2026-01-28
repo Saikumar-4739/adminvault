@@ -1,8 +1,8 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { DepartmentService } from './department.service';
-import { CreateDepartmentModel, UpdateDepartmentModel, GetAllDepartmentsResponseModel, CreateDepartmentResponseModel, DepartmentDropdownResponse, UpdateDepartmentResponseModel, IdRequestModel } from '@adminvault/shared-models';
+import { CreateDepartmentModel, UpdateDepartmentModel, DepartmentDropdownResponse, IdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
 
 @ApiTags('Departments Master')

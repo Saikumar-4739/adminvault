@@ -1,6 +1,6 @@
 import { CommonAxiosService } from '../common-axios-service';
 import { AxiosRequestConfig } from 'axios';
-import { CreateApplicationModel, CreateApplicationResponseModel, GetAllApplicationsResponseModel, CompanyIdRequestModel, IdRequestModel, UpdateApplicationModel, UpdateApplicationResponseModel, GlobalResponse } from '@adminvault/shared-models';
+import { CreateApplicationModel, CreateApplicationResponseModel, GetAllApplicationsResponseModel, IdRequestModel, UpdateApplicationModel, UpdateApplicationResponseModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class ApplicationService extends CommonAxiosService {
     private getURL(childUrl: string) {

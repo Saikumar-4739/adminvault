@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Bot, Send, Sparkles, Minimize2, Paperclip } from 'lucide-react';
+import { Bot, Send, Minimize2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { aiService } from '@/lib/api/services';
 

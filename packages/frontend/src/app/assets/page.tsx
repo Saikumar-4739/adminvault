@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import {
     Package, Warehouse, History, Plus, FileUp, Filter,
-    Activity, CheckCircle2, AlertCircle, User, AlertTriangle
+    Activity, CheckCircle2, User, RefreshCw
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 
@@ -19,6 +19,7 @@ const AssetFormModal = dynamic(() => import('./components/AssetFormModal').then(
 const AssignAssetModal = dynamic(() => import('./components/AssignAssetModal').then(mod => mod.AssignAssetModal), { ssr: false });
 
 import { PageHeader } from '@/components/ui/PageHeader';
+import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { assetService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
@@ -66,6 +67,7 @@ const AssetsPage: React.FC = () => {
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState<any>(null);
 
     const [assets, setAssets] = useState<Asset[]>([]);
@@ -196,7 +198,7 @@ const AssetsPage: React.FC = () => {
     const tabs = [
         { id: 'store', label: 'Store Assets', icon: Warehouse, gradient: 'from-emerald-500 to-teal-500' },
         { id: 'assigned', label: 'Assigned Assets', icon: User, gradient: 'from-blue-500 to-indigo-500' },
-        { id: 'maintenance', label: 'Maintenance Assets', icon: AlertTriangle, gradient: 'from-amber-500 to-orange-500' },
+        { id: 'maintenance', label: 'Maintenance Assets', icon: RefreshCw, gradient: 'from-orange-500 to-amber-500' },
         { id: 'not_used', label: 'Not Used Assets', icon: History, gradient: 'from-slate-500 to-gray-500' }
     ];
 
@@ -215,19 +217,25 @@ const AssetsPage: React.FC = () => {
         setIsAssignModalOpen(true);
     };
 
-    const handleDelete = async (asset: any) => {
-        if (confirm(`Are you sure you want to delete asset ${asset.serialNumber}?`)) {
-            try {
-                const response = await assetService.deleteAsset({ id: asset.id });
-                if (response.status) {
-                    AlertMessages.getSuccessMessage('Asset deleted successfully');
-                    refresh();
-                } else {
-                    AlertMessages.getErrorMessage(response.message);
-                }
-            } catch (err: any) {
-                AlertMessages.getErrorMessage(err.message || 'Failed to delete asset');
+    const handleDelete = (asset: any) => {
+        setSelectedAsset(asset);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!selectedAsset) return;
+        try {
+            const response = await assetService.deleteAsset({ id: selectedAsset.id });
+            if (response.status) {
+                AlertMessages.getSuccessMessage('Asset deleted successfully');
+                refresh();
+                setIsDeleteModalOpen(false);
+                setSelectedAsset(null);
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to delete asset');
         }
     };
 
@@ -258,9 +266,9 @@ const AssetsPage: React.FC = () => {
     );
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-4 space-y-4">
             <PageHeader
-                title="IT Asset Inventory"
+                title="Asset Inventory"
                 description="Manage and track hardware assets across the organization."
                 icon={<Package />}
                 gradient="from-emerald-500 to-teal-600"
@@ -304,13 +312,13 @@ const AssetsPage: React.FC = () => {
                     label="Available Stock"
                     value={statistics?.available}
                     icon={<CheckCircle2 className="h-6 w-6" />}
-                    gradient="from-amber-500 to-orange-600"
+                    gradient="from-emerald-500 to-teal-600"
                 />
                 <StatCard
-                    label="In Maintenance"
+                    label="Under Maintenance"
                     value={statistics?.maintenance}
-                    icon={<AlertCircle className="h-6 w-6" />}
-                    gradient="from-rose-500 to-pink-600"
+                    icon={<RefreshCw className="h-6 w-6" />}
+                    gradient="from-orange-500 to-amber-600"
                 />
             </div>
 
@@ -421,7 +429,19 @@ const AssetsPage: React.FC = () => {
                         refresh();
                     }}
                 />
+
             )}
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => {
+                    setIsDeleteModalOpen(false);
+                    setSelectedAsset(null);
+                }}
+                onConfirm={confirmDelete}
+                title="Delete Asset"
+                itemName={selectedAsset ? selectedAsset.assetName : undefined}
+                description="Are you sure you want to delete this asset? This action cannot be undone."
+            />
         </div>
     );
 }

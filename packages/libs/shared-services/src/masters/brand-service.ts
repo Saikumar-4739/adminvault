@@ -1,6 +1,6 @@
 import { CommonAxiosService } from '../common-axios-service';
 import { AxiosRequestConfig } from 'axios';
-import { CreateBrandModel, CreateBrandResponseModel, GetAllBrandsResponseModel, CompanyIdRequestModel, IdRequestModel, UpdateBrandModel, UpdateBrandResponseModel, GlobalResponse } from '@adminvault/shared-models';
+import { CreateBrandModel, CreateBrandResponseModel, GetAllBrandsResponseModel, IdRequestModel, UpdateBrandModel, UpdateBrandResponseModel, GlobalResponse } from '@adminvault/shared-models';
 
 export class BrandService extends CommonAxiosService {
     private getURL(childUrl: string) {

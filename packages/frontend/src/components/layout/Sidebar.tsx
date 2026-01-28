@@ -1,6 +1,6 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, KeySquare, ChevronLeft, ChevronRight, FileText, PieChart, Settings as SettingsIcon, UserCircle, Plus, GitPullRequest, Book, ShoppingCart, Calendar, Users } from 'lucide-react';
+import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, KeySquare, ChevronLeft, ChevronRight, PieChart, Settings as SettingsIcon, UserCircle, Plus, GitPullRequest, ShoppingCart, Users } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -16,10 +16,9 @@ const DEFAULT_NAVIGATION = [
     {
         title: 'Operations',
         items: [
-            { name: 'Employee Directory', href: '/employees', icon: Users },
-            { name: 'Asset Inventory', href: '/assets', icon: Package },
+            { name: 'Employees', href: '/employees', icon: Users },
+            { name: 'Assets Info', href: '/assets', icon: Package },
             { name: 'Procurement', href: '/procurement', icon: ShoppingCart },
-            { name: 'Maintenance', href: '/maintenance', icon: Calendar },
             { name: 'Approvals', href: '/approvals', icon: GitPullRequest },
             { name: 'Licenses', href: '/licenses', icon: KeySquare },
         ]
@@ -27,16 +26,8 @@ const DEFAULT_NAVIGATION = [
     {
         title: 'Support Portal',
         items: [
-            { name: 'My Tickets', href: '/create-ticket?tab=tickets', icon: Ticket },
-            { name: 'Submit Ticket', href: '/create-ticket?tab=create', icon: Plus },
-        ]
-    },
-    {
-        title: 'Support & Comms',
-        items: [
             { name: 'Support Tickets', href: '/tickets', icon: Ticket },
-            { name: 'Knowledge Base', href: '/knowledge-base', icon: Book },
-            { name: 'Document Center', href: '/documents', icon: FileText },
+            { name: 'Raise Ticket', href: '/create-ticket', icon: Plus },
         ]
     },
     {

@@ -234,7 +234,7 @@ export class LoginSessionService {
     /**
      * Get user login history
      */
-    async getUserLoginHistory(userId: number, limit: number = 50): Promise<GetUserLoginHistoryModel> {
+    async getUserLoginHistory(userId: number, limit = 50): Promise<GetUserLoginHistoryModel> {
         try {
             const sessions = await this.loginSessionRepo.getUserLoginHistory(userId, limit);
             const responses = sessions.map(s => this.mapToResponseModel(s));

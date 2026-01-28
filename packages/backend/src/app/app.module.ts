@@ -18,7 +18,6 @@ import { WorkflowModule } from './features/workflow/workflow.module';
 import { AiBotModule } from './features/administration/ai-bot/ai-bot.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { ProcurementModule } from './features/procurement/procurement.module';
-import { MaintenanceModule } from './features/maintenance/maintenance.module';
 import configuration from '../config/configuration';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -48,7 +47,6 @@ import { RedisCoreModule } from './core/redis/redis.module';
     AiBotModule,
     KnowledgeBaseModule,
     ProcurementModule,
-    MaintenanceModule,
     RedisCoreModule
   ],
   controllers: [AppController],

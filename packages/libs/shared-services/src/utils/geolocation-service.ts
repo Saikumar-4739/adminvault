@@ -10,7 +10,7 @@ export class GeolocationService {
      * @param timeout - Timeout in milliseconds (default: 30000)
      * @returns Promise with latitude/longitude or null if unavailable/denied
      */
-    async getCurrentPosition(timeout: number = 30000): Promise<GeolocationPosition | null> {
+    async getCurrentPosition(timeout = 30000): Promise<GeolocationPosition | null> {
         if (!navigator.geolocation) {
             return null;
         }

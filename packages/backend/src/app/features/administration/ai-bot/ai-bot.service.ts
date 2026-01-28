@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DataSource, Like } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { AiQueryResponse } from '@adminvault/shared-models';
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
@@ -322,7 +322,7 @@ export class AiBotService {
         // Remove keywords to isolate search term
         const term = cleanQuery.replace(new RegExp(`${entity}|search|find|show|list|all|my`, 'gi'), '').trim();
 
-        let qb = repo.createQueryBuilder('e').where('e.companyId = :companyId', { companyId });
+        const qb = repo.createQueryBuilder('e').where('e.companyId = :companyId', { companyId });
 
         if (term) {
             const conditions = searchFields.map(field => `e.${field} LIKE :term`).join(' OR ');

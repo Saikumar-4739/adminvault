@@ -12,6 +12,7 @@ import { Plus, Eye, EyeOff, Copy, Check, Globe, Wand2, Pencil, Trash2, ArrowLeft
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
 import { PasswordGenerator } from '@/components/vault/PasswordGenerator';
 
 interface PasswordVault {
@@ -44,6 +45,8 @@ const PasswordVaultPage: React.FC = () => {
     const [visiblePasswords, setVisiblePasswords] = useState<Set<number>>(new Set());
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [editingItem, setEditingItem] = useState<any>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<any>(null);
 
     // Lock Screen State
     const [isLocked, setIsLocked] = useState(true);
@@ -76,7 +79,7 @@ const PasswordVaultPage: React.FC = () => {
             const req = new CompanyIdRequestModel(user.companyId);
             const response = await employeesService.getAllEmployees(req as any);
             if (response.status) {
-                const data = (response as any).employees || (response as any).data || [];
+                const data = response.data || [];
                 setEmployees(data);
             } else {
                 AlertMessages.getErrorMessage(response.message);
@@ -172,20 +175,29 @@ const PasswordVaultPage: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (confirm('Are you sure you want to permanently remove this from your vault?')) {
-            try {
-                const req = new IdRequestModel(id);
-                const response = await passwordVaultService.deletePasswordVault(req);
-                if (response.status) {
-                    AlertMessages.getSuccessMessage('Removed from vault');
-                    fetchPasswordVaults();
-                } else {
-                    AlertMessages.getErrorMessage(response.message || 'Delete failed');
-                }
-            } catch (err: any) {
-                AlertMessages.getErrorMessage(err.message || 'Delete failed');
+    const handleDelete = (id: number) => {
+        const item = passwordVaults.find(p => p.id === id);
+        if (item) {
+            setItemToDelete(item);
+            setIsDeleteModalOpen(true);
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
+        try {
+            const req = new IdRequestModel(itemToDelete.id);
+            const response = await passwordVaultService.deletePasswordVault(req);
+            if (response.status) {
+                AlertMessages.getSuccessMessage('Removed from vault');
+                fetchPasswordVaults();
+                setIsDeleteModalOpen(false);
+                setItemToDelete(null);
+            } else {
+                AlertMessages.getErrorMessage(response.message || 'Delete failed');
             }
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Delete failed');
         }
     };
 
@@ -473,6 +485,17 @@ const PasswordVaultPage: React.FC = () => {
                         }}
                     />
                 </Modal>
+                <DeleteConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => {
+                        setIsDeleteModalOpen(false);
+                        setItemToDelete(null);
+                    }}
+                    onConfirm={confirmDelete}
+                    title="Delete Credential"
+                    itemName={itemToDelete ? itemToDelete.name : undefined}
+                    description="Are you sure you want to permanently remove this credential from your vault? This action cannot be undone."
+                />
             </div>
         </RouteGuard >
     );

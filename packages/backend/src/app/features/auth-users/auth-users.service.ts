@@ -1,5 +1,5 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import { DataSource, MoreThan } from 'typeorm';
+import { DataSource } from 'typeorm';
 import * as crypto from 'crypto';
 import { AuthUsersRepository } from './repositories/auth-users.repository';
 import { AuthUsersEntity } from './entities/auth-users.entity';

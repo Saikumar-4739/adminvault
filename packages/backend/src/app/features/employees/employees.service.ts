@@ -6,7 +6,7 @@ import { CompanyInfoEntity } from '../masters/company-info/entities/company-info
 import { DepartmentsMasterEntity } from '../masters/department/entities/department.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, CompanyIdRequestModel, EmployeeStatusEnum } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 
 @Injectable()
 export class EmployeesService {
@@ -46,12 +46,17 @@ export class EmployeesService {
 
             await transManager.startTransaction();
             const newEmployee = new EmployeesEntity();
+            newEmployee.userId = reqModel.userId;
             newEmployee.companyId = reqModel.companyId;
             newEmployee.firstName = reqModel.firstName;
             newEmployee.lastName = reqModel.lastName;
             newEmployee.email = reqModel.email;
+            newEmployee.phNumber = reqModel.phNumber;
             newEmployee.empStatus = reqModel.empStatus;
+            newEmployee.billingAmount = reqModel.billingAmount;
             newEmployee.departmentId = reqModel.departmentId;
+            newEmployee.remarks = reqModel.remarks;
+            newEmployee.managerId = reqModel.managerId;
             await transManager.getRepository(EmployeesEntity).save(newEmployee);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Employee created successfully");
@@ -83,6 +88,7 @@ export class EmployeesService {
             updateData.billingAmount = reqModel.billingAmount;
             updateData.departmentId = reqModel.departmentId;
             updateData.remarks = reqModel.remarks;
+            updateData.managerId = reqModel.managerId;
             await transManager.getRepository(EmployeesEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Employee updated successfully");
@@ -111,7 +117,33 @@ export class EmployeesService {
                 deptName = department.name;
             }
 
-            const employeeResponse = new EmployeeResponseModel(employee.id, employee.companyId, employee.firstName, employee.lastName, employee.email, employee.departmentId, employee.empStatus, employee.phNumber, employee.billingAmount, employee.remarks, deptName);
+            let managerName = '';
+            if (employee.managerId) {
+                const manager = await this.employeesRepo.findOne({ where: { id: employee.managerId } });
+                if (manager) {
+                    managerName = `${manager.firstName} ${manager.lastName}`;
+                }
+            }
+
+            const employeeResponse = new EmployeeResponseModel(
+                employee.id,
+                employee.companyId,
+                employee.firstName,
+                employee.lastName,
+                employee.email,
+                employee.departmentId,
+                employee.empStatus,
+                employee.phNumber,
+                employee.billingAmount,
+                employee.remarks,
+                deptName,
+                employee.slackUserId,
+                employee.slackDisplayName,
+                employee.slackAvatar,
+                employee.isSlackActive,
+                employee.managerId,
+                managerName
+            );
             return new GetEmployeeResponseModel(true, 0, "Employee retrieved successfully", employeeResponse);
         } catch (error) {
             throw error;
@@ -130,7 +162,7 @@ export class EmployeesService {
             }
 
             const deptIds = [...new Set(employees.map(e => e.departmentId))];
-            let deptMap = new Map<number, string>();
+            const deptMap = new Map<number, string>();
 
             if (deptIds.length > 0) {
                 const departments = await this.dataSource.getRepository(DepartmentsMasterEntity).find({
@@ -139,7 +171,34 @@ export class EmployeesService {
                 departments.forEach(d => deptMap.set(d.id, d.name));
             }
 
-            const employeeResponses = employees.map(emp => new EmployeeResponseModel(emp.id, emp.companyId, emp.firstName, emp.lastName, emp.email, emp.departmentId, emp.empStatus, emp.phNumber, emp.billingAmount, emp.remarks, deptMap.get(emp.departmentId) || `Dept ID: ${emp.departmentId}`));
+            const managerIds = [...new Set(employees.filter(e => e.managerId).map(e => e.managerId))];
+            const managerMap = new Map<number, string>();
+            if (managerIds.length > 0) {
+                const managers = await this.employeesRepo.find({
+                    where: { id: In(managerIds) }
+                });
+                managers.forEach(m => managerMap.set(m.id, `${m.firstName} ${m.lastName}`));
+            }
+
+            const employeeResponses = employees.map(emp => new EmployeeResponseModel(
+                emp.id,
+                emp.companyId,
+                emp.firstName,
+                emp.lastName,
+                emp.email,
+                emp.departmentId,
+                emp.empStatus,
+                emp.phNumber,
+                emp.billingAmount,
+                emp.remarks,
+                deptMap.get(emp.departmentId) || `Dept ID: ${emp.departmentId}`,
+                emp.slackUserId,
+                emp.slackDisplayName,
+                emp.slackAvatar,
+                emp.isSlackActive,
+                emp.managerId,
+                managerMap.get(emp.managerId) || ''
+            ));
             return new GetAllEmployeesResponseModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {
             throw error;

@@ -1,4 +1,4 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, DeleteDateColumn } from 'typeorm';
 import { EmployeeStatusEnum } from '@adminvault/shared-models';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
@@ -41,4 +41,10 @@ export class EmployeesEntity extends CommonBaseEntity {
 
   @Column('boolean', { name: 'is_slack_active', default: false, nullable: false, comment: 'Whether slack user is active' })
   isSlackActive: boolean;
+
+  @Column('int', { name: 'manager_id', nullable: true, comment: 'Manager ID (Self Reference)' })
+  managerId: number;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date;
 }

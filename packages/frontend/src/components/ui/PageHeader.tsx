@@ -36,7 +36,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     const structuredActions = Array.isArray(actions) ? actions : [];
 
     return (
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200/60 dark:border-slate-800/60 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-200/60 dark:border-slate-800/60 mb-4">
             <div className="flex items-center gap-3">
                 {Icon && (
                     <div className={`p-2 rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg [&>svg]:h-5 [&>svg]:w-5 flex items-center justify-center`}>
@@ -60,7 +60,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
             <div className="flex flex-1 items-center justify-end gap-3 max-w-5xl">
                 {children && (
-                    <div className="flex-1 hidden md:block">
+                    <div className="flex items-center justify-end">
                         {children}
                     </div>
                 )}

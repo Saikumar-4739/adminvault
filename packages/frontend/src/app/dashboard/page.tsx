@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { dashboardService, companyService } from '@/lib/api/services';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -33,24 +34,11 @@ const EmployeeDeptChart = dynamic(() => import('@/features/dashboard/components/
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const TicketStatusChart = dynamic(() => import('@/features/dashboard/components/TicketStatusChart').then(mod => mod.TicketStatusChart), {
-    ssr: false,
-    loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
-});
 
 // Lazy load Enterprise Widgets
-const SystemHealthWidget = dynamic(() => import('@/features/dashboard/components/SystemHealthWidget').then(mod => mod.SystemHealthWidget), {
-    ssr: false,
-    loading: () => <div className="h-full animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg p-4"></div>
-});
 const RenewalsWidget = dynamic(() => import('@/features/dashboard/components/RenewalsWidget').then(mod => mod.RenewalsWidget), {
     ssr: false,
     loading: () => <div className="h-full animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg p-4"></div>
-});
-
-const SecurityScoreCard = dynamic(() => import('@/features/dashboard/components/SecurityScoreCard').then(mod => mod.SecurityScoreCard), {
-    ssr: false,
-    loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
 
 export interface DashboardStats {
@@ -77,12 +65,12 @@ export interface DashboardStats {
             assignedTo: string;
         }[];
     };
-    systemHealth: {
+    systemHealth?: {
         assetUtilization: number;
         ticketResolutionRate: number;
         openCriticalTickets: number;
     };
-    security: {
+    security?: {
         score: number;
         metrics: {
             identity: number;
@@ -124,14 +112,12 @@ const DashboardPage: React.FC = () => {
         }
     };
 
-    // Load companies on mount
     useEffect(() => {
         const loadCompanies = async () => {
             try {
                 const response = await companyService.getAllCompaniesDropdown();
                 if (response && response.status && response.data) {
                     setCompanies(response.data);
-                    // Set default to user's company
                     if (user?.companyId) {
                         setSelectedCompanyId(user.companyId);
                     }
@@ -145,30 +131,18 @@ const DashboardPage: React.FC = () => {
         }
     }, [isAuthenticated, user]);
 
-    // Fetch stats when company changes
     useEffect(() => {
         if (!hasFetched.current && isAuthenticated && selectedCompanyId) {
             hasFetched.current = true;
             fetchStats();
         }
 
-        // Reset when user logs out
         if (!isAuthenticated) {
             hasFetched.current = false;
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, selectedCompanyId]);
 
-    const securityStats = useMemo(() => stats?.security || {
-        score: 0,
-        metrics: {
-            identity: 0,
-            devices: 0,
-            compliance: 0
-        }
-    }, [stats]);
-
-    // Memoize data transformations
     const assetData = useMemo(() =>
         stats?.assets.byStatus.map(item => ({
             name: item.status,
@@ -183,13 +157,6 @@ const DashboardPage: React.FC = () => {
         })) || []
         , [stats?.tickets.byPriority]);
 
-    const ticketStatusData = useMemo(() =>
-        stats?.tickets.byStatus.map(item => ({
-            name: item.status,
-            value: parseInt(item.count)
-        })) || []
-        , [stats?.tickets.byStatus]);
-
     const employeeDeptData = useMemo(() =>
         stats?.employees.byDepartment.map(item => ({
             name: item.department,
@@ -197,7 +164,6 @@ const DashboardPage: React.FC = () => {
         })) || []
         , [stats?.employees.byDepartment]);
 
-    // Enhanced KPI cards with trends
     const kpiCards = useMemo(() => [
         {
             title: 'IT Assets',
@@ -233,7 +199,6 @@ const DashboardPage: React.FC = () => {
         }
     ], [stats]);
 
-    // Quick action modules
     const quickActions = [
         { label: 'Assets', icon: Package, link: '/assets', color: 'emerald' },
         { label: 'Tickets', icon: Ticket, link: '/tickets', color: 'amber' },
@@ -245,28 +210,54 @@ const DashboardPage: React.FC = () => {
         { label: 'Settings', icon: Settings, link: '/settings', color: 'slate' },
     ];
 
+    // Animation Variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants: any = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { type: 'spring', stiffness: 100, damping: 20 } as any
+        }
+    };
+
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 space-y-6 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950/30">
+            <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
+                className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950/50"
+            >
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <motion.div variants={itemVariants} className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
-                            <LayoutGrid className="h-5 w-5 text-white" />
+                        <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center shadow-xl shadow-indigo-500/10 border border-slate-200 dark:border-slate-800">
+                            <LayoutGrid className="h-5 w-5 text-indigo-600" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                            <h1 className="text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none mb-0.5">
                                 Operational Dashboard
                             </h1>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                Last updated: {lastUpdated.toLocaleTimeString()}
+                                Sync: {lastUpdated.toLocaleTimeString()}
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        {/* Company Dropdown */}
-                        <div className="w-56">
+
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="w-48">
                             <Select
                                 value={selectedCompanyId?.toString() || ''}
                                 onChange={(e) => {
@@ -276,268 +267,259 @@ const DashboardPage: React.FC = () => {
                                     fetchStats(newCompanyId);
                                 }}
                                 options={[
-                                    { value: '', label: 'Select Company' },
+                                    { value: '', label: 'Global View (All Companies)' },
                                     ...companies.map((company) => ({
                                         value: company.id,
                                         label: company.name
                                     }))
                                 ]}
-                                className="h-8 text-xs font-semibold rounded-xl px-3 border-slate-200 dark:border-slate-800"
+                                className="h-8 text-[10px] font-bold rounded-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
                             />
                         </div>
                         <Button
                             variant="outline"
                             onClick={() => fetchStats()}
                             disabled={isLoading}
-                            leftIcon={<RefreshCcw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
-                            className="rounded-xl h-8 px-3 text-xs"
+                            leftIcon={<RefreshCcw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />}
+                            className="rounded-lg h-8 px-3 text-[10px] font-bold"
                         >
-                            Refresh
+                            Sync Data
                         </Button>
                         <Link href="/reports">
                             <Button
                                 variant="primary"
-                                leftIcon={<BarChart2 className="h-3.5 w-3.5" />}
-                                className="rounded-xl h-8 px-3 text-xs"
+                                leftIcon={<BarChart2 className="h-3 w-3" />}
+                                className="rounded-lg h-8 px-3 text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white border-none shadow-lg shadow-indigo-500/25"
                             >
                                 Generate Report
                             </Button>
                         </Link>
                     </div>
-                </div>
+                </motion.div>
 
-                {/* Primary KPI Cards */}
+                {/* KPI Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {kpiCards.map((card, idx) => (
-                        <Link key={idx} href={card.link}>
-                            <Card className="p-5 border-none shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group bg-white dark:bg-slate-900 hover:-translate-y-1">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">{card.title}</p>
-                                        {isLoading ? (
-                                            <div className="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
-                                        ) : (
-                                            <p className="text-3xl font-black text-slate-900 dark:text-white">{formatNumber(card.value)}</p>
-                                        )}
-                                        <p className="text-[10px] font-medium text-slate-400 mt-1">{card.subtitle}</p>
+                        <motion.div key={idx} variants={itemVariants}>
+                            <Link href={card.link}>
+                                <Card className="p-4 overflow-hidden relative group bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 hover:border-indigo-500/30 transition-all duration-500 shadow-lg shadow-slate-200/50 dark:shadow-none">
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 -skew-x-12 translate-x-full group-hover:-translate-x-full pointer-events-none" />
+
+                                    <div className="relative z-10 flex items-start justify-between">
+                                        <div>
+                                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{card.title}</p>
+                                            <div className="flex items-baseline gap-1.5">
+                                                <p className="text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">
+                                                    {isLoading ? '---' : formatNumber(card.value)}
+                                                </p>
+                                            </div>
+                                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1 transition-all duration-300">
+                                                {card.subtitle} <ArrowUpRight className="h-3 w-3" />
+                                            </p>
+                                        </div>
+                                        <div className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} shadow-xl shadow-indigo-500/20 rotate-6 group-hover:rotate-0 transition-all duration-500`}>
+                                            <card.icon className="h-5 w-5 text-white" />
+                                        </div>
                                     </div>
-                                    <div className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} shrink-0 group-hover:scale-110 transition-transform shadow-md`}>
-                                        <card.icon className="h-5 w-5 text-white" />
-                                    </div>
-                                </div>
-                                <div className="mt-3 flex items-center text-xs font-semibold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    View Details <ArrowUpRight className="h-3 w-3 ml-1" />
-                                </div>
-                            </Card>
-                        </Link>
+                                </Card>
+                            </Link>
+                        </motion.div>
                     ))}
                 </div>
 
-                {/* Critical Metrics Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                    {/* Security Score */}
-                    <div className="lg:col-span-1">
-                        <SecurityScoreCard score={securityStats.score} metrics={securityStats.metrics} />
-                    </div>
-
-                    {/* System Health */}
-                    <div className="lg:col-span-1">
-                        <SystemHealthWidget stats={stats} />
-                    </div>
-
+                {/* Analytics & Priority Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Ticket Priorities */}
-                    <div className="lg:col-span-1">
-                        <Card className="p-4 border-none shadow-md bg-white dark:bg-slate-900 h-full flex flex-col">
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                                    <AlertTriangle className="h-3.5 w-3.5 text-orange-600" />
+                    <motion.div variants={itemVariants}>
+                        <Card className="p-5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
+                            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-6 flex items-center gap-2.5">
+                                <div className="p-2 rounded-lg bg-orange-500/10 text-orange-600 shadow-inner border border-orange-500/10">
+                                    <AlertTriangle className="h-4 w-4" />
                                 </div>
-                                Ticket Priorities
+                                Support Criticality Matrix
                             </h3>
-                            <div className="w-full h-48">
+                            <div className="h-48">
                                 <TicketPriorityChart data={ticketPriorityData} />
                             </div>
                         </Card>
-                    </div>
+                    </motion.div>
 
-                    {/* Renewals */}
-                    <div className="lg:col-span-1">
-                        <RenewalsWidget stats={stats} />
-                    </div>
+                    {/* Renewals Widget */}
+                    <motion.div variants={itemVariants}>
+                        <RenewalsWidget stats={stats as any} />
+                    </motion.div>
                 </div>
 
-                {/* Analytics Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Distribution Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Asset Distribution */}
-                    <Card className="p-5 border-none shadow-md bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-900 dark:to-slate-800 h-full flex flex-col">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
-                                    <PieChartIcon className="h-3.5 w-3.5 text-white" />
-                                </div>
-                                Asset Distribution
-                            </h3>
-                            <Link href="/assets">
-                                <button className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
-                                    View All <ArrowUpRight className="h-3 w-3" />
-                                </button>
-                            </Link>
-                        </div>
-                        {isLoading ? (
-                            <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
-                        ) : (
-                            <div className="w-full h-64">
-                                <AssetDistributionChart data={assetData} />
+                    <motion.div variants={itemVariants}>
+                        <Card className="p-5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+                                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 shadow-inner border border-emerald-500/10">
+                                        <PieChartIcon className="h-4 w-4" />
+                                    </div>
+                                    Asset Lifecycle Status
+                                </h3>
+                                <Link href="/assets">
+                                    <Button variant="outline" className="rounded-lg px-3 h-7 text-[9px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800">
+                                        Inventory <ArrowUpRight className="h-3 w-3 ml-1.5" />
+                                    </Button>
+                                </Link>
                             </div>
-                        )}
-                    </Card>
+                            {isLoading ? (
+                                <div className="h-48 animate-pulse bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
+                            ) : (
+                                <div className="h-48">
+                                    <AssetDistributionChart data={assetData} />
+                                </div>
+                            )}
+                        </Card>
+                    </motion.div>
 
                     {/* Employee Distribution */}
-                    <Card className="p-5 border-none shadow-md bg-gradient-to-br from-violet-50 to-purple-50 dark:from-slate-900 dark:to-slate-800 h-full flex flex-col">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
-                                    <Activity className="h-3.5 w-3.5 text-white" />
-                                </div>
-                                Employee Distribution
-                            </h3>
-                            <Link href="/employees">
-                                <button className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1">
-                                    View All <ArrowUpRight className="h-3 w-3" />
-                                </button>
-                            </Link>
-                        </div>
-                        {isLoading ? (
-                            <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
-                        ) : (
-                            <div className="w-full h-64">
-                                <EmployeeDeptChart data={employeeDeptData} />
-                            </div>
-                        )}
-                    </Card>
-
-                    {/* Ticket Status */}
-                    <Card className="p-5 border-none shadow-md bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-slate-900 dark:to-slate-800 h-full flex flex-col">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600">
-                                    <BarChart2 className="h-3.5 w-3.5 text-white" />
-                                </div>
-                                Ticket Status
-                            </h3>
-                            <Link href="/tickets">
-                                <button className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                                    View All <ArrowUpRight className="h-3 w-3" />
-                                </button>
-                            </Link>
-                        </div>
-                        {isLoading ? (
-                            <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
-                        ) : (
-                            <div className="w-full h-64">
-                                <TicketStatusChart data={ticketStatusData} />
-                            </div>
-                        )}
-                    </Card>
-                </div>
-
-                {/* Bottom Section: Quick Actions + Recent Activity */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    {/* Quick Actions */}
-                    <Card className="p-5 border-none shadow-md bg-white dark:bg-slate-900">
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                            <Zap className="h-4 w-4 text-indigo-500" />
-                            Quick Actions
-                        </h3>
-                        <div className="grid grid-cols-2 gap-2">
-                            {quickActions.map((action, idx) => (
-                                <Link key={idx} href={action.link}>
-                                    <button className={`w-full p-3 rounded-xl border-2 border-${action.color}-100 dark:border-${action.color}-900/30 hover:border-${action.color}-300 dark:hover:border-${action.color}-700 bg-${action.color}-50/50 dark:bg-${action.color}-900/10 hover:bg-${action.color}-100 dark:hover:bg-${action.color}-900/20 transition-all group`}>
-                                        <action.icon className={`h-5 w-5 text-${action.color}-600 dark:text-${action.color}-400 mx-auto mb-1 group-hover:scale-110 transition-transform`} />
-                                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{action.label}</p>
-                                    </button>
+                    <motion.div variants={itemVariants}>
+                        <Card className="p-5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+                                    <div className="p-2 rounded-lg bg-violet-500/10 text-violet-600 shadow-inner border border-violet-500/10">
+                                        <Activity className="h-4 w-4" />
+                                    </div>
+                                    Workforce Architecture
+                                </h3>
+                                <Link href="/employees">
+                                    <Button variant="outline" className="rounded-lg px-3 h-7 text-[9px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800">
+                                        Directory <ArrowUpRight className="h-3 w-3 ml-1.5" />
+                                    </Button>
                                 </Link>
-                            ))}
-                        </div>
-                    </Card>
-
-                    {/* Recent Tickets */}
-                    <Card className="lg:col-span-2 p-5 border-none shadow-md bg-white dark:bg-slate-900">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <TrendingUp className="h-4 w-4 text-indigo-500" />
-                                Recent Support Tickets
-                            </h3>
-                            <Link href="/tickets">
-                                <button className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
-                                    View All <ArrowUpRight className="h-3 w-3" />
-                                </button>
-                            </Link>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="border-b border-slate-200 dark:border-slate-800">
-                                        <th className="py-2 px-3 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Subject</th>
-                                        <th className="py-2 px-3 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                                        <th className="py-2 px-3 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
-                                        <th className="py-2 px-3 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Requester</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {isLoading ? (
-                                        Array.from({ length: 5 }).map((_, i) => (
-                                            <tr key={i} className="animate-pulse border-b border-slate-100 dark:border-slate-800/50">
-                                                <td className="p-3"><div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-40"></div></td>
-                                                <td className="p-3"><div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-16"></div></td>
-                                                <td className="p-3"><div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-16"></div></td>
-                                                <td className="p-3"><div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-24"></div></td>
-                                            </tr>
-                                        ))
-                                    ) : stats?.tickets.recent.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={4} className="p-8 text-center">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <CheckCircle className="h-8 w-8 text-emerald-500" />
-                                                    <p className="text-sm font-medium text-slate-500">No recent tickets</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        stats?.tickets.recent.map((ticket: any) => (
-                                            <tr key={ticket.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                                <td className="p-3 text-xs font-semibold text-slate-700 dark:text-slate-300 max-w-xs truncate">{ticket.subject}</td>
-                                                <td className="p-3">
-                                                    <Badge
-                                                        variant={ticket.ticketStatus === TicketStatusEnum.OPEN ? 'primary' : ticket.ticketStatus === TicketStatusEnum.CLOSED ? 'neutral' : 'success'}
-                                                        className="text-[9px] px-2 py-0.5 font-bold uppercase"
-                                                    >
-                                                        {ticket.ticketStatus}
-                                                    </Badge>
-                                                </td>
-                                                <td className="p-3">
-                                                    <span className={`text-[9px] font-black px-2 py-1 rounded-md uppercase ${ticket.priorityEnum === TicketPriorityEnum.URGENT ? 'text-rose-700 bg-rose-100 dark:bg-rose-900/30' :
-                                                        ticket.priorityEnum === TicketPriorityEnum.HIGH ? 'text-orange-700 bg-orange-100 dark:bg-orange-900/30' :
-                                                            'text-slate-600 bg-slate-100 dark:bg-slate-800'
-                                                        }`}>
-                                                        {ticket.priorityEnum}
-                                                    </span>
-                                                </td>
-                                                <td className="p-3 text-xs text-slate-500 dark:text-slate-400">
-                                                    {ticket.raisedByEmployee?.firstName} {ticket.raisedByEmployee?.lastName}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
+                            </div>
+                            {isLoading ? (
+                                <div className="h-48 animate-pulse bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
+                            ) : (
+                                <div className="h-48">
+                                    <EmployeeDeptChart data={employeeDeptData} />
+                                </div>
+                            )}
+                        </Card>
+                    </motion.div>
                 </div>
-            </div>
+
+                {/* Bottom Section: Operations & Pulse */}
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                    {/* Quick Access Grid */}
+                    <motion.div variants={itemVariants} className="lg:col-span-1">
+                        <Card className="p-5 bg-white dark:bg-slate-900 border-none shadow-lg shadow-slate-200/50 dark:shadow-none h-full">
+                            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                <Zap className="h-4 w-4 text-amber-500" />
+                                Quick Launch
+                            </h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                {quickActions.map((action, idx) => (
+                                    <Link key={idx} href={action.link}>
+                                        <button className={`w-full p-2.5 rounded-xl border-2 border-transparent bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 hover:border-${action.color}-500/20 hover:shadow-lg hover:shadow-${action.color}-500/10 transition-all duration-300 group`}>
+                                            <action.icon className={`h-5 w-5 text-slate-400 dark:text-slate-500 group-hover:text-${action.color}-600 dark:group-hover:text-${action.color}-400 mx-auto mb-1.5 group-hover:scale-110 transition-transform`} />
+                                            <p className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest group-hover:text-slate-900 dark:group-hover:text-white">{action.label}</p>
+                                        </button>
+                                    </Link>
+                                ))}
+                            </div>
+                        </Card>
+                    </motion.div>
+
+                    {/* Support Pulse Table */}
+                    <motion.div variants={itemVariants} className="lg:col-span-3">
+                        <Card className="p-6 bg-white dark:bg-slate-900 border-none shadow-lg shadow-slate-200/50 dark:shadow-none h-full flex flex-col">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+                                    <TrendingUp className="h-4 w-4 text-indigo-500" />
+                                    Intelligence Pulse
+                                </h3>
+                                <Link href="/tickets">
+                                    <Button variant="outline" className="rounded-lg px-3 h-7 text-[9px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800">
+                                        Center <ArrowUpRight className="h-3 w-3 ml-1.5" />
+                                    </Button>
+                                </Link>
+                            </div>
+
+                            <div className="overflow-x-auto truncate">
+                                <table className="w-full text-left border-collapse min-w-[500px]">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 dark:border-slate-800">
+                                            <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Descriptor</th>
+                                            <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Engagement</th>
+                                            <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Urgency</th>
+                                            <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right whitespace-nowrap">Source</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                                        {isLoading ? (
+                                            Array.from({ length: 4 }).map((_, i) => (
+                                                <tr key={i} className="animate-pulse">
+                                                    <td className="p-2"><div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-lg w-40"></div></td>
+                                                    <td className="p-2"><div className="h-5 bg-slate-100 dark:bg-slate-800 rounded-lg w-16"></div></td>
+                                                    <td className="p-2"><div className="h-5 bg-slate-100 dark:bg-slate-800 rounded-lg w-16"></div></td>
+                                                    <td className="p-2"><div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-lg ml-auto w-24"></div></td>
+                                                </tr>
+                                            ))
+                                        ) : stats?.tickets.recent.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} className="p-8 text-center">
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-500">
+                                                            <CheckCircle className="h-6 w-6" />
+                                                        </div>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vector Clear</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            stats?.tickets.recent.slice(0, 5).map((ticket: any) => (
+                                                <tr key={ticket.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                                    <td className="p-2">
+                                                        <div className="max-w-[180px]">
+                                                            <p className="text-[11px] font-black text-slate-900 dark:text-white truncate leading-tight">{ticket.subject}</p>
+                                                            <p className="text-[8px] font-bold text-slate-400 mt-0.5 tracking-tighter">ID: {ticket.id.slice(0, 8)}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <Badge
+                                                            variant={ticket.ticketStatus === TicketStatusEnum.OPEN ? 'primary' : ticket.ticketStatus === TicketStatusEnum.CLOSED ? 'neutral' : 'success'}
+                                                            className="text-[8px] px-2 py-0.5 font-black uppercase tracking-tighter rounded-md border-none"
+                                                        >
+                                                            {ticket.ticketStatus}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <span className={`text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-tighter ${ticket.priorityEnum === TicketPriorityEnum.URGENT ? 'text-rose-700 bg-rose-50 dark:bg-rose-900/20' :
+                                                            ticket.priorityEnum === TicketPriorityEnum.HIGH ? 'text-orange-700 bg-orange-50 dark:bg-orange-900/20' :
+                                                                'text-slate-600 bg-slate-100 dark:bg-slate-800/50'
+                                                            }`}>
+                                                            {ticket.priorityEnum}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center text-[8px] font-black text-indigo-600 border border-indigo-500/5">
+                                                                {ticket.raisedByEmployee?.firstName?.[0]}{ticket.raisedByEmployee?.lastName?.[0]}
+                                                            </div>
+                                                            <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[80px]">
+                                                                {ticket.raisedByEmployee?.lastName}
+                                                            </p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </Card>
+                    </motion.div>
+                </div>
+            </motion.div>
         </RouteGuard>
     );
-}
-
+};
 
 export default DashboardPage;

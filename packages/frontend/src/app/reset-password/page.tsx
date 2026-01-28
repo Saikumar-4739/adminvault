@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/contexts/ToastContext';
-import { Lock, Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react';
 import { authService } from '@/lib/api/services';
 import { ResetPasswordModel } from '@adminvault/shared-models';
 

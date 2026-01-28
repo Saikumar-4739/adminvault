@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { PasswordVaultService } from './password-vault.service';
-import { CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel, CreatePasswordVaultResponseModel, UpdatePasswordVaultResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';

@@ -5,6 +5,7 @@ import { EmployeesRepository } from '../../employees/repositories/employees.repo
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateSlackUserModel, UpdateSlackUserModel, GetAllSlackUsersResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { SlackUsersMasterEntity } from './entities/slack-user.entity';
+import { EmployeesEntity } from '../../employees/entities/employees.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { CompanyInfoRepository } from '../company-info/repositories/company-info.repository';
 
@@ -46,6 +47,16 @@ export class SlackUserService {
             saveEntity.notes = reqModel.notes;
             saveEntity.userId = reqModel.userId;
             await transManager.getRepository(SlackUsersMasterEntity).save(saveEntity);
+
+            // Sync with Employee Table
+            if (empInfo) {
+                empInfo.slackUserId = reqModel.slackUserId;
+                empInfo.slackDisplayName = reqModel.displayName;
+                empInfo.slackAvatar = reqModel.avatar;
+                empInfo.isSlackActive = reqModel.isActive;
+                await transManager.getRepository(EmployeesEntity).save(empInfo);
+            }
+
             await transManager.completeTransaction();
             return new GlobalResponse(true, 201, 'Slack User created successfully');
         } catch (error) {
@@ -73,6 +84,24 @@ export class SlackUserService {
 
             await transManager.startTransaction();
             await transManager.getRepository(SlackUsersMasterEntity).update(reqModel.id, { name: reqModel.name, email: reqModel.email, slackUserId: reqModel.slackUserId, displayName: reqModel.displayName, role: reqModel.role, department: reqModel.department, phone: reqModel.phone, notes: reqModel.notes, isActive: reqModel.isActive, employeeId: reqModel.employeeId });
+
+            // Sync with Employee Table
+            const targetEmployeeId = reqModel.employeeId || existing.employeeId;
+            if (targetEmployeeId) {
+                const empInfo = await transManager.getRepository(EmployeesEntity).findOne({ where: { id: targetEmployeeId } });
+                if (empInfo) {
+                    empInfo.slackUserId = reqModel.slackUserId;
+                    empInfo.slackDisplayName = reqModel.displayName;
+                    // empInfo.slackAvatar = reqModel.avatar; // Update model might not have avatar in the update object above, let's check
+                    empInfo.isSlackActive = reqModel.isActive;
+                    // Avatar is in the model but not in the update object in the original code? 
+                    // Let's check CreateSlackUserModel vs UpdateSlackUserModel
+                    if (reqModel.avatar) empInfo.slackAvatar = reqModel.avatar;
+
+                    await transManager.getRepository(EmployeesEntity).save(empInfo);
+                }
+            }
+
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Slack User updated successfully');
         } catch (error) {

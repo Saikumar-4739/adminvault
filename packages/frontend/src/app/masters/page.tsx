@@ -13,7 +13,7 @@ const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-
 const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p>Loading Applications...</p> });
 const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p>Loading Slack Users...</p> });
 const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p>Loading Vendors...</p> });
-import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock, Search, X } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock, Search, X, Book, FileText } from 'lucide-react';
 
 interface MasterItem {
     id: string;
@@ -96,6 +96,22 @@ const MastersPage: React.FC = () => {
             color: 'from-emerald-600 to-teal-700',
             href: '/password-vault'
         },
+        {
+            id: 'knowledge-base',
+            title: 'Knowledge Base',
+            description: 'Enterprise guide and policy center',
+            icon: Book,
+            color: 'from-amber-500 to-orange-600',
+            href: '/knowledge-base'
+        },
+        {
+            id: 'document-hub',
+            title: 'Document Hub',
+            description: 'Centralized policy and template hub',
+            icon: FileText,
+            color: 'from-indigo-600 to-blue-700',
+            href: '/documents'
+        },
     ];
 
     const selectedMasterData = masters.find(m => m.id === selectedMaster);
@@ -122,7 +138,7 @@ const MastersPage: React.FC = () => {
     if (selectedMaster && selectedMasterData && selectedMasterData.component) {
         const MasterComponent = selectedMasterData.component;
         return (
-            <div className="p-6">
+            <div className="p-4">
                 <MasterComponent onBack={handleBack} />
             </div>
         );
@@ -132,7 +148,7 @@ const MastersPage: React.FC = () => {
         <div className="h-screen flex flex-col overflow-hidden">
             {/* Fixed Page Header */}
 
-            <div className="flex-shrink-0 p-4 md:p-6 pb-3 md:pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-shrink-0 p-4 pb-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
                         <Package className="h-5 w-5 text-white" />
@@ -167,7 +183,7 @@ const MastersPage: React.FC = () => {
             </div>
 
             {/* Scrollable Masters Grid */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 pt-3 md:pt-4">
+            <div className="flex-1 overflow-y-auto p-4 pt-0">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pb-6">
                     {filteredMasters.length === 0 ? (
                         <div className="col-span-full py-12 text-center">

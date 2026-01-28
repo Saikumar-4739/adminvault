@@ -1,8 +1,8 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApplicationService } from './application.service';
-import { CreateApplicationModel, UpdateApplicationModel, GetAllApplicationsResponseModel, CreateApplicationResponseModel, UpdateApplicationResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateApplicationModel, UpdateApplicationModel, GetAllApplicationsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
 
 @ApiTags('Applications Master')

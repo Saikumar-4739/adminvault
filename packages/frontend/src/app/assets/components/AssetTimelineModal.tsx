@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { User, ArrowLeft, Plus, CheckCircle, AlertTriangle, History } from 'lucide-react';
+import { PlusCircle, UserPlus, UserMinus, RefreshCw, Trash2, Clock, History } from 'lucide-react';
 import { services } from '@/lib/api/services';
 import { AssetTimelineEvent, AssetTimelineEventType, AssetTimelineRequestModel } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
@@ -52,36 +52,25 @@ export const AssetTimelineModal: React.FC<AssetTimelineModalProps> = ({ isOpen, 
     };
 
     const getIcon = (type: AssetTimelineEventType) => {
+        const iconSize = "h-3.5 w-3.5";
         switch (type) {
-            case AssetTimelineEventType.CREATED:
-                return <Plus className="h-5 w-5 text-white" />;
-            case AssetTimelineEventType.ASSIGNED:
-                return <User className="h-5 w-5 text-white" />;
-            case AssetTimelineEventType.RETURNED:
-                return <ArrowLeft className="h-5 w-5 text-white" />;
-            case AssetTimelineEventType.MAINTENANCE:
-                return <AlertTriangle className="h-5 w-5 text-white" />;
-            case AssetTimelineEventType.RETIRED:
-                return <History className="h-5 w-5 text-white" />;
-            default:
-                return <CheckCircle className="h-5 w-5 text-white" />;
+            case AssetTimelineEventType.CREATED: return <PlusCircle className={iconSize} />;
+            case AssetTimelineEventType.ASSIGNED: return <UserPlus className={iconSize} />;
+            case AssetTimelineEventType.RETURNED: return <UserMinus className={iconSize} />;
+            case AssetTimelineEventType.MAINTENANCE: return <RefreshCw className={iconSize} />;
+            case AssetTimelineEventType.RETIRED: return <Trash2 className={iconSize} />;
+            default: return <Clock className={iconSize} />;
         }
     };
 
     const getColor = (type: AssetTimelineEventType) => {
         switch (type) {
-            case AssetTimelineEventType.CREATED:
-                return 'bg-emerald-500';
-            case AssetTimelineEventType.ASSIGNED:
-                return 'bg-indigo-500';
-            case AssetTimelineEventType.RETURNED:
-                return 'bg-amber-500';
-            case AssetTimelineEventType.MAINTENANCE:
-                return 'bg-rose-500';
-            case AssetTimelineEventType.RETIRED:
-                return 'bg-slate-500';
-            default:
-                return 'bg-blue-500';
+            case AssetTimelineEventType.CREATED: return 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20';
+            case AssetTimelineEventType.ASSIGNED: return 'text-blue-500 bg-blue-50 dark:bg-blue-900/20';
+            case AssetTimelineEventType.RETURNED: return 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20';
+            case AssetTimelineEventType.MAINTENANCE: return 'text-orange-500 bg-orange-50 dark:bg-orange-900/20';
+            case AssetTimelineEventType.RETIRED: return 'text-rose-500 bg-rose-50 dark:bg-rose-900/20';
+            default: return 'text-slate-500 bg-slate-50 dark:bg-slate-900/20';
         }
     };
 

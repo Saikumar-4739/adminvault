@@ -1,6 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ApprovalRequestRepository } from './repositories/approval-request.repository';
-import { CreateApprovalRequestModel, ApprovalActionModel, GlobalResponse, ApprovalStatusEnum, ApprovalTypeEnum, TicketStatusEnum, AssetStatusEnum, POStatusEnum, GetPendingApprovalsRequestModel, GetPendingApprovalsResponseModel, UpdateTicketStatusRequestModel, UpdatePOStatusRequestModel, InitiateApprovalResponseModel, ApproveRequestResponseModel, RejectRequestResponseModel } from '@adminvault/shared-models';
+import { CreateApprovalRequestModel, ApprovalActionModel, ApprovalStatusEnum, ApprovalTypeEnum, TicketStatusEnum, AssetStatusEnum, POStatusEnum, GetPendingApprovalsRequestModel, GetPendingApprovalsResponseModel, UpdateTicketStatusRequestModel, UpdatePOStatusRequestModel, InitiateApprovalResponseModel, ApproveRequestResponseModel, RejectRequestResponseModel } from '@adminvault/shared-models';
 import { AssetInfoService } from '../asset-info/asset-info.service';
 import { TicketsService } from '../tickets/tickets.service';
 import { ProcurementService } from '../procurement/procurement.service';

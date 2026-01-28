@@ -90,7 +90,7 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                     >
                         <option value="">No Assignment</option>
                         {employees.map(emp => (
-                            <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+                            <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}{emp.managerName ? ` (Mgr: ${emp.managerName})` : ''}</option>
                         ))}
                     </select>
                 </div>

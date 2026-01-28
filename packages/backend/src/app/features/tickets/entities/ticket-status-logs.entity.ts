@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
+import { Column, Entity, CreateDateColumn, Index } from 'typeorm';
 import { TicketStatusEnum } from '@adminvault/shared-models';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 

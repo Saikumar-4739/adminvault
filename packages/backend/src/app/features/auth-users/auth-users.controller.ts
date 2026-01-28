@@ -116,6 +116,20 @@ export class AuthUsersController {
         }
     }
 
+    @Post('social/google')
+    @Public()
+    @ApiOperation({ summary: 'Initiate Google OAuth Flow (Placeholder)' })
+    async googleLogin(): Promise<GlobalResponse> {
+        return new GlobalResponse(true, 0, "Google OAuth Endpoint Initialized");
+    }
+
+    @Post('social/microsoft')
+    @Public()
+    @ApiOperation({ summary: 'Initiate Microsoft OAuth Flow (Placeholder)' })
+    async microsoftLogin(): Promise<GlobalResponse> {
+        return new GlobalResponse(true, 0, "Microsoft OAuth Endpoint Initialized");
+    }
+
     @UseGuards(JwtAuthGuard)
     @Post('verify-password')
     @ApiOperation({ summary: 'Verify user password' })

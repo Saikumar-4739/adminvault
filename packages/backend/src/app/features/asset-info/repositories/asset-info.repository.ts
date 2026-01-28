@@ -20,9 +20,8 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .leftJoin('employees', 'pastUser', 'asset.previous_user_employee_id = pastUser.id')
             .leftJoin('employees', 'presentUser', 'asset.assigned_to_employee_id = presentUser.id')
             .where('asset.company_id = :companyId', { companyId })
-            .andWhere('(asset.asset_status_enum = :available OR asset.asset_status_enum = :maintenance)', {
-                available: AssetStatusEnum.AVAILABLE,
-                maintenance: AssetStatusEnum.MAINTENANCE
+            .andWhere('asset.asset_status_enum = :available', {
+                available: AssetStatusEnum.AVAILABLE
             })
             .select([
                 'asset.id as id',

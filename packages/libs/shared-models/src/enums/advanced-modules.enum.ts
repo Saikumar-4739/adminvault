@@ -1,19 +1,3 @@
-export enum MaintenanceStatusEnum {
-    SCHEDULED = 'SCHEDULED',
-    IN_PROGRESS = 'IN_PROGRESS',
-    COMPLETED = 'COMPLETED',
-    CANCELLED = 'CANCELLED',
-    OVERDUE = 'OVERDUE'
-}
-
-export enum MaintenanceTypeEnum {
-    PREVENTIVE = 'PREVENTIVE',
-    REPAIR = 'REPAIR',
-    UPGRADE = 'UPGRADE',
-    PATCHING = 'PATCHING',
-    RENEWAL = 'RENEWAL'
-}
-
 export enum SoftwareTypeEnum {
     OPERATING_SYSTEM = 'OPERATING_SYSTEM',
     APPLICATION = 'APPLICATION',

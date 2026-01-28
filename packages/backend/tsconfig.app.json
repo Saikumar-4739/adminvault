@@ -43,13 +43,10 @@
   "exclude": [],
   "references": [
     {
-      "path": "../libs/shared-models/tsconfig.lib.json"
-    },
-    {
       "path": "../libs/backend-utils/tsconfig.lib.json"
     },
     {
-      "path": "../libs/shared-services/tsconfig.lib.json"
+      "path": "../libs/shared-models/tsconfig.lib.json"
     }
   ]
 }

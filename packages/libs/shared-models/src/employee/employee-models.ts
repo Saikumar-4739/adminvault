@@ -16,7 +16,12 @@ export class CreateEmployeeModel {
     slackAvatar?: string;
     isSlackActive?: boolean;
 
+    managerId?: number | null;
+
+    userId: number;
+
     constructor(
+        userId: number,
         companyId: number,
         firstName: string,
         lastName: string,
@@ -29,8 +34,10 @@ export class CreateEmployeeModel {
         slackUserId?: string,
         slackDisplayName?: string,
         slackAvatar?: string,
-        isSlackActive?: boolean
+        isSlackActive?: boolean,
+        managerId?: number | null
     ) {
+        this.userId = userId;
         this.companyId = companyId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -44,6 +51,7 @@ export class CreateEmployeeModel {
         this.slackDisplayName = slackDisplayName;
         this.slackAvatar = slackAvatar;
         this.isSlackActive = isSlackActive;
+        this.managerId = managerId;
     }
 }
 
@@ -52,6 +60,7 @@ export class UpdateEmployeeModel extends CreateEmployeeModel {
 
     constructor(
         id: number,
+        userId: number,
         companyId: number,
         firstName: string,
         lastName: string,
@@ -64,9 +73,10 @@ export class UpdateEmployeeModel extends CreateEmployeeModel {
         slackUserId?: string,
         slackDisplayName?: string,
         slackAvatar?: string,
-        isSlackActive?: boolean
+        isSlackActive?: boolean,
+        managerId?: number | null
     ) {
-        super(companyId, firstName, lastName, email, departmentId, empStatus, phNumber, billingAmount, remarks, slackUserId, slackDisplayName, slackAvatar, isSlackActive);
+        super(userId, companyId, firstName, lastName, email, departmentId, empStatus, phNumber, billingAmount, remarks, slackUserId, slackDisplayName, slackAvatar, isSlackActive, managerId);
         this.id = id;
     }
 }
@@ -103,6 +113,8 @@ export class EmployeeResponseModel {
     slackDisplayName?: string;
     slackAvatar?: string;
     isSlackActive?: boolean;
+    managerId?: number | null;
+    managerName?: string;
 
     constructor(
         id: number,
@@ -119,7 +131,9 @@ export class EmployeeResponseModel {
         slackUserId?: string,
         slackDisplayName?: string,
         slackAvatar?: string,
-        isSlackActive?: boolean
+        isSlackActive?: boolean,
+        managerId?: number | null,
+        managerName?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -136,22 +150,20 @@ export class EmployeeResponseModel {
         this.slackDisplayName = slackDisplayName;
         this.slackAvatar = slackAvatar;
         this.isSlackActive = isSlackActive;
+        this.managerId = managerId;
+        this.managerName = managerName;
     }
 }
 
 export class GlobalEmployeeResponseModel extends GlobalResponse<EmployeeResponseModel> {
-    employee!: EmployeeResponseModel;
     constructor(status: boolean, code: number, message: string, employee: EmployeeResponseModel) {
         super(status, code, message, employee);
-        this.employee = employee;
     }
 }
 
 export class GetAllEmployeesResponseModel extends GlobalResponse<EmployeeResponseModel[]> {
-    employees!: EmployeeResponseModel[];
     constructor(status: boolean, code: number, message: string, employees: EmployeeResponseModel[]) {
         super(status, code, message, employees);
-        this.employees = employees;
     }
 }
 

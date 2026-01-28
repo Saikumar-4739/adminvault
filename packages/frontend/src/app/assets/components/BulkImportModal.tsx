@@ -41,7 +41,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
             'Serial Number',
             'Configuration',
             'Purchase Date (YYYY-MM-DD)',
-            'Status (available/in_use/maintenance/retired)'
+            'Status (available/in_use/retired)'
         ];
 
         const exampleRow = [
@@ -126,7 +126,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                         <li>Download the template file to see the required format.</li>
                         <li>Fill in the asset details. Asset Type ID and Brand ID must match system IDs.</li>
                         <li>Dates should be in the format YYYY-MM-DD.</li>
-                        <li>Status must be one of: available, in_use, maintenance, retired.</li>
+                        <li>Status must be one of: available, in_use, retired.</li>
                     </ul>
                     <div className="mt-4">
                         <Button

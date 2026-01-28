@@ -1,8 +1,8 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { VendorService } from './vendor.service';
-import { CreateVendorModel, UpdateVendorModel, GetAllVendorsResponseModel, CreateVendorResponseModel, UpdateVendorResponseModel, CompanyIdRequestModel, IdRequestModel } from '@adminvault/shared-models';
+import { CreateVendorModel, UpdateVendorModel, GetAllVendorsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
 
 @ApiTags('Vendors Master')

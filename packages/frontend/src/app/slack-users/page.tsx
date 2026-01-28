@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { employeeService, mastersService } from '@/lib/api/services';
+import { employeeService, slackUserService, departmentService } from '@/lib/api/services';
 import { SlackUserModel, CreateSlackUserModel, UpdateSlackUserModel, EmployeeResponseModel, Department } from '@adminvault/shared-models';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -49,10 +49,10 @@ const SlackUsersPage: React.FC = () => {
             const req = new CompanyIdRequestModel(user.companyId);
             const [empRes, deptRes] = await Promise.all([
                 employeeService.getAllEmployees(req as any),
-                mastersService.getAllDepartments(req)
+                departmentService.getAllDepartments()
             ]);
 
-            if (empRes.status) setEmployees(empRes.employees);
+            if (empRes.status) setEmployees(empRes.data || []);
             if (deptRes.status) setDepartments(deptRes.departments);
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message || 'Failed to fetch initial data');
@@ -63,8 +63,8 @@ const SlackUsersPage: React.FC = () => {
         if (!user?.companyId) return;
         try {
             setIsLoading(true);
-            const req = new CompanyIdRequestModel(user.companyId);
-            const response = await mastersService.getAllSlackUsers(req);
+            // const req = new CompanyIdRequestModel(user.companyId);
+            const response = await slackUserService.getAllSlackUsers();
             if (response.status) {
                 setUsers(response.slackUsers || []);
             } else {
@@ -144,7 +144,7 @@ const SlackUsersPage: React.FC = () => {
                     formData.notes, // notes
                     currentCompanyId
                 );
-                const response = await mastersService.updateSlackUser(updateModel);
+                const response = await slackUserService.updateSlackUser(updateModel);
                 if (response.status) {
                     AlertMessages.getSuccessMessage('Slack user updated successfully');
                 } else {
@@ -165,7 +165,7 @@ const SlackUsersPage: React.FC = () => {
                     formData.phone,
                     formData.notes // notes
                 );
-                const response = await mastersService.createSlackUser(createModel);
+                const response = await slackUserService.createSlackUser(createModel);
                 if (response.status) {
                     AlertMessages.getSuccessMessage('Slack user created successfully');
                 } else {
@@ -188,7 +188,7 @@ const SlackUsersPage: React.FC = () => {
         if (!userToDelete) return;
         try {
             const req = new IdRequestModel(userToDelete);
-            const response = await mastersService.deleteSlackUser(req);
+            const response = await slackUserService.deleteSlackUser(req);
             if (response.status) {
                 AlertMessages.getSuccessMessage('Slack user deleted successfully');
                 fetchUsers();

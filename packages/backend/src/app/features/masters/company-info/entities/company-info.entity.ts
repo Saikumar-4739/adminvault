@@ -1,5 +1,4 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { MasterBaseEntity } from '../../../../../database/master-base.entity';
 
 @Entity('company_info')
 @Index('idx_company_user', ['userId'])

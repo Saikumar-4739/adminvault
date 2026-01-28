@@ -1,10 +1,10 @@
 import { Body, Controller, Post, Get, Param, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiTags, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
+import { ApiBody, ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import express from 'express';
 import { DocumentsService } from './documents.service';
-import { UploadDocumentModel, DeleteDocumentModel, GetDocumentModel, GetAllDocumentsResponseModel, GetDocumentResponseModel, UploadDocumentResponseModel, GetAllDocumentsRequestModel, DownloadDocumentRequestModel, DownloadDocumentResponseModel } from '@adminvault/shared-models';
+import { UploadDocumentModel, DeleteDocumentModel, GetDocumentModel, GetAllDocumentsResponseModel, GetDocumentResponseModel, UploadDocumentResponseModel, GetAllDocumentsRequestModel, DownloadDocumentRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Documents')
 @Controller('documents')

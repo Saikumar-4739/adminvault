@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { CompanyInfoService } from './company-info.service';

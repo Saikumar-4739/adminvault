@@ -309,7 +309,7 @@ const TicketsPage: React.FC = () => {
     };
 
     return (
-        <div className="p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
+        <div className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
             {/* Header */}
             <PageHeader
                 icon={<Ticket />}

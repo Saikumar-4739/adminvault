@@ -191,7 +191,7 @@ export class ReportsService {
         return Buffer.from(pdfBytes);
     }
 
-    async getAssetReports(format: string = 'summary') {
+    async getAssetReports(format = 'summary') {
         // Use raw query with manual joins
         const query = `
             SELECT 
@@ -247,7 +247,7 @@ export class ReportsService {
         return formattedAssets;
     }
 
-    async getAssetAllocationReports(format: string = 'summary') {
+    async getAssetAllocationReports(format = 'summary') {
         // Query only for allocated assets (where assigned_to_employee_id is not null)
         const query = `
             SELECT 
@@ -309,7 +309,7 @@ export class ReportsService {
         return formattedAssets;
     }
 
-    async getEmployeeReports(format: string = 'summary') {
+    async getEmployeeReports(format = 'summary') {
         if (format === 'summary') {
             const empRepo = this.dataSource.getRepository(EmployeesEntity);
             const totalEmployees = await empRepo.count();
@@ -347,7 +347,7 @@ export class ReportsService {
         }));
     }
 
-    async getTicketReports(format: string = 'summary') {
+    async getTicketReports(format = 'summary') {
         if (format === 'summary') {
             const ticketRepo = this.dataSource.getRepository(TicketsEntity);
             const totalTickets = await ticketRepo.count();
@@ -391,7 +391,7 @@ export class ReportsService {
     }
 
     // New Asset Reports
-    async getAssetWarrantyExpiryReport(format: string = 'summary') {
+    async getAssetWarrantyExpiryReport(format = 'summary') {
         const query = `
             SELECT 
                 a.id AS assetId,
@@ -429,7 +429,7 @@ export class ReportsService {
         }));
     }
 
-    async getAssetByDepartmentReport(format: string = 'summary') {
+    async getAssetByDepartmentReport(format = 'summary') {
         const query = `
             SELECT 
                 dept.name AS departmentName,
@@ -458,7 +458,7 @@ export class ReportsService {
         }));
     }
 
-    async getAssetByDeviceTypeReport(format: string = 'summary') {
+    async getAssetByDeviceTypeReport(format = 'summary') {
         const query = `
             SELECT 
                 d.device_name AS deviceName,
@@ -488,7 +488,7 @@ export class ReportsService {
         }));
     }
 
-    async getUnassignedAssetsReport(format: string = 'summary') {
+    async getUnassignedAssetsReport(format = 'summary') {
         const query = `
             SELECT 
                 a.id AS assetId,
@@ -523,7 +523,7 @@ export class ReportsService {
     }
 
     // Employee Reports
-    async getEmployeesByDepartmentReport(format: string = 'summary') {
+    async getEmployeesByDepartmentReport(format = 'summary') {
         const query = `
             SELECT 
                 dept.name AS departmentName,
@@ -545,7 +545,7 @@ export class ReportsService {
     }
 
     // Ticket Reports
-    async getOpenTicketsReport(format: string = 'summary') {
+    async getOpenTicketsReport(format = 'summary') {
         const query = `
             SELECT 
                 t.ticket_code AS ticketCode,
@@ -579,7 +579,7 @@ export class ReportsService {
         }));
     }
 
-    async getResolvedTicketsReport(format: string = 'summary') {
+    async getResolvedTicketsReport(format = 'summary') {
         const query = `
             SELECT 
                 t.ticket_code AS ticketCode,
@@ -613,7 +613,7 @@ export class ReportsService {
         }));
     }
 
-    async getTicketsByPriorityReport(format: string = 'summary') {
+    async getTicketsByPriorityReport(format = 'summary') {
         const query = `
             SELECT 
                 t.priority_enum AS priority,
@@ -637,7 +637,7 @@ export class ReportsService {
         }));
     }
 
-    async getTicketsByCategoryReport(format: string = 'summary') {
+    async getTicketsByCategoryReport(format = 'summary') {
         const query = `
             SELECT 
                 t.category_enum AS category,
@@ -660,7 +660,7 @@ export class ReportsService {
     }
 
     // Master Data Reports
-    async getDepartmentSummaryReport(format: string = 'summary') {
+    async getDepartmentSummaryReport(format = 'summary') {
         const query = `
             SELECT 
                 d.name AS departmentName,
@@ -682,7 +682,7 @@ export class ReportsService {
         }));
     }
 
-    async getDeviceBrandsReport(format: string = 'summary') {
+    async getDeviceBrandsReport(format = 'summary') {
         const query = `
             SELECT 
                 b.name AS brandName,

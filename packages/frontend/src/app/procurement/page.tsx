@@ -76,10 +76,10 @@ const ProcurementPage: React.FC = () => {
     };
 
     return (
-        <div className="p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
+        <div className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
             <PageHeader
                 icon={<ShoppingCart className="text-white" />}
-                title="Procurement Management"
+                title="Procurement"
                 description="Manage purchase orders and vendor interactions"
                 gradient="from-blue-600 to-indigo-700"
                 actions={[

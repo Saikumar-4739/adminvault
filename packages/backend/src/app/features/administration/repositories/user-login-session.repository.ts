@@ -8,7 +8,7 @@ export class UserLoginSessionRepository extends Repository<UserLoginSessionsEnti
         super(UserLoginSessionsEntity, dataSource.createEntityManager());
     }
 
-    async getUserLoginHistory(userId: number, limit: number = 50): Promise<UserLoginSessionsEntity[]> {
+    async getUserLoginHistory(userId: number, limit = 50): Promise<UserLoginSessionsEntity[]> {
         return await this.find({
             where: { userId },
             order: { loginTimestamp: 'DESC' },

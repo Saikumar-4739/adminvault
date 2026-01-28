@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AlertCircle, ShieldAlert, WifiOff, UserX, ChevronRight, X } from 'lucide-react';
+import { ShieldAlert, WifiOff, UserX, ChevronRight, X } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 
 interface Alert {

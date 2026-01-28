@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Not } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { VendorRepository } from './repositories/vendor.repository';
 import { CompanyInfoRepository } from '../company-info/repositories/company-info.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
-import { CreateVendorModel, UpdateVendorModel, GetAllVendorsResponseModel, CreateVendorResponseModel, UpdateVendorResponseModel, CompanyIdRequestModel, IdRequestModel } from '@adminvault/shared-models';
+import { CreateVendorModel, UpdateVendorModel, GetAllVendorsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { VendorsMasterEntity } from './entities/vendor.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 

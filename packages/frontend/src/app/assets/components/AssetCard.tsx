@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Laptop, Monitor, Smartphone, Tablet, HardDrive, User, Calendar, Shield, Package, History, QrCode, Pencil, Trash2, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, UserPlus, ShieldCheck, AlertOctagon, Clock, HelpCircle, RefreshCw, Lock, Eraser } from 'lucide-react';
+import { Laptop, Monitor, Smartphone, Tablet, HardDrive, User, Calendar, Shield, Package, History, QrCode, Pencil, Trash2, ChevronDown, ChevronUp, CheckCircle2, UserPlus, ShieldCheck, AlertOctagon, Clock, HelpCircle, RefreshCw, Lock, Eraser } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { ComplianceStatusEnum } from '@adminvault/shared-models';
 
@@ -45,10 +45,10 @@ const getStatusConfig = (status: string) => {
             icon: User
         },
         'MAINTENANCE': {
-            color: 'text-amber-600 dark:text-amber-400',
-            bg: 'bg-amber-50 dark:bg-amber-900/20',
-            gradient: 'from-amber-500/10 to-orange-500/10',
-            icon: AlertTriangle
+            color: 'text-orange-600 dark:text-orange-400',
+            bg: 'bg-orange-50 dark:bg-orange-900/20',
+            gradient: 'from-orange-500/10 to-amber-500/10',
+            icon: RefreshCw
         },
         'RETIRED': {
             color: 'text-slate-600 dark:text-slate-400',

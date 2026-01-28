@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { KnowledgeItemsRepository } from './repositories/knowledge-items.repository';
-import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, KnowledgeBaseStatsModel, KnowledgeCategoryEnum, GetKnowledgeArticleResponseModel, GetAllKnowledgeArticlesResponseModel, GetKnowledgeBaseStatsResponseModel, KnowledgeArticleModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, KnowledgeBaseStatsModel, KnowledgeCategoryEnum, GetKnowledgeArticleResponseModel, GetAllKnowledgeArticlesResponseModel, GetKnowledgeBaseStatsResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { ErrorResponse } from '@adminvault/backend-utils';
 
 @Injectable()

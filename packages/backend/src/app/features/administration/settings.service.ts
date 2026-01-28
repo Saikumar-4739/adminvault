@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { SettingsEntity } from './entities/settings.entity';
 import { SettingsRepository } from './repositories/settings.repository';
-import { SettingType, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, SettingResponseModel, GlobalResponse, GetSettingsByCategoryRequestModel, DeleteSettingRequestModel, GetSettingRequestModel, GetSettingResponseModel, CompanyIdRequestModel, UserIdNumRequestModel, UserIdRequestModel } from '@adminvault/shared-models';
+import { SettingType, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, SettingResponseModel, GlobalResponse, GetSettingsByCategoryRequestModel, DeleteSettingRequestModel, GetSettingRequestModel, GetSettingResponseModel, CompanyIdRequestModel, UserIdNumRequestModel } from '@adminvault/shared-models';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 
 interface ISettingRule {

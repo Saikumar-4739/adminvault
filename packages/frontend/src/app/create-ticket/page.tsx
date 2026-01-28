@@ -7,8 +7,9 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, CreateTicketModel } from '@adminvault/shared-models';
-import { Building2, CheckCircle, Ticket, Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, AlertTriangle, Send, MessageSquare, List, Plus, Clock, ChevronRight, Hash, Layers, Zap } from 'lucide-react';
+import { Building2, CheckCircle, Ticket, Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, AlertTriangle, Send, MessageSquare, List, Plus, Clock, ChevronRight, Hash, Layers } from 'lucide-react';
 import { getSocket } from '@/lib/socket';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const CategoryIcons: Record<string, any> = {
     [TicketCategoryEnum.HARDWARE]: Monitor,
@@ -182,27 +183,19 @@ const CreateTicketPage: React.FC = () => {
 
     return (
         <div className="w-full h-full bg-slate-50/50 dark:bg-slate-950/50">
-            <div className="max-w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+            <div className="p-4 space-y-4">
                 {/* Compact Premium Header */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                            <Building2 className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-lg font-black text-slate-900 dark:text-white leading-none">Support Hub</h1>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-500 uppercase tracking-widest font-bold mt-1.5 flex items-center gap-2">
-                                <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />
-                                Enterprise Assistance
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                <PageHeader
+                    icon={<Building2 />}
+                    title="Support Hub"
+                    description="Enterprise Assistance"
+                    gradient="from-indigo-600 to-violet-600"
+                >
+                    <div className="flex items-center p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
                         <button
                             onClick={() => setActiveTab('tickets')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${activeTab === 'tickets'
-                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'tickets'
+                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm ring-1 ring-slate-200/50 dark:ring-slate-600/50'
                                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
                                 }`}
                         >
@@ -211,8 +204,8 @@ const CreateTicketPage: React.FC = () => {
                         </button>
                         <button
                             onClick={() => setActiveTab('create')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${activeTab === 'create'
-                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'create'
+                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm ring-1 ring-slate-200/50 dark:ring-slate-600/50'
                                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
                                 }`}
                         >
@@ -220,7 +213,7 @@ const CreateTicketPage: React.FC = () => {
                             New Request
                         </button>
                     </div>
-                </div>
+                </PageHeader>
 
                 {/* Main Content - Full Width */}
                 <div className="w-full animate-in fade-in slide-in-from-bottom-2 duration-500">

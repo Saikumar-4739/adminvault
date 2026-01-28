@@ -8,6 +8,7 @@ import { FileText, Upload, Download, Trash2, Search, FileSpreadsheet, Image as I
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
+import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { GetAllDocumentsRequestModel } from '@adminvault/shared-models';
@@ -24,6 +25,8 @@ const DocumentsPage: React.FC = () => {
     const [tags, setTags] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState<string>('All');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [documentToDelete, setDocumentToDelete] = useState<any>(null);
 
     const fetchDocuments = useCallback(async () => {
         if (!user) return;
@@ -108,21 +111,30 @@ const DocumentsPage: React.FC = () => {
         return <FileIcon className={`${size} text-slate-400`} />;
     }, []);
 
-    const handleDelete = useCallback(async (id: number) => {
-        if (confirm('Are you sure you want to delete this document?')) {
-            try {
-                const response = await documentsService.deleteDocument({ id, userId: user?.id || 1 });
-                if (response.status) {
-                    AlertMessages.getSuccessMessage('Document removed from vault');
-                    fetchDocuments();
-                } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to delete document');
-                }
-            } catch (error: any) {
-                AlertMessages.getErrorMessage(error.message || 'Failed to delete document');
-            }
+    const handleDelete = useCallback((id: number) => {
+        const doc = documents.find(d => d.id === id);
+        if (doc) {
+            setDocumentToDelete(doc);
+            setIsDeleteModalOpen(true);
         }
-    }, [fetchDocuments, user]);
+    }, [documents]);
+
+    const confirmDelete = useCallback(async () => {
+        if (!documentToDelete) return;
+        try {
+            const response = await documentsService.deleteDocument({ id: documentToDelete.id, userId: user?.id || 1 });
+            if (response.status) {
+                AlertMessages.getSuccessMessage('Document removed from vault');
+                fetchDocuments();
+                setIsDeleteModalOpen(false);
+                setDocumentToDelete(null);
+            } else {
+                AlertMessages.getErrorMessage(response.message || 'Failed to delete document');
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to delete document');
+        }
+    }, [documentToDelete, fetchDocuments, user]);
 
     const handleDownload = useCallback((id: number) => {
         const url = documentsService.getDownloadUrl(id);
@@ -402,6 +414,16 @@ const DocumentsPage: React.FC = () => {
                         </div>
                     </div>
                 </Modal>
+                <DeleteConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => {
+                        setIsDeleteModalOpen(false);
+                        setDocumentToDelete(null);
+                    }}
+                    onConfirm={confirmDelete}
+                    title="Delete Document"
+                    itemName={documentToDelete ? documentToDelete.originalName : undefined}
+                />
             </div>
         </RouteGuard>
     );

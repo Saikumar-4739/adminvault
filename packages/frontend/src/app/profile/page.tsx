@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Mail, Building, Shield, Calendar, MapPin, Phone, Edit, Lock, Key, Smartphone, AlertCircle } from 'lucide-react';
+import { User, Mail, Shield, Calendar, Edit, Lock, Key, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useSearchParams } from 'next/navigation';
@@ -12,6 +12,7 @@ import { authService } from '@/lib/api/services';
 import { UpdateUserModel } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/Spinner';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 type TabType = 'profile' | 'security';
 
@@ -68,41 +69,38 @@ const ProfilePage: React.FC = () => {
     }
 
     return (
-        <div className="p-4 md:p-6 space-y-6 bg-slate-50/50 dark:bg-slate-900/50 min-h-screen">
+        <div className="p-4 space-y-4 bg-slate-50/50 dark:bg-slate-900/50 min-h-screen">
 
-            {/* Compact Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-600 dark:to-slate-800 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
-                        <User className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Account Identity</h1>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Profile & Security Oversight</p>
-                    </div>
-                </div>
-
-                <div className="flex gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+            {/* Standardized Header */}
+            <PageHeader
+                icon={<User />}
+                title="Account Identity"
+                description="Profile & Security Oversight"
+                gradient="from-slate-700 to-slate-900"
+            >
+                <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                     <button
                         onClick={() => setActiveTab('profile')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'profile'
-                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm'
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'profile'
+                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                     >
+                        <User className="h-3 w-3" />
                         Registry
                     </button>
                     <button
                         onClick={() => setActiveTab('security')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'security'
-                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm'
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'security'
+                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                     >
+                        <Shield className="h-3 w-3" />
                         Security
                     </button>
                 </div>
-            </div>
+            </PageHeader>
 
             {activeTab === 'profile' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -127,12 +125,10 @@ const ProfilePage: React.FC = () => {
                                 </Button>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <InfoField icon={<User className="h-4 w-4" />} label="Full Name" value={user.fullName} isEditing={isEditing} />
-                                    <InfoField icon={<Mail className="h-4 w-4" />} label="Email" value={user.email} isEditing={isEditing} />
-                                    <InfoField icon={<Phone className="h-4 w-4" />} label="Phone" value="+1 (555) 000-0000" isEditing={isEditing} />
-                                    <InfoField icon={<Building className="h-4 w-4" />} label="Organization" value="AdminVault Enterprise" isEditing={isEditing} />
-                                    <InfoField icon={<MapPin className="h-4 w-4" />} label="Location" value="Corporate HQ" isEditing={isEditing} />
+                                    <InfoField icon={<Mail className="h-4 w-4" />} label="System Email" value={user.email} isEditing={isEditing} />
+                                    <InfoField icon={<Shield className="h-4 w-4" />} label="Access Role" value={user.role || 'Administrator'} isEditing={false} />
                                     <InfoField icon={<Calendar className="h-4 w-4" />} label="Member Since" value="Jan 2024" isEditing={false} />
                                 </div>
                                 {isEditing && (
@@ -168,48 +164,31 @@ const ProfilePage: React.FC = () => {
                     {/* Sidebar - Right Column */}
                     <div className="space-y-6">
 
-                        {/* Security Status */}
+                        {/* Security Oversight */}
                         <Card className="border-slate-200 dark:border-slate-700">
-                            <CardHeader>
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Security Status</h3>
+                            <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
+                                <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                    <Lock className="h-3.5 w-3.5 text-indigo-500" />
+                                    Security Oversight
+                                </h3>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                                <StatusItem label="Password" value="Strong" status="success" />
-                                <StatusItem label="2FA" value="Enabled" status="success" />
-                                <StatusItem label="Last Login" value="2h ago" status="info" />
-                                <StatusItem label="Active Sessions" value="1 device" status="info" />
-                            </CardContent>
-                        </Card>
+                            <CardContent className="pt-4 space-y-4">
+                                <div className="space-y-2">
+                                    <StatusItem label="Password Strength" value="High" status="success" />
+                                    <StatusItem label="2FA Protection" value="Active" status="success" />
+                                    <StatusItem label="Last Login" value="2h ago" status="info" />
+                                </div>
 
-                        <Card className="border-slate-200 dark:border-slate-700">
-                            <CardHeader>
-                                <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Rapid Commands</h3>
-                            </CardHeader>
-                            <CardContent className="space-y-2">
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-9 justify-start text-[9px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                    onClick={() => setIsPasswordModalOpen(true)}
-                                    leftIcon={<Key className="h-3 w-3" />}
-                                >
-                                    Rotate Password
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-9 justify-start text-[9px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                    onClick={() => setActiveTab('security')}
-                                    leftIcon={<Lock className="h-3 w-3" />}
-                                >
-                                    API Management
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-9 justify-start text-[9px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                    onClick={() => setActiveTab('security')}
-                                    leftIcon={<Smartphone className="h-3 w-3" />}
-                                >
-                                    2FA Oversight
-                                </Button>
+                                <div className="pt-2">
+                                    <Button
+                                        variant="outline"
+                                        className="w-full h-10 text-[9px] font-black uppercase tracking-widest rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm"
+                                        onClick={() => setIsPasswordModalOpen(true)}
+                                        leftIcon={<Key className="h-3.5 w-3.5" />}
+                                    >
+                                        Rotate Security Key
+                                    </Button>
+                                </div>
                             </CardContent>
                         </Card>
 

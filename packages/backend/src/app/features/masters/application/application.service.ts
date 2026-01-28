@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource, Not } from 'typeorm';
 import { ApplicationRepository } from './repositories/application.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
-import { CreateApplicationModel, UpdateApplicationModel, GetAllApplicationsResponseModel, CreateApplicationResponseModel, UpdateApplicationResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateApplicationModel, UpdateApplicationModel, GetAllApplicationsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { ApplicationsMasterEntity } from './entities/application.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 

@@ -1,9 +1,6 @@
 import {
-    MaintenanceStatusEnum,
-    MaintenanceTypeEnum,
     SoftwareTypeEnum
 } from '../enums';
-import { GlobalResponse } from '../common/global-response';
 
 // --- Work Log Models (for Tickets) ---
 

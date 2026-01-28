@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { companyService, employeeService, mastersService, licensesService } from '@/lib/api/services';
+import { companyService, employeeService, applicationService, licensesService } from '@/lib/api/services';
 import { UserRoleEnum, CreateLicenseModel, DeleteLicenseModel } from '@adminvault/shared-models';
 import { Button } from '@/components/ui/Button';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Plus, Search, Key, Trash2, Calendar, Shield, Pencil } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { AddLicenseModal } from './AddLicenseModal';
@@ -113,7 +114,7 @@ const LicensesPage: React.FC = () => {
             const req = new CompanyIdRequestModel(user.companyId);
             const response = await employeeService.getAllEmployees(req as any);
             if (response.status) {
-                setAllEmployees(response.employees || []);
+                setAllEmployees(response.data || []);
             }
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message || 'Failed to fetch employees');
@@ -123,7 +124,7 @@ const LicensesPage: React.FC = () => {
     const fetchApplications = useCallback(async () => {
         if (!user?.companyId) return;
         try {
-            const response: any = await mastersService.getAllApplications(user.companyId as any);
+            const response: any = await applicationService.getAllApplications();
             if (response.status) {
                 setApplications(response.applications || []);
             }
@@ -187,51 +188,54 @@ const LicensesPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 space-y-6">
+            <div className="p-4 space-y-4">
                 {/* Page Header with Filters */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
-                            <Key className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Software Licenses</h1>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Subscription Registry</p>
-                        </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
+                <PageHeader
+                    icon={<Key />}
+                    title="Software Licenses"
+                    description="Subscription Registry"
+                    gradient="from-indigo-500 to-purple-600"
+                >
+                    <div className="flex flex-wrap items-center gap-2 w-full justify-end">
                         <div className="relative group/search">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within/search:text-indigo-500 transition-colors" />
                             <input
                                 type="text"
                                 placeholder="Locate..."
-                                className="w-full sm:w-48 pl-9 pr-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                                className="w-full sm:w-48 pl-9 pr-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm h-8"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <select
-                            value={selectedCompanyId}
-                            onChange={(e) => setSelectedCompanyId(e.target.value)}
-                            className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-sm min-w-[140px]"
-                        >
-                            <option value="">Organization</option>
-                            {companies.map((company) => (
-                                <option key={company.id} value={company.id}>{company.companyName}</option>
-                            ))}
-                        </select>
+                        <div className="relative">
+                            <select
+                                value={selectedCompanyId}
+                                onChange={(e) => setSelectedCompanyId(e.target.value)}
+                                className="pl-3 pr-8 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold uppercase tracking-widest text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-sm min-w-[140px] h-8"
+                            >
+                                <option value="">Organization</option>
+                                {companies.map((company) => (
+                                    <option key={company.id} value={company.id}>{company.companyName}</option>
+                                ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <svg className="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
                         <Button
                             variant="primary"
                             onClick={() => {
                                 setIsModalOpen(true);
                             }}
                             leftIcon={<Plus className="h-3.5 w-3.5" />}
-                            className="h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest"
+                            className="h-8 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest"
                         >
                             Add License
                         </Button>
                     </div>
-                </div>
+                </PageHeader>
 
                 {/* Table Content */}
                 <Card className="border border-slate-200 dark:border-slate-700">

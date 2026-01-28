@@ -31,8 +31,11 @@ export class EmployeesBulkService {
             if (!companyExists) {
                 return new BulkImportResponseModel(false, 400, "Invalid Company ID", 0, 0, []);
             }
-            const existingEmails = await this.employeesRepo.find({ where: { companyId }, select: ['email'] });
-            const existingEmailSet = new Set(existingEmails.map(e => e.email.toLowerCase()));
+            const existingEmployees = await this.employeesRepo.find({ where: { companyId } });
+            const existingEmailSet = new Set(existingEmployees.map(e => e.email.toLowerCase()));
+            const emailToIdMap = new Map<string, number>();
+            existingEmployees.forEach(e => emailToIdMap.set(e.email.toLowerCase(), e.id));
+            const idSet = new Set(existingEmployees.map(e => e.id));
             const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
@@ -58,6 +61,7 @@ export class EmployeesBulkService {
                     const statusStr = row[5]?.toString().trim().toLowerCase();
                     const billingAmount = Number(row[6]);
                     const remarks = row[7]?.toString().trim();
+                    const managerInput = row[8]?.toString().trim();
                     if (!firstName) throw new Error('First Name is required');
                     if (!lastName) throw new Error('Last Name is required');
                     if (!email) throw new Error('Email is required');
@@ -88,6 +92,23 @@ export class EmployeesBulkService {
                         throw new Error(`Email ${email} already exists`);
                     }
 
+                    let resolvedManagerId: number | undefined;
+                    if (managerInput) {
+                        if (!isNaN(Number(managerInput))) {
+                            const idToCheck = Number(managerInput);
+                            if (idSet.has(idToCheck)) {
+                                resolvedManagerId = idToCheck;
+                            }
+                        }
+
+                        if (!resolvedManagerId) {
+                            const emailToCheck = managerInput.toLowerCase();
+                            if (emailToIdMap.has(emailToCheck)) {
+                                resolvedManagerId = emailToIdMap.get(emailToCheck);
+                            }
+                        }
+                    }
+
                     let status = EmployeeStatusEnum.ACTIVE;
                     if (statusStr === 'inactive') status = EmployeeStatusEnum.INACTIVE;
 
@@ -102,6 +123,7 @@ export class EmployeesBulkService {
                     newEmployee.empStatus = status;
                     newEmployee.billingAmount = !isNaN(billingAmount) ? billingAmount : 0;
                     newEmployee.remarks = remarks;
+                    newEmployee.managerId = resolvedManagerId;
                     newEmployee.createdAt = new Date();
                     await this.employeesRepo.save(newEmployee);
                     existingEmailSet.add(email.toLowerCase());
