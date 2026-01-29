@@ -5,7 +5,7 @@ import { AuthUsersRepository } from './repositories/auth-users.repository';
 import { AuthUsersEntity } from './entities/auth-users.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, CreateLoginSessionModel } from '@adminvault/shared-models';
+import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, CreateLoginSessionModel, UserResponseModel } from '@adminvault/shared-models';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
@@ -154,7 +154,7 @@ export class AuthUsersService {
                     console.error("Error initiating session tracking", sessionError);
                 }
             }
-            const userInfo = new RegisterUserModel(user.fullName, user.companyId, user.email, user.phNumber, user.passwordHash, user.userRole);
+            const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
             return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
         } catch (err) {
             throw err;
@@ -408,6 +408,88 @@ export class AuthUsersService {
         } catch (error) {
             throw error;
         }
+    }
+
+    /**
+     * Validate and handle social login user
+     * 
+     * @param provider - 'google' or 'microsoft'
+     * @param socialUser - User profile from social provider
+     * @returns User object if validation success
+     */
+    async validateSocialUser(provider: 'google' | 'microsoft', socialUser: any): Promise<any> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            // Check if user exists by email
+            let user = await this.authUsersRepo.findOne({ where: { email: socialUser.email } });
+
+            if (user) {
+                // Link social account if not already linked
+                await transManager.startTransaction();
+                let updated = false;
+
+                if (provider === 'google' && !user.googleId) {
+                    user.googleId = socialUser.googleId;
+                    updated = true;
+                } else if (provider === 'microsoft' && !user.microsoftId) {
+                    user.microsoftId = socialUser.microsoftId;
+                    updated = true;
+                }
+
+                if (updated) {
+                    await this.authUsersRepo.save(user);
+                }
+                await transManager.completeTransaction();
+            } else {
+                // Create new user
+                await transManager.startTransaction();
+                user = new AuthUsersEntity();
+                user.email = socialUser.email;
+                user.fullName = `${socialUser.firstName} ${socialUser.lastName}`.trim();
+                user.userRole = UserRoleEnum.USER; // Default role
+                user.status = true;
+                user.companyId = 0; // Default or handled otherwise
+                user.employeeId = `EMP-${Date.now()}`;
+
+                // meaningful random password
+                user.passwordHash = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
+
+                if (provider === 'google') {
+                    user.googleId = socialUser.googleId;
+                } else if (provider === 'microsoft') {
+                    user.microsoftId = socialUser.microsoftId;
+                }
+
+                user = await this.authUsersRepo.save(user);
+                await transManager.completeTransaction();
+            }
+
+            return user;
+        } catch (error) {
+            await transManager.releaseTransaction();
+            console.error('Error validating social user:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate tokens for social login user
+     * 
+     * @param user - Authenticated user entity
+     * @returns LoginResponseModel with tokens
+     */
+    async loginSocialUser(user: AuthUsersEntity): Promise<LoginResponseModel> {
+        const payload = {
+            username: user.email,
+            email: user.email,
+            sub: user.id,
+            companyId: user.companyId
+        };
+        const accessToken = this.generateAccessToken(payload);
+        const refreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
+
+        const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
+        return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
     }
 
 }

@@ -17,6 +17,7 @@ export * from './ticket';
 export * from './license/license-models';
 export * from './dashboard/dashboard-models';
 export * from './administration';
+export * from './administration/audit-log.model';
 export * from './types/geolocation.types';
 
 // Export commonly used types

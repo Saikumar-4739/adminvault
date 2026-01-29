@@ -3,6 +3,7 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { CompanyIdRequestModel, GetActiveSessionsModel, GetUserLoginHistoryModel, IdRequestModel, LogoutSessionModel } from '@adminvault/shared-models';
 import { LoginSessionService } from './login-session.service';
+import { AuditLog } from '../audit-logs/audit-log.decorator';
 
 @ApiTags('Login Sessions')
 @Controller('auth-sessions')
@@ -30,6 +31,7 @@ export class LoginSessionController {
     }
 
     @Post('logoutSession')
+    @AuditLog({ action: 'LOGOUT_SESSION', module: 'LoginSession' })
     @ApiBody({ type: LogoutSessionModel })
     async logoutSession(@Body() reqModel: LogoutSessionModel): Promise<GlobalResponse> {
         try {
@@ -40,6 +42,7 @@ export class LoginSessionController {
     }
 
     @Post('logoutAllSessions')
+    @AuditLog({ action: 'LOGOUT_ALL_SESSIONS', module: 'LoginSession' })
     @ApiBody({ type: IdRequestModel })
     async logoutAllSessions(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {

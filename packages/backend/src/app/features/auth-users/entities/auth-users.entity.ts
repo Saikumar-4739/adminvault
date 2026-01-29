@@ -23,6 +23,12 @@ export class AuthUsersEntity {
   @Column('varchar', { name: 'ph_number', length: 20, nullable: true, comment: 'Phone number' })
   phNumber: string;
 
+  @Column('varchar', { name: 'google_id', length: 255, nullable: true, unique: true, comment: 'Google account ID' })
+  googleId: string;
+
+  @Column('varchar', { name: 'microsoft_id', length: 255, nullable: true, unique: true, comment: 'Microsoft account ID' })
+  microsoftId: string;
+
   @Column('text', { name: 'password_hash', nullable: false, comment: 'Hashed password' })
   passwordHash: string;
 

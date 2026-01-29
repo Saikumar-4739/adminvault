@@ -7,11 +7,11 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
     useFactory: async (configService: ConfigService): Promise<TypeOrmModuleOptions> => {
         return {
             type: 'mysql',
-            host: configService.get<string>('DB_HOST', 'mysql-23784a63-ummidisettisai01-ebc2.g.aivencloud.com'),
-            port: configService.get<number>('DB_PORT', 21240),
-            username: configService.get<string>('DB_USERNAME', 'avnadmin'),
-            password: configService.get<string>('DB_PASSWORD', 'AVNS_N--XstG5QvEDji4CFOQ'),
-            database: configService.get<string>('DB_DATABASE', 'adminvault'),
+            host: configService.get<string>('DB_HOST', ''),
+            port: configService.get<number>('DB_PORT', 3306),
+            username: configService.get<string>('DB_USERNAME', ''),
+            password: configService.get<string>('DB_PASSWORD', ''),
+            database: configService.get<string>('DB_DATABASE', ''),
             timezone: 'UTC',
             extra: {
                 connectionLimit: configService.get<number>('DB_POOL_LIMIT', 10),

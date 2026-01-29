@@ -1,6 +1,6 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, KeySquare, ChevronLeft, ChevronRight, PieChart, Settings as SettingsIcon, UserCircle, Plus, GitPullRequest, ShoppingCart, Users } from 'lucide-react';
+import { Building2, Package, Ticket, LayoutDashboard, Menu, X, Database, KeySquare, ChevronLeft, ChevronRight, PieChart, Settings as SettingsIcon, UserCircle, Plus, GitPullRequest, ShoppingCart, Users, FileText } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,6 +11,7 @@ const DEFAULT_NAVIGATION = [
             { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
             { name: 'Configuration', href: '/masters', icon: Database },
             { name: 'All Reports', href: '/reports', icon: PieChart },
+            { name: 'Audit Logs', href: '/audit-logs', icon: FileText },
         ]
     },
     {

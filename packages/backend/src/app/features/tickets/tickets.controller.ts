@@ -4,6 +4,7 @@ import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { TicketsService } from './tickets.service';
 import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, CompanyIdRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel, GetTicketStatisticsRequestModel } from '@adminvault/shared-models';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { AuditLog } from '../audit-logs/audit-log.decorator';
 
 @ApiTags('Tickets')
 @Controller('tickets')
@@ -12,6 +13,7 @@ export class TicketsController {
     constructor(private service: TicketsService) { }
 
     @Post('createTicket')
+    @AuditLog({ action: 'CREATE', module: 'Tickets' })
     @ApiBody({ type: CreateTicketModel })
     async createTicket(@Body() reqModel: CreateTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -29,6 +31,7 @@ export class TicketsController {
     }
 
     @Post('updateTicket')
+    @AuditLog({ action: 'UPDATE', module: 'Tickets' })
     @ApiBody({ type: UpdateTicketModel })
     async updateTicket(@Body() reqModel: UpdateTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -61,6 +64,7 @@ export class TicketsController {
     }
 
     @Post('deleteTicket')
+    @AuditLog({ action: 'DELETE', module: 'Tickets' })
     @ApiBody({ type: DeleteTicketModel })
     async deleteTicket(@Body() reqModel: DeleteTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -96,6 +100,7 @@ export class TicketsController {
     }
 
     @Post('status')
+    @AuditLog({ action: 'UPDATE_STATUS', module: 'Tickets' })
     @ApiBody({ type: UpdateTicketStatusRequestModel })
     async updateStatus(@Body() reqModel: UpdateTicketStatusRequestModel): Promise<GlobalResponse> {
         try {
@@ -106,6 +111,7 @@ export class TicketsController {
     }
 
     @Post('assign')
+    @AuditLog({ action: 'ASSIGN', module: 'Tickets' })
     @ApiBody({ type: AssignTicketRequestModel })
     async assignTicket(@Body() reqModel: AssignTicketRequestModel): Promise<GlobalResponse> {
         try {
@@ -116,6 +122,7 @@ export class TicketsController {
     }
 
     @Post('addResponse')
+    @AuditLog({ action: 'ADD_RESPONSE', module: 'Tickets' })
     @ApiBody({ type: AddTicketResponseRequestModel })
     async addResponse(@Body() reqModel: AddTicketResponseRequestModel): Promise<GlobalResponse> {
         try {

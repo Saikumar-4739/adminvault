@@ -19,9 +19,11 @@ import { AiBotModule } from './features/administration/ai-bot/ai-bot.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { ProcurementModule } from './features/procurement/procurement.module';
 import configuration from '../config/configuration';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RedisCoreModule } from './core/redis/redis.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
+import { AuditLogInterceptor } from './features/audit-logs/audit-log.interceptor';
 
 
 @Module({
@@ -47,7 +49,8 @@ import { RedisCoreModule } from './core/redis/redis.module';
     AiBotModule,
     KnowledgeBaseModule,
     ProcurementModule,
-    RedisCoreModule
+    EventEmitterModule.forRoot(),
+    AuditLogsModule
   ],
   controllers: [AppController],
   providers: [
@@ -55,6 +58,10 @@ import { RedisCoreModule } from './core/redis/redis.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditLogInterceptor,
     },
   ],
 })

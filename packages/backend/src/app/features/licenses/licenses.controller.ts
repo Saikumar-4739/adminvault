@@ -4,6 +4,7 @@ import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { LicensesService } from './licenses.service';
 import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GetLicenseStatisticsResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
+import { AuditLog } from '../audit-logs/audit-log.decorator';
 
 @ApiTags('Licenses')
 @Controller('licenses')
@@ -46,6 +47,7 @@ export class LicensesController {
      * @returns GlobalResponse indicating creation success
      */
     @Post('createLicense')
+    @AuditLog({ action: 'CREATE', module: 'Licenses' })
     @ApiBody({ type: CreateLicenseModel })
     async createLicense(@Body() reqModel: CreateLicenseModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -63,6 +65,7 @@ export class LicensesController {
      * @returns GlobalResponse indicating update success
      */
     @Post('updateLicense')
+    @AuditLog({ action: 'UPDATE', module: 'Licenses' })
     @ApiBody({ type: UpdateLicenseModel })
     async updateLicense(@Body() reqModel: UpdateLicenseModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -80,6 +83,7 @@ export class LicensesController {
      * @returns GlobalResponse indicating deletion success
      */
     @Post('deleteLicense')
+    @AuditLog({ action: 'DELETE', module: 'Licenses' })
     @ApiBody({ type: DeleteLicenseModel })
     async deleteLicense(@Body() reqModel: DeleteLicenseModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {

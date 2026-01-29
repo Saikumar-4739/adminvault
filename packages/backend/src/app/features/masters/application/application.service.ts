@@ -42,7 +42,6 @@ export class ApplicationService {
             newApp.description = reqModel.description;
             newApp.isActive = reqModel.isActive;
             newApp.ownerName = reqModel.ownerName;
-            newApp.ownerName = reqModel.ownerName;
 
             if (reqModel.appReleaseDate) {
                 const date = new Date(reqModel.appReleaseDate);
@@ -104,6 +103,18 @@ export class ApplicationService {
             return new GlobalResponse(true, 200, 'Application updated successfully');
         } catch (error) {
             await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    async getApplication(reqModel: IdRequestModel): Promise<GlobalResponse> {
+        try {
+            const application = await this.appRepo.findOne({ where: { id: reqModel.id } });
+            if (!application) {
+                throw new ErrorResponse(404, 'Application not found');
+            }
+            return new GlobalResponse(true, 200, 'Application retrieved successfully', application);
+        } catch (error) {
             throw error;
         }
     }

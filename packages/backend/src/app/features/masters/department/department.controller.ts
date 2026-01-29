@@ -4,6 +4,7 @@ import { CreateDepartmentModel, UpdateDepartmentModel, DepartmentDropdownRespons
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
+import { AuditLog } from '../../audit-logs/audit-log.decorator';
 
 @ApiTags('Departments Master')
 @Controller('department')
@@ -13,6 +14,7 @@ export class DepartmentController {
 
     @Post('createDepartment')
     @ApiBody({ type: CreateDepartmentModel })
+    @AuditLog({ action: 'CREATE', module: 'Department' })
     async createDepartment(@Body() reqModel: CreateDepartmentModel): Promise<GlobalResponse> {
         try {
             return await this.service.createDepartment(reqModel);
@@ -23,6 +25,7 @@ export class DepartmentController {
 
     @Post('updateDepartment')
     @ApiBody({ type: UpdateDepartmentModel })
+    @AuditLog({ action: 'UPDATE', module: 'Department' })
     async updateDepartment(@Body() reqModel: UpdateDepartmentModel): Promise<GlobalResponse> {
         try {
             return await this.service.updateDepartment(reqModel);
@@ -61,6 +64,7 @@ export class DepartmentController {
 
     @Post('deleteDepartment')
     @ApiBody({ type: IdRequestModel })
+    @AuditLog({ action: 'DELETE', module: 'Department' })
     async deleteDepartment(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {
             return await this.service.deleteDepartment(reqModel);

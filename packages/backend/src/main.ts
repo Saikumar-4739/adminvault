@@ -1,7 +1,7 @@
 import 'module-alias/register';
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app/app.module';
@@ -23,8 +23,26 @@ Logger.log(`Environment variables loaded. MICROSOFT_CLIENT_ID: ${process.env.MIC
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
+
+  // CORS Configuration
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+  app.enableCors({
+    origin: [frontendUrl, 'http://localhost:3000'],
+    credentials: true,
+  });
+
   app.setGlobalPrefix('api');
+
+  // Global Validation Pipe
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    forbidNonWhitelisted: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
+  }));
+
   (app.getHttpAdapter().getInstance() as any).set('trust proxy', true);
 
   // Swagger Configuration (for REST API documentation)

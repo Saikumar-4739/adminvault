@@ -2,8 +2,9 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { VendorService } from './vendor.service';
 import { CreateVendorModel, UpdateVendorModel, GetAllVendorsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
-import { ApiTags, ApiBody } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
+import { AuditLog } from '../../audit-logs/audit-log.decorator';
 
 @ApiTags('Vendors Master')
 @Controller('vendors')
@@ -21,31 +22,34 @@ export class VendorController {
     }
 
     @Post('createVendor')
+    @AuditLog({ action: 'CREATE', module: 'Vendor' })
     @ApiBody({ type: CreateVendorModel })
-    async createVendor(@Body() reqModel: CreateVendorModel, @Req() req: any): Promise<GlobalResponse> {
-        reqModel.userId = req.user.userId;
+    async createVendor(@Body() createVendorModel: CreateVendorModel, @Req() req: any): Promise<GlobalResponse> {
+        createVendorModel.userId = req.user.userId;
         try {
-            return await this.vendorService.createVendor(reqModel);
+            return await this.vendorService.createVendor(createVendorModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
     @Post('updateVendor')
+    @AuditLog({ action: 'UPDATE', module: 'Vendor' })
     @ApiBody({ type: UpdateVendorModel })
-    async updateVendor(@Body() reqModel: UpdateVendorModel): Promise<GlobalResponse> {
+    async updateVendor(@Body() updateVendorModel: UpdateVendorModel): Promise<GlobalResponse> {
         try {
-            return await this.vendorService.updateVendor(reqModel);
+            return await this.vendorService.updateVendor(updateVendorModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
     @Post('deleteVendor')
+    @AuditLog({ action: 'DELETE', module: 'Vendor' })
     @ApiBody({ type: IdRequestModel })
-    async deleteVendor(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteVendor(@Body() idRequestModel: IdRequestModel): Promise<GlobalResponse> {
         try {
-            return await this.vendorService.deleteVendor(reqModel);
+            return await this.vendorService.deleteVendor(idRequestModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

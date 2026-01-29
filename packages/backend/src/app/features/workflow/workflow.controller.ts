@@ -4,6 +4,7 @@ import { WorkflowService } from './workflow.service';
 import { CreateApprovalRequestModel, ApprovalActionModel, GetPendingApprovalsRequestModel, GetPendingApprovalsResponseModel, InitiateApprovalResponseModel, ApproveRequestResponseModel, RejectRequestResponseModel } from '@adminvault/shared-models';
 import { returnException } from '@adminvault/backend-utils';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { AuditLog } from '../audit-logs/audit-log.decorator';
 
 @ApiTags('Workflow')
 @Controller('workflow')
@@ -12,6 +13,7 @@ export class WorkflowController {
     constructor(private workflowService: WorkflowService) { }
 
     @Post('initiate')
+    @AuditLog({ action: 'INITIATE', module: 'Workflow' })
     @ApiBody({ type: CreateApprovalRequestModel })
     async initiate(@Body() reqModel: CreateApprovalRequestModel): Promise<InitiateApprovalResponseModel> {
         try {
@@ -22,6 +24,7 @@ export class WorkflowController {
     }
 
     @Post('approve')
+    @AuditLog({ action: 'APPROVE', module: 'Workflow' })
     @ApiBody({ type: ApprovalActionModel })
     async approve(@Body() reqModel: ApprovalActionModel): Promise<ApproveRequestResponseModel> {
         try {
@@ -32,6 +35,7 @@ export class WorkflowController {
     }
 
     @Post('reject')
+    @AuditLog({ action: 'REJECT', module: 'Workflow' })
     @ApiBody({ type: ApprovalActionModel })
     async reject(@Body() reqModel: ApprovalActionModel): Promise<RejectRequestResponseModel> {
         try {

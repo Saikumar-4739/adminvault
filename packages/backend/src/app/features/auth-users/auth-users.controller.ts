@@ -1,12 +1,14 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, Req, Res, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel } from '@adminvault/shared-models';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
+import { AuditLog } from '../audit-logs/audit-log.decorator';
 
 @ApiTags('Auth Users')
 @Controller('auth-users')
@@ -17,6 +19,7 @@ export class AuthUsersController {
 
     @Post('registerUser')
     @Public()
+    @AuditLog({ action: 'REGISTER', module: 'AuthUsers' })
     @ApiBody({ type: RegisterUserModel })
     async registerUser(@Body() reqModel: RegisterUserModel, @Req() req: Request): Promise<GlobalResponse> {
         try {
@@ -29,6 +32,7 @@ export class AuthUsersController {
 
     @Post('loginUser')
     @Public()
+    @AuditLog({ action: 'LOGIN', module: 'AuthUsers' })
     @ApiBody({ type: LoginUserModel })
     async loginUser(@Body() reqModel: LoginUserModel, @Req() req: Request): Promise<LoginResponseModel> {
         try {
@@ -39,6 +43,7 @@ export class AuthUsersController {
     }
 
     @Post('logOutUser')
+    @AuditLog({ action: 'LOGOUT', module: 'AuthUsers' })
     @ApiBody({ type: LogoutUserModel })
     async logOutUser(@Body() reqModel: LogoutUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -50,6 +55,7 @@ export class AuthUsersController {
     }
 
     @Post('updateUser')
+    @AuditLog({ action: 'UPDATE', module: 'AuthUsers' })
     @ApiBody({ type: UpdateUserModel })
     async updateUser(@Body() reqModel: UpdateUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -62,6 +68,7 @@ export class AuthUsersController {
     }
 
     @Post('deleteUser')
+    @AuditLog({ action: 'DELETE', module: 'AuthUsers' })
     @ApiBody({ type: DeleteUserModel })
     async deleteUser(@Body() reqModel: DeleteUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -85,6 +92,7 @@ export class AuthUsersController {
 
     @Post('requestAccess')
     @Public()
+    @AuditLog({ action: 'REQUEST_ACCESS', module: 'AuthUsers' })
     @ApiBody({ type: RequestAccessModel })
     async requestAccess(@Body() reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {
@@ -96,6 +104,7 @@ export class AuthUsersController {
 
     @Post('forgot-password')
     @Public()
+    @AuditLog({ action: 'FORGOT_PASSWORD', module: 'AuthUsers' })
     @ApiBody({ type: ForgotPasswordModel })
     async forgotPassword(@Body() reqModel: ForgotPasswordModel): Promise<GlobalResponse> {
         try {
@@ -107,6 +116,7 @@ export class AuthUsersController {
 
     @Post('reset-password')
     @Public()
+    @AuditLog({ action: 'RESET_PASSWORD', module: 'AuthUsers' })
     @ApiBody({ type: ResetPasswordModel })
     async resetPassword(@Body() resetPasswordDto: ResetPasswordModel): Promise<GlobalResponse> {
         try {
@@ -116,18 +126,48 @@ export class AuthUsersController {
         }
     }
 
-    @Post('social/google')
+    @Get('social/google')
     @Public()
-    @ApiOperation({ summary: 'Initiate Google OAuth Flow (Placeholder)' })
-    async googleLogin(): Promise<GlobalResponse> {
-        return new GlobalResponse(true, 0, "Google OAuth Endpoint Initialized");
+    @UseGuards(AuthGuard('google'))
+    @ApiOperation({ summary: 'Initiate Google OAuth Flow' })
+    async googleLogin(): Promise<void> {
+        // Guard handles redirection
     }
 
-    @Post('social/microsoft')
+    @Get('social/google/callback')
     @Public()
-    @ApiOperation({ summary: 'Initiate Microsoft OAuth Flow (Placeholder)' })
-    async microsoftLogin(): Promise<GlobalResponse> {
-        return new GlobalResponse(true, 0, "Microsoft OAuth Endpoint Initialized");
+    @UseGuards(AuthGuard('google'))
+    @ApiOperation({ summary: 'Google OAuth Callback' })
+    async googleLoginCallback(@Req() req: any, @Res() res: Response): Promise<void> {
+        const user = req.user;
+        // Generate tokens
+        const loginResponse = await this.service.loginSocialUser(user); // Wait, I need to expose generate tokens logic or reuse existing login
+
+        // Redirect to frontend with tokens
+        // Ideally we shouldn't send tokens in URL, but for simplicity/MVP or we can set cookies
+        // Let's assume we redirect to a frontend page handling the token
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+        res.redirect(`${frontendUrl}/auth/social-callback?token=${loginResponse.accessToken}&refreshToken=${loginResponse.refreshToken}&userInfo=${encodeURIComponent(JSON.stringify(loginResponse.userInfo))}`);
+    }
+
+    @Get('social/microsoft')
+    @Public()
+    @UseGuards(AuthGuard('microsoft'))
+    @ApiOperation({ summary: 'Initiate Microsoft OAuth Flow' })
+    async microsoftLogin(): Promise<void> {
+        // Guard handles redirection
+    }
+
+    @Get('social/microsoft/callback')
+    @Public()
+    @UseGuards(AuthGuard('microsoft'))
+    @ApiOperation({ summary: 'Microsoft OAuth Callback' })
+    async microsoftLoginCallback(@Req() req: any, @Res() res: Response): Promise<void> {
+        const user = req.user;
+        const loginResponse = await this.service.loginSocialUser(user);
+
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+        res.redirect(`${frontendUrl}/auth/social-callback?token=${loginResponse.accessToken}&refreshToken=${loginResponse.refreshToken}`);
     }
 
     @UseGuards(JwtAuthGuard)

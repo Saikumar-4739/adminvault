@@ -2,8 +2,9 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AssetTypeService } from './asset-type.service';
 import { CreateAssetTypeModel, UpdateAssetTypeModel, GetAllAssetTypesResponseModel, CreateAssetTypeResponseModel, AssetTypeDropdownResponse, IdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
-import { ApiTags, ApiBody } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
+import { AuditLog } from '../../audit-logs/audit-log.decorator';
 
 @ApiTags('Asset Types Master')
 @Controller('asset-type')
@@ -12,21 +13,23 @@ export class AssetTypeController {
     constructor(private service: AssetTypeService) { }
 
     @Post('createAssetType')
+    @AuditLog({ action: 'CREATE', module: 'AssetType' })
     @ApiBody({ type: CreateAssetTypeModel })
-    async createAssetType(@Body() reqModel: CreateAssetTypeModel, @Req() req: any): Promise<GlobalResponse> {
-        reqModel.userId = req.user.userId;
+    async createAssetType(@Body() createAssetTypeModel: CreateAssetTypeModel, @Req() req: any): Promise<GlobalResponse> {
+        createAssetTypeModel.userId = req.user.userId;
         try {
-            return await this.service.createAssetType(reqModel);
+            return await this.service.createAssetType(createAssetTypeModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
     @Post('updateAssetType')
+    @AuditLog({ action: 'UPDATE', module: 'AssetType' })
     @ApiBody({ type: UpdateAssetTypeModel })
-    async updateAssetType(@Body() reqModel: UpdateAssetTypeModel): Promise<GlobalResponse> {
+    async updateAssetType(@Body() updateAssetTypeModel: UpdateAssetTypeModel): Promise<GlobalResponse> {
         try {
-            return await this.service.updateAssetType(reqModel);
+            return await this.service.updateAssetType(updateAssetTypeModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -34,9 +37,9 @@ export class AssetTypeController {
 
     @Post('getAssetType')
     @ApiBody({ type: IdRequestModel })
-    async getAssetType(@Body() reqModel: IdRequestModel): Promise<CreateAssetTypeResponseModel> {
+    async getAssetType(@Body() idRequestModel: IdRequestModel): Promise<CreateAssetTypeResponseModel> {
         try {
-            return await this.service.getAssetType(reqModel);
+            return await this.service.getAssetType(idRequestModel);
         } catch (error) {
             return returnException(CreateAssetTypeResponseModel, error);
         }

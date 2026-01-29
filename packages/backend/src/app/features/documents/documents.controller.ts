@@ -4,6 +4,7 @@ import { ApiBody, ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import express from 'express';
 import { DocumentsService } from './documents.service';
+import { AuditLog } from '../audit-logs/audit-log.decorator';
 import { UploadDocumentModel, DeleteDocumentModel, GetDocumentModel, GetAllDocumentsResponseModel, GetDocumentResponseModel, UploadDocumentResponseModel, GetAllDocumentsRequestModel, DownloadDocumentRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Documents')
@@ -12,6 +13,7 @@ export class DocumentsController {
     constructor(private readonly service: DocumentsService) { }
 
     @Post('uploadDocument')
+    @AuditLog({ action: 'UPLOAD', module: 'Documents' })
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('file'))
     async uploadDocument(@UploadedFile() file: Express.Multer.File, @Body() reqModel: UploadDocumentModel): Promise<UploadDocumentResponseModel> {
@@ -23,6 +25,7 @@ export class DocumentsController {
     }
 
     @Post('deleteDocument')
+    @AuditLog({ action: 'DELETE', module: 'Documents' })
     @ApiBody({ type: DeleteDocumentModel })
     async deleteDocument(@Body() reqModel: DeleteDocumentModel): Promise<GlobalResponse> {
         try {

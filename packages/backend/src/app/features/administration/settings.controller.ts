@@ -3,6 +3,7 @@ import { SettingsService } from './settings.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
+import { AuditLog } from '../audit-logs/audit-log.decorator';
 import { SettingType, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel, CompanyIdRequestModel, UserIdNumRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Settings')
@@ -41,6 +42,7 @@ export class SettingsController {
     }
 
     @Post('setUserSetting')
+    @AuditLog({ action: 'UPDATE', module: 'Settings' })
     @ApiBody({ type: CreateSettingModel })
     async setUserSetting(@Body() reqModel: CreateSettingModel): Promise<GlobalResponse> {
         try {
@@ -52,6 +54,7 @@ export class SettingsController {
     }
 
     @Post('bulkSetSettings')
+    @AuditLog({ action: 'BULK_UPDATE', module: 'Settings' })
     @ApiBody({ type: BulkSetSettingsModel })
     async bulkSetSettings(@Body() reqModel: BulkSetSettingsModel): Promise<GlobalResponse> {
         try {
@@ -72,6 +75,7 @@ export class SettingsController {
     }
 
     @Post('deleteSetting')
+    @AuditLog({ action: 'DELETE', module: 'Settings' })
     @ApiBody({ type: DeleteSettingRequestModel })
     async deleteSetting(@Body() reqModel: DeleteSettingRequestModel): Promise<GlobalResponse> {
         try {

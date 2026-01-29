@@ -106,11 +106,29 @@ export class RefreshTokenResponseModel {
     }
 }
 
+export class UserResponseModel {
+    id: number;
+    fullName: string;
+    companyId: number;
+    email: string;
+    phNumber: string;
+    role: UserRoleEnum;
+
+    constructor(id: number, fullName: string, companyId: number, email: string, phNumber: string, role: UserRoleEnum) {
+        this.id = id;
+        this.fullName = fullName;
+        this.companyId = companyId;
+        this.email = email;
+        this.phNumber = phNumber;
+        this.role = role;
+    }
+}
+
 export class LoginResponseModel extends GlobalResponse {
-    userInfo: RegisterUserModel
+    userInfo: UserResponseModel
     accessToken: string;
     refreshToken: string;
-    constructor(status: boolean, code: number, message: string, userInfo: RegisterUserModel, accessToken: string, refreshToken: string) {
+    constructor(status: boolean, code: number, message: string, userInfo: UserResponseModel, accessToken: string, refreshToken: string) {
         super(status, code, message);
         this.userInfo = userInfo;
         this.accessToken = accessToken;

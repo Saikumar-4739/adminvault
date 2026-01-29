@@ -3,6 +3,7 @@ import { PasswordVaultService } from './password-vault.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
+import { AuditLog } from '../audit-logs/audit-log.decorator';
 import { CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVaultsResponseModel, GetAllVaultEntriesModel, GetVaultEntryModel, DeleteVaultEntryModel, GetDecryptedPasswordModel, SearchVaultByCategoryModel, ToggleVaultFavoriteModel, GetVaultCategoriesModel, GetVaultEntryResponseModel, GetVaultCategoriesResponseModel, GetDecryptedPasswordResponseModel } from '@adminvault/shared-models';
 
 @ApiTags('Password Vault')
@@ -32,6 +33,7 @@ export class VaultController {
     }
 
     @Post('createVaultEntry')
+    @AuditLog({ action: 'CREATE', module: 'GlobalVault' })
     @ApiBody({ type: CreatePasswordVaultModel })
     async createVaultEntry(@Body() reqModel: CreatePasswordVaultModel): Promise<GlobalResponse> {
         try {
@@ -42,6 +44,7 @@ export class VaultController {
     }
 
     @Post('updateVaultEntry')
+    @AuditLog({ action: 'UPDATE', module: 'GlobalVault' })
     @ApiBody({ type: UpdatePasswordVaultModel })
     async updateVaultEntry(@Body() reqModel: UpdatePasswordVaultModel): Promise<GlobalResponse> {
         try {
@@ -52,6 +55,7 @@ export class VaultController {
     }
 
     @Post('deleteVaultEntry')
+    @AuditLog({ action: 'DELETE', module: 'GlobalVault' })
     @ApiBody({ type: DeleteVaultEntryModel })
     async deleteVaultEntry(@Body() reqModel: DeleteVaultEntryModel): Promise<GlobalResponse> {
         try {
@@ -82,6 +86,7 @@ export class VaultController {
     }
 
     @Post('toggleVaultFavorite')
+    @AuditLog({ action: 'TOGGLE_FAVORITE', module: 'GlobalVault' })
     @ApiBody({ type: ToggleVaultFavoriteModel })
     async toggleVaultFavorite(@Body() reqModel: ToggleVaultFavoriteModel): Promise<GlobalResponse> {
         try {
