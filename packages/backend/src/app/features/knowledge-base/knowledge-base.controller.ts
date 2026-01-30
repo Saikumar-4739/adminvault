@@ -1,7 +1,8 @@
 import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { KnowledgeBaseService } from './knowledge-base.service';
-import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, GetKnowledgeArticleResponseModel, GetAllKnowledgeArticlesResponseModel, GetKnowledgeBaseStatsResponseModel, CompanyIdRequestModel, IdRequestModel } from '@adminvault/shared-models';
+import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, GetKnowledgeArticleResponseModel, GetAllKnowledgeArticlesResponseModel, GetKnowledgeBaseStatsResponseModel } from '@adminvault/shared-models';
+import { CompanyIdDto, IdDto } from '../../common/dto/common.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { AuditLog } from '../audit-logs/audit-log.decorator';
 import { returnException } from '@adminvault/backend-utils';
@@ -39,8 +40,8 @@ export class KnowledgeBaseController {
 
     @Post('deleteArticle')
     @AuditLog({ action: 'DELETE', module: 'KnowledgeBase' })
-    @ApiBody({ type: IdRequestModel })
-    async deleteArticle(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
+    @ApiBody({ type: IdDto })
+    async deleteArticle(@Body() reqModel: IdDto): Promise<GlobalResponse> {
         try {
             return await this.service.deleteArticle(reqModel);
         } catch (error) {
@@ -49,8 +50,8 @@ export class KnowledgeBaseController {
     }
 
     @Post('getArticle')
-    @ApiBody({ type: IdRequestModel })
-    async getArticle(@Body() reqModel: IdRequestModel): Promise<GetKnowledgeArticleResponseModel> {
+    @ApiBody({ type: IdDto })
+    async getArticle(@Body() reqModel: IdDto): Promise<GetKnowledgeArticleResponseModel> {
         try {
             return await this.service.getArticle(reqModel);
         } catch (error) {
@@ -69,8 +70,8 @@ export class KnowledgeBaseController {
     }
 
     @Post('getStats')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getStats(@Body() reqModel: CompanyIdRequestModel): Promise<GetKnowledgeBaseStatsResponseModel> {
+    @ApiBody({ type: CompanyIdDto })
+    async getStats(@Body() reqModel: CompanyIdDto): Promise<GetKnowledgeBaseStatsResponseModel> {
         try {
             return await this.service.getStats(reqModel);
         } catch (error) {

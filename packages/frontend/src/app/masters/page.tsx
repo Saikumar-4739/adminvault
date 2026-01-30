@@ -2,18 +2,22 @@
 
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import dynamic from 'next/dynamic';
 
-const CompaniesMasterView = dynamic(() => import('./components/companies-master-view').then(mod => mod.CompaniesMasterView), { loading: () => <p>Loading Companies...</p> });
-const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view').then(mod => mod.DepartmentsMasterView), { loading: () => <p>Loading Departments...</p> });
-const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view').then(mod => mod.AssetTypesMasterView), { loading: () => <p>Loading Asset Types...</p> });
-const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view').then(mod => mod.DeviceBrandsMasterView), { loading: () => <p>Loading Device Brands...</p> });
-const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p>Loading Applications...</p> });
-const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p>Loading Slack Users...</p> });
-const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p>Loading Vendors...</p> });
-import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock, Search, X, Book, FileText } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock, Search, Book, FileText, Layers, Globe, Zap, Settings2 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StatCard } from '@/components/ui/StatCard';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { RouteGuard } from '@/components/auth/RouteGuard';
+import { UserRoleEnum } from '@adminvault/shared-models';
+
+const CompaniesMasterView = dynamic(() => import('./components/companies-master-view').then(mod => mod.CompaniesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Companies...</p> });
+const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view').then(mod => mod.DepartmentsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Departments...</p> });
+const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view').then(mod => mod.AssetTypesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Asset Types...</p> });
+const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view').then(mod => mod.DeviceBrandsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: device Brands...</p> });
+const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Applications...</p> });
+const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Slack Integration...</p> });
+const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Vendors...</p> });
 
 interface MasterItem {
     id: string;
@@ -29,93 +33,92 @@ const MastersPage: React.FC = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const selectedMaster = searchParams.get('view');
+    const { stats, isLoading: statsLoading } = useDashboardStats();
 
     const masters: MasterItem[] = [
         {
             id: 'companies',
-            title: 'Companies',
-            description: 'Manage company information',
+            title: 'Entities',
+            description: 'Global organization registry and node management',
             icon: Building2,
-            color: 'from-blue-500 to-blue-600',
+            color: 'from-blue-500 to-indigo-600',
             component: CompaniesMasterView
         },
         {
             id: 'departments',
-            title: 'Departments',
-            description: 'Manage departments',
+            title: 'Organizational Units',
+            description: 'Structural hierarchy and departmental mapping',
             icon: Users,
-            color: 'from-purple-500 to-purple-600',
+            color: 'from-purple-500 to-indigo-600',
             component: DepartmentsMasterView
         },
         {
             id: 'asset-types',
-            title: 'Asset Types',
-            description: 'Manage asset types',
+            title: 'Resource Schema',
+            description: 'Universal classification for enterprise hardware',
             icon: Package,
-            color: 'from-green-500 to-green-600',
+            color: 'from-emerald-500 to-teal-600',
             component: AssetTypesMasterView
         },
         {
             id: 'device-brands',
-            title: 'Device Brands',
-            description: 'Manage device brands',
+            title: 'Vendor Standards',
+            description: 'Standardization protocols for device ecosystems',
             icon: Smartphone,
-            color: 'from-orange-500 to-orange-600',
+            color: 'from-amber-500 to-orange-600',
             component: DeviceBrandsMasterView
         },
         {
             id: 'applications',
-            title: 'Applications',
-            description: 'Manage applications',
+            title: 'Software Lattice',
+            description: 'Enterprise application registry and integrations',
             icon: AppWindow,
-            color: 'from-teal-500 to-teal-600',
+            color: 'from-cyan-500 to-blue-600',
             component: ApplicationsMasterView
         },
         {
             id: 'slack-users',
-            title: 'Slack Users',
-            description: 'Manage slack integration users',
+            title: 'Communication Mesh',
+            description: 'Synchronized identity mapping for Slack protocols',
             icon: MessageSquare,
-            color: 'from-sky-500 to-sky-600',
+            color: 'from-rose-500 to-pink-600',
             component: SlackUsersMasterView
         },
         {
             id: 'vendors',
-            title: 'Vendors',
-            description: 'Manage vendors and suppliers',
+            title: 'Supply Chain Registry',
+            description: 'Critical supplier and vendor network oversight',
             icon: Store,
-            color: 'from-pink-500 to-pink-600',
+            color: 'from-indigo-600 to-violet-700',
             component: VendorsMasterView
         },
-
         {
             id: 'password-vault',
-            title: 'Password Vault',
-            description: 'Secure enterprise password storage',
+            title: 'Identity Shield',
+            description: 'Secure enterprise credential hardening',
             icon: Lock,
-            color: 'from-emerald-600 to-teal-700',
+            color: 'from-slate-600 to-slate-800',
             href: '/password-vault'
         },
         {
             id: 'knowledge-base',
-            title: 'Knowledge Base',
-            description: 'Enterprise guide and policy center',
+            title: 'Intelligence Core',
+            description: 'Universal policy and procedural guide',
             icon: Book,
-            color: 'from-amber-500 to-orange-600',
+            color: 'from-amber-600 to-yellow-700',
             href: '/knowledge-base'
         },
         {
             id: 'document-hub',
-            title: 'Document Hub',
-            description: 'Centralized policy and template hub',
+            title: 'Registry Documents',
+            description: 'Centralized organizational policy templates',
             icon: FileText,
-            color: 'from-indigo-600 to-blue-700',
+            color: 'from-blue-600 to-indigo-700',
             href: '/documents'
         },
     ];
 
     const selectedMasterData = masters.find(m => m.id === selectedMaster);
-
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredMasters = masters.filter(master =>
@@ -138,105 +141,128 @@ const MastersPage: React.FC = () => {
     if (selectedMaster && selectedMasterData && selectedMasterData.component) {
         const MasterComponent = selectedMasterData.component;
         return (
-            <div className="p-4">
-                <MasterComponent onBack={handleBack} />
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50">
+                <div className="p-4 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <MasterComponent onBack={handleBack} />
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="h-screen flex flex-col overflow-hidden">
-            {/* Fixed Page Header */}
-
-            <div className="flex-shrink-0 p-4 pb-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md rotate-2 hover:rotate-0 transition-transform duration-300">
-                        <Package className="h-5 w-5 text-white" />
+        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN]}>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 lg:p-8 space-y-6 overflow-y-auto">
+                <PageHeader
+                    title="System Registry"
+                    description="Enterprise-wide configuration and organization masters"
+                    icon={<Settings2 />}
+                    gradient="from-slate-700 to-slate-900"
+                >
+                    <div className="relative max-w-xs ml-auto group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Search Master Registry..."
+                            className="pl-11 pr-4 py-3 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
-                    <div>
-                        <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">System Configuration</h1>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            Organization Master Registry
-                        </p>
-                    </div>
-                </div>
+                </PageHeader>
 
-                {/* Search Bar */}
-                <div className="relative w-full md:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Search masters..."
-                        className="w-full pl-9 pr-8 py-2 text-sm bg-slate-100 dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-500"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                {/* Registry Pulse */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <StatCard
+                        title="Registered Entities"
+                        value={stats?.employees.byDepartment.length || 0}
+                        icon={Building2}
+                        gradient="from-blue-500 to-indigo-600"
+                        iconBg="bg-blue-50 dark:bg-blue-900/20"
+                        iconColor="text-blue-600 dark:text-blue-400"
+                        isLoading={statsLoading}
                     />
-                    {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery('')}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
-                        >
-                            <X className="h-3 w-3 text-slate-500" />
-                        </button>
-                    )}
+                    <StatCard
+                        title="Active Units"
+                        value={stats?.employees.total || 0}
+                        icon={Users}
+                        gradient="from-purple-500 to-violet-600"
+                        iconBg="bg-purple-50 dark:bg-purple-900/20"
+                        iconColor="text-purple-600 dark:text-purple-400"
+                        isLoading={statsLoading}
+                    />
+                    <StatCard
+                        title="Resource Types"
+                        value={stats?.assets.total || 0}
+                        icon={Layers}
+                        gradient="from-emerald-500 to-teal-600"
+                        iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+                        iconColor="text-emerald-600 dark:text-emerald-400"
+                        isLoading={statsLoading}
+                    />
+                    <StatCard
+                        title="Network Nodes"
+                        value={masters.length}
+                        icon={Globe}
+                        gradient="from-amber-500 to-orange-600"
+                        iconBg="bg-amber-50 dark:bg-amber-900/20"
+                        iconColor="text-amber-600 dark:text-amber-400"
+                        isLoading={false}
+                    />
                 </div>
-            </div>
 
-            {/* Scrollable Masters Grid */}
-            <div className="flex-1 overflow-y-auto p-4 pt-0">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pb-6">
+                {/* Master Grid Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
                     {filteredMasters.length === 0 ? (
-                        <div className="col-span-full py-12 text-center">
-                            <div className="mx-auto w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3">
-                                <Search className="h-6 w-6 text-slate-400" />
+                        <div className="col-span-full py-24 text-center bg-white dark:bg-slate-900 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center gap-4">
+                            <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-full shadow-lg">
+                                <Search className="h-10 w-10 text-slate-300" />
                             </div>
-                            <h3 className="text-sm font-medium text-slate-900 dark:text-white">No masters found</h3>
-                            <p className="text-xs text-slate-500 mt-1">Try adjusting your search query</p>
+                            <div className="space-y-1">
+                                <p className="font-black uppercase tracking-widest text-slate-900 dark:text-white">Registry Signal Lost</p>
+                                <p className="text-xs text-slate-500 font-medium">No master nodes matching your query were detected.</p>
+                            </div>
                         </div>
                     ) : (
                         filteredMasters.map((master) => {
                             const Icon = master.icon;
                             return (
-                                <Card
+                                <button
                                     key={master.id}
-                                    className="group hover:shadow-md transition-all duration-200 cursor-pointer border-slate-200 dark:border-slate-700"
                                     onClick={() => handleSelectMaster(master)}
+                                    className="group p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-2xl hover:-translate-y-1.5 transition-all text-left relative overflow-hidden flex flex-col h-full"
                                 >
-                                    <div className="p-3 space-y-2">
-                                        {/* Icon */}
-                                        <div className={`w-8 h-8 rounded-md bg-gradient-to-br ${master.color} flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-200`}>
-                                            <Icon className="h-4 w-4 text-white" />
-                                        </div>
-
-                                        {/* Content */}
-                                        <div>
-                                            <h3 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors tracking-tight line-clamp-1">
-                                                {master.title}
-                                            </h3>
-                                            <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
-                                                {master.description}
-                                            </p>
-                                        </div>
-
-                                        {/* Button */}
-                                        <Button
-                                            variant="outline"
-                                            className="w-full h-7 rounded-md text-[9px] font-bold uppercase tracking-wide group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleSelectMaster(master);
-                                            }}
-                                        >
-                                            Open
-                                        </Button>
+                                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                                        <Icon className="h-24 w-24 text-indigo-500" />
                                     </div>
-                                </Card>
+
+                                    <div className="flex items-start justify-between mb-8 relative z-10">
+                                        <div className={`p-4 rounded-2xl bg-gradient-to-br ${master.color} text-white shadow-xl group-hover:scale-110 transition-transform`}>
+                                            <Icon className="h-6 w-6" />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 relative z-10 flex-1">
+                                        <h3 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight">
+                                            {master.title}
+                                        </h3>
+                                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                                            {master.description}
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-8 pt-6 border-t border-slate-50 dark:border-white/5 flex items-center justify-between relative z-10">
+                                        <span className="text-[10px] font-black text-slate-400 group-hover:text-indigo-500 uppercase tracking-widest transition-colors">
+                                            Access Registry
+                                        </span>
+                                        <Zap className="h-3 w-3 text-slate-300 group-hover:text-amber-500 group-hover:animate-pulse transition-colors" />
+                                    </div>
+                                </button>
                             );
                         })
                     )}
                 </div>
             </div>
-        </div>
+        </RouteGuard>
     );
 };
 

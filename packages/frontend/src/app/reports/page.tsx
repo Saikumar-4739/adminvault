@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { FileText, Users, Package, Ticket, TrendingUp, BarChart3, FileSpreadsheet, CheckCircle2, Clock, AlertCircle, ArrowLeft, FileDown, Search, Filter } from 'lucide-react';
+import { FileText, Users, Package, Ticket, TrendingUp, BarChart3, FileSpreadsheet, CheckCircle2, Clock, AlertCircle, ArrowLeft, FileDown, Search, ShieldCheck, Zap } from 'lucide-react';
 import { reportsService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { StatCard } from '@/components/ui/StatCard';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 interface ReportItem {
     name: string;
@@ -26,6 +27,7 @@ interface ReportCategory {
 }
 
 const ReportsPage: React.FC = () => {
+    const { stats, isLoading: statsLoading } = useDashboardStats();
     const [activeTab, setActiveTab] = useState('assets');
     const [selectedReport, setSelectedReport] = useState<string | null>(null);
     const [reportData, setReportData] = useState<any>(null);
@@ -37,49 +39,47 @@ const ReportsPage: React.FC = () => {
     const reportCategories: ReportCategory[] = [
         {
             id: 'assets',
-            title: 'Asset Reports',
-            description: 'Inventory and allocation analytics',
+            title: 'Inventory Protocols',
+            description: 'Global resource distribution and lifecycle oversight',
             icon: Package,
             reports: [
-                { name: 'Asset Inventory Report', description: 'Global inventory status and lifecycle metrics', icon: BarChart3, stats: 'All Assets' },
-                { name: 'Asset Allocation Plan', description: 'Resource distribution across operational units', icon: Users, stats: 'Assigned' },
-                { name: 'Warranty Watchlist', description: 'Predictive tracking and warranty coverage', icon: Clock, stats: 'Active' },
-                { name: 'Operational Intensity', description: 'Asset utilization by key departments', icon: TrendingUp, stats: 'Utilization' },
-                { name: 'Device Diversity', description: 'Segmented breakdown by brand and type', icon: Package, stats: 'Breakdown' },
-                { name: 'Liquid Assets (Unassigned)', description: 'Available resources for immediate deployment', icon: AlertCircle, stats: 'Available' },
+                { name: 'Asset Inventory Matrix', description: 'Real-time synchronization of all hardware nodes', icon: BarChart3, stats: 'Full Audit' },
+                { name: 'Resource Allocation Plan', description: 'Deployment mapping across organizational sectors', icon: Users, stats: 'Assigned' },
+                { name: 'Warranty Lifecycle Audit', description: 'Predictive maintenance and coverage tracking', icon: Clock, stats: 'Active' },
+                { name: 'Operational Intensity', description: 'Utilization benchmarks by department', icon: TrendingUp, stats: 'Efficiency' },
+                { name: 'Hardware Diversity', description: 'Segmented breakdown by brand and architecture', icon: Package, stats: 'Models' },
             ]
         },
         {
             id: 'employees',
-            title: 'Employee Reports',
-            description: 'Workforce and directory details',
+            title: 'Workforce Records',
+            description: 'Organizational structure and identity directory',
             icon: Users,
             reports: [
-                { name: 'Employee Portfolio', description: 'Comprehensive directory with operational context', icon: Users, stats: 'Directory' },
-                { name: 'Workforce Distribution', description: 'Employee density by organizational structure', icon: TrendingUp, stats: 'By Dept' },
+                { name: 'Identity Directory', description: 'Comprehensive registry with operational context', icon: Users, stats: 'Live' },
+                { name: 'Departmental Density', description: 'Human resources mapped by structural units', icon: TrendingUp, stats: 'Growth' },
             ]
         },
         {
             id: 'tickets',
-            title: 'Support Reports',
-            description: 'Helpdesk and SLA performance',
+            title: 'Service Analytics',
+            description: 'Incident response and throughput benchmarks',
             icon: Ticket,
             reports: [
-                { name: 'Inquiry Analytics', description: 'High-level overview of support performance', icon: TrendingUp, stats: 'All Trends' },
-                { name: 'Critical Backlog', description: 'Real-time analysis of pending operations', icon: AlertCircle, stats: 'Backlog' },
-                { name: 'Success Metrics (Resolved)', description: 'Resolution efficiency and throughput audit', icon: CheckCircle2, stats: 'Resolved' },
-                { name: 'Priority Matrix', description: 'Response prioritization and status breakdown', icon: BarChart3, stats: 'Impact' },
-                { name: 'Issue Categorization', description: 'Pattern recognition by service category', icon: FileText, stats: 'Category' },
+                { name: 'Performance Pulse', description: 'High-velocity analysis of helpdesk operations', icon: TrendingUp, stats: 'Trends' },
+                { name: 'Critical Backlog Matrix', description: 'Real-time detection of pending operations', icon: AlertCircle, stats: 'Alerts' },
+                { name: 'Resolution Throughput', description: 'Efficiency audit of closed service requests', icon: CheckCircle2, stats: 'Metrics' },
+                { name: 'SLA Compliance Audit', description: 'Response-time verification against standards', icon: Clock, stats: 'Audit' },
             ]
         },
         {
-            id: 'masters',
-            title: 'System Reports',
-            description: 'Configuration and system records',
-            icon: FileSpreadsheet,
+            id: 'system',
+            title: 'System Registry',
+            description: 'Environmental configuration and audit records',
+            icon: ShieldCheck,
             reports: [
-                { name: 'Entity Structure Audit', description: 'Relational mapping of departments and resources', icon: TrendingUp, stats: 'Mapping' },
-                { name: 'Hardware standards', description: 'Vendor standardization and model compliance', icon: Package, stats: 'Standards' },
+                { name: 'Registry Logic Audit', description: 'Mapping of configuration nodes and masters', icon: Zap, stats: 'System' },
+                { name: 'Network Mesh Standards', description: 'Vendor compliance and branding directives', icon: Package, stats: 'Global' },
             ]
         }
     ];
@@ -90,10 +90,10 @@ const ReportsPage: React.FC = () => {
         try {
             const response = await reportsService.generateReport(selectedReport, { format: 'detailed' });
             setReportData(response);
-            toast.success('Report generated successfully');
+            toast.success('Intelligence link established, report generated.');
         } catch (error) {
             console.error(error);
-            toast.error('Failed to generate report');
+            toast.error('Failed to establish data link for report.');
         } finally {
             setIsLoading(false);
         }
@@ -117,10 +117,10 @@ const ReportsPage: React.FC = () => {
             document.body.appendChild(a);
             a.click();
             a.remove();
-            toast.success(`Exported as ${format.toUpperCase()}`);
+            toast.success(`Data exported as ${format.toUpperCase()}`);
         } catch (error) {
             console.error(error);
-            toast.error('Export failed');
+            toast.error('Export protocol failed.');
         } finally {
             setIsExporting(false);
         }
@@ -133,19 +133,19 @@ const ReportsPage: React.FC = () => {
     ) || [];
 
     return (
-        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            {selectedReport ? (
-                // Detailed Report View
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-8 animate-in fade-in duration-300">
-                    <div className="p-4 space-y-4">
-                        {/* Back Navigation */}
-                        <div className="flex items-center justify-between mb-4">
+        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.SUPER_ADMIN]}>
+            <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/50 space-y-6">
+                {selectedReport ? (
+                    // Detailed Report View
+                    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                        {/* Navigation Actions */}
+                        <div className="flex items-center justify-between">
                             <button
                                 onClick={() => { setSelectedReport(null); setReportData(null); }}
-                                className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors"
+                                className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors"
                             >
                                 <ArrowLeft className="h-4 w-4" />
-                                Back to Reports
+                                Return to Hub
                             </button>
 
                             <div className="flex items-center gap-3">
@@ -154,70 +154,72 @@ const ReportsPage: React.FC = () => {
                                     onClick={() => downloadFullReport('excel')}
                                     disabled={!reportData || isExporting}
                                     leftIcon={<FileSpreadsheet className="h-4 w-4" />}
-                                    className="h-9"
+                                    className="h-10 text-xs font-black uppercase tracking-widest shadow-sm border-2"
                                 >
-                                    Export Excel
+                                    Export XLSX
                                 </Button>
                                 <Button
                                     variant="outline"
                                     onClick={() => downloadFullReport('pdf')}
                                     disabled={!reportData || isExporting}
                                     leftIcon={<FileDown className="h-4 w-4" />}
-                                    className="h-9"
+                                    className="h-10 text-xs font-black uppercase tracking-widest shadow-sm border-2"
                                 >
                                     Export PDF
                                 </Button>
                             </div>
                         </div>
 
-                        {/* Report Header */}
-                        <div className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{selectedReport}</h1>
-                            <p className="text-slate-500 dark:text-slate-400">
+                        {/* Report Context Card */}
+                        <div className="p-8 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 shadow-xl">
+                            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-2 uppercase">{selectedReport}</h1>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium">
                                 {reportCategories.find(c => c.reports.some(r => r.name === selectedReport))?.reports.find(r => r.name === selectedReport)?.description}
                             </p>
                         </div>
 
-                        {/* Report Content */}
-                        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm min-h-[500px]">
+                        {/* Content Processing Area */}
+                        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden min-h-[500px]">
                             {!reportData ? (
-                                <div className="flex flex-col items-center justify-center h-[500px] p-8 text-center">
-                                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-6">
-                                        <FileText className="h-8 w-8 text-slate-400" />
+                                <div className="flex flex-col items-center justify-center min-h-[500px] p-12 text-center space-y-8">
+                                    <div className="w-24 h-24 bg-slate-50 dark:bg-white/5 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-white/10 flex items-center justify-center animate-pulse">
+                                        <FileText className="h-10 w-10 text-slate-300" />
                                     </div>
-                                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Ready to Generate</h2>
-                                    <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-6">
-                                        Click the button below to generate the latest data for this report.
-                                    </p>
+                                    <div className="max-w-sm space-y-2">
+                                        <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-widest">Protocol Staged</h2>
+                                        <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
+                                            Synthesizing live environmental data for generating the latest operational intelligence.
+                                        </p>
+                                    </div>
                                     <Button
                                         variant="primary"
                                         onClick={generateReport}
                                         isLoading={isLoading}
-                                        className="px-8"
+                                        className="h-14 px-12 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-600/20"
                                     >
-                                        Generate Report
+                                        Execute Report Generation
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="p-4">
+                                <div className="p-0">
                                     {Array.isArray(reportData) && reportData.length > 0 ? (
                                         <div className="overflow-x-auto">
-                                            <table className="w-full text-left text-sm">
-                                                <thead className="bg-slate-50 dark:bg-slate-700/50">
+                                            <table className="w-full text-left">
+                                                <thead className="bg-slate-50/50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5">
                                                     <tr>
                                                         {Object.keys(reportData[0]).map((header) => (
-                                                            <th key={header} className="px-4 py-3 font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-xs border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                                                            <th key={header} className="px-6 py-4 font-black text-slate-500 uppercase tracking-widest text-[10px] whitespace-nowrap">
                                                                 {header.replace(/_/g, ' ')}
                                                             </th>
                                                         ))}
                                                     </tr>
                                                 </thead>
-                                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                                <tbody className="divide-y divide-slate-50 dark:divide-white/5">
                                                     {reportData.slice(0, 100).map((row: any, idx: number) => (
-                                                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                                                             {Object.values(row).map((cell: any, cellIdx: number) => (
-                                                                <td key={cellIdx} className="px-4 py-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                                                                    {cell === null || cell === undefined ? '-' : String(cell)}
+                                                                <td key={cellIdx} className="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap group-hover:text-indigo-500 transition-colors">
+                                                                    {cell === null || cell === undefined ? <span className="opacity-20">---</span> : String(cell)}
                                                                 </td>
                                                             ))}
                                                         </tr>
@@ -226,105 +228,158 @@ const ReportsPage: React.FC = () => {
                                             </table>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-                                            <Search className="h-8 w-8 mb-2 opacity-50" />
-                                            <p>No data found for this report.</p>
+                                        <div className="flex flex-col items-center justify-center min-h-[500px] text-slate-500 space-y-4">
+                                            <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-full">
+                                                <Search className="h-10 w-10 opacity-20" />
+                                            </div>
+                                            <p className="font-black uppercase tracking-widest text-xs">No Data Strings Detected</p>
                                         </div>
                                     )}
                                 </div>
                             )}
                         </div>
                     </div>
-                </div>
-            ) : (
-                // Reports Hub List View
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-8">
-                    <div className="p-4 space-y-4">
+                ) : (
+                    // Reports Hub List View
+                    <div className="space-y-6">
                         <PageHeader
-                            title="Reports"
-                            description="Access system reports and analytics"
+                            title="Analytics Hub"
+                            description="Real-time operational reporting and data synthesis"
                             icon={<BarChart3 />}
-                            gradient="from-indigo-600 to-indigo-700"
+                            gradient="from-indigo-600 to-indigo-800"
                         >
-                            <div className="relative max-w-md ml-auto">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <div className="relative max-w-xs ml-auto group">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                                 <input
                                     type="text"
-                                    placeholder="Search reports..."
-                                    className="pl-9 pr-4 py-2 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                                    placeholder="Search Report Matrix..."
+                                    className="pl-11 pr-4 py-3 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
                         </PageHeader>
 
-                        {/* Tabs */}
-                        <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-4">
-                            {reportCategories.map((category) => {
-                                const Icon = category.icon;
-                                const isActive = activeTab === category.id;
-                                return (
-                                    <button
-                                        key={category.id}
-                                        onClick={() => setActiveTab(category.id)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                                                ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400'
-                                                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                            }`}
-                                    >
-                                        <Icon className="h-4 w-4" />
-                                        {category.title}
-                                    </button>
-                                );
-                            })}
+                        {/* Pulse Vitals */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <StatCard
+                                title="Active Workforce"
+                                value={stats?.employees.total || 0}
+                                icon={Users}
+                                gradient="from-indigo-500 to-blue-600"
+                                iconBg="bg-indigo-50 dark:bg-indigo-900/20"
+                                iconColor="text-indigo-600 dark:text-indigo-400"
+                                isLoading={statsLoading}
+                            />
+                            <StatCard
+                                title="Inventory Nodes"
+                                value={stats?.assets.total || 0}
+                                icon={Package}
+                                gradient="from-blue-500 to-cyan-600"
+                                iconBg="bg-blue-50 dark:bg-blue-900/20"
+                                iconColor="text-blue-600 dark:text-blue-400"
+                                isLoading={statsLoading}
+                            />
+                            <StatCard
+                                title="Resolution Velocity"
+                                value={`${Math.round(stats?.systemHealth.ticketResolutionRate || 0)}%`}
+                                icon={Zap}
+                                gradient="from-emerald-500 to-teal-600"
+                                iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+                                iconColor="text-emerald-600 dark:text-emerald-400"
+                                isLoading={statsLoading}
+                            />
+                            <StatCard
+                                title="Critical Stability"
+                                value={stats?.systemHealth.openCriticalTickets || 0}
+                                icon={ShieldCheck}
+                                gradient="from-rose-500 to-red-600"
+                                iconBg="bg-rose-50 dark:bg-rose-900/20"
+                                iconColor="text-rose-600 dark:text-rose-400"
+                                isLoading={statsLoading}
+                            />
                         </div>
 
-                        {/* Content */}
-                        {activeCategory && (
-                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <div className="mb-4">
-                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{activeCategory.title}</h3>
-                                    <p className="text-sm text-slate-500">{activeCategory.description}</p>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {activeCategoryReports.length > 0 ? (
-                                        activeCategoryReports.map((report, idx) => {
-                                            const ReportIcon = report.icon;
-                                            return (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => setSelectedReport(report.name)}
-                                                    className="flex flex-col p-5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all text-left group"
-                                                >
-                                                    <div className="flex items-start justify-between mb-3 w-full">
-                                                        <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 transition-colors">
-                                                            <ReportIcon className="h-5 w-5" />
-                                                        </div>
-                                                        <span className="text-xs font-medium text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-full">
-                                                            {report.stats}
-                                                        </span>
-                                                    </div>
-                                                    <h4 className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                                        {report.name}
-                                                    </h4>
-                                                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                                                        {report.description}
-                                                    </p>
-                                                </button>
-                                            );
-                                        })
-                                    ) : (
-                                        <div className="col-span-full py-12 text-center text-slate-500 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
-                                            <p>No reports found matching your search.</p>
-                                        </div>
-                                    )}
-                                </div>
+                        {/* Hub Navigation and Content */}
+                        <div className="space-y-8 pt-4">
+                            {/* Unified Tab Navigation */}
+                            <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 w-fit">
+                                {reportCategories.map((category) => {
+                                    const Icon = category.icon;
+                                    const isActive = activeTab === category.id;
+                                    return (
+                                        <button
+                                            key={category.id}
+                                            onClick={() => setActiveTab(category.id)}
+                                            className={`flex items-center gap-3 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${isActive
+                                                ? 'bg-white dark:bg-white/10 text-indigo-600 dark:text-white shadow-lg'
+                                                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
+                                                }`}
+                                        >
+                                            <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                                            {category.title}
+                                        </button>
+                                    );
+                                })}
                             </div>
-                        )}
+
+                            {/* Category Context & Grid */}
+                            {activeCategory && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div className="border-l-4 border-indigo-500 pl-4 py-1">
+                                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{activeCategory.title}</h3>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{activeCategory.description}</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {activeCategoryReports.length > 0 ? (
+                                            activeCategoryReports.map((report, idx) => {
+                                                const ReportIcon = report.icon;
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => setSelectedReport(report.name)}
+                                                        className="group p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-2xl hover:-translate-y-1 transition-all text-left relative overflow-hidden"
+                                                    >
+                                                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                            <ReportIcon className="h-20 w-20 text-indigo-500" />
+                                                        </div>
+
+                                                        <div className="flex items-start justify-between mb-6 relative z-10">
+                                                            <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform shadow-sm">
+                                                                <ReportIcon className="h-6 w-6" />
+                                                            </div>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/5">
+                                                                {report.stats}
+                                                            </span>
+                                                        </div>
+                                                        <h4 className="text-lg font-black text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight relative z-10">
+                                                            {report.name}
+                                                        </h4>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed relative z-10">
+                                                            {report.description}
+                                                        </p>
+                                                    </button>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="col-span-full py-24 text-center bg-slate-50 dark:bg-white/[0.02] rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center gap-4">
+                                                <div className="p-6 bg-white dark:bg-slate-800 rounded-full shadow-lg">
+                                                    <Search className="h-10 w-10 text-slate-300" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="font-black uppercase tracking-widest text-slate-900 dark:text-white">Empty Signal Matrix</p>
+                                                    <p className="text-xs text-slate-500 font-medium">No intelligence matches your search parameters.</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </RouteGuard>
     );
 }

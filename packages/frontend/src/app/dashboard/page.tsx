@@ -26,7 +26,7 @@ const AssetDistributionChart = dynamic(() => import('@/features/dashboard/compon
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const TicketPriorityChart = dynamic(() => import('@/features/dashboard/components/TicketPriorityChart').then(mod => mod.TicketPriorityChart), {
+const TicketPriorityChart = dynamic(() => import('@/features/dashboard/components/TicketPriorityChart'), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });

@@ -1,4 +1,8 @@
+import { IsNumber, IsNotEmpty } from 'class-validator';
+
 export class IdRequestModel {
+    @IsNumber()
+    @IsNotEmpty()
     id: number;
     constructor(id: number) {
         this.id = id;
@@ -6,6 +10,8 @@ export class IdRequestModel {
 }
 
 export class CompanyIdRequestModel {
+    @IsNumber()
+    @IsNotEmpty()
     companyId: number;
     constructor(companyId: number) {
         this.companyId = companyId;
@@ -13,6 +19,8 @@ export class CompanyIdRequestModel {
 }
 
 export class UserIdRequestModel {
+    @IsNumber()
+    @IsNotEmpty()
     userId: number;
     constructor(userId: number) {
         this.userId = userId;
@@ -20,6 +28,8 @@ export class UserIdRequestModel {
 }
 
 export class UserIdNumRequestModel {
+    @IsNumber()
+    @IsNotEmpty()
     id: number;
     constructor(id: number) {
         this.id = id;

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { ShieldCheck, Users, Zap, X, Lock, ArrowRight, Globe, Building2 } from 'lucide-react';
+import { ArrowRight, BrainCircuit, Activity, X, Users, Lock, LifeBuoy, BookOpen } from 'lucide-react';
 import { authService } from '@/lib/api/services';
 import { RequestAccessModel, UserRoleEnum, ForgotPasswordModel, LoginUserModel } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
@@ -110,263 +110,224 @@ const LoginContent: React.FC = () => {
 
 
     return (
-        <div className="min-h-screen w-full flex bg-white dark:bg-[#020617] font-sans">
+        <div className="min-h-screen w-full relative flex items-center justify-center bg-[#f8fafc] overflow-hidden font-sans selection:bg-blue-200">
+            {/* Global Immersive Background Layer */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                {/* Master Gradients */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,_rgba(59,130,246,0.1),transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,_rgba(99,102,241,0.15),transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(139,92,246,0.05),transparent_70%)]" />
 
-            {/* Left Side: Brand/Art (60%) */}
-            <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden flex-col justify-between p-16 text-white bg-[#0F172A]">
-                {/* Dynamic Gradient Overlay - Deep Space Theme */}
-                <div className="absolute inset-0 bg-[radial-gradient(at_top_right,_var(--tw-gradient-stops))] from-blue-700/30 via-slate-900/0 to-slate-900/0" />
-                <div className="absolute inset-0 bg-[radial-gradient(at_bottom_left,_var(--tw-gradient-stops))] from-indigo-600/30 via-slate-900/0 to-slate-900/0" />
-                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.04] z-0" />
+                {/* Grid Effect */}
+                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)]" />
 
-                {/* Content */}
-                <div className="relative z-10 h-full flex flex-col justify-between">
-                    <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 backdrop-blur-md border border-blue-400/20 mb-8">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                            </span>
-                            <span className="text-[10px] font-bold tracking-widest uppercase text-blue-100">System Online</span>
+                {/* Dynamic Orbital Rings (Subtle for Light Mode) */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] max-w-[1600px] max-h-[1600px]">
+                    <div className="absolute inset-0 border-[1px] border-blue-200 rounded-full animate-[spin_80s_linear_infinite]" />
+                    <div className="absolute inset-[10%] border-[1px] border-indigo-100 rounded-full animate-[spin_60s_linear_infinite_reverse]" />
+                </div>
+
+                {/* Floating Soft Glows */}
+                <div className="absolute top-1/4 left-1/3 w-64 h-64 bg-blue-400/10 rounded-full blur-[100px] animate-pulse" />
+                <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-purple-400/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+            </div>
+
+            {/* Content Container */}
+            <div className="relative z-10 w-full max-w-[1400px] h-full flex flex-col lg:flex-row items-center justify-between px-8 lg:px-20 py-12 gap-16">
+
+                {/* Branding Side */}
+                <div className="flex-1 flex flex-col justify-center text-left space-y-12">
+                    <div className="space-y-6">
+                        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
+                            <Activity className="w-4 h-4 text-blue-600 animate-pulse" />
+                            <span className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-600/80">AI Connect: System Synchronized</span>
                         </div>
-                        <h1 className="text-7xl font-black tracking-tight mb-6 leading-tight text-white drop-shadow-sm">
-                            Admin<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Vault</span>
+
+                        <h1 className="text-7xl lg:text-9xl font-black tracking-tighter leading-[0.85] text-slate-900">
+                            Admin<span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 drop-shadow-[0_0_15px_rgba(99,102,241,0.2)]">Vault</span>
                         </h1>
-                        <p className="text-slate-300 text-xl font-light leading-relaxed max-w-md">
-                            The secure foundation for your enterprise operations. Manage Identity, Assets, and Compliance in one unified platform.
-                        </p>
                     </div>
 
-                    {/* Feature List */}
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-8">
-                        <div className="flex flex-col gap-2 group">
-                            <div className="flex items-center gap-3 text-base font-semibold text-white group-hover:text-blue-200 transition-colors">
-                                <div className="p-2.5 rounded-xl bg-blue-500/20 border border-blue-500/20 group-hover:bg-blue-500/30 transition-colors"><ShieldCheck className="w-5 h-5 text-blue-300" /></div>
-                                Enterprise Security
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl">
+                        {[
+                            { icon: LifeBuoy, title: "Support", desc: "Expert Assistance", color: "blue" },
+                            { icon: BrainCircuit, title: "Assets", desc: "Predictive Synthesis", color: "indigo" },
+                            { icon: BookOpen, title: "Knowledge", desc: "Cognitive Engine", color: "violet" }
+                        ].map((m, idx) => (
+                            <div key={idx} className="group p-5 rounded-2xl bg-white/40 border border-white/60 backdrop-blur-md hover:bg-white/60 hover:border-white/80 transition-all duration-500 cursor-default shadow-sm hover:shadow-md">
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-2.5 rounded-xl bg-${m.color}-500/10 text-${m.color}-600 group-hover:scale-110 group-hover:bg-${m.color}-500/20 transition-all`}>
+                                        <m.icon className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-black text-slate-800 group-hover:text-slate-950 transition-colors uppercase tracking-wider">{m.title}</h4>
+                                        <p className="text-[11px] text-slate-500 font-medium group-hover:text-slate-600 transition-colors">{m.desc}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <p className="text-sm text-slate-400 leading-relaxed pl-[3.25rem]">Zero-trust architecture with advanced RBAC.</p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 group">
-                            <div className="flex items-center gap-3 text-base font-semibold text-white group-hover:text-indigo-200 transition-colors">
-                                <div className="p-2.5 rounded-xl bg-indigo-500/20 border border-indigo-500/20 group-hover:bg-indigo-500/30 transition-colors"><Zap className="w-5 h-5 text-indigo-300" /></div>
-                                Automated Workflows
-                            </div>
-                            <p className="text-sm text-slate-400 leading-relaxed pl-[3.25rem]">Trigger-based actions for approvals and alerts.</p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 group">
-                            <div className="flex items-center gap-3 text-base font-semibold text-white group-hover:text-cyan-200 transition-colors">
-                                <div className="p-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors"><Globe className="w-5 h-5 text-cyan-300" /></div>
-                                Global Infrastructure
-                            </div>
-                            <p className="text-sm text-slate-400 leading-relaxed pl-[3.25rem]">Distributed systems ensures 99.9% uptime.</p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 group">
-                            <div className="flex items-center gap-3 text-base font-semibold text-white group-hover:text-violet-200 transition-colors">
-                                <div className="p-2.5 rounded-xl bg-violet-500/20 border border-violet-500/20 group-hover:bg-violet-500/30 transition-colors"><Users className="w-5 h-5 text-violet-300" /></div>
-                                Team Management
-                            </div>
-                            <p className="text-sm text-slate-400 leading-relaxed pl-[3.25rem]">Streamlined onboarding and access control.</p>
-                        </div>
+                        ))}
                     </div>
 
-                    <div className="pt-8 border-t border-slate-700/50">
-                        <div className="flex justify-between items-end">
-                            <div className="text-sm text-slate-400 font-medium">
-                                Trusted by industry leaders worldwide.
-                            </div>
-                            <div className="flex gap-2 opacity-50">
-                                <div className="w-2 h-2 rounded-full bg-white"></div>
-                                <div className="w-2 h-2 rounded-full bg-white"></div>
-                                <div className="w-2 h-2 rounded-full bg-white"></div>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
-                {/* Decorative Elements - Subtle Glows */}
-                <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px]" />
-            </div>
 
-
-            {/* Right Side: Form (40%) */}
-            <div className="w-full lg:w-[40%] flex flex-col justify-center relative bg-white dark:bg-[#020617] transition-colors duration-300">
-                {/* Decorative background element for form area */}
-                <div className="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                    <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[100px]" />
-                </div>
-
-                <div className="w-full max-w-[480px] mx-auto px-8 sm:px-12 py-10 relative z-10">
-
-                    {/* Mobile Logo for small screens */}
-                    <div className="lg:hidden flex justify-center mb-8">
-                        <div className="inline-flex items-center gap-2 group">
-                            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-                                <Building2 className="w-6 h-6" />
+                {/* Login Card (Glassmorphic Interface - Light Edition) */}
+                <div className="w-full lg:w-[480px] animate-in slide-in-from-right-12 duration-1000">
+                    <div className="relative p-[1px] rounded-[32px] bg-gradient-to-b from-white/80 to-slate-200 shadow-2xl overflow-hidden group">
+                        <div className="relative bg-white/80 backdrop-blur-[40px] rounded-[31px] p-10 lg:p-12 border border-white/40">
+                            <div className="mb-10 text-center lg:text-left">
+                                <h2 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Welcome</h2>
+                                <p className="text-slate-500 text-sm font-medium">Initialize secure session to continue.</p>
                             </div>
-                            <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Admin<span className="text-blue-600 dark:text-blue-500">Vault</span></span>
-                        </div>
-                    </div>
 
-                    <div className="mb-10">
-                        <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Welcome Back</h2>
-                        <p className="text-slate-500 dark:text-slate-400 text-base">Please enter your details to sign in.</p>
-                    </div>
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="space-y-5">
+                                    <div className="group space-y-2">
+                                        <label className="text-[10px] font-black text-blue-600/70 uppercase tracking-[0.2em] ml-1">Email ID</label>
+                                        <Input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                            placeholder="identity@vault.security"
+                                            className="h-14 px-5 text-sm bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all"
+                                        />
+                                    </div>
+                                    <div className="group space-y-2">
+                                        <div className="flex justify-between items-center ml-1">
+                                            <label className="text-[10px] font-black text-blue-600/70 uppercase tracking-[0.2em]">Password</label>
+                                            <button type="button" onClick={() => setShowForgotModal(true)} className="text-[10px] font-bold text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest">Forgot Password</button>
+                                        </div>
+                                        <Input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                            placeholder="••••••••"
+                                            className="h-14 px-5 text-sm bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all"
+                                        />
+                                    </div>
+                                </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-5">
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1 uppercase tracking-wide">Email Address</label>
-                                <div className="relative">
-                                    <Input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        placeholder="name@company.com"
-                                        className="h-14 pl-4 text-base bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all rounded-2xl"
-                                    />
+                                <Button
+                                    type="submit"
+                                    className="w-full h-14 bg-blue-600 hover:bg-blue-500 text-white text-sm font-black uppercase tracking-[0.1em] rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-3 active:scale-95 group/btn"
+                                    isLoading={isLoading}
+                                >
+                                    Login
+                                    <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                                </Button>
+                            </form>
+
+                            <div className="relative my-10">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-slate-200"></span>
+                                </div>
+                                <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.3em]">
+                                    <span className="bg-white/80 backdrop-blur-md px-4 text-slate-400">Sync with</span>
                                 </div>
                             </div>
-                            <div className="space-y-1.5">
-                                <div className="flex justify-between items-center ml-1">
-                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Password</label>
-                                    <button type="button" onClick={() => setShowForgotModal(true)} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Forgot Password?</button>
-                                </div>
-                                <div className="relative">
-                                    <Input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                        placeholder="••••••••"
-                                        className="h-14 pl-4 text-base bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all rounded-2xl"
-                                    />
-                                </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="h-14 bg-white/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 font-bold text-xs tracking-widest transition-all rounded-2xl flex items-center justify-center gap-2"
+                                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth-users/social/google`}
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                                    </svg>
+                                    GOOGLE
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="h-14 bg-white/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 font-bold text-xs tracking-widest transition-all rounded-2xl flex items-center justify-center gap-2"
+                                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth-users/social/microsoft`}
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 23 23">
+                                        <path fill="#f3f3f3" d="M0 0h23v23H0z" />
+                                        <path fill="#f35325" d="M1 1h10v10H1z" />
+                                        <path fill="#81bc06" d="M12 1h10v10H12z" />
+                                        <path fill="#05a6f0" d="M1 12h10v10H1z" />
+                                        <path fill="#ffba08" d="M12 12h10v10H12z" />
+                                    </svg>
+                                    MICROSOFT
+                                </Button>
+                            </div>
+
+                            <div className="mt-10 text-center">
+                                <p className="text-[11px] font-bold text-slate-400 tracking-widest uppercase">
+                                    No access?{' '}
+                                    <button type="button" onClick={() => setShowRequestModal(true)} className="text-blue-600 hover:text-blue-700 transition-colors underline underline-offset-4 decoration-blue-600/20">
+                                        Request Access
+                                    </button>
+                                </p>
                             </div>
                         </div>
-
-                        <Button
-                            type="submit"
-                            className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-base font-bold rounded-2xl shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 group mt-2"
-                            isLoading={isLoading}
-                        >
-                            Sign In to Account
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                    </form>
-
-                    <div className="relative my-8">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-slate-200 dark:border-slate-800"></span>
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white dark:bg-[#020617] px-2 text-slate-500">Or continue with</span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="h-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold"
-                            onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api'}/auth-users/social/google`}
-                            leftIcon={
-                                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                                    <path
-                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                                        fill="#4285F4"
-                                    />
-                                    <path
-                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                                        fill="#34A853"
-                                    />
-                                    <path
-                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                                        fill="#FBBC05"
-                                    />
-                                    <path
-                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                                        fill="#EA4335"
-                                    />
-                                </svg>
-                            }
-                        >
-                            Google
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="h-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold"
-                            onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api'}/auth-users/social/microsoft`}
-                            leftIcon={
-                                <svg className="w-5 h-5" viewBox="0 0 21 21">
-                                    <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-                                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-                                    <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-                                    <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
-                                </svg>
-                            }
-                        >
-                            Microsoft
-                        </Button>
-                    </div>
-
-                    <div className="mt-10 text-center">
-                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                            Don't have an account?{' '}
-                            <button type="button" onClick={() => setShowRequestModal(true)} className="font-bold text-blue-600 dark:text-blue-400 hover:underline transition-all">
-                                Request access
-                            </button>
-                        </p>
                     </div>
                 </div>
             </div>
 
-            {/* Request Access Modal */}
+            {/* Request Access Modal (Light Edition) */}
             {showRequestModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 relative overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
-                        <button onClick={() => setShowRequestModal(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                            <X className="w-5 h-5 text-slate-500" />
-                        </button>
-                        <div className="mb-8">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
-                                <Users className="w-6 h-6" />
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/10 backdrop-blur-[20px] animate-in fade-in duration-300">
+                    <div className="relative p-[1px] rounded-[32px] bg-gradient-to-b from-white to-slate-200 shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-300">
+                        <div className="relative bg-white/90 backdrop-blur-3xl rounded-[31px] p-8 lg:p-10 border border-white/40">
+                            <button onClick={() => setShowRequestModal(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 transition-colors">
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                            <div className="mb-8">
+                                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 flex items-center justify-center mb-6">
+                                    <Users className="w-7 h-7" />
+                                </div>
+                                <h3 className="text-3xl font-black text-slate-900 tracking-tight">Request Access</h3>
+                                <p className="text-slate-500 mt-2 text-sm font-medium">Initialize uplink request to workspace.</p>
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Request Access</h3>
-                            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">Fill in your details to join your organization's workspace.</p>
+                            <form onSubmit={handleRequestAccess} className="space-y-5">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-blue-600/70 uppercase tracking-[0.2em] ml-1">Identity Name</label>
+                                    <Input value={requestName} onChange={(e) => setRequestName(e.target.value)} required className="h-12 rounded-xl bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-500/50 transition-all px-4" placeholder="Enter full name" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-blue-600/70 uppercase tracking-[0.2em] ml-1">Terminal Email</label>
+                                    <Input type="email" value={requestEmail} onChange={(e) => setRequestEmail(e.target.value)} required className="h-12 rounded-xl bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-500/50 transition-all px-4" placeholder="name@company.com" />
+                                </div>
+                                <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest rounded-xl mt-4 shadow-lg shadow-blue-500/20 active:scale-95 transition-all" isLoading={isRequesting}>Send Uplink</Button>
+                            </form>
                         </div>
-                        <form onSubmit={handleRequestAccess} className="space-y-4">
-                            <Input label="Full Name" value={requestName} onChange={(e) => setRequestName(e.target.value)} required className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50" />
-                            <Input label="Work Email" type="email" value={requestEmail} onChange={(e) => setRequestEmail(e.target.value)} required className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50" />
-                            <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl mt-2" isLoading={isRequesting}>Send Request</Button>
-                        </form>
                     </div>
                 </div>
             )}
 
-            {/* Forgot Password Modal */}
+            {/* Forgot Password Modal (Light Edition) */}
             {showForgotModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 relative overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
-                        <button onClick={() => setShowForgotModal(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                            <X className="w-5 h-5 text-slate-500" />
-                        </button>
-                        <div className="mb-8">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
-                                <Lock className="w-6 h-6" />
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/10 backdrop-blur-[20px] animate-in fade-in duration-300">
+                    <div className="relative p-[1px] rounded-[32px] bg-gradient-to-b from-white to-slate-200 shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-300">
+                        <div className="relative bg-white/90 backdrop-blur-3xl rounded-[31px] p-8 lg:p-10 border border-white/40">
+                            <button onClick={() => setShowForgotModal(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 transition-colors">
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                            <div className="mb-8">
+                                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 flex items-center justify-center mb-6">
+                                    <Lock className="w-7 h-7" />
+                                </div>
+                                <h3 className="text-3xl font-black text-slate-900 tracking-tight">Recovery Mode</h3>
+                                <p className="text-slate-500 mt-2 text-sm font-medium">Verify credentials for secret key reset.</p>
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Reset Password</h3>
-                            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">We'll send you instructions to reset your password.</p>
+                            <form onSubmit={handleForgotPassword} className="space-y-5">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-blue-600/70 uppercase tracking-[0.2em] ml-1">Terminal Email</label>
+                                    <Input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required className="h-12 rounded-xl bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-500/50 transition-all px-4" placeholder="name@company.com" />
+                                </div>
+                                <Button type="submit" className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest rounded-xl mt-4 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all" isLoading={isResetting}>Initialize Reset</Button>
+                            </form>
                         </div>
-                        <form onSubmit={handleForgotPassword} className="space-y-4">
-                            <Input label="Email Address" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50" />
-                            <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl mt-2" isLoading={isResetting}>Send Reset Link</Button>
-                        </form>
                     </div>
                 </div>
             )}

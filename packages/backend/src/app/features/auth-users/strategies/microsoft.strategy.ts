@@ -1,15 +1,19 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-microsoft';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthUsersService } from '../auth-users.service';
 
 @Injectable()
 export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
-    constructor(private authService: AuthUsersService) {
+    constructor(
+        private authService: AuthUsersService,
+        private configService: ConfigService
+    ) {
         super({
-            clientID: process.env.MICROSOFT_CLIENT_ID || 'place-holder',
-            clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'place-holder',
-            callbackURL: process.env.MICROSOFT_CALLBACK_URL || 'http://localhost:3333/api/auth-users/social/microsoft/callback',
+            clientID: configService.get<string>('MICROSOFT_CLIENT_ID') || 'place-holder',
+            clientSecret: configService.get<string>('MICROSOFT_CLIENT_SECRET') || 'place-holder',
+            callbackURL: configService.get<string>('MICROSOFT_CALLBACK_URL') || 'http://localhost:3001/api/auth-users/social/microsoft/callback',
             scope: ['user.read'],
         });
     }

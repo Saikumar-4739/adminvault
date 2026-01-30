@@ -4,7 +4,9 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
-import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel } from '@adminvault/shared-models';
+import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel } from '@adminvault/shared-models';
+import { CompanyIdDto } from '../../common/dto/common.dto';
+import { LoginUserDto, RegisterUserDto, ForgotPasswordDto, ResetPasswordDto, UpdateUserDto } from './dto/auth.dto';
 import { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
@@ -20,8 +22,8 @@ export class AuthUsersController {
     @Post('registerUser')
     @Public()
     @AuditLog({ action: 'REGISTER', module: 'AuthUsers' })
-    @ApiBody({ type: RegisterUserModel })
-    async registerUser(@Body() reqModel: RegisterUserModel, @Req() req: Request): Promise<GlobalResponse> {
+    @ApiBody({ type: RegisterUserDto })
+    async registerUser(@Body() reqModel: RegisterUserDto, @Req() req: Request): Promise<GlobalResponse> {
         try {
             const ipAddress = this.extractIp(req);
             return await this.service.registerUser(reqModel, ipAddress);
@@ -33,8 +35,8 @@ export class AuthUsersController {
     @Post('loginUser')
     @Public()
     @AuditLog({ action: 'LOGIN', module: 'AuthUsers' })
-    @ApiBody({ type: LoginUserModel })
-    async loginUser(@Body() reqModel: LoginUserModel, @Req() req: Request): Promise<LoginResponseModel> {
+    @ApiBody({ type: LoginUserDto })
+    async loginUser(@Body() reqModel: LoginUserDto, @Req() req: Request): Promise<LoginResponseModel> {
         try {
             return await this.service.loginUser(reqModel, req);
         } catch (error) {
@@ -56,8 +58,8 @@ export class AuthUsersController {
 
     @Post('updateUser')
     @AuditLog({ action: 'UPDATE', module: 'AuthUsers' })
-    @ApiBody({ type: UpdateUserModel })
-    async updateUser(@Body() reqModel: UpdateUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
+    @ApiBody({ type: UpdateUserDto })
+    async updateUser(@Body() reqModel: UpdateUserDto, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
             const userId = req.user.userId;
             const ipAddress = this.extractIp(req);
@@ -81,8 +83,8 @@ export class AuthUsersController {
     }
 
     @Post('getAllUsers')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllUsers(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllUsersModel> {
+    @ApiBody({ type: CompanyIdDto })
+    async getAllUsers(@Body() reqModel: CompanyIdDto): Promise<GetAllUsersModel> {
         try {
             return await this.service.getAllUsers(reqModel);
         } catch (error) {
@@ -105,8 +107,8 @@ export class AuthUsersController {
     @Post('forgot-password')
     @Public()
     @AuditLog({ action: 'FORGOT_PASSWORD', module: 'AuthUsers' })
-    @ApiBody({ type: ForgotPasswordModel })
-    async forgotPassword(@Body() reqModel: ForgotPasswordModel): Promise<GlobalResponse> {
+    @ApiBody({ type: ForgotPasswordDto })
+    async forgotPassword(@Body() reqModel: ForgotPasswordDto): Promise<GlobalResponse> {
         try {
             return await this.service.forgotPassword(reqModel);
         } catch (error) {
@@ -117,8 +119,8 @@ export class AuthUsersController {
     @Post('reset-password')
     @Public()
     @AuditLog({ action: 'RESET_PASSWORD', module: 'AuthUsers' })
-    @ApiBody({ type: ResetPasswordModel })
-    async resetPassword(@Body() resetPasswordDto: ResetPasswordModel): Promise<GlobalResponse> {
+    @ApiBody({ type: ResetPasswordDto })
+    async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<GlobalResponse> {
         try {
             return await this.service.resetPassword(resetPasswordDto);
         } catch (error) {

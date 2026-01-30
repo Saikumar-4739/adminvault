@@ -6,6 +6,8 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es2022",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "lib": [
       "es2022"
     ],

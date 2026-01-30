@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AiAssistant } from '../ui/AiAssistant';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { CommandPalette } from '../CommandPalette';
 
 // Memoize the layout shell to prevent unnecessary re-renders
 const LayoutShell = memo(function LayoutShell({ children, isLoading }: { children: React.ReactNode, isLoading: boolean }) {
@@ -17,12 +18,13 @@ const LayoutShell = memo(function LayoutShell({ children, isLoading }: { childre
                 <TopBar />
                 <main className="flex-1 overflow-y-auto scrollbar-hide">
                     {isLoading ? (
-                        <PageLoader message="Loading content..." />
+                        <PageLoader message="Initializing secure workspace..." />
                     ) : (
                         children
                     )}
                 </main>
                 <AiAssistant />
+                <CommandPalette />
             </div>
         </div>
     );

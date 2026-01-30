@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getAuditLogs } from '@adminvault/shared-services';
 import { AuditLogModel, UserRoleEnum } from '@adminvault/shared-models';
 import { format } from 'date-fns';
-import { FileText, Search, RefreshCw, Filter } from 'lucide-react';
+import { FileText, Search, RefreshCw, Filter, ShieldAlert, Activity, Layers, Zap } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { StatCard } from '@/components/ui/StatCard';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 
 export default function AuditLogsPage() {
@@ -13,17 +14,17 @@ export default function AuditLogsPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const fetchLogs = () => {
+    const fetchLogs = useCallback(() => {
         setLoading(true);
         getAuditLogs()
             .then(setLogs)
             .catch((err) => console.error('Failed to fetch logs', err))
             .finally(() => setLoading(false));
-    };
+    }, []);
 
     useEffect(() => {
         fetchLogs();
-    }, []);
+    }, [fetchLogs]);
 
     const filteredLogs = logs.filter(log =>
         log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -31,6 +32,13 @@ export default function AuditLogsPage() {
         log.performedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (log.details && log.details.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+
+    const stats = {
+        total: logs.length,
+        critical: logs.filter(l => l.action === 'DELETE' || l.module === 'Security').length,
+        modules: new Set(logs.map(l => l.module)).size,
+        systemOps: logs.filter(l => l.action === 'CREATE' || l.action === 'UPDATE').length
+    };
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
@@ -50,14 +58,47 @@ export default function AuditLogsPage() {
                                 variant: 'outline'
                             }
                         ]}
-                    >
-                        <div className="flex justify-end w-full">
-                            <div className="hidden md:flex items-center px-3 py-1 bg-slate-100 dark:bg-slate-700/50 rounded-md border border-slate-200 dark:border-slate-600">
-                                <span className="text-xs font-semibold text-slate-500 mr-2">Total Logs:</span>
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{logs.length}</span>
-                            </div>
-                        </div>
-                    </PageHeader>
+                    />
+
+                    {/* Vitals Feed */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <StatCard
+                            title="Total Events"
+                            value={stats.total}
+                            icon={Layers}
+                            gradient="from-blue-500 to-indigo-600"
+                            iconBg="bg-blue-50 dark:bg-blue-900/20"
+                            iconColor="text-blue-600 dark:text-blue-400"
+                            isLoading={loading}
+                        />
+                        <StatCard
+                            title="Security Alerts"
+                            value={stats.critical}
+                            icon={ShieldAlert}
+                            gradient="from-rose-500 to-red-600"
+                            iconBg="bg-rose-50 dark:bg-rose-900/20"
+                            iconColor="text-rose-600 dark:text-rose-400"
+                            isLoading={loading}
+                        />
+                        <StatCard
+                            title="Active Modules"
+                            value={stats.modules}
+                            icon={Zap}
+                            gradient="from-amber-500 to-orange-600"
+                            iconBg="bg-amber-50 dark:bg-amber-900/20"
+                            iconColor="text-amber-600 dark:text-amber-400"
+                            isLoading={loading}
+                        />
+                        <StatCard
+                            title="System Operations"
+                            value={stats.systemOps}
+                            icon={Activity}
+                            gradient="from-emerald-500 to-teal-600"
+                            iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+                            iconColor="text-emerald-600 dark:text-emerald-400"
+                            isLoading={loading}
+                        />
+                    </div>
                 </div>
 
                 {/* Toolbar */}
@@ -68,87 +109,100 @@ export default function AuditLogsPage() {
                             <input
                                 type="text"
                                 placeholder="Search logs by action, module, user or details..."
-                                className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                className="w-full pl-9 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm font-medium"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
                         <div className="flex gap-3">
-                            <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <button className="flex items-center gap-2 px-6 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all shadow-sm">
                                 <Filter className="h-4 w-4" />
-                                <span>Filter</span>
+                                <span>Filter Protocol</span>
                             </button>
                         </div>
                     </div>
 
                     {/* Content Table */}
-                    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-white/10 overflow-hidden shadow-xl">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
-                                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
+                                <thead className="bg-slate-50/50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5">
                                     <tr>
-                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[120px]">Action</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[150px]">Module</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[200px]">Performed By</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[250px]">Request Payload</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Details</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[180px]">Date & Time</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest w-[120px]">Action</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest w-[150px]">Module</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest w-[200px]">Identity</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest w-[250px]">Data Flow</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Observation</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest w-[180px]">Timestamp</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                <tbody className="divide-y divide-slate-50 dark:divide-white/5">
                                     {filteredLogs.length > 0 ? (
                                         filteredLogs.map((log) => (
-                                            <tr key={log.id} className="group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                                                <td className="px-4 py-3">
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${log.action === 'CREATE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800' :
+                                            <tr key={log.id} className="group hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-black tracking-widest border shadow-sm ${log.action === 'CREATE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800' :
                                                         log.action === 'UPDATE' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800' :
                                                             log.action === 'DELETE' ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800' :
-                                                                'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                                'bg-slate-50 text-slate-700 border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:border-white/10'
                                                         }`}>
                                                         {log.action}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="p-1 rounded bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400">
-                                                            <FileText className="h-3 w-3" />
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 group-hover:text-blue-500 transition-colors">
+                                                            <FileText className="h-4 w-4" />
                                                         </div>
-                                                        <span className="font-medium text-slate-900 dark:text-white text-sm">{log.module}</span>
+                                                        <span className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-tight">{log.module}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-white/5 dark:to-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center text-[10px] font-black text-slate-500 dark:text-slate-400 shadow-inner">
                                                             {(log.performedBy || '?').charAt(0).toUpperCase()}
                                                         </div>
-                                                        <span className="text-slate-600 dark:text-slate-300 text-sm truncate max-w-[150px]" title={log.performedBy}>
-                                                            {log.performedBy || 'Unknown'}
+                                                        <span className="text-slate-600 dark:text-slate-300 text-xs font-bold truncate max-w-[150px]" title={log.performedBy}>
+                                                            {log.performedBy || 'System Protocol'}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3">
+                                                <td className="px-6 py-4">
                                                     {log.requestPayload ? (
-                                                        <pre className="text-xs bg-slate-100 dark:bg-slate-900/50 p-2 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto max-w-[250px] max-h-[100px] whitespace-pre-wrap font-mono text-slate-600 dark:text-slate-400">
-                                                            {JSON.stringify(log.requestPayload, null, 2)}
-                                                        </pre>
+                                                        <div className="relative group/pre">
+                                                            <pre className="text-[10px] bg-slate-50 dark:bg-black/20 p-3 rounded-xl border border-slate-100 dark:border-white/5 overflow-hidden max-w-[250px] max-h-[80px] font-mono text-slate-500 dark:text-slate-400 group-hover/pre:max-h-[300px] transition-all duration-300">
+                                                                {JSON.stringify(log.requestPayload, null, 2)}
+                                                            </pre>
+                                                        </div>
                                                     ) : (
-                                                        <span className="text-slate-400 text-xs">-</span>
+                                                        <span className="text-slate-400 dark:text-slate-600 text-[10px] font-black tracking-widest italic opacity-50">NULL_PAYLOAD</span>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm max-w-md truncate" title={log.details || ''}>
-                                                    {log.details || '-'}
+                                                <td className="px-6 py-4">
+                                                    <p className="text-slate-600 dark:text-slate-400 text-xs font-medium leading-relaxed max-w-md line-clamp-2 italic" title={log.details || ''}>
+                                                        {log.details || 'No telemetric details provided'}
+                                                    </p>
                                                 </td>
-                                                <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-sm whitespace-nowrap">
-                                                    {format(new Date(log.timestamp), 'PP p')}
+                                                <td className="px-6 py-4">
+                                                    <div className="text-slate-500 dark:text-slate-500 text-[10px] font-black uppercase tracking-wider tabular-nums">
+                                                        {format(new Date(log.timestamp), 'PP')}
+                                                        <br />
+                                                        <span className="opacity-50">{format(new Date(log.timestamp), 'p')}</span>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={6} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
-                                                    <p>No audit logs found matching your search</p>
+                                            <td colSpan={6} className="px-6 py-20 text-center">
+                                                <div className="flex flex-col items-center gap-4">
+                                                    <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 flex items-center justify-center animate-pulse">
+                                                        <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-slate-900 dark:text-white font-black uppercase tracking-widest text-xs">No Pulse Detected</p>
+                                                        <p className="text-slate-400 dark:text-slate-600 text-[10px] font-bold mt-1 uppercase">Adjust filters to re-establish intelligence link</p>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>

@@ -8,6 +8,7 @@ export class RegisterUserModel {
     phNumber: string;
     password: string;
     role?: UserRoleEnum;
+
     constructor(fullName: string, companyId: number, email: string, phNumber: string, password: string, role?: UserRoleEnum) {
         this.fullName = fullName;
         this.companyId = companyId;
@@ -50,6 +51,7 @@ export class LoginUserModel {
     password: string;
     latitude?: number;
     longitude?: number;
+
     constructor(email: string, password: string, latitude?: number, longitude?: number) {
         this.email = email;
         this.password = password;
@@ -68,6 +70,7 @@ export class ForgotPasswordModel {
 export class LogoutUserModel {
     email: string;
     token: string;
+
     constructor(email: string, token: string) {
         this.email = email;
         this.token = token;
@@ -77,6 +80,7 @@ export class LogoutUserModel {
 export class ResetPasswordModel {
     email: string;
     newPassword: string;
+
     constructor(email: string, newPassword: string) {
         this.email = email;
         this.newPassword = newPassword;
