@@ -165,7 +165,7 @@ const DocumentsPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-slate-50/50 dark:bg-slate-950">
+            <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950 space-y-6">
                 {/* Header Section */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-1">
                     <div className="flex items-center gap-3">

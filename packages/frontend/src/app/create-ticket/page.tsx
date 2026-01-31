@@ -183,7 +183,7 @@ const CreateTicketPage: React.FC = () => {
 
     return (
         <div className="w-full h-full bg-slate-50/50 dark:bg-slate-950/50">
-            <div className="p-4 space-y-4">
+            <div className="p-4 lg:p-8 space-y-6">
                 {/* Compact Premium Header */}
                 <PageHeader
                     icon={<Building2 />}

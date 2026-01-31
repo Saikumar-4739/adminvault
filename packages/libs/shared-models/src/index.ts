@@ -28,3 +28,5 @@ export * from './ai';
 export * from './knowledge-base/knowledge-base.models';
 export * from './procurement/procurement.models';
 export * from './advanced/advanced-modules.models';
+export * from './websocket/websocket-events.model';
+export * from './network/network-stats.model';

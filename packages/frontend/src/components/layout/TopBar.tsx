@@ -85,9 +85,9 @@ const TopBar: React.FC = () => {
                         onClick={() => { setShowNotifications(!showNotifications); setUnreadCount(0); }}
                         className={`p-2 rounded-lg transition-all ${showNotifications ? 'bg-slate-100 dark:bg-slate-900 text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900'}`}
                     >
-                        <Bell className="h-5 w-5" />
+                        <Bell className="h-4 w-4" />
                         {unreadCount > 0 && (
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-950" />
+                            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white dark:border-slate-950" />
                         )}
                     </button>
 
@@ -121,7 +121,7 @@ const TopBar: React.FC = () => {
                     onClick={toggleDarkMode}
                     className="p-2 rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
                 >
-                    {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                    {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </button>
 
                 <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-2" />

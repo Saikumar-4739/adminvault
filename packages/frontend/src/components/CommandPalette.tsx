@@ -15,16 +15,15 @@ interface Action {
 }
 
 const ACTIONS: Action[] = [
-    { id: 'dashboard', title: 'Operational Dashboard', description: 'System-wide overview', icon: LayoutGrid, shortcut: 'D', category: 'Navigation', href: '/dashboard' },
-    { id: 'assets', title: 'Asset Inventory', description: 'Manage hardware & instances', icon: Package, shortcut: 'A', category: 'Navigation', href: '/assets' },
-    { id: 'tickets', title: 'Support Queue', description: 'Active intelligence requests', icon: Activity, shortcut: 'T', category: 'Navigation', href: '/tickets' },
-    { id: 'raise-ticket', title: 'Raise Ticket', description: 'Initialize support protocol', icon: Plus, shortcut: 'P', category: 'Support', href: '/create-ticket' },
-    { id: 'security', title: 'Vault Security', description: 'Identity encryption hub', icon: ShieldCheck, shortcut: 'V', category: 'Security', href: '/security' },
-    { id: 'audit-logs', title: 'Audit Ledger', description: 'System-wide immutable logs', icon: FileText, shortcut: 'L', category: 'Security', href: '/audit-logs' },
-    { id: 'network', title: 'Network Mesh', description: 'Global connectivity map', icon: Network, shortcut: 'N', category: 'Navigation', href: '/network' },
-    { id: 'employees', title: 'Workforce Registry', description: 'Manage employee identity', icon: Users, shortcut: 'E', category: 'Navigation', href: '/employees' },
-    { id: 'licenses', title: 'License Vault', description: 'Software & subscription audit', icon: Key, shortcut: 'K', category: 'Security', href: '/licenses' },
-    { id: 'kb', title: 'Neural Archive', description: 'Documentation & procedures', icon: BookOpen, shortcut: 'H', category: 'Support', href: '/knowledge-base' },
+    { id: 'dashboard', title: 'Dashboard', description: 'System overview', icon: LayoutGrid, shortcut: 'D', category: 'Navigation', href: '/dashboard' },
+    { id: 'assets', title: 'Assets', description: 'Manage hardware & assets', icon: Package, shortcut: 'A', category: 'Navigation', href: '/assets' },
+    { id: 'tickets', title: 'Tickets', description: 'Support tickets', icon: Activity, shortcut: 'T', category: 'Navigation', href: '/tickets' },
+    { id: 'raise-ticket', title: 'Create Ticket', description: 'Create new support ticket', icon: Plus, shortcut: 'P', category: 'Support', href: '/create-ticket' },
+    { id: 'audit-logs', title: 'Audit Logs', description: 'System audit logs', icon: FileText, shortcut: 'L', category: 'Security', href: '/audit-logs' },
+    { id: 'network', title: 'Network', description: 'Network monitoring', icon: Network, shortcut: 'N', category: 'Navigation', href: '/network' },
+    { id: 'employees', title: 'Employees', description: 'Manage employees', icon: Users, shortcut: 'E', category: 'Navigation', href: '/employees' },
+    { id: 'licenses', title: 'Licenses', description: 'Software licenses', icon: Key, shortcut: 'K', category: 'Security', href: '/licenses' },
+    { id: 'kb', title: 'Knowledge Base', description: 'Documentation & guides', icon: BookOpen, shortcut: 'H', category: 'Support', href: '/knowledge-base' },
 ];
 
 export const CommandPalette: React.FC = () => {

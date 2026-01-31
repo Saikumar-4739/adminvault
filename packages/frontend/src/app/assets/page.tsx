@@ -266,7 +266,7 @@ const AssetsPage: React.FC = () => {
     );
 
     return (
-        <div className="p-4 space-y-4">
+        <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/50 space-y-6">
             <PageHeader
                 title="Asset Inventory"
                 description="Manage and track hardware assets across the organization."

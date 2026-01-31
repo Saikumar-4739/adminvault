@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock, Search, Book, FileText, Layers, Globe, Zap, Settings2 } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock, Search, FileText, Settings2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { StatCard } from '@/components/ui/StatCard';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
@@ -33,85 +31,78 @@ const MastersPage: React.FC = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const selectedMaster = searchParams.get('view');
-    const { stats, isLoading: statsLoading } = useDashboardStats();
+
 
     const masters: MasterItem[] = [
         {
             id: 'companies',
-            title: 'Entities',
-            description: 'Global organization registry and node management',
+            title: 'Companies',
+            description: 'Manage organization and company details',
             icon: Building2,
             color: 'from-blue-500 to-indigo-600',
             component: CompaniesMasterView
         },
         {
             id: 'departments',
-            title: 'Organizational Units',
-            description: 'Structural hierarchy and departmental mapping',
+            title: 'Departments',
+            description: 'Manage departments and organizational structure',
             icon: Users,
             color: 'from-purple-500 to-indigo-600',
             component: DepartmentsMasterView
         },
         {
             id: 'asset-types',
-            title: 'Resource Schema',
-            description: 'Universal classification for enterprise hardware',
+            title: 'Asset Types',
+            description: 'Define and manage asset categories',
             icon: Package,
             color: 'from-emerald-500 to-teal-600',
             component: AssetTypesMasterView
         },
         {
             id: 'device-brands',
-            title: 'Vendor Standards',
-            description: 'Standardization protocols for device ecosystems',
+            title: 'Device Brands',
+            description: 'Manage device manufacturers and brands',
             icon: Smartphone,
             color: 'from-amber-500 to-orange-600',
             component: DeviceBrandsMasterView
         },
         {
             id: 'applications',
-            title: 'Software Lattice',
-            description: 'Enterprise application registry and integrations',
+            title: 'Applications',
+            description: 'Manage software applications and integrations',
             icon: AppWindow,
             color: 'from-cyan-500 to-blue-600',
             component: ApplicationsMasterView
         },
         {
             id: 'slack-users',
-            title: 'Communication Mesh',
-            description: 'Synchronized identity mapping for Slack protocols',
+            title: 'Slack Users',
+            description: 'Manage Slack user integration and mapping',
             icon: MessageSquare,
             color: 'from-rose-500 to-pink-600',
             component: SlackUsersMasterView
         },
         {
             id: 'vendors',
-            title: 'Supply Chain Registry',
-            description: 'Critical supplier and vendor network oversight',
+            title: 'Vendors',
+            description: 'Manage suppliers and vendor information',
             icon: Store,
             color: 'from-indigo-600 to-violet-700',
             component: VendorsMasterView
         },
         {
             id: 'password-vault',
-            title: 'Identity Shield',
-            description: 'Secure enterprise credential hardening',
+            title: 'Password Vault',
+            description: 'Secure password and credential storage',
             icon: Lock,
             color: 'from-slate-600 to-slate-800',
             href: '/password-vault'
         },
-        {
-            id: 'knowledge-base',
-            title: 'Intelligence Core',
-            description: 'Universal policy and procedural guide',
-            icon: Book,
-            color: 'from-amber-600 to-yellow-700',
-            href: '/knowledge-base'
-        },
+
         {
             id: 'document-hub',
-            title: 'Registry Documents',
-            description: 'Centralized organizational policy templates',
+            title: 'Documents',
+            description: 'Manage organizational documents and templates',
             icon: FileText,
             color: 'from-blue-600 to-indigo-700',
             href: '/documents'
@@ -153,7 +144,7 @@ const MastersPage: React.FC = () => {
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN]}>
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 lg:p-8 space-y-6 overflow-y-auto">
                 <PageHeader
-                    title="System Registry"
+                    title="System Configuration"
                     description="Enterprise-wide configuration and organization masters"
                     icon={<Settings2 />}
                     gradient="from-slate-700 to-slate-900"
@@ -162,7 +153,7 @@ const MastersPage: React.FC = () => {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input
                             type="text"
-                            placeholder="Search Master Registry..."
+                            placeholder="Search System Configuration..."
                             className="pl-11 pr-4 py-3 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -170,48 +161,8 @@ const MastersPage: React.FC = () => {
                     </div>
                 </PageHeader>
 
-                {/* Registry Pulse */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard
-                        title="Registered Entities"
-                        value={stats?.employees.byDepartment.length || 0}
-                        icon={Building2}
-                        gradient="from-blue-500 to-indigo-600"
-                        iconBg="bg-blue-50 dark:bg-blue-900/20"
-                        iconColor="text-blue-600 dark:text-blue-400"
-                        isLoading={statsLoading}
-                    />
-                    <StatCard
-                        title="Active Units"
-                        value={stats?.employees.total || 0}
-                        icon={Users}
-                        gradient="from-purple-500 to-violet-600"
-                        iconBg="bg-purple-50 dark:bg-purple-900/20"
-                        iconColor="text-purple-600 dark:text-purple-400"
-                        isLoading={statsLoading}
-                    />
-                    <StatCard
-                        title="Resource Types"
-                        value={stats?.assets.total || 0}
-                        icon={Layers}
-                        gradient="from-emerald-500 to-teal-600"
-                        iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-                        iconColor="text-emerald-600 dark:text-emerald-400"
-                        isLoading={statsLoading}
-                    />
-                    <StatCard
-                        title="Network Nodes"
-                        value={masters.length}
-                        icon={Globe}
-                        gradient="from-amber-500 to-orange-600"
-                        iconBg="bg-amber-50 dark:bg-amber-900/20"
-                        iconColor="text-amber-600 dark:text-amber-400"
-                        isLoading={false}
-                    />
-                </div>
-
                 {/* Master Grid Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-12">
                     {filteredMasters.length === 0 ? (
                         <div className="col-span-full py-24 text-center bg-white dark:bg-slate-900 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center gap-4">
                             <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-full shadow-lg">
@@ -229,32 +180,31 @@ const MastersPage: React.FC = () => {
                                 <button
                                     key={master.id}
                                     onClick={() => handleSelectMaster(master)}
-                                    className="group p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-2xl hover:-translate-y-1.5 transition-all text-left relative overflow-hidden flex flex-col h-full"
+                                    className="group p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-2xl hover:-translate-y-1 transition-all text-left relative overflow-hidden flex flex-col h-full"
                                 >
                                     <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                                        <Icon className="h-24 w-24 text-indigo-500" />
+                                        <Icon className="h-16 w-16 text-indigo-500" />
                                     </div>
 
-                                    <div className="flex items-start justify-between mb-8 relative z-10">
-                                        <div className={`p-4 rounded-2xl bg-gradient-to-br ${master.color} text-white shadow-xl group-hover:scale-110 transition-transform`}>
-                                            <Icon className="h-6 w-6" />
+                                    <div className="flex items-start justify-between mb-4 relative z-10">
+                                        <div className={`p-3 rounded-xl bg-gradient-to-br ${master.color} text-white shadow-lg group-hover:scale-110 transition-transform`}>
+                                            <Icon className="h-5 w-5" />
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2 relative z-10 flex-1">
-                                        <h3 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight">
+                                    <div className="space-y-1.5 relative z-10 flex-1">
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                             {master.title}
                                         </h3>
-                                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                                        <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
                                             {master.description}
                                         </p>
                                     </div>
 
-                                    <div className="mt-8 pt-6 border-t border-slate-50 dark:border-white/5 flex items-center justify-between relative z-10">
-                                        <span className="text-[10px] font-black text-slate-400 group-hover:text-indigo-500 uppercase tracking-widest transition-colors">
-                                            Access Registry
+                                    <div className="mt-4 pt-4 border-t border-slate-50 dark:border-white/5 flex items-center justify-between relative z-10">
+                                        <span className="text-[9px] font-bold text-slate-400 group-hover:text-indigo-500 uppercase tracking-wider transition-colors">
+                                            Access
                                         </span>
-                                        <Zap className="h-3 w-3 text-slate-300 group-hover:text-amber-500 group-hover:animate-pulse transition-colors" />
                                     </div>
                                 </button>
                             );

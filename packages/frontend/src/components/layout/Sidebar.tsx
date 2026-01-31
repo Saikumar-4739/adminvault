@@ -5,26 +5,20 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-import { Package, Ticket, LayoutDashboard, Database, KeySquare, ChevronLeft, ChevronRight, PieChart, Settings as SettingsIcon, UserCircle, Plus, GitPullRequest, ShoppingCart, Users, Network, ShieldCheck, Cpu, BookOpen, FolderOpen } from 'lucide-react';
+import { Package, Ticket, LayoutDashboard, Database, KeySquare, ChevronLeft, ChevronRight, PieChart, UserCircle, Plus, GitPullRequest, ShoppingCart, Users, Network, Cpu, BookOpen, Mail, ShieldCheck } from 'lucide-react';
 
 const DEFAULT_NAVIGATION = [
     {
-        title: 'Command & Control',
+        title: 'Main',
         items: [
             { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-            { name: 'Reports', href: '/reports', icon: PieChart },
             { name: 'Configuration', href: '/masters', icon: Database },
+            { name: 'Reports', href: '/reports', icon: PieChart },
+            { name: 'Email & Identities', href: '/emails', icon: Mail },
         ]
     },
     {
-        title: 'Intelligence & Vault',
-        items: [
-            { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen },
-            { name: 'Document Center', href: '/documents', icon: FolderOpen },
-        ]
-    },
-    {
-        title: 'Resource Management',
+        title: 'Resources',
         items: [
             { name: 'Employees', href: '/employees', icon: Users },
             { name: 'Assets', href: '/assets', icon: Package },
@@ -35,23 +29,23 @@ const DEFAULT_NAVIGATION = [
     {
         title: 'Network & Security',
         items: [
-            { name: 'Network Mesh', href: '/network', icon: Network },
-            { name: 'Vault Security', href: '/security', icon: ShieldCheck },
+            { name: 'Network', href: '/network', icon: Network },
             { name: 'Approvals', href: '/approvals', icon: GitPullRequest },
+            { name: 'IAM & SSO', href: '/iam', icon: ShieldCheck },
         ]
     },
     {
-        title: 'System Support',
+        title: 'Support',
         items: [
             { name: 'Support Tickets', href: '/tickets', icon: Ticket },
-            { name: 'Raise Ticket', href: '/create-ticket', icon: Plus },
+            { name: 'Create Ticket', href: '/create-ticket', icon: Plus },
         ]
     },
     {
-        title: 'Personal',
+        title: 'Account',
         items: [
             { name: 'Profile', href: '/profile', icon: UserCircle },
-            { name: 'Settings', href: '/settings', icon: SettingsIcon },
+            { name: 'Help', href: '/knowledge-base', icon: BookOpen },
         ]
     }
 ];

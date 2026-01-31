@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Select } from '@/components/ui/Select';
 import {
     Users, Package, Ticket, Lock, RefreshCcw, TrendingUp, Activity,
-    PieChart as PieChartIcon, BarChart2, Mail, FileText, Settings,
+    PieChart as PieChartIcon, BarChart2, Mail,
     Clock, AlertTriangle, CheckCircle, ArrowUpRight, Zap,
     Key, LayoutGrid
 } from 'lucide-react';
@@ -201,13 +201,11 @@ const DashboardPage: React.FC = () => {
 
     const quickActions = [
         { label: 'Assets', icon: Package, link: '/assets', color: 'emerald' },
-        { label: 'Tickets', icon: Ticket, link: '/tickets', color: 'amber' },
+        { label: 'Support Tickets', icon: Ticket, link: '/tickets', color: 'amber' },
         { label: 'Employees', icon: Users, link: '/employees', color: 'violet' },
         { label: 'Licenses', icon: Key, link: '/licenses', color: 'blue' },
-        { label: 'Documents', icon: FileText, link: '/documents', color: 'indigo' },
         { label: 'Reports', icon: BarChart2, link: '/reports', color: 'rose' },
-        { label: 'Email Hub', icon: Mail, link: '/emails', color: 'cyan' },
-        { label: 'Settings', icon: Settings, link: '/settings', color: 'slate' },
+        { label: 'Email & Identities', icon: Mail, link: '/emails', color: 'cyan' },
     ];
 
     // Animation Variants
@@ -237,7 +235,7 @@ const DashboardPage: React.FC = () => {
                 initial="hidden"
                 animate="visible"
                 variants={containerVariants}
-                className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950/50"
+                className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-6"
             >
                 {/* Header Section */}
                 <motion.div variants={itemVariants} className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

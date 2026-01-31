@@ -1,47 +1,65 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Mail, Shield, Calendar, Edit, Lock, Key, AlertCircle, Activity, Globe, Fingerprint, Smartphone } from 'lucide-react';
+import {
+    User, Mail, Shield, Calendar, Edit, Lock, Key, AlertCircle,
+    Fingerprint, Camera, Monitor,
+    Bell, Palette, Languages, Save, X, Check,
+    Settings, Eye, EyeOff
+} from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { authService } from '@/lib/api/services';
 import { UpdateUserModel } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/Spinner';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { StatCard } from '@/components/ui/StatCard';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
 
-type TabType = 'profile' | 'security';
+type TabType = 'overview' | 'personal' | 'security' | 'preferences';
 
 const ProfilePage: React.FC = () => {
     const { user } = useAuth();
     const searchParams = useSearchParams();
     const toast = useToast();
-    const { stats, isLoading: statsLoading } = useDashboardStats();
 
-    const [activeTab, setActiveTab] = useState<TabType>('profile');
+    const [activeTab, setActiveTab] = useState<TabType>('overview');
     const [isEditing, setIsEditing] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' });
+    const [editedData, setEditedData] = useState({
+        fullName: user?.fullName || '',
+        email: user?.email || ''
+    });
 
     useEffect(() => {
         const tab = searchParams.get('tab');
-        if (tab === 'security' || tab === 'profile') {
+        if (tab && ['overview', 'personal', 'security', 'preferences'].includes(tab)) {
             setActiveTab(tab as TabType);
         }
     }, [searchParams]);
+
+    useEffect(() => {
+        if (user) {
+            setEditedData({
+                fullName: user.fullName,
+                email: user.email
+            });
+        }
+    }, [user]);
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
         if (passwordData.new !== passwordData.confirm) {
             toast.error('New passwords do not match');
+            return;
+        }
+        if (passwordData.new.length < 6) {
+            toast.error('Password must be at least 6 characters');
             return;
         }
 
@@ -51,18 +69,49 @@ const ProfilePage: React.FC = () => {
             model.password = passwordData.new;
             const res = await authService.updateUser(model);
             if (res.status) {
-                toast.success('Security credentials updated successfully');
+                toast.success('Password updated successfully');
                 setIsPasswordModalOpen(false);
                 setPasswordData({ current: '', new: '', confirm: '' });
             } else {
-                toast.error(res.message || 'Failed to update security credentials');
+                toast.error(res.message || 'Failed to update password');
             }
         } catch (error) {
-            toast.error('An error occurred while updating security');
+            toast.error('An error occurred while updating password');
         } finally {
             setIsUpdating(false);
         }
     };
+
+    const handleSaveProfile = async () => {
+        if (!user) return;
+        setIsUpdating(true);
+        try {
+            const model = new UpdateUserModel(user.id);
+            model.fullName = editedData.fullName;
+            model.email = editedData.email;
+            const res = await authService.updateUser(model);
+            if (res.status) {
+                toast.success('Profile updated successfully');
+                setIsEditing(false);
+            } else {
+                toast.error(res.message || 'Failed to update profile');
+            }
+        } catch (error) {
+            toast.error('An error occurred while updating profile');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const getPasswordStrength = (password: string): { strength: number; label: string; color: string } => {
+        if (password.length === 0) return { strength: 0, label: 'None', color: 'bg-slate-200' };
+        if (password.length < 6) return { strength: 25, label: 'Weak', color: 'bg-rose-500' };
+        if (password.length < 10) return { strength: 50, label: 'Fair', color: 'bg-amber-500' };
+        if (password.length < 14) return { strength: 75, label: 'Good', color: 'bg-blue-500' };
+        return { strength: 100, label: 'Strong', color: 'bg-emerald-500' };
+    };
+
+    const passwordStrength = getPasswordStrength(passwordData.new);
 
     if (!user) {
         return (
@@ -72,348 +121,463 @@ const ProfilePage: React.FC = () => {
         );
     }
 
+    const tabs = [
+        { id: 'overview', label: 'Overview', icon: User },
+        { id: 'personal', label: 'Personal Info', icon: Edit },
+        { id: 'security', label: 'Security', icon: Shield },
+        { id: 'preferences', label: 'Preferences', icon: Settings }
+    ];
+
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 lg:p-8 space-y-6 overflow-y-auto">
-            <PageHeader
-                icon={<User />}
-                title="Account Identity"
-                description="Global profile & security oversight protocols"
-                gradient="from-slate-700 to-slate-900"
-            >
-                <div className="flex gap-1 p-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm">
-                    <button
-                        onClick={() => setActiveTab('profile')}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'profile'
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                    >
-                        <User className="h-3 w-3" />
-                        Registry
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('security')}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'security'
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                    >
-                        <Shield className="h-3 w-3" />
-                        Security
-                    </button>
-                </div>
-            </PageHeader>
-
-            {/* Identity Pulse */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
-                    title="Security Strength"
-                    value={stats?.security.score || 94}
-                    unit="%"
-                    icon={Fingerprint}
-                    gradient="from-emerald-500 to-teal-600"
-                    iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-                    iconColor="text-emerald-600 dark:text-emerald-400"
-                    isLoading={statsLoading}
-                />
-                <StatCard
-                    title="Identity Integrity"
-                    value={stats?.security.identityStrength || 98}
-                    unit="%"
-                    icon={Shield}
-                    gradient="from-blue-500 to-indigo-600"
-                    iconBg="bg-blue-50 dark:bg-blue-900/20"
-                    iconColor="text-blue-600 dark:text-blue-400"
-                    isLoading={statsLoading}
-                />
-                <StatCard
-                    title="Device Compliance"
-                    value={stats?.security.deviceCompliance || 100}
-                    unit="%"
-                    icon={Smartphone}
-                    gradient="from-purple-500 to-violet-600"
-                    iconBg="bg-purple-50 dark:bg-purple-900/20"
-                    iconColor="text-purple-600 dark:text-purple-400"
-                    isLoading={statsLoading}
-                />
-                <StatCard
-                    title="Access Velocity"
-                    value={1.2}
-                    unit="ms"
-                    icon={Activity}
-                    gradient="from-amber-500 to-orange-600"
-                    iconBg="bg-amber-50 dark:bg-amber-900/20"
-                    iconColor="text-amber-600 dark:text-amber-400"
-                    isLoading={false}
-                />
-            </div>
-
-            {activeTab === 'profile' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Profile Registry - Left Column */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <Card className="rounded-[2.5rem] border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-                            <CardHeader className="p-8 border-b border-slate-50 dark:border-white/5 flex flex-row items-center justify-between">
-                                <div className="space-y-1">
-                                    <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Identity Profile</h3>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Architecture Registry</p>
-                                </div>
-                                <Button
-                                    variant="outline"
-                                    className="h-10 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/5"
-                                    onClick={() => setIsEditing(!isEditing)}
-                                    leftIcon={<Edit className="h-3.5 w-3.5" />}
-                                >
-                                    {isEditing ? 'Discard' : 'Maintain Profile'}
-                                </Button>
-                            </CardHeader>
-                            <CardContent className="p-8">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                                    <InfoField icon={<User className="h-4 w-4" />} label="Full Name" value={user.fullName} isEditing={isEditing} />
-                                    <InfoField icon={<Mail className="h-4 w-4" />} label="System Email" value={user.email} isEditing={isEditing} />
-                                    <InfoField icon={<Shield className="h-4 w-4" />} label="Access Role" value={user.role || 'Administrator'} isEditing={false} />
-                                    <InfoField icon={<Calendar className="h-4 w-4" />} label="Registry Epoch" value="Jan 2024" isEditing={false} />
-                                </div>
-                                {isEditing && (
-                                    <div className="mt-12 pt-8 border-t border-slate-50 dark:border-white/5 flex justify-end gap-3">
-                                        <Button
-                                            variant="outline"
-                                            className="px-8 text-[10px] font-black uppercase tracking-widest rounded-xl"
-                                            onClick={() => setIsEditing(false)}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            variant="primary"
-                                            className="px-10 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-500/20"
-                                        >
-                                            Apply Changes
-                                        </Button>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        <Card className="rounded-[2.5rem] border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 shadow-sm overflow-hidden p-1">
-                            <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-[2.2rem]">
-                                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight mb-6">Security Clearance</h3>
-                                <div className="flex items-center gap-6 p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-xl shadow-indigo-500/5">
-                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/20 group hover:scale-105 transition-transform duration-500">
-                                        <Shield className="h-7 w-7 text-white" />
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                        <p className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">{user.role || 'Administrator'}</p>
-                                        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Global Architecture Access • Protocol Versant</p>
-                                    </div>
-                                    <div className="hidden md:block px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-full">
-                                        <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Cleared</span>
-                                    </div>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 space-y-4">
+            {/* Hero Profile Card */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-1 shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-pink-600/20 backdrop-blur-3xl"></div>
+                <div className="relative bg-white dark:bg-slate-900 rounded-[1.4rem] p-6 md:p-8">
+                    <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                        {/* Avatar */}
+                        <div className="relative group">
+                            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-1 shadow-xl shadow-indigo-500/50">
+                                <div className="w-full h-full rounded-[1.1rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                                    <span className="text-3xl font-black text-indigo-600 dark:text-indigo-400">
+                                        {user.fullName.charAt(0).toUpperCase()}
+                                    </span>
                                 </div>
                             </div>
-                        </Card>
-                    </div>
+                            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera className="h-4 w-4" />
+                            </button>
+                        </div>
 
-                    {/* Sidebar - Right Column */}
-                    <div className="space-y-8">
-                        <Card className="rounded-[2.5rem] border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-                            <CardHeader className="p-6 border-b border-slate-50 dark:border-white/5">
-                                <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                                    <Lock className="h-3.5 w-3.5 text-indigo-500" />
-                                    Security Oversight
-                                </h3>
-                            </CardHeader>
-                            <CardContent className="p-6 space-y-4">
-                                <div className="space-y-2">
-                                    <StatusItem label="Credential Strength" value="Optimal" status="success" />
-                                    <StatusItem label="2FA Shield" value="Hardened" status="success" />
-                                    <StatusItem label="Last Node Access" value="2h ago" status="info" />
-                                </div>
-
-                                <div className="pt-4">
-                                    <Button
-                                        variant="outline"
-                                        className="w-full h-12 text-[10px] font-black uppercase tracking-widest rounded-2xl border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all shadow-sm"
-                                        onClick={() => setIsPasswordModalOpen(true)}
-                                        leftIcon={<Key className="h-4 w-4" />}
-                                    >
-                                        Rotate Security Key
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <div className="p-8 rounded-[2.5rem] bg-indigo-600 text-white shadow-2xl shadow-indigo-500/20 space-y-4 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                                <Globe className="h-32 w-32" />
+                        {/* User Info */}
+                        <div className="flex-1 text-center md:text-left">
+                            <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-1">
+                                {user.fullName}
+                            </h1>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{user.email}</p>
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-4">
+                                <span className="px-3 py-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center gap-1.5">
+                                    <Shield className="h-3.5 w-3.5" />
+                                    {user.role || 'Administrator'}
+                                </span>
+                                <span className="px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5">
+                                    <Check className="h-3.5 w-3.5" />
+                                    Verified
+                                </span>
                             </div>
-                            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-                                <AlertCircle className="h-5 w-5 text-white" />
-                            </div>
-                            <div className="space-y-1 relative z-10">
-                                <p className="text-sm font-black uppercase tracking-tight">Need Assistance?</p>
-                                <p className="text-[10px] font-bold text-indigo-100 leading-relaxed uppercase tracking-widest">
-                                    Contact architecture support to modify restricted corporate identity nodes.
-                                </p>
-                            </div>
-                            <Button className="w-full h-10 bg-white text-indigo-600 hover:bg-indigo-50 text-[10px] font-black uppercase tracking-widest rounded-xl relative z-10 mt-2">
-                                Contact Support
-                            </Button>
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
 
-            {activeTab === 'security' && (
-                <div className="max-w-3xl space-y-6">
-                    <Card className="rounded-[2.5rem] border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-                        <CardHeader className="p-8 border-b border-slate-50 dark:border-white/5">
-                            <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Security Hardening</h3>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Personnel access protocols</p>
-                        </CardHeader>
-                        <CardContent className="p-8 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 space-y-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 rounded-xl bg-indigo-600 text-white">
-                                            <Lock className="h-5 w-5" />
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">Credential Shield</p>
-                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Mandatory Rotation Active</p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full h-10 text-[9px] font-black uppercase tracking-widest rounded-xl border-slate-200 dark:border-white/10"
+            {/* Tabs Navigation */}
+            <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide">
+                {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as TabType)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === tab.id
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+                                }`}
+                        >
+                            <Icon className="h-3.5 w-3.5" />
+                            {tab.label}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Tab Content */}
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {activeTab === 'overview' && (
+                    <div className="grid grid-cols-1 gap-4">
+                        {/* Quick Actions */}
+                        <Card className="rounded-2xl border-slate-200 dark:border-slate-800">
+                            <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800">
+                                <h3 className="text-base font-black text-slate-900 dark:text-white">Quick Actions</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Common tasks and settings</p>
+                            </CardHeader>
+                            <CardContent className="p-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                    <button
                                         onClick={() => setIsPasswordModalOpen(true)}
-                                        leftIcon={<Key className="h-3.5 w-3.5" />}
+                                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-left"
                                     >
-                                        Change Password
-                                    </Button>
+                                        <Key className="h-5 w-5 text-indigo-600 mb-1.5 group-hover:scale-110 transition-transform" />
+                                        <div className="text-xs font-bold text-slate-900 dark:text-white">Change Password</div>
+                                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Update your password</div>
+                                    </button>
+                                    <button className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-left">
+                                        <Camera className="h-5 w-5 text-purple-600 mb-1.5 group-hover:scale-110 transition-transform" />
+                                        <div className="text-xs font-bold text-slate-900 dark:text-white">Update Photo</div>
+                                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Change profile picture</div>
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('security')}
+                                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-left"
+                                    >
+                                        <Shield className="h-5 w-5 text-emerald-600 mb-1.5 group-hover:scale-110 transition-transform" />
+                                        <div className="text-xs font-bold text-slate-900 dark:text-white">Security Settings</div>
+                                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">2FA and sessions</div>
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('preferences')}
+                                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-left"
+                                    >
+                                        <Settings className="h-5 w-5 text-amber-600 mb-1.5 group-hover:scale-110 transition-transform" />
+                                        <div className="text-xs font-bold text-slate-900 dark:text-white">Preferences</div>
+                                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Theme and language</div>
+                                    </button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {activeTab === 'personal' && (
+                    <Card className="rounded-2xl border-slate-200 dark:border-slate-800 max-w-3xl">
+                        <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                            <div>
+                                <h3 className="text-base font-black text-slate-900 dark:text-white">Personal Information</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Update your personal details</p>
+                            </div>
+                            {!isEditing && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsEditing(true)}
+                                    leftIcon={<Edit className="h-3.5 w-3.5" />}
+                                    className="rounded-lg text-xs h-8 px-3"
+                                >
+                                    Edit Profile
+                                </Button>
+                            )}
+                        </CardHeader>
+                        <CardContent className="p-4 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                        <User className="h-3.5 w-3.5" />
+                                        Full Name
+                                    </label>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={editedData.fullName}
+                                            onChange={(e) => setEditedData({ ...editedData, fullName: e.target.value })}
+                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 transition-all"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white px-3 py-2">{user.fullName}</p>
+                                    )}
                                 </div>
 
-                                <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 space-y-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 rounded-xl bg-emerald-600 text-white">
-                                            <Fingerprint className="h-5 w-5" />
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">2FA Hardware</p>
-                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Perimeter Hardened</p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full h-10 text-[9px] font-black uppercase tracking-widest rounded-xl border-slate-200 dark:border-white/10"
-                                        disabled
-                                    >
-                                        Manage Hardware Keys
-                                    </Button>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                        <Mail className="h-3.5 w-3.5" />
+                                        Email Address
+                                    </label>
+                                    {isEditing ? (
+                                        <input
+                                            type="email"
+                                            value={editedData.email}
+                                            onChange={(e) => setEditedData({ ...editedData, email: e.target.value })}
+                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 transition-all"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white px-3 py-2">{user.email}</p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                        <Shield className="h-3.5 w-3.5" />
+                                        Role
+                                    </label>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white px-3 py-2">{user.role || 'Administrator'}</p>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                        <Calendar className="h-3.5 w-3.5" />
+                                        Member Since
+                                    </label>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white px-3 py-2">January 2024</p>
                                 </div>
                             </div>
+
+                            {isEditing && (
+                                <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setIsEditing(false);
+                                            setEditedData({ fullName: user.fullName, email: user.email });
+                                        }}
+                                        leftIcon={<X className="h-3.5 w-3.5" />}
+                                        className="rounded-lg text-xs h-8 px-3"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        onClick={handleSaveProfile}
+                                        isLoading={isUpdating}
+                                        leftIcon={<Save className="h-3.5 w-3.5" />}
+                                        className="rounded-lg text-xs h-8 px-3"
+                                    >
+                                        Save Changes
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
-                </div>
-            )}
+                )}
+
+                {activeTab === 'security' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
+                        <Card className="rounded-2xl border-slate-200 dark:border-slate-800">
+                            <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800">
+                                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Lock className="h-4 w-4 text-indigo-600" />
+                                    Password
+                                </h3>
+                            </CardHeader>
+                            <CardContent className="p-4 space-y-3">
+                                <p className="text-xs text-slate-600 dark:text-slate-400">
+                                    Keep your account secure by using a strong password
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsPasswordModalOpen(true)}
+                                    leftIcon={<Key className="h-3.5 w-3.5" />}
+                                    className="w-full rounded-lg text-xs h-9"
+                                >
+                                    Change Password
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="rounded-2xl border-slate-200 dark:border-slate-800">
+                            <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800">
+                                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Fingerprint className="h-4 w-4 text-emerald-600" />
+                                    Two-Factor Authentication
+                                </h3>
+                            </CardHeader>
+                            <CardContent className="p-4 space-y-3">
+                                <p className="text-xs text-slate-600 dark:text-slate-400">
+                                    Add an extra layer of security to your account
+                                </p>
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Status: Enabled</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="lg:col-span-2 rounded-2xl border-slate-200 dark:border-slate-800">
+                            <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800">
+                                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Monitor className="h-4 w-4 text-blue-600" />
+                                    Active Sessions
+                                </h3>
+                            </CardHeader>
+                            <CardContent className="p-4">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                                                <Monitor className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                            </div>
+                                            <div>
+                                                <div className="text-xs font-bold text-slate-900 dark:text-white">Current Session</div>
+                                                <div className="text-[10px] text-slate-500 dark:text-slate-400">Chrome on Windows • Active now</div>
+                                            </div>
+                                        </div>
+                                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
+                                            Active
+                                        </span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {activeTab === 'preferences' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
+                        <Card className="rounded-2xl border-slate-200 dark:border-slate-800">
+                            <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800">
+                                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Palette className="h-4 w-4 text-purple-600" />
+                                    Appearance
+                                </h3>
+                            </CardHeader>
+                            <CardContent className="p-4 space-y-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Theme</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['Light', 'Dark', 'Auto'].map((theme) => (
+                                            <button
+                                                key={theme}
+                                                className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-500 transition-all text-xs font-bold"
+                                            >
+                                                {theme}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="rounded-2xl border-slate-200 dark:border-slate-800">
+                            <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800">
+                                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Bell className="h-4 w-4 text-amber-600" />
+                                    Notifications
+                                </h3>
+                            </CardHeader>
+                            <CardContent className="p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Email Notifications</span>
+                                    <button className="w-10 h-5 rounded-full bg-indigo-600 relative">
+                                        <div className="w-4 h-4 rounded-full bg-white absolute right-0.5 top-0.5"></div>
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Push Notifications</span>
+                                    <button className="w-10 h-5 rounded-full bg-slate-200 dark:bg-slate-700 relative">
+                                        <div className="w-4 h-4 rounded-full bg-white absolute left-0.5 top-0.5"></div>
+                                    </button>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="lg:col-span-2 rounded-2xl border-slate-200 dark:border-slate-800">
+                            <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800">
+                                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Languages className="h-4 w-4 text-blue-600" />
+                                    Language & Region
+                                </h3>
+                            </CardHeader>
+                            <CardContent className="p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Language</label>
+                                        <select className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-indigo-500">
+                                            <option>English (US)</option>
+                                            <option>Spanish</option>
+                                            <option>French</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Timezone</label>
+                                        <select className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-indigo-500">
+                                            <option>UTC-5 (Eastern Time)</option>
+                                            <option>UTC-8 (Pacific Time)</option>
+                                            <option>UTC+0 (GMT)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+            </div>
 
             {/* Change Password Modal */}
             <Modal
                 isOpen={isPasswordModalOpen}
-                onClose={() => setIsPasswordModalOpen(false)}
-                title="Credential Rotation"
+                onClose={() => {
+                    setIsPasswordModalOpen(false);
+                    setPasswordData({ current: '', new: '', confirm: '' });
+                }}
+                title="Change Password"
                 size="md"
             >
                 <form onSubmit={handlePasswordChange} className="space-y-6 pt-4">
                     <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">New Security Key</label>
-                        <input
-                            type="password"
-                            required
-                            value={passwordData.new}
-                            onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })}
-                            className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
-                            placeholder="••••••••••••"
-                        />
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">New Password</label>
+                        <div className="relative">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                value={passwordData.new}
+                                onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })}
+                                className="w-full px-4 py-3 pr-12 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-all"
+                                placeholder="Enter new password"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                            >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
+                        </div>
+                        {passwordData.new && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-slate-500">Password Strength</span>
+                                    <span className={`font-bold ${passwordStrength.strength >= 75 ? 'text-emerald-600' : passwordStrength.strength >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
+                                        {passwordStrength.label}
+                                    </span>
+                                </div>
+                                <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full ${passwordStrength.color} transition-all duration-300`}
+                                        style={{ width: `${passwordStrength.strength}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm Key Rotation</label>
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Confirm Password</label>
                         <input
                             type="password"
                             required
                             value={passwordData.confirm}
                             onChange={(e) => setPasswordData({ ...passwordData, confirm: e.target.value })}
-                            className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
-                            placeholder="••••••••••••"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-all"
+                            placeholder="Confirm new password"
                         />
+                        {passwordData.confirm && passwordData.new !== passwordData.confirm && (
+                            <p className="text-xs text-rose-600 flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                Passwords do not match
+                            </p>
+                        )}
                     </div>
-                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-50 dark:border-white/5">
+                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
                         <Button
                             variant="outline"
                             type="button"
-                            onClick={() => setIsPasswordModalOpen(false)}
-                            className="h-10 px-8 text-[9px] font-black uppercase tracking-widest rounded-xl"
+                            onClick={() => {
+                                setIsPasswordModalOpen(false);
+                                setPasswordData({ current: '', new: '', confirm: '' });
+                            }}
+                            className="rounded-xl"
                         >
-                            Discard
+                            Cancel
                         </Button>
                         <Button
                             variant="primary"
                             type="submit"
                             isLoading={isUpdating}
-                            className="h-10 px-10 text-[9px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-500/20"
+                            disabled={passwordData.new !== passwordData.confirm || passwordData.new.length < 6}
+                            className="rounded-xl"
                         >
-                            Rotate Credentials
+                            Update Password
                         </Button>
                     </div>
                 </form>
             </Modal>
         </div>
     );
-}
-
-function InfoField({ icon, label, value, isEditing }: { icon: React.ReactNode; label: string; value: string; isEditing: boolean }) {
-    return (
-        <div className="space-y-2 group">
-            <label className="flex items-center gap-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest transition-colors group-hover:text-indigo-500">
-                <span className="w-4 h-4 flex items-center justify-center">
-                    {icon}
-                </span>
-                {label}
-            </label>
-            {isEditing ? (
-                <input
-                    type="text"
-                    defaultValue={value}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-inner"
-                />
-            ) : (
-                <p className="text-sm font-black text-slate-900 dark:text-white leading-tight px-0.5">{value}</p>
-            )}
-        </div>
-    );
-}
-
-function StatusItem({ label, value, status }: { label: string; value: string; status: 'success' | 'warning' | 'info' }) {
-    const bgColors = {
-        success: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-        warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-        info: 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-    };
-
-    const dotColors = {
-        success: 'bg-emerald-500',
-        warning: 'bg-amber-500',
-        info: 'bg-blue-500'
-    };
-
-    return (
-        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent hover:border-slate-100 dark:hover:border-white/10 transition-all">
-            <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{label}</span>
-            <div className={`flex items-center gap-2.5 px-3 py-1.5 rounded-full ${bgColors[status]}`}>
-                <span className="text-[9px] font-black uppercase tracking-widest">{value}</span>
-                <div className={`w-1.5 h-1.5 rounded-full ${dotColors[status]} animate-pulse`}></div>
-            </div>
-        </div>
-    );
-}
+};
 
 export default ProfilePage;

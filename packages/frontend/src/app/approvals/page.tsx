@@ -81,7 +81,7 @@ const ApprovalsPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-4 space-y-4 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950/30">
+            <div className="p-4 lg:p-8 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950/30 space-y-6">
                 {/* Header Section */}
                 <PageHeader
                     icon={<Check />}

@@ -325,46 +325,44 @@ const EmployeesPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]} >
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-8">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 lg:p-8 space-y-6">
                 {/* Standardized Header */}
-                <div className="p-4 space-y-4">
-                    <PageHeader
-                        title="Employee Directory"
-                        description="Manage organization members and roles"
-                        icon={<Users />}
-                        gradient="from-indigo-600 to-indigo-700"
-                        actions={[
-                            {
-                                label: 'Import',
-                                onClick: () => setIsImportModalOpen(true),
-                                icon: <Upload className="h-4 w-4" />,
-                                variant: 'outline'
-                            },
-                            {
-                                label: 'Add Employee',
-                                onClick: () => setIsModalOpen(true),
-                                icon: <Plus className="h-4 w-4" />,
-                                variant: 'primary'
-                            }
-                        ]}
-                    >
-                        <div className="flex justify-end w-full">
-                            <div className="hidden md:flex items-center px-3 py-1 bg-slate-100 dark:bg-slate-700/50 rounded-md border border-slate-200 dark:border-slate-600">
-                                <span className="text-xs font-semibold text-slate-500 mr-2">Total:</span>
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{stats.total}</span>
-                                <span className="mx-2 text-slate-300">|</span>
-                                <span className="text-xs font-semibold text-emerald-600 mr-2">Active:</span>
-                                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{stats.active}</span>
-                                <span className="mx-2 text-slate-300">|</span>
-                                <span className="text-xs font-semibold text-rose-600 mr-2">Inactive:</span>
-                                <span className="text-sm font-bold text-rose-700 dark:text-rose-400">{stats.inactive}</span>
-                            </div>
+                <PageHeader
+                    title="Employee Directory"
+                    description="Manage organization members and roles"
+                    icon={<Users />}
+                    gradient="from-indigo-600 to-indigo-700"
+                    actions={[
+                        {
+                            label: 'Import',
+                            onClick: () => setIsImportModalOpen(true),
+                            icon: <Upload className="h-4 w-4" />,
+                            variant: 'outline'
+                        },
+                        {
+                            label: 'Add Employee',
+                            onClick: () => setIsModalOpen(true),
+                            icon: <Plus className="h-4 w-4" />,
+                            variant: 'primary'
+                        }
+                    ]}
+                >
+                    <div className="flex justify-end w-full">
+                        <div className="hidden md:flex items-center px-3 py-1 bg-slate-100 dark:bg-slate-700/50 rounded-md border border-slate-200 dark:border-slate-600">
+                            <span className="text-xs font-semibold text-slate-500 mr-2">Total:</span>
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{stats.total}</span>
+                            <span className="mx-2 text-slate-300">|</span>
+                            <span className="text-xs font-semibold text-emerald-600 mr-2">Active:</span>
+                            <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{stats.active}</span>
+                            <span className="mx-2 text-slate-300">|</span>
+                            <span className="text-xs font-semibold text-rose-600 mr-2">Inactive:</span>
+                            <span className="text-sm font-bold text-rose-700 dark:text-rose-400">{stats.inactive}</span>
                         </div>
-                    </PageHeader>
-                </div>
+                    </div>
+                </PageHeader>
 
                 {/* Toolbar */}
-                <div className="max-w-[1920px] mx-auto px-4 py-4 space-y-4">
+                <div className="space-y-4">
                     <div className="flex flex-col md:flex-row gap-3">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />

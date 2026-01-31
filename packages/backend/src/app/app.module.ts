@@ -24,6 +24,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
 import { AuditLogInterceptor } from './features/audit-logs/audit-log.interceptor';
+import { WebSocketModule } from './features/websocket/websocket.module';
+import { NetworkModule } from './features/network/network.module';
 
 
 @Module({
@@ -50,7 +52,9 @@ import { AuditLogInterceptor } from './features/audit-logs/audit-log.interceptor
     KnowledgeBaseModule,
     ProcurementModule,
     EventEmitterModule.forRoot(),
-    AuditLogsModule
+    AuditLogsModule,
+    WebSocketModule,
+    NetworkModule,
   ],
   controllers: [AppController],
   providers: [

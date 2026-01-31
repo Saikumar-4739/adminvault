@@ -212,11 +212,11 @@ const InfoEmailsPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
-            <div className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
+            <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-6">
                 {/* Header */}
                 <PageHeader
                     icon={<Mail />}
-                    title="Communicator Hub"
+                    title="Email & Identities"
                     description="Global routing and identity management"
                     gradient="from-indigo-600 to-violet-700"
                     actions={[

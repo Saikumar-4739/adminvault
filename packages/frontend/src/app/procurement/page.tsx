@@ -76,7 +76,7 @@ const ProcurementPage: React.FC = () => {
     };
 
     return (
-        <div className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
+        <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-6">
             <PageHeader
                 icon={<ShoppingCart className="text-white" />}
                 title="Procurement"

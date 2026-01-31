@@ -41,8 +41,8 @@ export default function AuditLogsPage() {
     };
 
     return (
-        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-8">
+        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN]}>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 lg:p-8 space-y-6">
                 {/* Standardized Header */}
                 <div className="p-4 space-y-4">
                     <PageHeader

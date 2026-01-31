@@ -121,9 +121,9 @@ const KnowledgeBasePage: React.FC = () => {
     };
 
     return (
-        <div className="p-4 space-y-4 min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
+        <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-6">
             <PageHeader
-                title="Knowledge Base"
+                title="Help Center"
                 description="Centralized repository for IT documentation, guides, and policies."
                 icon={<Book />}
                 gradient="from-cyan-500 to-blue-600"

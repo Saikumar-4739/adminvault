@@ -11,5 +11,7 @@ export * from './utils'
 export * from './dashboard'
 export * from './workflow'
 export * from './ai-bot'
-export * from './knowledge-base/knowledge-base.service'
-export * from './procurement/procurement.service'
+export * from './knowledge-base/knowledge-base.service';
+export * from './procurement/procurement.service';
+export * from './network/network.service';
+

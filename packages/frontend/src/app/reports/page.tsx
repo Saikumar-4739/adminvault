@@ -2,14 +2,12 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { FileText, Users, Package, Ticket, TrendingUp, BarChart3, FileSpreadsheet, CheckCircle2, Clock, AlertCircle, ArrowLeft, FileDown, Search, ShieldCheck, Zap } from 'lucide-react';
+import { FileText, Users, Package, Ticket, TrendingUp, BarChart3, FileSpreadsheet, CheckCircle2, Clock, AlertCircle, ArrowLeft, FileDown, Search, ShieldCheck } from 'lucide-react';
 import { reportsService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { StatCard } from '@/components/ui/StatCard';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 interface ReportItem {
     name: string;
@@ -27,7 +25,6 @@ interface ReportCategory {
 }
 
 const ReportsPage: React.FC = () => {
-    const { stats, isLoading: statsLoading } = useDashboardStats();
     const [activeTab, setActiveTab] = useState('assets');
     const [selectedReport, setSelectedReport] = useState<string | null>(null);
     const [reportData, setReportData] = useState<any>(null);
@@ -39,47 +36,49 @@ const ReportsPage: React.FC = () => {
     const reportCategories: ReportCategory[] = [
         {
             id: 'assets',
-            title: 'Inventory Protocols',
-            description: 'Global resource distribution and lifecycle oversight',
+            title: 'Asset Reports',
+            description: 'Comprehensive asset inventory and allocation analytics',
             icon: Package,
             reports: [
-                { name: 'Asset Inventory Matrix', description: 'Real-time synchronization of all hardware nodes', icon: BarChart3, stats: 'Full Audit' },
-                { name: 'Resource Allocation Plan', description: 'Deployment mapping across organizational sectors', icon: Users, stats: 'Assigned' },
-                { name: 'Warranty Lifecycle Audit', description: 'Predictive maintenance and coverage tracking', icon: Clock, stats: 'Active' },
-                { name: 'Operational Intensity', description: 'Utilization benchmarks by department', icon: TrendingUp, stats: 'Efficiency' },
-                { name: 'Hardware Diversity', description: 'Segmented breakdown by brand and architecture', icon: Package, stats: 'Models' },
+                { name: 'Asset Inventory Report', description: 'Complete inventory of all assets with device details and assignment status', icon: BarChart3, stats: 'Full Audit' },
+                { name: 'Asset Allocation Report', description: 'Assets currently assigned to employees with department information', icon: Users, stats: 'Assigned' },
+                { name: 'Asset Warranty Expiry Report', description: 'Assets with warranty information and days until expiry', icon: Clock, stats: 'Active' },
+                { name: 'Asset by Department Report', description: 'Asset distribution and count by department', icon: TrendingUp, stats: 'Distribution' },
+                { name: 'Asset by Device Type Report', description: 'Assets grouped by device type, brand, and model with assignment statistics', icon: Package, stats: 'Categories' },
+                { name: 'Unassigned Assets Report', description: 'Available assets not currently assigned to any employee', icon: AlertCircle, stats: 'Available' },
             ]
         },
         {
             id: 'employees',
-            title: 'Workforce Records',
-            description: 'Organizational structure and identity directory',
+            title: 'Employee Reports',
+            description: 'Workforce directory and departmental analytics',
             icon: Users,
             reports: [
-                { name: 'Identity Directory', description: 'Comprehensive registry with operational context', icon: Users, stats: 'Live' },
-                { name: 'Departmental Density', description: 'Human resources mapped by structural units', icon: TrendingUp, stats: 'Growth' },
+                { name: 'Employee Directory', description: 'Complete employee list with contact information and department details', icon: Users, stats: 'Directory' },
+                { name: 'Employees by Department Report', description: 'Employee count and listing grouped by department', icon: TrendingUp, stats: 'Distribution' },
             ]
         },
         {
             id: 'tickets',
-            title: 'Service Analytics',
-            description: 'Incident response and throughput benchmarks',
+            title: 'Ticket Reports',
+            description: 'Service desk analytics and performance metrics',
             icon: Ticket,
             reports: [
-                { name: 'Performance Pulse', description: 'High-velocity analysis of helpdesk operations', icon: TrendingUp, stats: 'Trends' },
-                { name: 'Critical Backlog Matrix', description: 'Real-time detection of pending operations', icon: AlertCircle, stats: 'Alerts' },
-                { name: 'Resolution Throughput', description: 'Efficiency audit of closed service requests', icon: CheckCircle2, stats: 'Metrics' },
-                { name: 'SLA Compliance Audit', description: 'Response-time verification against standards', icon: Clock, stats: 'Audit' },
+                { name: 'Ticket Summary Report', description: 'Complete overview of all tickets with status and assignment details', icon: FileText, stats: 'Overview' },
+                { name: 'Open Tickets Report', description: 'Currently open tickets with priority and days open tracking', icon: AlertCircle, stats: 'Active' },
+                { name: 'Resolved Tickets Report', description: 'Resolved tickets with resolution time and performance metrics', icon: CheckCircle2, stats: 'Completed' },
+                { name: 'Tickets by Priority Report', description: 'Ticket statistics grouped by priority level with average resolution time', icon: TrendingUp, stats: 'Priority' },
+                { name: 'Tickets by Category Report', description: 'Ticket statistics grouped by category with resolution metrics', icon: BarChart3, stats: 'Categories' },
             ]
         },
         {
             id: 'system',
-            title: 'System Registry',
-            description: 'Environmental configuration and audit records',
+            title: 'Master Data Reports',
+            description: 'System configuration and organizational structure',
             icon: ShieldCheck,
             reports: [
-                { name: 'Registry Logic Audit', description: 'Mapping of configuration nodes and masters', icon: Zap, stats: 'System' },
-                { name: 'Network Mesh Standards', description: 'Vendor compliance and branding directives', icon: Package, stats: 'Global' },
+                { name: 'Department Summary Report', description: 'Department overview with employee and asset counts', icon: Users, stats: 'Structure' },
+                { name: 'Device Brands Report', description: 'Brand distribution across device types with asset counts', icon: Package, stats: 'Inventory' },
             ]
         }
     ];
@@ -88,12 +87,13 @@ const ReportsPage: React.FC = () => {
         if (!selectedReport) return;
         setIsLoading(true);
         try {
+            // Backend expects: /reports/generate?type=ReportName&format=detailed
             const response = await reportsService.generateReport(selectedReport, { format: 'detailed' });
             setReportData(response);
-            toast.success('Intelligence link established, report generated.');
+            toast.success('Report generated successfully');
         } catch (error) {
             console.error(error);
-            toast.error('Failed to establish data link for report.');
+            toast.error('Failed to generate report');
         } finally {
             setIsLoading(false);
         }
@@ -103,13 +103,17 @@ const ReportsPage: React.FC = () => {
         if (!selectedReport) return;
         setIsExporting(true);
         try {
+            // Backend expects: /reports/generate?type=ReportName&format=excel|pdf
+            // Backend returns file buffer with proper headers
             const response = await reportsService.generateReport(selectedReport, { format });
+
+            // Response is already a Blob from the backend
             const mimeType = format === 'excel'
                 ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                 : 'application/pdf';
             const extension = format === 'excel' ? 'xlsx' : 'pdf';
 
-            const blob = new Blob([response], { type: mimeType });
+            const blob = response instanceof Blob ? response : new Blob([response], { type: mimeType });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -117,10 +121,11 @@ const ReportsPage: React.FC = () => {
             document.body.appendChild(a);
             a.click();
             a.remove();
-            toast.success(`Data exported as ${format.toUpperCase()}`);
+            window.URL.revokeObjectURL(url);
+            toast.success(`Report exported as ${format.toUpperCase()}`);
         } catch (error) {
             console.error(error);
-            toast.error('Export protocol failed.');
+            toast.error('Failed to export report');
         } finally {
             setIsExporting(false);
         }
@@ -243,7 +248,7 @@ const ReportsPage: React.FC = () => {
                     // Reports Hub List View
                     <div className="space-y-6">
                         <PageHeader
-                            title="Analytics Hub"
+                            title="Reports"
                             description="Real-time operational reporting and data synthesis"
                             icon={<BarChart3 />}
                             gradient="from-indigo-600 to-indigo-800"
@@ -260,63 +265,23 @@ const ReportsPage: React.FC = () => {
                             </div>
                         </PageHeader>
 
-                        {/* Pulse Vitals */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <StatCard
-                                title="Active Workforce"
-                                value={stats?.employees.total || 0}
-                                icon={Users}
-                                gradient="from-indigo-500 to-blue-600"
-                                iconBg="bg-indigo-50 dark:bg-indigo-900/20"
-                                iconColor="text-indigo-600 dark:text-indigo-400"
-                                isLoading={statsLoading}
-                            />
-                            <StatCard
-                                title="Inventory Nodes"
-                                value={stats?.assets.total || 0}
-                                icon={Package}
-                                gradient="from-blue-500 to-cyan-600"
-                                iconBg="bg-blue-50 dark:bg-blue-900/20"
-                                iconColor="text-blue-600 dark:text-blue-400"
-                                isLoading={statsLoading}
-                            />
-                            <StatCard
-                                title="Resolution Velocity"
-                                value={`${Math.round(stats?.systemHealth.ticketResolutionRate || 0)}%`}
-                                icon={Zap}
-                                gradient="from-emerald-500 to-teal-600"
-                                iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-                                iconColor="text-emerald-600 dark:text-emerald-400"
-                                isLoading={statsLoading}
-                            />
-                            <StatCard
-                                title="Critical Stability"
-                                value={stats?.systemHealth.openCriticalTickets || 0}
-                                icon={ShieldCheck}
-                                gradient="from-rose-500 to-red-600"
-                                iconBg="bg-rose-50 dark:bg-rose-900/20"
-                                iconColor="text-rose-600 dark:text-rose-400"
-                                isLoading={statsLoading}
-                            />
-                        </div>
-
                         {/* Hub Navigation and Content */}
                         <div className="space-y-8 pt-4">
                             {/* Unified Tab Navigation */}
-                            <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 w-fit">
+                            <div className="flex gap-3 border-b border-slate-200 dark:border-white/10 pb-1">
                                 {reportCategories.map((category) => {
-                                    const Icon = category.icon;
+                                    const CategoryIcon = category.icon;
                                     const isActive = activeTab === category.id;
                                     return (
                                         <button
                                             key={category.id}
                                             onClick={() => setActiveTab(category.id)}
-                                            className={`flex items-center gap-3 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${isActive
-                                                ? 'bg-white dark:bg-white/10 text-indigo-600 dark:text-white shadow-lg'
-                                                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
+                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl font-black text-xs uppercase tracking-tight transition-all border-b-2 ${isActive
+                                                ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-500'
+                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 border-transparent'
                                                 }`}
                                         >
-                                            <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                                            <CategoryIcon className="h-4 w-4" />
                                             {category.title}
                                         </button>
                                     );
@@ -331,7 +296,7 @@ const ReportsPage: React.FC = () => {
                                         <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{activeCategory.description}</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                         {activeCategoryReports.length > 0 ? (
                                             activeCategoryReports.map((report, idx) => {
                                                 const ReportIcon = report.icon;
@@ -339,24 +304,24 @@ const ReportsPage: React.FC = () => {
                                                     <button
                                                         key={idx}
                                                         onClick={() => setSelectedReport(report.name)}
-                                                        className="group p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-2xl hover:-translate-y-1 transition-all text-left relative overflow-hidden"
+                                                        className="group p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-xl hover:-translate-y-0.5 transition-all text-left relative overflow-hidden"
                                                     >
-                                                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                                            <ReportIcon className="h-20 w-20 text-indigo-500" />
+                                                        <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                                                            <ReportIcon className="h-16 w-16 text-indigo-500" />
                                                         </div>
 
-                                                        <div className="flex items-start justify-between mb-6 relative z-10">
-                                                            <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform shadow-sm">
-                                                                <ReportIcon className="h-6 w-6" />
+                                                        <div className="flex items-start justify-between mb-4 relative z-10">
+                                                            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform shadow-sm">
+                                                                <ReportIcon className="h-4 w-4" />
                                                             </div>
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/5">
+                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider bg-slate-100 dark:bg-white/5 px-2 py-1 rounded-full border border-slate-200 dark:border-white/5">
                                                                 {report.stats}
                                                             </span>
                                                         </div>
-                                                        <h4 className="text-lg font-black text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight relative z-10">
+                                                        <h4 className="text-sm font-black text-slate-900 dark:text-white mb-1.5 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight relative z-10">
                                                             {report.name}
                                                         </h4>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed relative z-10">
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed relative z-10">
                                                             {report.description}
                                                         </p>
                                                     </button>
