@@ -1,0 +1,43 @@
+# Build Stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy root configurations
+COPY package*.json ./
+COPY nx.json ./
+COPY tsconfig*.json ./
+
+# Copy packages and libs metadata
+COPY packages/backend/package*.json ./packages/backend/
+COPY packages/libs/shared-models/package*.json ./packages/libs/shared-models/
+COPY packages/libs/backend-utils/package*.json ./packages/libs/backend-utils/
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY packages/backend ./packages/backend
+COPY packages/libs ./packages/libs
+
+# Build shared libraries and backend
+# build:shared and build:backend scripts are in root package.json
+RUN npm run build:backend
+
+# Production Stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy production dependencies and build artifacts
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist/packages/backend ./dist/packages/backend
+# Copy necessary metadata for runtime if needed (e.g. types from libs)
+COPY --from=builder /app/dist/packages/libs ./dist/packages/libs
+
+EXPOSE 3001
+
+ENV NODE_ENV=production
+
+CMD ["node", "dist/packages/backend/main.js"]

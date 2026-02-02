@@ -1,0 +1,48 @@
+# Build Stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy root configurations
+COPY package*.json ./
+COPY nx.json ./
+COPY tsconfig*.json ./
+
+# Copy packages and libs metadata
+COPY packages/frontend/package*.json ./packages/frontend/
+COPY packages/libs/shared-models/package*.json ./packages/libs/shared-models/
+COPY packages/libs/shared-services/package*.json ./packages/libs/shared-services/
+COPY packages/libs/backend-utils/package*.json ./packages/libs/backend-utils/
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY packages/frontend ./packages/frontend
+COPY packages/libs ./packages/libs
+
+# Build shared libraries and frontend
+# build:shared and build:frontend scripts are in root package.json
+RUN npm run build:frontend
+
+# Production Stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Next.js standalone output or custom server? 
+# The build:frontend script runs `npx nx build frontend`
+# Default Nx Next build outputs to dist/packages/frontend/.next
+
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/frontend/next.config.js ./packages/frontend/
+COPY --from=builder /app/packages/frontend/public ./packages/frontend/public
+COPY --from=builder /app/dist/packages/frontend/.next ./dist/packages/frontend/.next
+
+EXPOSE 3000
+
+ENV NODE_ENV=production
+
+# Nx + Next.js start command
+CMD ["npx", "nx", "serve", "frontend"]

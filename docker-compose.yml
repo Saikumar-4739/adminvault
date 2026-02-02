@@ -1,13 +1,63 @@
 version: "3.8"
 
 services:
-  adminvault:
+  db:
+    image: mysql:8.4
+    platform: linux/amd64
+    container_name: adminvault_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: adminvault
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: adminvault_app
+      dockerfile: Dockerfile.backend
+    container_name: adminvault_backend
+    ports:
+      - "3001:3001"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USERNAME=user
+      - DB_PASSWORD=password
+      - DB_DATABASE=adminvault
+      - NODE_ENV=production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - adminvault_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: adminvault_frontend
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: production
-    restart: always
+      - NODE_ENV=production
+      - BACKEND_URL=http://backend:3001
+    depends_on:
+      - backend
+    networks:
+      - adminvault_network
+
+networks:
+  adminvault_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
