@@ -485,7 +485,7 @@ const TicketsPage: React.FC = () => {
             </div>
 
             {/* Tickets Grid with Premium Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
                 {isLoading && tickets.length === 0 ? (
                     <div className="col-span-full py-12 flex justify-center"><PageLoader /></div>
                 ) : filteredTickets.length === 0 ? (
@@ -509,9 +509,9 @@ const TicketsPage: React.FC = () => {
                                 {/* Hover Glow Effect */}
                                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none" />
 
-                                <div className="p-4 relative z-10">
+                                <div className="p-3 relative z-10">
                                     {/* Header */}
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start mb-2">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${Config.gradient} shadow-md transform group-hover:scale-110 transition-transform`}>
                                                 <Icon className="h-5 w-5 text-white" />
@@ -554,7 +554,7 @@ const TicketsPage: React.FC = () => {
                                     </div>
 
                                     {/* Content */}
-                                    <div className="mb-4 min-h-[4rem]">
+                                    <div className="mb-2 min-h-[3.5rem]">
                                         <h3 className="text-base font-black text-slate-900 dark:text-white mb-2 line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
                                             {ticket.subject}
                                         </h3>

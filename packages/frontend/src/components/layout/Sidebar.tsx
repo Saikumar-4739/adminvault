@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { iamService } from '@/lib/api/services';
 
 import { Package, Ticket, LayoutDashboard, Database, KeySquare, ChevronLeft, ChevronRight, PieChart, UserCircle, Plus, GitPullRequest, ShoppingCart, Users, Network, Cpu, BookOpen, Mail, ShieldCheck } from 'lucide-react';
 
@@ -11,41 +12,41 @@ const DEFAULT_NAVIGATION = [
     {
         title: 'Main',
         items: [
-            { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-            { name: 'Configuration', href: '/masters', icon: Database },
-            { name: 'Reports', href: '/reports', icon: PieChart },
-            { name: 'Email & Identities', href: '/emails', icon: Mail },
+            { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, key: 'dashboard' },
+            { name: 'Configuration', href: '/masters', icon: Database, key: 'masters' },
+            { name: 'Reports', href: '/reports', icon: PieChart, key: 'reports' },
+            { name: 'Emails Info', href: '/emails', icon: Mail, key: 'emails' },
         ]
     },
     {
         title: 'Resources',
         items: [
-            { name: 'Employees', href: '/employees', icon: Users },
-            { name: 'Assets', href: '/assets', icon: Package },
-            { name: 'Procurement', href: '/procurement', icon: ShoppingCart },
-            { name: 'Licenses', href: '/licenses', icon: KeySquare },
+            { name: 'Employees', href: '/employees', icon: Users, key: 'employees' },
+            { name: 'Assets', href: '/assets', icon: Package, key: 'assets' },
+            { name: 'Procurement', href: '/procurement', icon: ShoppingCart, key: 'procurement' },
+            { name: 'Licenses', href: '/licenses', icon: KeySquare, key: 'licenses' },
         ]
     },
     {
         title: 'Network & Security',
         items: [
-            { name: 'Network', href: '/network', icon: Network },
-            { name: 'Approvals', href: '/approvals', icon: GitPullRequest },
-            { name: 'IAM & SSO', href: '/iam', icon: ShieldCheck },
+            { name: 'Network', href: '/network', icon: Network, key: 'network' },
+            { name: 'Approvals', href: '/approvals', icon: GitPullRequest, key: 'approvals' },
+            { name: 'IAM & SSO', href: '/iam', icon: ShieldCheck, key: 'iam' },
         ]
     },
     {
         title: 'Support',
         items: [
-            { name: 'Support Tickets', href: '/tickets', icon: Ticket },
-            { name: 'Create Ticket', href: '/create-ticket', icon: Plus },
+            { name: 'Support Tickets', href: '/tickets', icon: Ticket, key: 'tickets' },
+            { name: 'Create Ticket', href: '/create-ticket', icon: Plus, key: 'create-ticket' },
         ]
     },
     {
         title: 'Account',
         items: [
-            { name: 'Profile', href: '/profile', icon: UserCircle },
-            { name: 'Help', href: '/knowledge-base', icon: BookOpen },
+            { name: 'Profile', href: '/profile', icon: UserCircle, key: 'profile' },
+            { name: 'Help', href: '/knowledge-base', icon: BookOpen, key: 'knowledge-base' },
         ]
     }
 ];
@@ -55,6 +56,8 @@ export const Sidebar: React.FC = () => {
     const { user } = useAuth();
 
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [allowedMenus, setAllowedMenus] = useState<string[]>([]);
+    const [isLoadingMenus, setIsLoadingMenus] = useState(true);
 
     useEffect(() => {
         const stored = localStorage.getItem('sidebar_collapsed');
@@ -62,6 +65,19 @@ export const Sidebar: React.FC = () => {
             setIsCollapsed(stored === 'true');
         }
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            iamService.getMyMenus()
+                .then(response => {
+                    if (response.status && Array.isArray(response.data)) {
+                        setAllowedMenus(response.data);
+                    }
+                })
+                .catch(err => console.error("Failed to fetch menus", err))
+                .finally(() => setIsLoadingMenus(false));
+        }
+    }, [user]);
 
     const toggleCollapse = useCallback(() => {
         const newState = !isCollapsed;
@@ -89,42 +105,55 @@ export const Sidebar: React.FC = () => {
 
             {/* Navigation */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide py-4">
-                {DEFAULT_NAVIGATION.map((group) => (
-                    <div key={group.title} className="mb-6">
-                        {!isCollapsed && (
-                            <h3 className="px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
-                                {group.title}
-                            </h3>
-                        )}
-                        <nav className="px-3 space-y-0.5">
-                            {group.items.map((item) => {
-                                const Icon = item.icon;
-                                const isActive = item.href === '/dashboard' ? pathname === '/dashboard' : pathname?.startsWith(item.href);
-                                return (
-                                    <Link
-                                        key={item.name}
-                                        href={item.href}
-                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${isActive
-                                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
-                                            } ${isCollapsed ? 'justify-center px-0' : ''}`}
-                                        title={isCollapsed ? item.name : ''}
-                                    >
-                                        <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
-                                        {!isCollapsed && (
-                                            <span className="text-sm font-semibold tracking-tight truncate">
-                                                {item.name}
-                                            </span>
-                                        )}
-                                        {isActive && !isCollapsed && (
-                                            <div className="ml-auto w-1 h-4 bg-blue-600 rounded-full" />
-                                        )}
-                                    </Link>
-                                );
-                            })}
-                        </nav>
-                    </div>
-                ))}
+                {DEFAULT_NAVIGATION.map((group) => {
+                    // Filter items based on dynamic allowed keys
+                    const visibleItems = group.items.filter(item => {
+                        if (!item.key) return true; // Accessible by all if no key defined
+                        // If loading, maybe hide or show default? Safer to hide until loaded to prevent flicker of forbidden items
+                        // But for better UX, we might want to default to showing nothing or skeleton.
+                        // Here we wait for loading to finish, or if allowedMenus has data.
+                        return allowedMenus.includes(item.key);
+                    });
+
+                    if (visibleItems.length === 0) return null;
+
+                    return (
+                        <div key={group.title} className="mb-6">
+                            {!isCollapsed && (
+                                <h3 className="px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
+                                    {group.title}
+                                </h3>
+                            )}
+                            <nav className="px-3 space-y-0.5">
+                                {visibleItems.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = item.href === '/dashboard' ? pathname === '/dashboard' : pathname?.startsWith(item.href);
+                                    return (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${isActive
+                                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
+                                                } ${isCollapsed ? 'justify-center px-0' : ''}`}
+                                            title={isCollapsed ? item.name : ''}
+                                        >
+                                            <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
+                                            {!isCollapsed && (
+                                                <span className="text-sm font-semibold tracking-tight truncate">
+                                                    {item.name}
+                                                </span>
+                                            )}
+                                            {isActive && !isCollapsed && (
+                                                <div className="ml-auto w-1 h-4 bg-blue-600 rounded-full" />
+                                            )}
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Footer / Toggle */}

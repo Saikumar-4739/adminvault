@@ -48,15 +48,15 @@ export const StatCard: React.FC<StatCardProps> = ({
                     <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
                 </div>
             ) : (
-                <div className="p-3 relative z-10">
+                <div className="p-2 relative z-10">
                     <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</p>
-                            <h3 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{value}</h3>
-                            {subText && <div className="mt-0.5 text-[9px] text-slate-500">{subText}</div>}
+                        <div className="max-w-[70%]">
+                            <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">{title}</p>
+                            <h3 className="text-base font-black text-slate-900 dark:text-white leading-tight">{value}</h3>
+                            {subText && <div className="mt-0.5 text-[8px] text-slate-500 leading-none">{subText}</div>}
                         </div>
-                        <div className={`p-1.5 rounded-lg ${iconBg}`}>
-                            <Icon className={`h-4 w-4 ${iconColor}`} />
+                        <div className={`p-1 rounded-lg flex-shrink-0 ${iconBg}`}>
+                            <Icon className={`h-3 w-3 ${iconColor}`} />
                         </div>
                     </div>
                     {/* Decorative Gradient Blob */}

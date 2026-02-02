@@ -2,7 +2,6 @@ import { Body, Controller, Post, UseInterceptors, UploadedFile } from '@nestjs/c
 import { ApiBody, ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
-import { AuditLog } from '../audit-logs/audit-log.decorator';
 import { EmployeesService } from './employees.service';
 import { EmployeesBulkService } from './employees-bulk.service';
 import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, BulkImportResponseModel, CompanyIdRequestModel, BulkImportRequestModel } from '@adminvault/shared-models';
@@ -16,7 +15,6 @@ export class EmployeesController {
     ) { }
 
     @Post('bulk-import')
-    @AuditLog({ action: 'IMPORT', module: 'Employees' })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -45,7 +43,6 @@ export class EmployeesController {
     }
 
     @Post('createEmployee')
-    @AuditLog({ action: 'CREATE', module: 'Employees' })
     @ApiBody({ type: CreateEmployeeModel })
     async createEmployee(@Body() reqModel: CreateEmployeeModel): Promise<GlobalResponse> {
         try {
@@ -56,7 +53,6 @@ export class EmployeesController {
     }
 
     @Post('updateEmployee')
-    @AuditLog({ action: 'UPDATE', module: 'Employees' })
     @ApiBody({ type: UpdateEmployeeModel })
     async updateEmployee(@Body() reqModel: UpdateEmployeeModel): Promise<GlobalResponse> {
         try {
@@ -87,7 +83,6 @@ export class EmployeesController {
     }
 
     @Post('deleteEmployee')
-    @AuditLog({ action: 'DELETE', module: 'Employees' })
     @ApiBody({ type: DeleteEmployeeModel })
     async deleteEmployee(@Body() reqModel: DeleteEmployeeModel): Promise<GlobalResponse> {
         try {

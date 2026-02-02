@@ -8,12 +8,10 @@ Shared services library for AdminVault application providing API service classes
 - 🔐 **Authentication** - User registration, login, logout, and management
 - 🏢 **Company Management** - CRUD operations for companies
 - 👥 **Employee Management** - CRUD operations for employees
-- 💼 **Asset Management** - CRUD operations for assets
-- 📱 **Device Management** - CRUD operations for devices
+- 📱 **Asset Management** - CRUD operations for assets
 - 📧 **Email Management** - CRUD operations for email information
 - 🎫 **Ticket Management** - CRUD operations for support tickets
 - 🔗 **Asset Assignment** - Manage asset-to-employee assignments
-- 👨‍💼 **IT Admin Management** - CRUD operations for IT administrators
 
 ## Installation
 
@@ -150,20 +148,6 @@ const assets = await assetService.getAllAssets(1);
 await assetService.deleteAsset({ assetId: 1 });
 ```
 
-### Device Service
-
-```typescript
-import { DeviceInfoService } from '@adminvault/shared-services';
-
-const deviceService = new DeviceInfoService();
-
-// CRUD operations similar to Asset Service
-await deviceService.createDevice({ /* ... */ });
-await deviceService.updateDevice({ /* ... */ });
-const device = await deviceService.getDevice({ deviceId: 1 });
-const devices = await deviceService.getAllDevices();
-await deviceService.deleteDevice({ deviceId: 1 });
-```
 
 ### Email Service
 
@@ -222,20 +206,6 @@ const assignments = await assignService.getAllAssignments();
 await assignService.deleteAssignment({ assignmentId: 1 });
 ```
 
-### IT Admin Service
-
-```typescript
-import { ItAdminService } from '@adminvault/shared-services';
-
-const adminService = new ItAdminService();
-
-// CRUD operations
-await adminService.createAdmin({ /* ... */ });
-await adminService.updateAdmin({ /* ... */ });
-const admin = await adminService.getAdmin({ adminId: 1 });
-const admins = await adminService.getAllAdmins();
-await adminService.deleteAdmin({ adminId: 1 });
-```
 
 ## Custom Configuration
 
@@ -279,11 +249,9 @@ Feature Services (extend CommonAxiosService)
 ├── CompanyInfoService
 ├── EmployeesService
 ├── AssetInfoService
-├── DeviceInfoService
 ├── EmailInfoService
 ├── TicketsService
-├── AssetAssignService
-└── ItAdminService
+└── AssetAssignService
 ```
 
 ## Development

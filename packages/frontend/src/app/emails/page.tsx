@@ -216,7 +216,7 @@ const InfoEmailsPage: React.FC = () => {
                 {/* Header */}
                 <PageHeader
                     icon={<Mail />}
-                    title="Email & Identities"
+                    title="Emails"
                     description="Global routing and identity management"
                     gradient="from-indigo-600 to-violet-700"
                     actions={[

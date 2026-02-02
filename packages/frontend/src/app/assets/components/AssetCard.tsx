@@ -119,7 +119,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, o
                 {/* Status Accent Bar */}
                 <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${statusConfig.gradient.replace('/10', '')}`}></div>
 
-                <div className="relative p-4">
+                <div className="relative p-3">
                     {/* Header Section */}
                     <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0">

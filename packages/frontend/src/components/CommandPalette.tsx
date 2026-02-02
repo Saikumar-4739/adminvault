@@ -19,7 +19,6 @@ const ACTIONS: Action[] = [
     { id: 'assets', title: 'Assets', description: 'Manage hardware & assets', icon: Package, shortcut: 'A', category: 'Navigation', href: '/assets' },
     { id: 'tickets', title: 'Tickets', description: 'Support tickets', icon: Activity, shortcut: 'T', category: 'Navigation', href: '/tickets' },
     { id: 'raise-ticket', title: 'Create Ticket', description: 'Create new support ticket', icon: Plus, shortcut: 'P', category: 'Support', href: '/create-ticket' },
-    { id: 'audit-logs', title: 'Audit Logs', description: 'System audit logs', icon: FileText, shortcut: 'L', category: 'Security', href: '/audit-logs' },
     { id: 'network', title: 'Network', description: 'Network monitoring', icon: Network, shortcut: 'N', category: 'Navigation', href: '/network' },
     { id: 'employees', title: 'Employees', description: 'Manage employees', icon: Users, shortcut: 'E', category: 'Navigation', href: '/employees' },
     { id: 'licenses', title: 'Licenses', description: 'Software licenses', icon: Key, shortcut: 'K', category: 'Security', href: '/licenses' },

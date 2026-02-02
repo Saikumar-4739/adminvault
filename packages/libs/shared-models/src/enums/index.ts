@@ -9,8 +9,6 @@ export * from './procurement-status.enum';
 export * from './advanced-modules.enum';
 export * from './asset-status.enum';
 export * from './user-role.enum';
-export * from './admin-role.enum';
-export * from './admin-status.enum';
 export * from './email-status.enum';
 export * from './comment-by.enum';
 export * from './setting-type.enum';

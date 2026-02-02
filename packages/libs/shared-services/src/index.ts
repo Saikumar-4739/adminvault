@@ -1,4 +1,5 @@
 export * from './administration'
+export * from './lib/iam.service';
 export * from './auth-users'
 export * from './assets'
 export * from './documents'

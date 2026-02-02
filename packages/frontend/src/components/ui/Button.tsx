@@ -1,3 +1,5 @@
+'use client';
+
 import React, { ButtonHTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
@@ -37,10 +39,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         };
 
         const sizes = {
-            xs: 'h-7 px-2 text-xs',
-            sm: 'h-9 px-3 text-sm',  // 36px - acceptable for secondary actions
-            md: 'h-11 px-4 text-base',  // 44px - meets touch target minimum
-            lg: 'h-12 px-6 text-lg',  // 48px - exceeds minimum
+            xs: 'h-6 px-2 text-[10px]',
+            sm: 'h-8 px-3 text-xs',
+            md: 'h-9 px-4 text-sm',
+            lg: 'h-10 px-6 text-base',
         };
 
         return (

@@ -4,7 +4,6 @@ import { CreatePasswordVaultModel, UpdatePasswordVaultModel, GetAllPasswordVault
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
-import { AuditLog } from '../../audit-logs/audit-log.decorator';
 
 @ApiTags('Password Vault Master')
 @Controller('password-vaults')
@@ -22,7 +21,6 @@ export class PasswordVaultController {
     }
 
     @Post('password-vaults')
-    @AuditLog({ action: 'CREATE', module: 'PasswordVault' })
     @ApiBody({ type: CreatePasswordVaultModel })
     async createPasswordVault(@Body() reqModel: CreatePasswordVaultModel, @Req() req: any): Promise<GlobalResponse> {
         reqModel.userId = req.user.userId;
@@ -34,7 +32,6 @@ export class PasswordVaultController {
     }
 
     @Post('updatePasswordVault')
-    @AuditLog({ action: 'UPDATE', module: 'PasswordVault' })
     @ApiBody({ type: UpdatePasswordVaultModel })
     async updatePasswordVault(@Body() reqModel: UpdatePasswordVaultModel): Promise<GlobalResponse> {
         try {
@@ -45,7 +42,6 @@ export class PasswordVaultController {
     }
 
     @Post('deletePasswordVault')
-    @AuditLog({ action: 'DELETE', module: 'PasswordVault' })
     @ApiBody({ type: IdRequestModel })
     async deletePasswordVault(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {

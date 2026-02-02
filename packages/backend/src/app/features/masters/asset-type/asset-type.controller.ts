@@ -4,7 +4,6 @@ import { CreateAssetTypeModel, UpdateAssetTypeModel, GetAllAssetTypesResponseMod
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
-import { AuditLog } from '../../audit-logs/audit-log.decorator';
 
 @ApiTags('Asset Types Master')
 @Controller('asset-type')
@@ -13,7 +12,6 @@ export class AssetTypeController {
     constructor(private service: AssetTypeService) { }
 
     @Post('createAssetType')
-    @AuditLog({ action: 'CREATE', module: 'AssetType' })
     @ApiBody({ type: CreateAssetTypeModel })
     async createAssetType(@Body() createAssetTypeModel: CreateAssetTypeModel, @Req() req: any): Promise<GlobalResponse> {
         createAssetTypeModel.userId = req.user.userId;
@@ -25,7 +23,6 @@ export class AssetTypeController {
     }
 
     @Post('updateAssetType')
-    @AuditLog({ action: 'UPDATE', module: 'AssetType' })
     @ApiBody({ type: UpdateAssetTypeModel })
     async updateAssetType(@Body() updateAssetTypeModel: UpdateAssetTypeModel): Promise<GlobalResponse> {
         try {

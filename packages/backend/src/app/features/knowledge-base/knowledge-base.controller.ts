@@ -4,7 +4,6 @@ import { KnowledgeBaseService } from './knowledge-base.service';
 import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, GetKnowledgeArticleResponseModel, GetAllKnowledgeArticlesResponseModel, GetKnowledgeBaseStatsResponseModel } from '@adminvault/shared-models';
 import { CompanyIdDto, IdDto } from '../../common/dto/common.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
-import { AuditLog } from '../audit-logs/audit-log.decorator';
 import { returnException } from '@adminvault/backend-utils';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
 
@@ -15,7 +14,6 @@ export class KnowledgeBaseController {
     constructor(private service: KnowledgeBaseService) { }
 
     @Post('createArticle')
-    @AuditLog({ action: 'CREATE', module: 'KnowledgeBase' })
     @ApiBody({ type: CreateArticleRequestModel })
     async createArticle(@Body() reqModel: CreateArticleRequestModel, @Request() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -28,7 +26,6 @@ export class KnowledgeBaseController {
     }
 
     @Post('updateArticle')
-    @AuditLog({ action: 'UPDATE', module: 'KnowledgeBase' })
     @ApiBody({ type: UpdateArticleRequestModel })
     async updateArticle(@Body() reqModel: UpdateArticleRequestModel): Promise<GlobalResponse> {
         try {
@@ -39,7 +36,6 @@ export class KnowledgeBaseController {
     }
 
     @Post('deleteArticle')
-    @AuditLog({ action: 'DELETE', module: 'KnowledgeBase' })
     @ApiBody({ type: IdDto })
     async deleteArticle(@Body() reqModel: IdDto): Promise<GlobalResponse> {
         try {

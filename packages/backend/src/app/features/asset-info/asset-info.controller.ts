@@ -7,7 +7,6 @@ import { AssetTabsService } from './asset-tabs.service';
 import { AssetBulkService } from './asset-bulk.service';
 import { AssetHistoryService } from './asset-history.service';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
-import { AuditLog } from '../audit-logs/audit-log.decorator';
 import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel, AssetTimelineRequestModel, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel } from '@adminvault/shared-models';
 
 
@@ -32,7 +31,6 @@ export class AssetInfoController {
     }
 
     @Post('bulk-import')
-    @AuditLog({ action: 'IMPORT', module: 'Assets' })
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('file'))
     async bulkImport(@UploadedFile() file: Express.Multer.File, @Body('companyId') companyId: number, @Body('userId') userId: number): Promise<BulkImportResponseModel> {
@@ -48,7 +46,6 @@ export class AssetInfoController {
     }
 
     @Post('createAsset')
-    @AuditLog({ action: 'CREATE', module: 'Assets' })
     @ApiBody({ type: CreateAssetModel })
     async createAsset(@Body() reqModel: CreateAssetModel): Promise<GlobalResponse> {
         try {
@@ -59,7 +56,6 @@ export class AssetInfoController {
     }
 
     @Post('updateAsset')
-    @AuditLog({ action: 'UPDATE', module: 'Assets' })
     @ApiBody({ type: UpdateAssetModel })
     async updateAsset(@Body() reqModel: UpdateAssetModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -91,7 +87,6 @@ export class AssetInfoController {
     }
 
     @Post('deleteAsset')
-    @AuditLog({ action: 'DELETE', module: 'Assets' })
     @ApiBody({ type: DeleteAssetModel })
     async deleteAsset(@Body() reqModel: DeleteAssetModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -154,7 +149,6 @@ export class AssetInfoController {
     }
 
     @Post('process-return')
-    @AuditLog({ action: 'RETURN', module: 'Assets' })
     @ApiBody({ type: ProcessReturnRequestModel })
     async processReturn(@Body() reqModel: ProcessReturnRequestModel): Promise<ProcessReturnResponseModel> {
         try {
@@ -175,7 +169,6 @@ export class AssetInfoController {
     }
 
     @Post('create-next-assignment')
-    @AuditLog({ action: 'CREATE_NEXT_ASSIGNMENT', module: 'Assets' })
     @ApiBody({ type: CreateNextAssignmentRequestModel })
     async createNextAssignment(@Body() reqModel: CreateNextAssignmentRequestModel): Promise<CreateNextAssignmentResponseModel> {
         try {
@@ -186,7 +179,6 @@ export class AssetInfoController {
     }
 
     @Post('assign-from-queue')
-    @AuditLog({ action: 'ASSIGN_FROM_QUEUE', module: 'Assets' })
     @ApiBody({ type: AssignFromQueueRequestModel })
     async assignFromQueue(@Body() reqModel: AssignFromQueueRequestModel): Promise<AssignFromQueueResponseModel> {
         try {
@@ -198,7 +190,6 @@ export class AssetInfoController {
 
     // Asset Assignment CRUD Operations
     @Post('createAssignment')
-    @AuditLog({ action: 'ASSIGN', module: 'Assets' })
     @ApiBody({ type: CreateAssetAssignModel })
     async createAssignment(@Body() reqModel: CreateAssetAssignModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -210,7 +201,6 @@ export class AssetInfoController {
     }
 
     @Post('updateAssignment')
-    @AuditLog({ action: 'UPDATE_ASSIGNMENT', module: 'Assets' })
     @ApiBody({ type: UpdateAssetAssignModel })
     async updateAssignment(@Body() reqModel: UpdateAssetAssignModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -242,7 +232,6 @@ export class AssetInfoController {
     }
 
     @Post('assignAssetOp')
-    @AuditLog({ action: 'ASSIGN_OP', module: 'Assets' })
     @ApiBody({ type: AssignAssetOpRequestModel })
     async assignAssetOp(@Body() reqModel: AssignAssetOpRequestModel): Promise<GlobalResponse> {
         try {
@@ -253,7 +242,6 @@ export class AssetInfoController {
     }
 
     @Post('returnAssetOp')
-    @AuditLog({ action: 'RETURN_OP', module: 'Assets' })
     @ApiBody({ type: ReturnAssetOpRequestModel })
     async returnAssetOp(@Body() reqModel: ReturnAssetOpRequestModel): Promise<GlobalResponse> {
         try {

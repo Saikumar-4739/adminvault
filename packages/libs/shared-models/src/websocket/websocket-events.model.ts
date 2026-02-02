@@ -38,8 +38,6 @@ export enum WebSocketEvent {
     SYSTEM_ALERT = 'system:alert',
     SYSTEM_MAINTENANCE = 'system:maintenance',
 
-    // Audit events
-    AUDIT_LOG = 'audit:log',
 
     // Workflow events
     WORKFLOW_UPDATED = 'workflow:updated',
@@ -143,17 +141,6 @@ export interface SystemAlertPayload extends WebSocketPayload {
     actionUrl?: string;
 }
 
-/**
- * Audit Log Payload
- */
-export interface AuditLogPayload extends WebSocketPayload {
-    action: string;
-    entity: string;
-    entityId: number;
-    changes?: Record<string, any>;
-    performedBy: number;
-    performedByName: string;
-}
 
 /**
  * Approval Event Payload

@@ -4,7 +4,6 @@ import { CreatePOModel, GetAllPOsModel, GetPOByIdModel, GetAllPOsRequestModel, G
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
-import { AuditLog } from '../audit-logs/audit-log.decorator';
 
 @ApiTags('Procurement')
 @Controller('procurement')
@@ -13,7 +12,6 @@ export class ProcurementController {
     constructor(private readonly service: ProcurementService) { }
 
     @Post('createPO')
-    @AuditLog({ action: 'CREATE', module: 'Procurement' })
     @ApiBody({ type: CreatePOModel })
     async createPO(@Body() data: CreatePOModel, @Req() req: any): Promise<GlobalResponse> {
         try {
@@ -47,7 +45,6 @@ export class ProcurementController {
     }
 
     @Post('updatePOStatus')
-    @AuditLog({ action: 'UPDATE_STATUS', module: 'Procurement' })
     @ApiBody({ type: UpdatePOStatusRequestModel })
     async updatePOStatus(@Body() reqModel: UpdatePOStatusRequestModel): Promise<GlobalResponse> {
         try {

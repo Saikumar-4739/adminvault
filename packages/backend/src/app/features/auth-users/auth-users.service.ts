@@ -5,11 +5,10 @@ import { AuthUsersRepository } from './repositories/auth-users.repository';
 import { AuthUsersEntity } from './entities/auth-users.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, CreateLoginSessionModel, UserResponseModel } from '@adminvault/shared-models';
+import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, UserResponseModel } from '@adminvault/shared-models';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
-import { LoginSessionService } from './login-session.service';
 import { EmailInfoService } from '../administration/email-info.service';
 import { ForgotPasswordModel, ResetPasswordModel, RequestAccessModel, SendPasswordResetEmailModel } from '@adminvault/shared-models';
 import { Request } from 'express';
@@ -35,7 +34,6 @@ export class AuthUsersService {
     constructor(
         private dataSource: DataSource,
         private authUsersRepo: AuthUsersRepository,
-        private loginSessionService: LoginSessionService,
         @Inject(forwardRef(() => EmailInfoService))
         private emailService: EmailInfoService,
         private jwtService: JwtService,
@@ -137,23 +135,12 @@ export class AuthUsersService {
                 username: user.email,
                 email: user.email,
                 sub: user.id,
-                companyId: user.companyId
+                companyId: user.companyId,
+                role: user.userRole
             };
             const accessToken = this.generateAccessToken(payload);
             const refreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
 
-            if (req) {
-                try {
-                    const ipAddress = this.extractClientIp(req);
-                    const userAgent = req.headers['user-agent'];
-                    const loginSessionModel = new CreateLoginSessionModel(user.id, user.companyId, ipAddress, userAgent, 'email_password', accessToken, reqModel.latitude, reqModel.longitude);
-                    // Run async to not block response
-                    this.loginSessionService.createLoginSession(loginSessionModel)
-                        .catch(err => console.error("Failed to create login session", err));
-                } catch (sessionError) {
-                    console.error("Error initiating session tracking", sessionError);
-                }
-            }
             const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
             return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
         } catch (err) {
@@ -223,14 +210,7 @@ export class AuthUsersService {
      * @throws Error if session service fails to record attempt
      */
     private async trackFailedLogin(req: Request, email: string, reason: string, userId?: number, companyId?: number, latitude?: number, longitude?: number): Promise<void> {
-        try {
-            const ipAddress = this.extractClientIp(req);
-            const userAgent = req.headers['user-agent'];
-
-            await this.loginSessionService.createFailedLoginAttempt({ userId: userId || 0, companyId: companyId || 0, ipAddress, userAgent, loginMethod: 'email_password', failureReason: reason, attemptedEmail: email, latitude, longitude });
-        } catch (error) {
-            throw error;
-        }
+        // Session tracking removed
     }
 
     /**
@@ -285,6 +265,8 @@ export class AuthUsersService {
             const updateData: Partial<AuthUsersEntity> = {};
             if (reqModel.fullName) updateData.fullName = reqModel.fullName;
             if (reqModel.phNumber) updateData.phNumber = reqModel.phNumber;
+            if (reqModel.role) updateData.userRole = reqModel.role as any;
+            if (reqModel.companyId) updateData.companyId = reqModel.companyId;
             // Handle other fields if necessary
 
             if (Object.keys(updateData).length > 0) {
@@ -483,7 +465,8 @@ export class AuthUsersService {
             username: user.email,
             email: user.email,
             sub: user.id,
-            companyId: user.companyId
+            companyId: user.companyId,
+            role: user.userRole
         };
         const accessToken = this.generateAccessToken(payload);
         const refreshToken = this.generateRefreshToken({ ...payload, sub: user.id });

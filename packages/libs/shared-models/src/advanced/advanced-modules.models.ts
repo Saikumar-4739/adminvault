@@ -2,45 +2,6 @@ import {
     SoftwareTypeEnum
 } from '../enums';
 
-// --- Work Log Models (for Tickets) ---
-
-export class CreateWorkLogModel {
-    ticketId: number;
-    technicianId: number;
-    startTime: Date;
-    endTime?: Date;
-    timeSpentMinutes?: number;
-    description: string;
-
-    constructor(ticketId: number, technicianId: number, startTime: Date, description: string, endTime?: Date, timeSpentMinutes?: number) {
-        this.ticketId = ticketId;
-        this.technicianId = technicianId;
-        this.startTime = startTime;
-        this.description = description;
-        this.endTime = endTime;
-        this.timeSpentMinutes = timeSpentMinutes;
-    }
-}
-
-export class WorkLogResponseModel {
-    id: number;
-    ticketId: number;
-    technicianName: string;
-    startTime: Date;
-    endTime?: Date;
-    timeSpentMinutes: number;
-    description: string;
-
-    constructor(id: number, ticketId: number, technicianName: string, startTime: Date, timeSpentMinutes: number, description: string, endTime?: Date) {
-        this.id = id;
-        this.ticketId = ticketId;
-        this.technicianName = technicianName;
-        this.startTime = startTime;
-        this.timeSpentMinutes = timeSpentMinutes;
-        this.description = description;
-        this.endTime = endTime;
-    }
-}
 
 // --- Software Inventory Models ---
 

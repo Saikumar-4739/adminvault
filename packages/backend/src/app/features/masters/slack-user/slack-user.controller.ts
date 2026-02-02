@@ -4,7 +4,6 @@ import { CreateSlackUserModel, UpdateSlackUserModel, GetAllSlackUsersResponseMod
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
-import { AuditLog } from '../../audit-logs/audit-log.decorator';
 
 @ApiTags('Slack Users Master')
 @Controller('slack-users')
@@ -22,7 +21,6 @@ export class SlackUserController {
     }
 
     @Post('createSlackUser')
-    @AuditLog({ action: 'CREATE', module: 'SlackUser' })
     @ApiBody({ type: CreateSlackUserModel })
     async createSlackUser(@Body() reqModel: CreateSlackUserModel, @Req() req: any): Promise<GlobalResponse> {
         reqModel.userId = req.user.userId;
@@ -34,7 +32,6 @@ export class SlackUserController {
     }
 
     @Post('updateSlackUser')
-    @AuditLog({ action: 'UPDATE', module: 'SlackUser' })
     @ApiBody({ type: UpdateSlackUserModel })
     async updateSlackUser(@Body() reqModel: UpdateSlackUserModel): Promise<GlobalResponse> {
         try {
@@ -45,7 +42,6 @@ export class SlackUserController {
     }
 
     @Post('deleteSlackUser')
-    @AuditLog({ action: 'DELETE', module: 'SlackUser' })
     @ApiBody({ type: IdRequestModel })
     async deleteSlackUser(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {

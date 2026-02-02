@@ -118,20 +118,41 @@ const LoginPage: React.FC = () => {
                         {/* Enhanced Stats */}
                         <div className="grid grid-cols-3 gap-4 pt-2 animate-slide-up animation-delay-200">
                             {[
-                                { val: '99.9%', label: 'Uptime SLA', from: 'blue', to: 'cyan' },
-                                { val: '50k+', label: 'Active Users', from: 'indigo', to: 'purple' },
-                                { val: '24/7', label: 'Support', from: 'violet', to: 'fuchsia' }
+                                {
+                                    val: '99.9%',
+                                    label: 'Uptime SLA',
+                                    darkBg: 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20',
+                                    lightBg: 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10',
+                                    darkBorder: 'border-blue-500/30 hover:border-blue-400/50',
+                                    textGradient: 'from-blue-500 to-cyan-500'
+                                },
+                                {
+                                    val: '50k+',
+                                    label: 'Active Users',
+                                    darkBg: 'bg-gradient-to-r from-indigo-500/20 to-purple-500/20',
+                                    lightBg: 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10',
+                                    darkBorder: 'border-indigo-500/30 hover:border-indigo-400/50',
+                                    textGradient: 'from-indigo-500 to-purple-500'
+                                },
+                                {
+                                    val: '24/7',
+                                    label: 'Support',
+                                    darkBg: 'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20',
+                                    lightBg: 'bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10',
+                                    darkBorder: 'border-violet-500/30 hover:border-violet-400/50',
+                                    textGradient: 'from-violet-500 to-fuchsia-500'
+                                }
                             ].map((stat, i) => (
-                                <div key={i} className="relative group">
+                                <div key={i} className="relative group h-full">
                                     <div className={`absolute inset-0 rounded-xl blur-lg group-hover:blur-xl transition-all ${isDarkMode
-                                        ? `bg-gradient-to-r from-${stat.from}-500/20 to-${stat.to}-500/20`
-                                        : `bg-gradient-to-r from-${stat.from}-500/10 to-${stat.to}-500/10 opacity-0 group-hover:opacity-100`
+                                        ? stat.darkBg
+                                        : `${stat.lightBg} opacity-0 group-hover:opacity-100`
                                         }`}></div>
-                                    <div className={`relative rounded-xl p-4 transition-all border ${isDarkMode
-                                        ? `bg-slate-900/50 backdrop-blur-sm border-${stat.from}-500/30 hover:border-${stat.from}-400/50`
+                                    <div className={`relative rounded-xl p-4 transition-all border h-full flex flex-col justify-center ${isDarkMode
+                                        ? `bg-slate-900/50 backdrop-blur-sm ${stat.darkBorder}`
                                         : 'bg-white border-slate-100 shadow-sm hover:shadow-lg hover:shadow-slate-200/50'
                                         }`}>
-                                        <div className={`text-4xl font-black bg-gradient-to-r from-${stat.from}-500 to-${stat.to}-500 bg-clip-text text-transparent`}>{stat.val}</div>
+                                        <div className={`text-4xl font-black bg-gradient-to-r ${stat.textGradient} bg-clip-text text-transparent`}>{stat.val}</div>
                                         <div className={`text-sm font-bold ${isDarkMode ? 'text-gray-400' : 'text-slate-400'}`}>{stat.label}</div>
                                     </div>
                                 </div>
@@ -141,27 +162,87 @@ const LoginPage: React.FC = () => {
                         {/* Enhanced Features Grid */}
                         <div className="grid grid-cols-2 gap-3 pt-2 animate-slide-up animation-delay-400">
                             {[
-                                { icon: Shield, title: 'Enterprise Security', desc: 'MFA & RBAC protection', color: 'cyan', from: 'blue', to: 'cyan' },
-                                { icon: Lock, title: 'Data Encryption', desc: 'End-to-end AES-256', color: 'purple', from: 'indigo', to: 'purple' },
-                                { icon: TrendingUp, title: 'Real-time Analytics', desc: 'Live insights dashboard', color: 'fuchsia', from: 'violet', to: 'fuchsia' },
-                                { icon: Zap, title: 'AI Automation', desc: 'Smart workflow engine', color: 'teal', from: 'cyan', to: 'teal' },
-                                { icon: Users, title: 'Team Collaboration', desc: 'Unified workspace', color: 'green', from: 'emerald', to: 'green' },
-                                { icon: CheckCircle2, title: 'Compliance Ready', desc: 'GDPR, SOC 2, ISO', color: 'pink', from: 'rose', to: 'pink' }
+                                {
+                                    icon: Shield,
+                                    title: 'Enterprise Security',
+                                    desc: 'MFA & RBAC protection',
+                                    darkContainer: 'bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 hover:border-blue-400/40',
+                                    lightContainerBorder: 'hover:shadow-blue-500/10 hover:border-blue-200',
+                                    darkIcon: 'bg-gradient-to-br from-blue-500/30 to-cyan-500/30',
+                                    lightIcon: 'bg-blue-50 text-blue-600',
+                                    darkIconColor: 'text-cyan-300',
+                                    hoverGradient: 'from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/10 group-hover:to-cyan-500/10'
+                                },
+                                {
+                                    icon: Lock,
+                                    title: 'Data Encryption',
+                                    desc: 'End-to-end AES-256',
+                                    darkContainer: 'bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-500/20 hover:border-indigo-400/40',
+                                    lightContainerBorder: 'hover:shadow-indigo-500/10 hover:border-indigo-200',
+                                    darkIcon: 'bg-gradient-to-br from-indigo-500/30 to-purple-500/30',
+                                    lightIcon: 'bg-indigo-50 text-indigo-600',
+                                    darkIconColor: 'text-purple-300',
+                                    hoverGradient: 'from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/10 group-hover:to-purple-500/10'
+                                },
+                                {
+                                    icon: TrendingUp,
+                                    title: 'Real-time Analytics',
+                                    desc: 'Live insights dashboard',
+                                    darkContainer: 'bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20 hover:border-violet-400/40',
+                                    lightContainerBorder: 'hover:shadow-violet-500/10 hover:border-violet-200',
+                                    darkIcon: 'bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30',
+                                    lightIcon: 'bg-violet-50 text-violet-600',
+                                    darkIconColor: 'text-fuchsia-300',
+                                    hoverGradient: 'from-violet-500/0 to-fuchsia-500/0 group-hover:from-violet-500/10 group-hover:to-fuchsia-500/10'
+                                },
+                                {
+                                    icon: Zap,
+                                    title: 'AI Automation',
+                                    desc: 'Smart workflow engine',
+                                    darkContainer: 'bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border-cyan-500/20 hover:border-cyan-400/40',
+                                    lightContainerBorder: 'hover:shadow-cyan-500/10 hover:border-cyan-200',
+                                    darkIcon: 'bg-gradient-to-br from-cyan-500/30 to-teal-500/30',
+                                    lightIcon: 'bg-cyan-50 text-cyan-600',
+                                    darkIconColor: 'text-teal-300',
+                                    hoverGradient: 'from-cyan-500/0 to-teal-500/0 group-hover:from-cyan-500/10 group-hover:to-teal-500/10'
+                                },
+                                {
+                                    icon: Users,
+                                    title: 'Team Collaboration',
+                                    desc: 'Unified workspace',
+                                    darkContainer: 'bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20 hover:border-emerald-400/40',
+                                    lightContainerBorder: 'hover:shadow-emerald-500/10 hover:border-emerald-200',
+                                    darkIcon: 'bg-gradient-to-br from-emerald-500/30 to-green-500/30',
+                                    lightIcon: 'bg-emerald-50 text-emerald-600',
+                                    darkIconColor: 'text-green-300',
+                                    hoverGradient: 'from-emerald-500/0 to-green-500/0 group-hover:from-emerald-500/10 group-hover:to-green-500/10'
+                                },
+                                {
+                                    icon: CheckCircle2,
+                                    title: 'Compliance Ready',
+                                    desc: 'GDPR, SOC 2, ISO',
+                                    darkContainer: 'bg-gradient-to-br from-rose-500/10 to-pink-500/10 border-rose-500/20 hover:border-rose-400/40',
+                                    lightContainerBorder: 'hover:shadow-rose-500/10 hover:border-rose-200',
+                                    darkIcon: 'bg-gradient-to-br from-rose-500/30 to-pink-500/30',
+                                    lightIcon: 'bg-rose-50 text-rose-600',
+                                    darkIconColor: 'text-pink-300',
+                                    hoverGradient: 'from-rose-500/0 to-pink-500/0 group-hover:from-rose-500/10 group-hover:to-pink-500/10'
+                                }
                             ].map((feat, i) => (
-                                <div key={i} className={`group relative overflow-hidden rounded-xl p-4 transition-all hover:scale-105 border ${isDarkMode
-                                    ? `bg-gradient-to-br from-${feat.from}-500/10 to-${feat.to}-500/10 border-${feat.from}-500/20 hover:border-${feat.from}-400/40`
-                                    : `bg-white border-slate-100 shadow-sm hover:shadow-md hover:shadow-${feat.from}-500/10 hover:border-${feat.from}-200`
+                                <div key={i} className={`group relative overflow-hidden rounded-xl p-4 transition-all hover:scale-105 border h-full flex flex-col justify-center ${isDarkMode
+                                    ? feat.darkContainer
+                                    : `bg-white border-slate-100 shadow-sm hover:shadow-md ${feat.lightContainerBorder}`
                                     }`}>
-                                    <div className={`absolute inset-0 transition-all ${isDarkMode
-                                        ? `bg-gradient-to-br from-${feat.from}-500/0 to-${feat.to}-500/0 group-hover:from-${feat.from}-500/10 group-hover:to-${feat.to}-500/10`
+                                    <div className={`absolute inset-0 transition-all bg-gradient-to-br ${isDarkMode
+                                        ? feat.hoverGradient
                                         : 'opacity-0 group-hover:opacity-100 bg-slate-50/50'
                                         }`}></div>
                                     <div className="relative flex items-start gap-4">
                                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform ${isDarkMode
-                                            ? `bg-gradient-to-br from-${feat.from}-500/30 to-${feat.to}-500/30`
-                                            : `bg-${feat.from}-50 text-${feat.from}-600`
+                                            ? feat.darkIcon
+                                            : feat.lightIcon
                                             }`}>
-                                            <feat.icon className={`h-5 w-5 ${isDarkMode ? `text-${feat.color}-300` : 'text-current'}`} />
+                                            <feat.icon className={`h-5 w-5 ${isDarkMode ? feat.darkIconColor : 'text-current'}`} />
                                         </div>
                                         <div>
                                             <h3 className={`font-bold text-sm mb-0.5 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{feat.title}</h3>
@@ -298,7 +379,7 @@ const LoginPage: React.FC = () => {
                                         <div className="w-full border-t border-slate-700"></div>
                                     </div>
                                     <div className="relative flex justify-center text-sm">
-                                        <span className="px-4 bg-slate-900/80 text-gray-400 font-semibold">Or continue with</span>
+                                        <span className="px-4 text-gray-400 font-semibold">Or continue with</span>
                                     </div>
                                 </div>
 

@@ -4,7 +4,6 @@ import { CreateBrandModel, UpdateBrandModel, GetAllBrandsResponseModel, IdReques
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
-import { AuditLog } from '../../audit-logs/audit-log.decorator';
 
 @ApiTags('Brands Master')
 @Controller('brands')
@@ -22,7 +21,6 @@ export class BrandController {
     }
 
     @Post('createBrand')
-    @AuditLog({ action: 'CREATE', module: 'Brand' })
     @ApiBody({ type: CreateBrandModel })
     async createBrand(@Body() reqModel: CreateBrandModel, @Req() req: any): Promise<GlobalResponse> {
         reqModel.userId = req.user.userId;
@@ -34,7 +32,6 @@ export class BrandController {
     }
 
     @Post('updateBrand')
-    @AuditLog({ action: 'UPDATE', module: 'Brand' })
     @ApiBody({ type: UpdateBrandModel })
     async updateBrand(@Body() reqModel: UpdateBrandModel): Promise<GlobalResponse> {
         try {
@@ -45,7 +42,6 @@ export class BrandController {
     }
 
     @Post('deleteBrand')
-    @AuditLog({ action: 'DELETE', module: 'Brand' })
     @ApiBody({ type: IdRequestModel })
     async deleteBrand(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {

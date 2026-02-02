@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
     User, Mail, Shield, Calendar, Edit, Lock, Key, AlertCircle,
-    Fingerprint, Camera, Monitor,
+    Fingerprint, Camera,
     Bell, Palette, Languages, Save, X, Check,
     Settings, Eye, EyeOff
 } from 'lucide-react';
@@ -378,32 +378,6 @@ const ProfilePage: React.FC = () => {
                             </CardContent>
                         </Card>
 
-                        <Card className="lg:col-span-2 rounded-2xl border-slate-200 dark:border-slate-800">
-                            <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800">
-                                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                    <Monitor className="h-4 w-4 text-blue-600" />
-                                    Active Sessions
-                                </h3>
-                            </CardHeader>
-                            <CardContent className="p-4">
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                                                <Monitor className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                                            </div>
-                                            <div>
-                                                <div className="text-xs font-bold text-slate-900 dark:text-white">Current Session</div>
-                                                <div className="text-[10px] text-slate-500 dark:text-slate-400">Chrome on Windows • Active now</div>
-                                            </div>
-                                        </div>
-                                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
-                                            Active
-                                        </span>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
                     </div>
                 )}
 

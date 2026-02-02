@@ -205,7 +205,7 @@ const DashboardPage: React.FC = () => {
         { label: 'Employees', icon: Users, link: '/employees', color: 'violet' },
         { label: 'Licenses', icon: Key, link: '/licenses', color: 'blue' },
         { label: 'Reports', icon: BarChart2, link: '/reports', color: 'rose' },
-        { label: 'Email & Identities', icon: Mail, link: '/emails', color: 'cyan' },
+        { label: 'Emails', icon: Mail, link: '/emails', color: 'cyan' },
     ];
 
     // Animation Variants
@@ -300,23 +300,23 @@ const DashboardPage: React.FC = () => {
                     {kpiCards.map((card, idx) => (
                         <motion.div key={idx} variants={itemVariants}>
                             <Link href={card.link}>
-                                <Card className="p-4 overflow-hidden relative group bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 hover:border-indigo-500/30 transition-all duration-500 shadow-lg shadow-slate-200/50 dark:shadow-none">
+                                <Card className="p-2.5 overflow-hidden relative group bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 hover:border-indigo-500/30 transition-all duration-500 shadow-lg shadow-slate-200/50 dark:shadow-none">
                                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 -skew-x-12 translate-x-full group-hover:-translate-x-full pointer-events-none" />
 
                                     <div className="relative z-10 flex items-start justify-between">
                                         <div>
-                                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{card.title}</p>
+                                            <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">{card.title}</p>
                                             <div className="flex items-baseline gap-1.5">
-                                                <p className="text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">
+                                                <p className="text-lg font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">
                                                     {isLoading ? '---' : formatNumber(card.value)}
                                                 </p>
                                             </div>
-                                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1 transition-all duration-300">
-                                                {card.subtitle} <ArrowUpRight className="h-3 w-3" />
+                                            <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1 transition-all duration-300">
+                                                {card.subtitle} <ArrowUpRight className="h-2.5 w-2.5" />
                                             </p>
                                         </div>
-                                        <div className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} shadow-xl shadow-indigo-500/20 rotate-6 group-hover:rotate-0 transition-all duration-500`}>
-                                            <card.icon className="h-5 w-5 text-white" />
+                                        <div className={`p-1.5 rounded-lg bg-gradient-to-br ${card.gradient} shadow-lg shadow-indigo-500/20 rotate-6 group-hover:rotate-0 transition-all duration-500`}>
+                                            <card.icon className="h-4 w-4 text-white" />
                                         </div>
                                     </div>
                                 </Card>
@@ -329,8 +329,8 @@ const DashboardPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Ticket Priorities */}
                     <motion.div variants={itemVariants}>
-                        <Card className="p-5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
-                            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-6 flex items-center gap-2.5">
+                        <Card className="p-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
+                            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                 <div className="p-2 rounded-lg bg-orange-500/10 text-orange-600 shadow-inner border border-orange-500/10">
                                     <AlertTriangle className="h-4 w-4" />
                                 </div>
@@ -352,9 +352,9 @@ const DashboardPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Asset Distribution */}
                     <motion.div variants={itemVariants}>
-                        <Card className="p-5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+                        <Card className="p-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 shadow-inner border border-emerald-500/10">
                                         <PieChartIcon className="h-4 w-4" />
                                     </div>
@@ -378,9 +378,9 @@ const DashboardPage: React.FC = () => {
 
                     {/* Employee Distribution */}
                     <motion.div variants={itemVariants}>
-                        <Card className="p-5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+                        <Card className="p-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <div className="p-2 rounded-lg bg-violet-500/10 text-violet-600 shadow-inner border border-violet-500/10">
                                         <Activity className="h-4 w-4" />
                                     </div>
@@ -407,8 +407,8 @@ const DashboardPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     {/* Quick Access Grid */}
                     <motion.div variants={itemVariants} className="lg:col-span-1">
-                        <Card className="p-5 bg-white dark:bg-slate-900 border-none shadow-lg shadow-slate-200/50 dark:shadow-none h-full">
-                            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                        <Card className="p-4 bg-white dark:bg-slate-900 border-none shadow-lg shadow-slate-200/50 dark:shadow-none h-full">
+                            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                 <Zap className="h-4 w-4 text-amber-500" />
                                 Quick Launch
                             </h3>
@@ -427,9 +427,9 @@ const DashboardPage: React.FC = () => {
 
                     {/* Support Pulse Table */}
                     <motion.div variants={itemVariants} className="lg:col-span-3">
-                        <Card className="p-6 bg-white dark:bg-slate-900 border-none shadow-lg shadow-slate-200/50 dark:shadow-none h-full flex flex-col">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+                        <Card className="p-4 bg-white dark:bg-slate-900 border-none shadow-lg shadow-slate-200/50 dark:shadow-none h-full flex flex-col">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <TrendingUp className="h-4 w-4 text-indigo-500" />
                                     Intelligence Pulse
                                 </h3>

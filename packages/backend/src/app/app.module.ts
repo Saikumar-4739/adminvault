@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CompanyInfoModule } from './features/masters/company-info/company-info.module';
@@ -22,10 +22,11 @@ import configuration from '../config/configuration';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
-import { AuditLogInterceptor } from './features/audit-logs/audit-log.interceptor';
 import { WebSocketModule } from './features/websocket/websocket.module';
 import { NetworkModule } from './features/network/network.module';
+import { IamModule } from './features/iam/iam.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RoleMenuEntity } from './features/iam/entities/role-menu.entity';
 
 
 @Module({
@@ -35,7 +36,20 @@ import { NetworkModule } from './features/network/network.module';
       envFilePath: '.env',
       load: [configuration],
     }),
-    DatabaseModule,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_DATABASE'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}', RoleMenuEntity],
+        synchronize: true, // Auto-create tables (dev only)
+      }),
+    }),
     CompanyInfoModule,
     AuthUsersModule,
     EmployeesModule,
@@ -52,9 +66,9 @@ import { NetworkModule } from './features/network/network.module';
     KnowledgeBaseModule,
     ProcurementModule,
     EventEmitterModule.forRoot(),
-    AuditLogsModule,
     WebSocketModule,
     NetworkModule,
+    IamModule,
   ],
   controllers: [AppController],
   providers: [
@@ -62,10 +76,6 @@ import { NetworkModule } from './features/network/network.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: AuditLogInterceptor,
     },
   ],
 })

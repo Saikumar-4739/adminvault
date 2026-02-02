@@ -10,7 +10,6 @@ import { LoginUserDto, RegisterUserDto, ForgotPasswordDto, ResetPasswordDto, Upd
 import { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
-import { AuditLog } from '../audit-logs/audit-log.decorator';
 
 @ApiTags('Auth Users')
 @Controller('auth-users')
@@ -21,7 +20,6 @@ export class AuthUsersController {
 
     @Post('registerUser')
     @Public()
-    @AuditLog({ action: 'REGISTER', module: 'AuthUsers' })
     @ApiBody({ type: RegisterUserDto })
     async registerUser(@Body() reqModel: RegisterUserDto, @Req() req: Request): Promise<GlobalResponse> {
         try {
@@ -34,7 +32,6 @@ export class AuthUsersController {
 
     @Post('loginUser')
     @Public()
-    @AuditLog({ action: 'LOGIN', module: 'AuthUsers' })
     @ApiBody({ type: LoginUserDto })
     async loginUser(@Body() reqModel: LoginUserDto, @Req() req: Request): Promise<LoginResponseModel> {
         try {
@@ -45,7 +42,6 @@ export class AuthUsersController {
     }
 
     @Post('logOutUser')
-    @AuditLog({ action: 'LOGOUT', module: 'AuthUsers' })
     @ApiBody({ type: LogoutUserModel })
     async logOutUser(@Body() reqModel: LogoutUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -57,7 +53,6 @@ export class AuthUsersController {
     }
 
     @Post('updateUser')
-    @AuditLog({ action: 'UPDATE', module: 'AuthUsers' })
     @ApiBody({ type: UpdateUserDto })
     async updateUser(@Body() reqModel: UpdateUserDto, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -70,7 +65,6 @@ export class AuthUsersController {
     }
 
     @Post('deleteUser')
-    @AuditLog({ action: 'DELETE', module: 'AuthUsers' })
     @ApiBody({ type: DeleteUserModel })
     async deleteUser(@Body() reqModel: DeleteUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
@@ -94,7 +88,6 @@ export class AuthUsersController {
 
     @Post('requestAccess')
     @Public()
-    @AuditLog({ action: 'REQUEST_ACCESS', module: 'AuthUsers' })
     @ApiBody({ type: RequestAccessModel })
     async requestAccess(@Body() reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {
@@ -106,7 +99,6 @@ export class AuthUsersController {
 
     @Post('forgot-password')
     @Public()
-    @AuditLog({ action: 'FORGOT_PASSWORD', module: 'AuthUsers' })
     @ApiBody({ type: ForgotPasswordDto })
     async forgotPassword(@Body() reqModel: ForgotPasswordDto): Promise<GlobalResponse> {
         try {
@@ -118,7 +110,6 @@ export class AuthUsersController {
 
     @Post('reset-password')
     @Public()
-    @AuditLog({ action: 'RESET_PASSWORD', module: 'AuthUsers' })
     @ApiBody({ type: ResetPasswordDto })
     async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<GlobalResponse> {
         try {

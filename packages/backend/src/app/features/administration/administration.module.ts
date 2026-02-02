@@ -8,7 +8,6 @@ import { PasswordVaultService } from './password-vault.service';
 import { EmailInfoService } from './email-info.service';
 import { SettingsEntity } from './entities/settings.entity';
 import { PasswordVaultEntity } from './entities/password-vault.entity';
-import { UserLoginSessionsEntity } from './entities/user-login-sessions.entity';
 import { EmailInfoEntity } from './entities/email-info.entity';
 import { AccessRequestEntity } from './entities/access-request.entity';
 import { AssetInfoEntity } from '../asset-info/entities/asset-info.entity';
@@ -18,18 +17,17 @@ import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { SettingsRepository } from './repositories/settings.repository';
 import { PasswordVaultRepository } from './repositories/password-vault.repository';
 import { EmailInfoRepository } from './repositories/email-info.repository';
-import { UserLoginSessionRepository } from './repositories/user-login-session.repository';
 import { AccessRequestRepository } from './repositories/access-request.repository';
 import { AuthUsersModule } from '../auth-users/auth-users.module';
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([SettingsEntity, PasswordVaultEntity, UserLoginSessionsEntity, AssetInfoEntity, AssetAssignEntity, AuthUsersEntity, EmailInfoEntity, AccessRequestEntity, EmployeesEntity]),
+        TypeOrmModule.forFeature([SettingsEntity, PasswordVaultEntity, AssetInfoEntity, AssetAssignEntity, AuthUsersEntity, EmailInfoEntity, AccessRequestEntity, EmployeesEntity]),
         forwardRef(() => AuthUsersModule)
     ],
     controllers: [SettingsController, VaultController, EmailController],
-    providers: [SettingsService, PasswordVaultService, EmailInfoService, SettingsRepository, PasswordVaultRepository, EmailInfoRepository, UserLoginSessionRepository, AccessRequestRepository, EmployeesRepository],
-    exports: [SettingsService, PasswordVaultService, EmailInfoService, UserLoginSessionRepository, AccessRequestRepository]
+    providers: [SettingsService, PasswordVaultService, EmailInfoService, SettingsRepository, PasswordVaultRepository, EmailInfoRepository, AccessRequestRepository, EmployeesRepository],
+    exports: [SettingsService, PasswordVaultService, EmailInfoService, AccessRequestRepository]
 })
 export class AdministrationModule { }

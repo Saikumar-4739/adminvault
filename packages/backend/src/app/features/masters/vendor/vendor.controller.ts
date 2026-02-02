@@ -4,7 +4,6 @@ import { CreateVendorModel, UpdateVendorModel, GetAllVendorsResponseModel, IdReq
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
-import { AuditLog } from '../../audit-logs/audit-log.decorator';
 
 @ApiTags('Vendors Master')
 @Controller('vendors')
@@ -22,7 +21,6 @@ export class VendorController {
     }
 
     @Post('createVendor')
-    @AuditLog({ action: 'CREATE', module: 'Vendor' })
     @ApiBody({ type: CreateVendorModel })
     async createVendor(@Body() createVendorModel: CreateVendorModel, @Req() req: any): Promise<GlobalResponse> {
         createVendorModel.userId = req.user.userId;
@@ -34,7 +32,6 @@ export class VendorController {
     }
 
     @Post('updateVendor')
-    @AuditLog({ action: 'UPDATE', module: 'Vendor' })
     @ApiBody({ type: UpdateVendorModel })
     async updateVendor(@Body() updateVendorModel: UpdateVendorModel): Promise<GlobalResponse> {
         try {
@@ -45,7 +42,6 @@ export class VendorController {
     }
 
     @Post('deleteVendor')
-    @AuditLog({ action: 'DELETE', module: 'Vendor' })
     @ApiBody({ type: IdRequestModel })
     async deleteVendor(@Body() idRequestModel: IdRequestModel): Promise<GlobalResponse> {
         try {

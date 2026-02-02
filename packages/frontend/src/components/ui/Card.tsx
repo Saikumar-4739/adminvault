@@ -1,3 +1,5 @@
+'use client';
+
 import React, { HTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -8,7 +10,7 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
     ({ className, variant = 'default', hover = false, children, ...props }, ref) => {
-        const baseStyles = 'rounded-xl p-6 transition-all duration-300';
+        const baseStyles = 'rounded-xl p-4 transition-all duration-300';
 
         const variants = {
             default: 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700',
@@ -37,7 +39,7 @@ Card.displayName = 'Card';
 
 export const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     ({ className, ...props }, ref) => (
-        <div ref={ref} className={cn('mb-4', className)} {...props} />
+        <div ref={ref} className={cn('mb-3', className)} {...props} />
     )
 );
 CardHeader.displayName = 'CardHeader';
@@ -46,7 +48,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadi
     ({ className, ...props }, ref) => (
         <h3
             ref={ref}
-            className={cn('text-xl font-semibold text-slate-900 dark:text-slate-100', className)}
+            className={cn('text-lg font-semibold text-slate-900 dark:text-slate-100 leading-tight', className)}
             {...props}
         />
     )
@@ -75,7 +77,7 @@ export const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivEleme
     ({ className, ...props }, ref) => (
         <div
             ref={ref}
-            className={cn('mt-6 pt-4 border-t border-slate-200 dark:border-slate-700', className)}
+            className={cn('mt-4 pt-3 border-t border-slate-200 dark:border-slate-700', className)}
             {...props}
         />
     )

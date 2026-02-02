@@ -251,14 +251,14 @@ const AssetsPage: React.FC = () => {
 
     const StatCard = ({ label, value, icon, gradient }: any) => (
         <Card className="overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-900">
-            <CardContent className="p-4 relative">
+            <CardContent className="p-3 relative">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-0.5">{label}</p>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white tabular-nums">{value || 0}</h3>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-tight mb-0.5">{label}</p>
+                        <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight tabular-nums">{value || 0}</h3>
                     </div>
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white shadow-md shadow-inner`}>
-                        {React.cloneElement(icon, { className: 'h-5 w-5' })}
+                    <div className={`p-1.5 rounded-lg bg-gradient-to-br ${gradient} text-white shadow-md`}>
+                        {React.cloneElement(icon, { className: 'h-4 w-4' })}
                     </div>
                 </div>
             </CardContent>

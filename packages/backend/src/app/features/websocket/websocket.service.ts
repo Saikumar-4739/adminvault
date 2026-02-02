@@ -9,7 +9,6 @@ import {
     AssetEventPayload,
     UserStatusPayload,
     SystemAlertPayload,
-    AuditLogPayload,
     ApprovalEventPayload,
 } from '@adminvault/shared-models';
 
@@ -149,12 +148,6 @@ export class WebSocketService {
         this.emitToCompany(companyId, WebSocketEvent.SYSTEM_ALERT, alert);
     }
 
-    /**
-     * Send audit log to admins
-     */
-    sendAuditLog(roleId: number, log: Omit<AuditLogPayload, 'timestamp'>): void {
-        this.emitToRole(roleId, WebSocketEvent.AUDIT_LOG, log);
-    }
 
     /**
      * Notify about pending approval

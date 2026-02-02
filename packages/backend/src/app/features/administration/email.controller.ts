@@ -4,7 +4,6 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetAllEmailInfoModel, EmailStatsResponseModel, CompanyIdRequestModel, GetEmailInfoModel, GetEmailInfoByIdModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel } from '@adminvault/shared-models';
-import { AuditLog } from '../audit-logs/audit-log.decorator';
 
 @ApiTags('Email Settings')
 @Controller('administration/email')
@@ -33,7 +32,6 @@ export class EmailController {
     }
 
     @Post('createEmailInfo')
-    @AuditLog({ action: 'CREATE', module: 'EmailSettings' })
     @ApiBody({ type: CreateEmailInfoModel })
     async createEmailInfo(@Body() req: CreateEmailInfoModel): Promise<GlobalResponse> {
         try {
@@ -44,7 +42,6 @@ export class EmailController {
     }
 
     @Post('updateEmailInfo')
-    @AuditLog({ action: 'UPDATE', module: 'EmailSettings' })
     @ApiBody({ type: UpdateEmailInfoModel })
     async updateEmailInfo(@Body() req: UpdateEmailInfoModel): Promise<GlobalResponse> {
         try {
@@ -55,7 +52,6 @@ export class EmailController {
     }
 
     @Post('deleteEmailInfo')
-    @AuditLog({ action: 'DELETE', module: 'EmailSettings' })
     @ApiBody({ type: DeleteEmailInfoModel })
     async deleteEmailInfo(@Body() req: DeleteEmailInfoModel): Promise<GlobalResponse> {
         try {

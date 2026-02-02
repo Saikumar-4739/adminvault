@@ -3,8 +3,8 @@ export enum UserRoleEnum {
   USER = 'user',
   MANAGER = 'manager',
   VIEWER = 'viewer',
-  SUPER_ADMIN = "SUPER_ADMIN",
-  SUPPORT_ADMIN = "SUPPORT_ADMIN",
+  SUPER_ADMIN = 'super_admin',
+  SUPPORT_ADMIN = 'support_admin',
 }
 
 

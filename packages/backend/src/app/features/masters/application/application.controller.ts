@@ -4,7 +4,6 @@ import { CreateApplicationModel, UpdateApplicationModel, GetAllApplicationsRespo
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
-import { AuditLog } from '../../audit-logs/audit-log.decorator';
 
 @ApiTags('Applications Master')
 @Controller('application')
@@ -13,7 +12,6 @@ export class ApplicationController {
     constructor(private applicationService: ApplicationService) { }
 
     @Post('createApplication')
-    @AuditLog({ action: 'CREATE', module: 'Application' })
     @ApiBody({ type: CreateApplicationModel })
     async createApplication(@Body() createApplicationModel: CreateApplicationModel): Promise<GlobalResponse> {
         try {
@@ -24,7 +22,6 @@ export class ApplicationController {
     }
 
     @Post('updateApplication')
-    @AuditLog({ action: 'UPDATE', module: 'Application' })
     @ApiBody({ type: UpdateApplicationModel })
     async updateApplication(@Body() updateApplicationModel: UpdateApplicationModel): Promise<GlobalResponse> {
         try {
@@ -54,7 +51,6 @@ export class ApplicationController {
     }
 
     @Post('deleteApplication')
-    @AuditLog({ action: 'DELETE', module: 'Application' })
     @ApiBody({ type: IdRequestModel })
     async deleteApplication(@Body() idRequestModel: IdRequestModel): Promise<GlobalResponse> {
         try {

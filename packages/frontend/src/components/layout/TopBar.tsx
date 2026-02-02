@@ -55,12 +55,6 @@ const TopBar: React.FC = () => {
         <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 sticky top-0 z-30 transition-all duration-300">
             {/* Left: Section Title / Global Context */}
             <div className="flex items-center gap-4">
-                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all hover:border-blue-500/20">
-                    <div className={`w-2 h-2 rounded-full animate-pulse ${stats?.security.score && stats.security.score > 70 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        {statsLoading ? 'Security: ---' : `Security Score: ${stats?.security.score}%`}
-                    </span>
-                </div>
 
                 <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-transparent hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
                     <Globe className="h-3.5 w-3.5 text-slate-400" />

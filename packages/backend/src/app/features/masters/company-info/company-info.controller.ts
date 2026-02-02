@@ -1,7 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
-import { AuditLog } from '../../audit-logs/audit-log.decorator';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { CompanyInfoService } from './company-info.service';
 import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, GetCompanyModel } from '@adminvault/shared-models';
@@ -24,7 +23,6 @@ export class CompanyInfoController {
     }
 
     @Post('updateCompany')
-    @AuditLog({ action: 'UPDATE', module: 'CompanyInfo' })
     @ApiBody({ type: UpdateCompanyModel })
     async updateCompany(@Body() reqModel: UpdateCompanyModel,): Promise<GlobalResponse> {
         try {
