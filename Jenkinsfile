@@ -8,6 +8,12 @@ pipeline {
             }
         }
 
+        stage('Debug') {
+            steps {
+                sh 'ls -la'
+            }
+        }
+
         stage('Build') {
             steps {
                 sh 'docker-compose build'

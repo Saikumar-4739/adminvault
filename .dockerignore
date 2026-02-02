@@ -10,7 +10,5 @@ yarn-debug.log*
 yarn-error.log*
 .ssh
 .vscode
-Dockerfile*
-docker-compose*
 README.md
 Jenkinsfile
