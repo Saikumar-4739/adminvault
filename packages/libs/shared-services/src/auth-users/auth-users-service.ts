@@ -46,4 +46,8 @@ export class AuthUsersService extends CommonAxiosService {
     async verifyPassword(password: string, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('verify-password'), { password }, config);
     }
+
+    async getMe(config?: AxiosRequestConfig): Promise<LoginResponseModel> {
+        return await this.axiosGetCall(this.getURLwithMainEndPoint('getMe'), config);
+    }
 }

@@ -403,13 +403,13 @@ export class ReportsService {
                 d.device_name AS deviceName,
                 b.name AS brandName,
                 CONCAT(e1.first_name, ' ', e1.last_name) AS assignedTo,
-                DATEDIFF(a.warranty_expiry, CURDATE()) AS daysUntilExpiry
+                (a.warranty_expiry - CURRENT_DATE) AS daysUntilExpiry
             FROM asset_info a
             LEFT JOIN device_info d ON a.device_id = d.id
             LEFT JOIN device_brands b ON a.brand_id = b.id
             LEFT JOIN employees e1 ON a.assigned_to_employee_id = e1.id
             WHERE a.warranty_expiry IS NOT NULL 
-            AND a.warranty_expiry >= CURDATE()
+            AND a.warranty_expiry >= CURRENT_DATE
             ORDER BY a.warranty_expiry ASC
         `;
 
@@ -436,7 +436,7 @@ export class ReportsService {
                 d.device_name AS deviceName,
                 b.name AS brandName,
                 COUNT(a.id) AS assetCount,
-                GROUP_CONCAT(a.serial_number SEPARATOR ', ') AS serialNumbers
+                STRING_AGG(a.serial_number, ', ') AS serialNumbers
             FROM asset_info a
             INNER JOIN employees e ON a.assigned_to_employee_id = e.id
             INNER JOIN departments dept ON e.department_id = dept.id
@@ -528,7 +528,7 @@ export class ReportsService {
             SELECT 
                 dept.name AS departmentName,
                 COUNT(e.id) AS employeeCount,
-                GROUP_CONCAT(CONCAT(e.first_name, ' ', e.last_name) SEPARATOR ', ') AS employees
+                STRING_AGG(CONCAT(e.first_name, ' ', e.last_name), ', ') AS employees
             FROM employees e
             LEFT JOIN departments dept ON e.department_id = dept.id
             GROUP BY dept.name
@@ -556,7 +556,7 @@ export class ReportsService {
                 t.created_at AS createdAt,
                 CONCAT(e1.first_name, ' ', e1.last_name) AS raisedBy,
                 CONCAT(e2.first_name, ' ', e2.last_name) AS assignedTo,
-                DATEDIFF(CURDATE(), t.created_at) AS daysOpen
+                (CURRENT_DATE - t.created_at::date) AS daysOpen
             FROM tickets t
             LEFT JOIN employees e1 ON t.employee_id = e1.id
             LEFT JOIN employees e2 ON t.assign_admin_id = e2.id
@@ -590,7 +590,7 @@ export class ReportsService {
                 t.resolved_at AS resolvedAt,
                 CONCAT(e1.first_name, ' ', e1.last_name) AS raisedBy,
                 CONCAT(e2.first_name, ' ', e2.last_name) AS resolvedBy,
-                DATEDIFF(t.resolved_at, t.created_at) AS resolutionDays
+                (t.resolved_at::date - t.created_at::date) AS resolutionDays
             FROM tickets t
             LEFT JOIN employees e1 ON t.employee_id = e1.id
             LEFT JOIN employees e2 ON t.assign_admin_id = e2.id
@@ -619,11 +619,17 @@ export class ReportsService {
                 t.priority_enum AS priority,
                 t.ticket_status AS status,
                 COUNT(t.id) AS ticketCount,
-                AVG(DATEDIFF(COALESCE(t.resolved_at, CURDATE()), t.created_at)) AS avgResolutionDays
+                AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS avgResolutionDays
             FROM tickets t
             GROUP BY t.priority_enum, t.ticket_status
             ORDER BY 
-                FIELD(t.priority_enum, 'Critical', 'High', 'Medium', 'Low'),
+                CASE t.priority_enum
+                    WHEN 'Critical' THEN 1
+                    WHEN 'High' THEN 2
+                    WHEN 'Medium' THEN 3
+                    WHEN 'Low' THEN 4
+                    ELSE 5
+                END,
                 t.ticket_status
         `;
 
@@ -643,7 +649,7 @@ export class ReportsService {
                 t.category_enum AS category,
                 t.ticket_status AS status,
                 COUNT(t.id) AS ticketCount,
-                AVG(DATEDIFF(COALESCE(t.resolved_at, CURDATE()), t.created_at)) AS avgResolutionDays
+                AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS avgResolutionDays
             FROM tickets t
             GROUP BY t.category_enum, t.ticket_status
             ORDER BY ticketCount DESC

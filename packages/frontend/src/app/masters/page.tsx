@@ -16,6 +16,7 @@ const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-
 const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Applications...</p> });
 const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Slack Integration...</p> });
 const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Vendors...</p> });
+const MenusMasterView = dynamic(() => import('./components/menus-master-view').then(mod => mod.MenusMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Menus...</p> });
 
 interface MasterItem {
     id: string;
@@ -49,6 +50,14 @@ const MastersPage: React.FC = () => {
             icon: Users,
             color: 'from-purple-500 to-indigo-600',
             component: DepartmentsMasterView
+        },
+        {
+            id: 'menus',
+            title: 'Menus & Submenus',
+            description: 'Manage application navigation and menu structures',
+            icon: Settings2,
+            color: 'from-indigo-500 to-blue-600',
+            component: MenusMasterView
         },
         {
             id: 'asset-types',

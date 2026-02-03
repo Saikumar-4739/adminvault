@@ -126,7 +126,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
 
         if (reqModel.searchQuery) {
             query.andWhere(
-                '(asset.serial_number LIKE :search OR device.device_name LIKE :search)',
+                '(asset.serial_number ILIKE :search OR device.device_name ILIKE :search)',
                 { search: `%${reqModel.searchQuery}%` }
             );
         }

@@ -32,7 +32,7 @@ const DEFAULT_NAVIGATION = [
         items: [
             { name: 'Network', href: '/network', icon: Network, key: 'network' },
             { name: 'Approvals', href: '/approvals', icon: GitPullRequest, key: 'approvals' },
-            { name: 'IAM & SSO', href: '/iam', icon: ShieldCheck, key: 'iam' },
+            { name: 'IAM', href: '/iam', icon: ShieldCheck, key: 'iam' },
         ]
     },
     {
@@ -53,11 +53,9 @@ const DEFAULT_NAVIGATION = [
 
 export const Sidebar: React.FC = () => {
     const pathname = usePathname();
-    const { user } = useAuth();
+    const { user, allowedMenus, updateMenus } = useAuth();
 
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [allowedMenus, setAllowedMenus] = useState<string[]>([]);
-    const [isLoadingMenus, setIsLoadingMenus] = useState(true);
 
     useEffect(() => {
         const stored = localStorage.getItem('sidebar_collapsed');
@@ -67,17 +65,16 @@ export const Sidebar: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (user) {
+        if (user && (!allowedMenus || allowedMenus.length === 0)) {
             iamService.getMyMenus()
                 .then(response => {
                     if (response.status && Array.isArray(response.data)) {
-                        setAllowedMenus(response.data);
+                        updateMenus(response.data);
                     }
                 })
-                .catch(err => console.error("Failed to fetch menus", err))
-                .finally(() => setIsLoadingMenus(false));
+                .catch(err => console.error("Failed to fetch menus", err));
         }
-    }, [user]);
+    }, [user, allowedMenus, updateMenus]);
 
     const toggleCollapse = useCallback(() => {
         const newState = !isCollapsed;
@@ -107,13 +104,16 @@ export const Sidebar: React.FC = () => {
             <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide py-4">
                 {DEFAULT_NAVIGATION.map((group) => {
                     // Filter items based on dynamic allowed keys
-                    const visibleItems = group.items.filter(item => {
-                        if (!item.key) return true; // Accessible by all if no key defined
-                        // If loading, maybe hide or show default? Safer to hide until loaded to prevent flicker of forbidden items
-                        // But for better UX, we might want to default to showing nothing or skeleton.
-                        // Here we wait for loading to finish, or if allowedMenus has data.
-                        return allowedMenus.includes(item.key);
-                    });
+                    const visibleItems = group.items
+                        .map(item => {
+                            const dynamicMenu = allowedMenus.find(m => m.key === item.key);
+                            if (!dynamicMenu) return null;
+                            return {
+                                ...item,
+                                name: dynamicMenu.label || item.name // Use DB label if available
+                            };
+                        })
+                        .filter((item): item is any => item !== null);
 
                     if (visibleItems.length === 0) return null;
 

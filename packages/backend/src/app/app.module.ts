@@ -26,7 +26,6 @@ import { WebSocketModule } from './features/websocket/websocket.module';
 import { NetworkModule } from './features/network/network.module';
 import { IamModule } from './features/iam/iam.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RoleMenuEntity } from './features/iam/entities/role-menu.entity';
 
 
 @Module({
@@ -36,20 +35,7 @@ import { RoleMenuEntity } from './features/iam/entities/role-menu.entity';
       envFilePath: '.env',
       load: [configuration],
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'mysql',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}', RoleMenuEntity],
-        synchronize: true, // Auto-create tables (dev only)
-      }),
-    }),
+    DatabaseModule,
     CompanyInfoModule,
     AuthUsersModule,
     EmployeesModule,

@@ -23,14 +23,15 @@ export class AuthUsersEntity {
   @Column('varchar', { name: 'ph_number', length: 20, nullable: true, comment: 'Phone number' })
   phNumber: string;
 
-  @Column('varchar', { name: 'google_id', length: 255, nullable: true, unique: true, comment: 'Google account ID' })
+
+  @Column('text', { name: 'password_hash', nullable: true, comment: 'Hashed password' })
+  passwordHash: string;
+
+  @Column('varchar', { name: 'google_id', length: 255, nullable: true, comment: 'Google ID for OAuth' })
   googleId: string;
 
-  @Column('varchar', { name: 'microsoft_id', length: 255, nullable: true, unique: true, comment: 'Microsoft account ID' })
-  microsoftId: string;
-
-  @Column('text', { name: 'password_hash', nullable: false, comment: 'Hashed password' })
-  passwordHash: string;
+  @Column('text', { name: 'picture', nullable: true, comment: 'User profile picture URL' })
+  picture: string;
 
   @Column('enum', { name: 'user_role', enum: UserRoleEnum, default: UserRoleEnum.USER, nullable: false, comment: 'Legacy user role' })
   userRole: UserRoleEnum;

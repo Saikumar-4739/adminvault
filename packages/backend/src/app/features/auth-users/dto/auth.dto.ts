@@ -37,6 +37,9 @@ export class RegisterUserDto extends RegisterUserModel {
 
     @IsString()
     phNumber: string;
+
+    @IsEnum(UserRoleEnum)
+    role: UserRoleEnum;
 }
 
 export class ForgotPasswordDto extends ForgotPasswordModel {
@@ -83,4 +86,23 @@ export class UpdateUserDto extends UpdateUserModel {
     @IsOptional()
     @IsEnum(UserRoleEnum)
     role?: UserRoleEnum;
+}
+export class RequestAccessModel {
+    name: string;
+    email: string;
+    description?: string;
+}
+
+export class RequestAccessDto extends RequestAccessModel {
+    @IsString()
+    @IsNotEmpty()
+    name: string;
+
+    @IsEmail()
+    @IsNotEmpty()
+    email: string;
+
+    @IsOptional()
+    @IsString()
+    description?: string;
 }

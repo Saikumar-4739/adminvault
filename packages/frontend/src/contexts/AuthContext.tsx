@@ -16,10 +16,13 @@ interface User {
 interface AuthContextType {
     user: User | null;
     token: string | null;
+    allowedMenus: any[];
     isLoading: boolean;
     isAuthenticated: boolean;
     login: (credentials: LoginUserModel) => Promise<User | undefined>;
+    loginWithTokens: (accessToken: string, refreshToken: string) => Promise<User | undefined>;
     logout: () => Promise<void>;
+    updateMenus: (menus: any[]) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,6 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
+    const [allowedMenus, setAllowedMenus] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const toast = useToast();
 
@@ -34,24 +38,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             const storedToken = localStorage.getItem('auth_token');
             const storedUser = localStorage.getItem('auth_user');
+            const storedMenus = localStorage.getItem('auth_menus');
             if (storedToken && storedUser) {
                 const parsedUser = JSON.parse(storedUser);
                 setToken(storedToken);
                 setUser(parsedUser);
+                if (storedMenus) {
+                    setAllowedMenus(JSON.parse(storedMenus));
+                }
             } else if (storedUser && !storedToken) {
                 localStorage.removeItem('auth_user');
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('refresh_token');
+                localStorage.removeItem('auth_menus');
                 setUser(null);
                 setToken(null);
+                setAllowedMenus([]);
             }
         } catch (error) {
             localStorage.removeItem('auth_user');
             localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_menus');
         } finally {
             setIsLoading(false);
         }
     }, []);
+
+    const updateMenus = (menus: any[]) => {
+        setAllowedMenus(menus);
+        localStorage.setItem('auth_menus', JSON.stringify(menus));
+    };
 
     const login = async (credentials: LoginUserModel): Promise<User | undefined> => {
         try {
@@ -76,7 +92,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 console.log('✅ GPS obtained:', latitude, longitude);
             } catch (geoError) {
                 console.warn('⚠️ Geolocation fallback to IP:', geoError);
-                // Continue with login even if geolocation fails - backend will fallback to IP lookup
             }
 
             const loginData = new LoginUserModel(
@@ -89,9 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const tokenToSave = response.accessToken || (response as any)?.access_token;
             if (response.status && tokenToSave) {
                 const userData: User = {
-                    id:
-                        (response.userInfo as any)?.id ??
-                        response.userInfo.companyId,
+                    id: response.userInfo.id,
                     fullName: response.userInfo.fullName,
                     email: response.userInfo.email,
                     companyId: response.userInfo.companyId,
@@ -99,9 +112,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 };
                 setUser(userData);
                 setToken(tokenToSave);
+                if (response.menus) {
+                    setAllowedMenus(response.menus);
+                }
                 try {
                     localStorage.setItem("auth_token", tokenToSave);
                     localStorage.setItem("auth_user", JSON.stringify(userData));
+                    if (response.menus) {
+                        localStorage.setItem("auth_menus", JSON.stringify(response.menus));
+                    }
                     if (response.refreshToken) {
                         localStorage.setItem("refresh_token", response.refreshToken);
                     }
@@ -117,6 +136,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const loginWithTokens = async (accessToken: string, refreshToken: string): Promise<User | undefined> => {
+        try {
+            localStorage.setItem("auth_token", accessToken);
+            localStorage.setItem("refresh_token", refreshToken);
+
+            // We need to fetch user info if we don't have it. 
+            // However, the backend login response usually gives it.
+            // For OAuth, I could pass the user info in the redirect URl too, or fetch a "me" endpoint.
+            // Let's assume we can fetch user profile or that we received it.
+            // Since I only passed tokens in the redirect, I'll add a 'getMe' endpoint to authService if it doesn't exist, 
+            // or just use the tokens to fetch info.
+
+            // For now, I'll fetch the profile to populate the context properly.
+            const response = await authService.getMe();
+            if (response.status) {
+                const userData: User = {
+                    id: response.userInfo.id,
+                    fullName: response.userInfo.fullName,
+                    email: response.userInfo.email,
+                    companyId: response.userInfo.companyId,
+                    role: response.userInfo.role,
+                };
+                setUser(userData);
+                setToken(accessToken);
+                if (response.menus) {
+                    setAllowedMenus(response.menus);
+                }
+                localStorage.setItem("auth_user", JSON.stringify(userData));
+                if (response.menus) {
+                    localStorage.setItem("auth_menus", JSON.stringify(response.menus));
+                }
+                return userData;
+            }
+            throw new Error('Failed to fetch user profile');
+        } catch (error: any) {
+            console.error('Login with tokens error:', error);
+            throw error;
+        }
+    };
+
     const logout = useCallback(async () => {
         try {
             if (user && token) {
@@ -127,15 +186,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } finally {
             setUser(null);
             setToken(null);
+            setAllowedMenus([]);
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
             localStorage.removeItem('refresh_token');
-
+            localStorage.removeItem('auth_menus');
         }
     }, [user, token, toast]);
 
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated: !!user && !!token, login, logout, }}>
+        <AuthContext.Provider value={{ user, token, allowedMenus, isLoading, isAuthenticated: !!user && !!token, login, loginWithTokens, logout, updateMenus }}>
             {children}
         </AuthContext.Provider>
     );

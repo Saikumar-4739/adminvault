@@ -2,7 +2,9 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as crypto from 'crypto';
 import { AuthUsersRepository } from './repositories/auth-users.repository';
+import { AuthTokensRepository } from './repositories/auth-tokens.repository';
 import { AuthUsersEntity } from './entities/auth-users.entity';
+import { AuthTokensEntity } from './entities/auth-tokens.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CompanyIdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, UserResponseModel } from '@adminvault/shared-models';
@@ -13,6 +15,7 @@ import { EmailInfoService } from '../administration/email-info.service';
 import { ForgotPasswordModel, ResetPasswordModel, RequestAccessModel, SendPasswordResetEmailModel } from '@adminvault/shared-models';
 import { Request } from 'express';
 import { IUserPayload } from '../../interfaces/auth.interface';
+import { IamService } from '../iam/iam.service';
 
 const SECRET_KEY = process.env.JWT_SECRET_KEY || (() => {
     if (process.env.NODE_ENV === 'production') {
@@ -34,9 +37,12 @@ export class AuthUsersService {
     constructor(
         private dataSource: DataSource,
         private authUsersRepo: AuthUsersRepository,
+        private authTokensRepo: AuthTokensRepository,
         @Inject(forwardRef(() => EmailInfoService))
         private emailService: EmailInfoService,
         private jwtService: JwtService,
+        @Inject(forwardRef(() => IamService))
+        private iamService: IamService,
     ) { }
 
 
@@ -141,8 +147,74 @@ export class AuthUsersService {
             const accessToken = this.generateAccessToken(payload);
             const refreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
 
+            // Store refresh token in database
+            const tokenEntity = new AuthTokensEntity();
+            tokenEntity.userId = user.id;
+            tokenEntity.token = refreshToken;
+            tokenEntity.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+            await this.authTokensRepo.save(tokenEntity);
+
+            const menus = await this.iamService.getEffectiveMenusForUser(user.id, user.userRole);
+
             const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
-            return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
+            return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken, menus);
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    /**
+     * Refresh access token using a valid, non-revoked refresh token
+     * 
+     * @param refreshToken - The refresh token provided by the client
+     * @returns New access token and refresh token
+     * @throws ErrorResponse if token is invalid, expired, or revoked
+     */
+    async refreshToken(refreshToken: string): Promise<LoginResponseModel> {
+        try {
+            // Verify refresh token signature and expiration
+            let decoded: any;
+            try {
+                decoded = this.jwtService.verify(refreshToken, { secret: REFRESH_SECRET_KEY });
+            } catch (err) {
+                throw new ErrorResponse(401, "Invalid or expired refresh token");
+            }
+
+            // Check if token exists in DB and is not revoked
+            const tokenRecord = await this.authTokensRepo.findOne({ where: { token: refreshToken, isRevoked: false } });
+            if (!tokenRecord) {
+                throw new ErrorResponse(401, "Token has been revoked or is invalid");
+            }
+
+            // Get user info
+            const user = await this.authUsersRepo.findOne({ where: { id: decoded.sub } });
+            if (!user || user.status === false) {
+                throw new ErrorResponse(401, "User no longer active");
+            }
+
+            const payload = {
+                username: user.email,
+                email: user.email,
+                sub: user.id,
+                companyId: user.companyId,
+                role: user.userRole
+            };
+
+            const newAccessToken = this.generateAccessToken(payload);
+            const newRefreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
+
+            // Revoke old token and save new one
+            tokenRecord.isRevoked = true;
+            await this.authTokensRepo.save(tokenRecord);
+
+            const newTokenEntity = new AuthTokensEntity();
+            newTokenEntity.userId = user.id;
+            newTokenEntity.token = newRefreshToken;
+            newTokenEntity.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+            await this.authTokensRepo.save(newTokenEntity);
+
+            const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
+            return new LoginResponseModel(true, 0, "Token Refreshed Successfully", userInfo, newAccessToken, newRefreshToken);
         } catch (err) {
             throw err;
         }
@@ -229,6 +301,8 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "Email does not exist");
             }
             await transManager.startTransaction();
+            // Revoke all tokens for this user on logout
+            await this.authTokensRepo.revokeAllTokensForUser(existingUser.id);
             await this.authUsersRepo.update({ email: reqModel.email }, { lastLogin: new Date() })
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "User Logged Out Successfully");
@@ -393,74 +467,54 @@ export class AuthUsersService {
     }
 
     /**
-     * Validate and handle social login user
+     * Validate and link/create user based on Google OAuth profile
      * 
-     * @param provider - 'google' or 'microsoft'
-     * @param socialUser - User profile from social provider
-     * @returns User object if validation success
+     * @param googleProfile - Profile data returned by Google OAuth
+     * @returns User entity
      */
-    async validateSocialUser(provider: 'google' | 'microsoft', socialUser: any): Promise<any> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            // Check if user exists by email
-            let user = await this.authUsersRepo.findOne({ where: { email: socialUser.email } });
+    async validateGoogleUser(googleProfile: any): Promise<AuthUsersEntity> {
+        const { googleId, email, firstName, lastName, picture } = googleProfile;
 
-            if (user) {
-                // Link social account if not already linked
-                await transManager.startTransaction();
-                let updated = false;
+        let user = await this.authUsersRepo.findOne({ where: [{ googleId }, { email }] });
 
-                if (provider === 'google' && !user.googleId) {
-                    user.googleId = socialUser.googleId;
-                    updated = true;
-                } else if (provider === 'microsoft' && !user.microsoftId) {
-                    user.microsoftId = socialUser.microsoftId;
-                    updated = true;
-                }
-
-                if (updated) {
-                    await this.authUsersRepo.save(user);
-                }
-                await transManager.completeTransaction();
-            } else {
-                // Create new user
-                await transManager.startTransaction();
-                user = new AuthUsersEntity();
-                user.email = socialUser.email;
-                user.fullName = `${socialUser.firstName} ${socialUser.lastName}`.trim();
-                user.userRole = UserRoleEnum.USER; // Default role
-                user.status = true;
-                user.companyId = 0; // Default or handled otherwise
-                user.employeeId = `EMP-${Date.now()}`;
-
-                // meaningful random password
-                user.passwordHash = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
-
-                if (provider === 'google') {
-                    user.googleId = socialUser.googleId;
-                } else if (provider === 'microsoft') {
-                    user.microsoftId = socialUser.microsoftId;
-                }
-
-                user = await this.authUsersRepo.save(user);
-                await transManager.completeTransaction();
+        if (!user) {
+            // Create new user if not found by Google ID or Email
+            user = new AuthUsersEntity();
+            user.email = email;
+            user.fullName = `${firstName} ${lastName}`;
+            user.googleId = googleId;
+            user.picture = picture;
+            user.status = true;
+            user.userRole = UserRoleEnum.USER;
+            user.companyId = 1; // Default company ID, should ideally be handled better
+            user.employeeId = `EMP-G-${Date.now()}`;
+            await this.authUsersRepo.save(user);
+        } else {
+            // Update existing user with Google ID and picture if not already set
+            let changed = false;
+            if (!user.googleId) {
+                user.googleId = googleId;
+                changed = true;
             }
-
-            return user;
-        } catch (error) {
-            await transManager.releaseTransaction();
-            console.error('Error validating social user:', error);
-            throw error;
+            if (!user.picture) {
+                user.picture = picture;
+                changed = true;
+            }
+            if (changed) {
+                await this.authUsersRepo.save(user);
+            }
         }
+
+        return user;
     }
 
     /**
-     * Generate tokens for social login user
+     * Authenticate user after successful OAuth and return tokens
      * 
      * @param user - Authenticated user entity
-     * @returns LoginResponseModel with tokens
+     * @returns LoginResponseModel with user info and tokens
      */
-    async loginSocialUser(user: AuthUsersEntity): Promise<LoginResponseModel> {
+    async loginUserFromOAuth(user: AuthUsersEntity): Promise<LoginResponseModel> {
         const payload = {
             username: user.email,
             email: user.email,
@@ -471,8 +525,38 @@ export class AuthUsersService {
         const accessToken = this.generateAccessToken(payload);
         const refreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
 
+        // Store refresh token in database
+        const tokenEntity = new AuthTokensEntity();
+        tokenEntity.userId = user.id;
+        tokenEntity.token = refreshToken;
+        tokenEntity.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        await this.authTokensRepo.save(tokenEntity);
+
+        const menus = await this.iamService.getEffectiveMenusForUser(user.id, user.userRole);
+
         const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
-        return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken);
+        return new LoginResponseModel(true, 0, "User Logged In via OAuth Successfully", userInfo, accessToken, refreshToken, menus);
     }
 
+    /**
+     * Get user profile and menus by ID
+     * 
+     * @param userId - User ID
+     * @returns LoginResponseModel with user info and menus
+     */
+    async getMe(userId: number): Promise<LoginResponseModel> {
+        try {
+            const user = await this.authUsersRepo.findOne({ where: { id: userId } });
+            if (!user) {
+                throw new ErrorResponse(404, "User not found");
+            }
+
+            const menus = await this.iamService.getEffectiveMenusForUser(user.id, user.userRole);
+            const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
+
+            return new LoginResponseModel(true, 0, "Profile retrieved successfully", userInfo, undefined, undefined, menus);
+        } catch (error) {
+            throw error;
+        }
+    }
 }

@@ -4,7 +4,6 @@ import { AssetTypeModule } from './asset-type/asset-type.module';
 import { BrandModule } from './brand/brand.module';
 import { VendorModule } from './vendor/vendor.module';
 import { ApplicationModule } from './application/application.module';
-import { PasswordVaultModule } from './password-vault/password-vault.module';
 import { SlackUserModule } from './slack-user/slack-user.module';
 import { CompanyInfoModule } from './company-info/company-info.module';
 
@@ -15,7 +14,6 @@ import { CompanyInfoModule } from './company-info/company-info.module';
         BrandModule,
         VendorModule,
         ApplicationModule,
-        PasswordVaultModule,
         SlackUserModule,
         CompanyInfoModule
     ],

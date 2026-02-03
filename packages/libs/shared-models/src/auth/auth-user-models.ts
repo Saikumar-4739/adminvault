@@ -132,11 +132,13 @@ export class LoginResponseModel extends GlobalResponse {
     userInfo: UserResponseModel
     accessToken: string;
     refreshToken: string;
-    constructor(status: boolean, code: number, message: string, userInfo: UserResponseModel, accessToken: string, refreshToken: string) {
+    menus?: any[];
+    constructor(status: boolean, code: number, message: string, userInfo: UserResponseModel, accessToken: string, refreshToken: string, menus?: any[]) {
         super(status, code, message);
         this.userInfo = userInfo;
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
+        this.menus = menus;
     }
 }
 

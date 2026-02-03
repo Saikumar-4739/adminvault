@@ -6,19 +6,12 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
     inject: [ConfigService],
     useFactory: async (configService: ConfigService): Promise<TypeOrmModuleOptions> => {
         return {
-            type: 'mysql',
+            type: 'postgres',
             host: configService.get<string>('DB_HOST', ''),
-            port: configService.get<number>('DB_PORT', 3306),
+            port: configService.get<number>('DB_PORT', 5432),
             username: configService.get<string>('DB_USERNAME', ''),
             password: configService.get<string>('DB_PASSWORD', ''),
             database: configService.get<string>('DB_DATABASE', ''),
-            timezone: 'UTC',
-            extra: {
-                connectionLimit: configService.get<number>('DB_POOL_LIMIT', 10),
-                charset: configService.get<string>('DB_CHARSET', 'utf8mb4'),
-            },
-            poolSize: configService.get<number>('DB_POOL_LIMIT', 10),
-            supportBigNumbers: false,
             synchronize: false,
             logging: configService.get<string>('NODE_ENV') !== 'production',
             autoLoadEntities: true,

@@ -6,7 +6,7 @@ import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
 import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel } from '@adminvault/shared-models';
 import { CompanyIdDto } from '../../common/dto/common.dto';
-import { LoginUserDto, RegisterUserDto, ForgotPasswordDto, ResetPasswordDto, UpdateUserDto } from './dto/auth.dto';
+import { LoginUserDto, RegisterUserDto, ForgotPasswordDto, ResetPasswordDto, UpdateUserDto, RequestAccessDto } from './dto/auth.dto';
 import { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
@@ -36,6 +36,18 @@ export class AuthUsersController {
     async loginUser(@Body() reqModel: LoginUserDto, @Req() req: Request): Promise<LoginResponseModel> {
         try {
             return await this.service.loginUser(reqModel, req);
+        } catch (error) {
+            return returnException(LoginResponseModel, error);
+        }
+    }
+
+    @Post('refresh-token')
+    @Public()
+    @ApiOperation({ summary: 'Refresh access token' })
+    @ApiBody({ schema: { type: 'object', properties: { refreshToken: { type: 'string' } } } })
+    async refreshToken(@Body() body: { refreshToken: string }): Promise<LoginResponseModel> {
+        try {
+            return await this.service.refreshToken(body.refreshToken);
         } catch (error) {
             return returnException(LoginResponseModel, error);
         }
@@ -88,8 +100,8 @@ export class AuthUsersController {
 
     @Post('requestAccess')
     @Public()
-    @ApiBody({ type: RequestAccessModel })
-    async requestAccess(@Body() reqModel: RequestAccessModel): Promise<GlobalResponse> {
+    @ApiBody({ type: RequestAccessDto })
+    async requestAccess(@Body() reqModel: RequestAccessDto): Promise<GlobalResponse> {
         try {
             return await this.service.requestAccess(reqModel);
         } catch (error) {
@@ -119,49 +131,6 @@ export class AuthUsersController {
         }
     }
 
-    @Get('social/google')
-    @Public()
-    @UseGuards(AuthGuard('google'))
-    @ApiOperation({ summary: 'Initiate Google OAuth Flow' })
-    async googleLogin(): Promise<void> {
-        // Guard handles redirection
-    }
-
-    @Get('social/google/callback')
-    @Public()
-    @UseGuards(AuthGuard('google'))
-    @ApiOperation({ summary: 'Google OAuth Callback' })
-    async googleLoginCallback(@Req() req: any, @Res() res: Response): Promise<void> {
-        const user = req.user;
-        // Generate tokens
-        const loginResponse = await this.service.loginSocialUser(user); // Wait, I need to expose generate tokens logic or reuse existing login
-
-        // Redirect to frontend with tokens
-        // Ideally we shouldn't send tokens in URL, but for simplicity/MVP or we can set cookies
-        // Let's assume we redirect to a frontend page handling the token
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-        res.redirect(`${frontendUrl}/auth/social-callback?token=${loginResponse.accessToken}&refreshToken=${loginResponse.refreshToken}&userInfo=${encodeURIComponent(JSON.stringify(loginResponse.userInfo))}`);
-    }
-
-    @Get('social/microsoft')
-    @Public()
-    @UseGuards(AuthGuard('microsoft'))
-    @ApiOperation({ summary: 'Initiate Microsoft OAuth Flow' })
-    async microsoftLogin(): Promise<void> {
-        // Guard handles redirection
-    }
-
-    @Get('social/microsoft/callback')
-    @Public()
-    @UseGuards(AuthGuard('microsoft'))
-    @ApiOperation({ summary: 'Microsoft OAuth Callback' })
-    async microsoftLoginCallback(@Req() req: any, @Res() res: Response): Promise<void> {
-        const user = req.user;
-        const loginResponse = await this.service.loginSocialUser(user);
-
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-        res.redirect(`${frontendUrl}/auth/social-callback?token=${loginResponse.accessToken}&refreshToken=${loginResponse.refreshToken}`);
-    }
 
     @UseGuards(JwtAuthGuard)
     @Post('verify-password')
@@ -177,6 +146,45 @@ export class AuthUsersController {
             }
         } catch (error) {
             return returnException(GlobalResponse, error);
+        }
+    }
+    @Get('google')
+    @Public()
+    @UseGuards(AuthGuard('google'))
+    async googleAuth(@Req() req: Request) {
+        // Initiates Google OAuth2 flow
+    }
+
+    @Get('google/callback')
+    @Public()
+    @UseGuards(AuthGuard('google'))
+    async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
+        try {
+            const googleProfile = req.user;
+            const user = await this.service.validateGoogleUser(googleProfile);
+
+            // Generate tokens (similar to loginUser logic but for OAuth)
+            const payload = {
+                username: user.email,
+                email: user.email,
+                sub: user.id,
+                companyId: user.companyId,
+                role: user.userRole
+            };
+
+            // Note: Since I can't easily access the private token generation methods from within the controller 
+            // without making them public or adding a service method, I'll assume I should have a service method 
+            // for generating tokens from a user object.
+            // For now, I'll redirect to the frontend with the tokens in the URL or handle it as a session.
+            // Best practice for NestJS with Passport is often to use the service to generate response.
+
+            const response = await this.service.loginUserFromOAuth(user);
+
+            // Redirect to frontend with tokens (or handle as needed)
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            res.redirect(`${frontendUrl}/auth/callback?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`);
+        } catch (error) {
+            res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
         }
     }
 
