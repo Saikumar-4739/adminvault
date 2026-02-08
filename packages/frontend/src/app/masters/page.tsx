@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock, Search, FileText, Settings2 } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock, Search, FileText, Settings2, Upload } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
+import { BulkImportModal } from './components/BulkImportModal';
 
 const CompaniesMasterView = dynamic(() => import('./components/companies-master-view').then(mod => mod.CompaniesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Companies...</p> });
 const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view').then(mod => mod.DepartmentsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Departments...</p> });
@@ -120,6 +121,7 @@ const MastersPage: React.FC = () => {
 
     const selectedMasterData = masters.find(m => m.id === selectedMaster);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
     const filteredMasters = masters.filter(master =>
         master.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -157,6 +159,14 @@ const MastersPage: React.FC = () => {
                     description="Enterprise-wide configuration and organization masters"
                     icon={<Settings2 />}
                     gradient="from-slate-700 to-slate-900"
+                    actions={[
+                        {
+                            label: 'Bulk Import',
+                            icon: <Upload className="h-4 w-4" />,
+                            onClick: () => setIsImportModalOpen(true),
+                            variant: 'primary'
+                        }
+                    ]}
                 >
                     <div className="relative max-w-xs ml-auto group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
@@ -169,6 +179,11 @@ const MastersPage: React.FC = () => {
                         />
                     </div>
                 </PageHeader>
+
+                <BulkImportModal
+                    isOpen={isImportModalOpen}
+                    onClose={() => setIsImportModalOpen(false)}
+                />
 
                 {/* Master Grid Layout */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-12">

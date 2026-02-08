@@ -8,6 +8,7 @@ import { Lock, Mail, Shield, Eye, EyeOff, ArrowRight, Sparkles, Zap, Users, Chec
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { LoginUserModel } from '@adminvault/shared-models';
 import Link from 'next/link';
+import { configVariables } from '@adminvault/shared-services';
 
 const LoginPage: React.FC = () => {
     const router = useRouter();
@@ -368,7 +369,7 @@ const LoginPage: React.FC = () => {
                                     {/* Google Login Button */}
                                     <Button
                                         type="button"
-                                        onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth-users/google`}
+                                        onClick={() => window.location.href = `${configVariables.APP_AVS_SERVICE_URL}/auth-users/google`}
                                         className={`w-full py-4 flex items-center justify-center gap-3 rounded-xl border font-bold transition-all duration-300 ${isDarkMode
                                             ? 'bg-white/5 border-white/10 text-white hover:bg-white/10'
                                             : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm'

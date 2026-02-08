@@ -18,6 +18,10 @@ export class BrandService {
     async createBrand(reqModel: CreateBrandModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            const existingBrand = await this.brandRepo.findOne({ where: { name: reqModel.code } });
+            if (existingBrand) {
+                throw new ErrorResponse(400, 'Brand already exists');
+            }
             await transManager.startTransaction();
             const saveEnti = new BrandsMasterEntity();
             saveEnti.name = reqModel.name;

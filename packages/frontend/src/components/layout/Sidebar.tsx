@@ -106,6 +106,10 @@ export const Sidebar: React.FC = () => {
                     // Filter items based on dynamic allowed keys
                     const visibleItems = group.items
                         .map(item => {
+                            // Always allow dashboard, otherwise check permissions
+                            if (item.key === 'dashboard') {
+                                return item;
+                            }
                             const dynamicMenu = allowedMenus.find(m => m.key === item.key);
                             if (!dynamicMenu) return null;
                             return {

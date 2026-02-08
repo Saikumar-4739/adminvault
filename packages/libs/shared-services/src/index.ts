@@ -15,4 +15,5 @@ export * from './ai-bot'
 export * from './knowledge-base/knowledge-base.service';
 export * from './procurement/procurement.service';
 export * from './network/network.service';
+export * from './config';
 

@@ -1,4 +1,4 @@
-import io from 'socket.io-client';
+import { configVariables } from '@adminvault/shared-services';
 
 let socketInstance: any | null = null;
 
@@ -6,7 +6,7 @@ export const getSocket = (): any => {
     if (!socketInstance) {
         // Use 127.0.0.1 instead of localhost for better compatibility on Windows
         // and allow polling as a fallback transport to prevent timeout errors
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const baseUrl = configVariables.APP_AVS_SERVICE_URL; // e.g. https://api.inolyse.live/api
 
         console.log(`[Socket] Initializing connection to ${baseUrl}/tickets`);
 

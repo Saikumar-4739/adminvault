@@ -7,6 +7,9 @@ import { ApplicationModule } from './application/application.module';
 import { SlackUserModule } from './slack-user/slack-user.module';
 import { CompanyInfoModule } from './company-info/company-info.module';
 
+import { MastersBulkController } from './bulk-import/masters-bulk.controller';
+import { MastersBulkService } from './bulk-import/masters-bulk.service';
+
 @Module({
     imports: [
         DepartmentModule,
@@ -17,5 +20,7 @@ import { CompanyInfoModule } from './company-info/company-info.module';
         SlackUserModule,
         CompanyInfoModule
     ],
+    controllers: [MastersBulkController],
+    providers: [MastersBulkService],
 })
 export class MastersModule { }

@@ -43,52 +43,91 @@ export class IamService implements OnModuleInit {
     ) { }
 
     async onModuleInit() {
-        await this.seedDefaultMenus();
+        // await this.seedDefaultMenus();
     }
 
     async seedDefaultMenus() {
-        this.logger.log('Syncing default system menus and role permissions...');
+        // this.logger.debug('Syncing default system menus and role permissions...');
 
-        // 1. Seed System Menus
-        for (let i = 0; i < DEFAULT_MENUS.length; i++) {
-            const menu = DEFAULT_MENUS[i];
-            let entity = await this.systemMenuRepo.findOne({ where: { key: menu.key } });
+        try {
+            let changesCount = 0;
 
-            if (!entity) {
-                entity = new SystemMenuEntity();
-                entity.key = menu.key;
-                entity.label = menu.label;
-                entity.icon = menu.icon;
-                entity.displayOrder = i;
-                await this.systemMenuRepo.save(entity);
-                this.logger.log(`Created system menu: ${menu.key}`);
-            }
-        }
+            // 1. Seed System Menus
+            for (let i = 0; i < DEFAULT_MENUS.length; i++) {
+                const menu = DEFAULT_MENUS[i];
+                let entity = await this.systemMenuRepo.findOne({ where: { key: menu.key } });
 
-        // 2. Seed Role Menus (Permissions)
-        const fullPermissions = { create: true, read: true, update: true, delete: true };
-        const readOnlyPermissions = { create: false, read: true, update: false, delete: false };
-
-        for (const menu of DEFAULT_MENUS) {
-            for (const role of menu.roles) {
-                const exists = await this.roleMenuRepo.findOne({
-                    where: { role, menuKey: menu.key }
-                });
-
-                if (!exists) {
-                    const entity = new RoleMenuEntity();
-                    entity.role = role;
-                    entity.menuKey = menu.key;
-                    entity.isActive = true;
-                    entity.permissions = (role === UserRoleEnum.ADMIN || role === UserRoleEnum.SUPER_ADMIN)
-                        ? fullPermissions
-                        : readOnlyPermissions;
-                    await this.roleMenuRepo.save(entity);
-                    this.logger.log(`Added missing menu permission: ${menu.key} for role ${role}`);
+                if (!entity) {
+                    entity = new SystemMenuEntity();
+                    entity.key = menu.key;
+                    entity.label = menu.label;
+                    entity.icon = menu.icon;
+                    entity.displayOrder = i;
+                    await this.systemMenuRepo.save(entity);
+                    this.logger.log(`Created system menu: ${menu.key}`);
+                    changesCount++;
+                } else {
+                    // Update if different
+                    if (entity.label !== menu.label || entity.icon !== menu.icon || entity.displayOrder !== i) {
+                        entity.label = menu.label;
+                        entity.icon = menu.icon;
+                        entity.displayOrder = i;
+                        await this.systemMenuRepo.save(entity);
+                        this.logger.log(`Updated system menu: ${menu.key}`);
+                        changesCount++;
+                    }
                 }
             }
+
+            // 2. Seed Role Menus (Permissions)
+            const fullPermissions = { create: true, read: true, update: true, delete: true };
+            const readOnlyPermissions = { create: false, read: true, update: false, delete: false };
+
+            for (const menu of DEFAULT_MENUS) {
+                for (const role of menu.roles) {
+                    const exists = await this.roleMenuRepo.findOne({
+                        where: { role, menuKey: menu.key }
+                    });
+
+                    const targetPermissions = (role === UserRoleEnum.ADMIN || role === UserRoleEnum.SUPER_ADMIN)
+                        ? fullPermissions
+                        : readOnlyPermissions;
+
+                    if (!exists) {
+                        const entity = new RoleMenuEntity();
+                        entity.role = role;
+                        entity.menuKey = menu.key;
+                        entity.isActive = true;
+                        entity.permissions = targetPermissions;
+                        await this.roleMenuRepo.save(entity);
+                        this.logger.log(`Added missing menu permission: ${menu.key} for role ${role}`);
+                        changesCount++;
+                    } else {
+                        // Check deep equality for permissions
+                        if (!this.arePermissionsEqual(exists.permissions, targetPermissions)) {
+                            exists.permissions = targetPermissions;
+                            await this.roleMenuRepo.save(exists);
+                            this.logger.log(`Updated permissions for menu ${menu.key} role ${role}`);
+                            changesCount++;
+                        }
+                    }
+                }
+            }
+
+            if (changesCount > 0) {
+                this.logger.log(`IAM sync complete. ${changesCount} changes applied.`);
+            }
+        } catch (error) {
+            this.logger.error('Failed to sync IAM menus', error);
         }
-        this.logger.log('IAM sync complete.');
+    }
+
+    private arePermissionsEqual(p1: any, p2: any): boolean {
+        if (!p1 || !p2) return false;
+        return p1.create === p2.create &&
+            p1.read === p2.read &&
+            p1.update === p2.update &&
+            p1.delete === p2.delete;
     }
 
     // Effective Permissions for User (Merged)

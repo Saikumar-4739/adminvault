@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { WebSocketEvent } from '@adminvault/shared-models';
+import { configVariables } from '@adminvault/shared-services';
 
 interface WebSocketContextType {
     socket: Socket | null;
@@ -49,7 +50,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
 
         console.log('[WebSocket] Initializing connection...');
 
-        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+        const wsUrl = configVariables.APP_AVS_SERVICE_URL; // e.g. https://api.inolyse.live/api
 
         const newSocket = io(`${wsUrl}/ws`, {
             auth: {
