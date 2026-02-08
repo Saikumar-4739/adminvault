@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-import { PageLoader } from '@/components/ui/Spinner';
+
 
 const HomePage: React.FC = () => {
   const router = useRouter();
@@ -28,11 +28,7 @@ const HomePage: React.FC = () => {
     }
   }, [isAuthenticated, isLoading, user, router]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <PageLoader message="Initializing application..." />
-    </div>
-  );
+  return null;
 };
 
 export default HomePage;

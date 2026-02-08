@@ -5,7 +5,7 @@ import { PlusCircle, UserPlus, UserMinus, RefreshCw, Trash2, Clock, History } fr
 import { services } from '@/lib/api/services';
 import { AssetTimelineEvent, AssetTimelineEventType, AssetTimelineRequestModel } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 import { formatDateTime } from '@/lib/utils';
 import { Modal } from '../../../components/ui/Modal';
 
@@ -84,7 +84,7 @@ export const AssetTimelineModal: React.FC<AssetTimelineModalProps> = ({ isOpen, 
             <div className="p-4">
                 {isLoading ? (
                     <div className="flex justify-center py-8">
-                        <PageLoader />
+                        <Spinner size="lg" />
                     </div>
                 ) : error ? (
                     <div className="text-center text-rose-500 py-4">

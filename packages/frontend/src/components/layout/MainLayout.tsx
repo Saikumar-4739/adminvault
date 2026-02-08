@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { PageLoader } from '../ui/Spinner';
+
 import { memo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AiAssistant } from '../ui/AiAssistant';
@@ -17,11 +17,7 @@ const LayoutShell = memo(function LayoutShell({ children, isLoading }: { childre
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 <TopBar />
                 <main className="flex-1 overflow-y-auto scrollbar-hide">
-                    {isLoading ? (
-                        <PageLoader message="Initializing secure workspace..." />
-                    ) : (
-                        children
-                    )}
+                    {children}
                 </main>
                 <AiAssistant />
                 <CommandPalette />
@@ -43,13 +39,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
     // If it's a public page, just render children without layout
     if (isPublicPage) {
-        if (isLoading) {
-            return (
-                <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
-                    <PageLoader message="Initializing public access..." />
-                </div>
-            );
-        }
         return <>{children}</>;
     }
 

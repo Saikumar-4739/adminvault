@@ -15,7 +15,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { authService } from '@/lib/api/services';
 import { UpdateUserModel } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 
 type TabType = 'overview' | 'personal' | 'security' | 'preferences';
 
@@ -116,7 +116,7 @@ const ProfilePage: React.FC = () => {
     if (!user) {
         return (
             <div className="h-screen flex items-center justify-center">
-                <PageLoader />
+                <Spinner size="lg" />
             </div>
         );
     }

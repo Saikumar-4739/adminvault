@@ -27,7 +27,7 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = 'md', variant = 'primar
     );
 };
 
-// Re-export PageLoader and other loading states from the dedicated file
-export { PageLoader, CardSkeleton, TableSkeleton, EmptyState } from './LoadingStates';
+// Re-export other loading states from the dedicated file
+export { CardSkeleton, TableSkeleton, EmptyState } from './LoadingStates';
 
 
