@@ -92,7 +92,7 @@ unoptimized: true
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:3001/api/:path*',
+        destination: process.env.APP_AVS_SERVICE_URL || 'https://api.inolyse.live/api/:path*',
       },
     ];
   },

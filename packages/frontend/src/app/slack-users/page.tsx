@@ -13,7 +13,7 @@ import { UserRoleEnum, CompanyIdRequestModel, IdRequestModel } from '@adminvault
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 
 const SlackUsersPage: React.FC = () => {
     const { user } = useAuth();
@@ -248,7 +248,9 @@ const SlackUsersPage: React.FC = () => {
 
                 {/* Table */}
                 {isLoading ? (
-                    <PageLoader />
+                    <div className="flex justify-center py-20">
+                        <Spinner size="lg" />
+                    </div>
                 ) : filteredUsers.length === 0 ? (
                     <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">

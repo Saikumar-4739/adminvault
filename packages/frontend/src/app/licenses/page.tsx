@@ -9,7 +9,7 @@ import { Plus, Search, Key, Trash2, Calendar, Shield, Pencil } from 'lucide-reac
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { AddLicenseModal } from './AddLicenseModal';
 
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDate } from '@/lib/utils';
@@ -241,8 +241,8 @@ const LicensesPage: React.FC = () => {
                 <Card className="border border-slate-200 dark:border-slate-700">
                     <CardContent className="p-0">
                         {isLoading ? (
-                            <div className="p-12">
-                                <PageLoader />
+                            <div className="p-12 flex justify-center">
+                                <Spinner size="lg" />
                             </div>
                         ) : filteredLicenses.length === 0 ? (
                             <div className="flex flex-col items-center justify-center p-12">

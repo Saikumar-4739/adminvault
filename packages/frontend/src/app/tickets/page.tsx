@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
 import { Modal } from '@/components/ui/Modal';
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
     Search, Edit, Trash2, Ticket, Clock, MessageSquare,
@@ -487,7 +487,9 @@ const TicketsPage: React.FC = () => {
             {/* Tickets Grid with Premium Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
                 {isLoading && tickets.length === 0 ? (
-                    <div className="col-span-full py-12 flex justify-center"><PageLoader /></div>
+                    <div className="col-span-full py-12 flex justify-center">
+                        <Spinner size="lg" />
+                    </div>
                 ) : filteredTickets.length === 0 ? (
                     <div className="col-span-full py-20 text-center">
                         <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 mb-6 shadow-lg">

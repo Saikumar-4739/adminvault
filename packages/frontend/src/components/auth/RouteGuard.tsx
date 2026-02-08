@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { PageLoader } from '@/components/ui/Spinner';
+
 import { useEffect, useState } from 'react';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
@@ -54,11 +54,7 @@ export function RouteGuard({
 
     // Show loading state
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-slate-950">
-                <PageLoader message="Verifying access..." />
-            </div>
-        );
+        return null;
     }
 
     // Don't render children until authorized

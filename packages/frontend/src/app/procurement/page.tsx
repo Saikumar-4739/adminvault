@@ -5,7 +5,7 @@ import { procurementService } from '@/lib/api/services';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
     ShoppingCart, Plus, Search,
@@ -111,7 +111,7 @@ const ProcurementPage: React.FC = () => {
 
             {isLoading ? (
                 <div className="flex justify-center py-20">
-                    <PageLoader />
+                    <Spinner size="lg" />
                 </div>
             ) : pos.length === 0 ? (
                 <Card className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-slate-200 dark:border-slate-800">

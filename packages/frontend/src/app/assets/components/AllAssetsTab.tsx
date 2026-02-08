@@ -1,6 +1,6 @@
 'use client';
 
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 import { Package } from 'lucide-react';
 import { AssetCard } from './AssetCard';
 
@@ -29,7 +29,11 @@ export const AllAssetsTab: React.FC<AllAssetsTabProps> = ({ assets, isLoading, s
         })
         : assets;
 
-    if (isLoading) return <PageLoader />;
+    if (isLoading) return (
+        <div className="flex justify-center py-10">
+            <Spinner size="lg" />
+        </div>
+    );
 
     if (filteredAssets.length === 0) {
         return (

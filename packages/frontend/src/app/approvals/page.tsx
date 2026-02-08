@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Check, Clock, AlertCircle, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 import { PageHeader } from '@/components/ui/PageHeader';
 
 const ApprovalsPage: React.FC = () => {
@@ -77,7 +77,11 @@ const ApprovalsPage: React.FC = () => {
 
     const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
 
-    if (loading) return <PageLoader />;
+    if (loading) return (
+        <div className="flex justify-center items-center py-20">
+            <Spinner size="lg" />
+        </div>
+    );
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>

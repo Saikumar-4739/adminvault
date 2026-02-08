@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { kbService } from '@/lib/api/services';
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -219,7 +219,7 @@ const KnowledgeBasePage: React.FC = () => {
                 {/* Main Content */}
                 <div className="lg:col-span-3 space-y-4">
                     {isLoading ? (
-                        <div className="flex justify-center py-20"><PageLoader /></div>
+                        <div className="flex justify-center py-20"><Spinner size="lg" /></div>
                     ) : articles.length === 0 ? (
                         <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
                             <BookOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />

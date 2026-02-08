@@ -12,7 +12,7 @@ import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { GetAllDocumentsRequestModel } from '@adminvault/shared-models';
-import { PageLoader } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/Spinner';
 
 const DocumentsPage: React.FC = () => {
     const { user } = useAuth();
@@ -237,7 +237,7 @@ const DocumentsPage: React.FC = () => {
 
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                        <PageLoader />
+                        <Spinner size="lg" />
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">Synchronizing Secure Vault...</p>
                     </div>
                 ) : filteredDocuments.length === 0 ? (

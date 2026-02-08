@@ -2,25 +2,7 @@
 
 import React from 'react';
 
-interface PageLoaderProps {
-    message?: string;
-}
 
-export function PageLoader({ message = 'Loading...' }: PageLoaderProps) {
-    return (
-        <div className="flex flex-col items-center justify-center py-32 space-y-4">
-            <div className="relative">
-                {/* Outer ring */}
-                <div className="w-16 h-16 border-4 border-slate-200 dark:border-slate-800 rounded-full"></div>
-                {/* Spinning ring */}
-                <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 animate-pulse">
-                {message}
-            </p>
-        </div>
-    );
-}
 
 interface CardSkeletonProps {
     count?: number;
