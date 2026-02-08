@@ -33,10 +33,14 @@ const nextConfig = {
   compress: true, // Enable gzip compression
   productionBrowserSourceMaps: false, // Disable source maps in production
 
+output: 'export',
+
+
   // Optimize images
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
+unoptimized: true
   },
 
   // Modularize imports disabled temporarily to debug 404s

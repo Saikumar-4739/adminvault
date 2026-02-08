@@ -1,5 +1,4 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { useWebSocket } from '@/contexts/WebSocketContext';
 
 /**
  * Custom hook for WebSocket event subscriptions

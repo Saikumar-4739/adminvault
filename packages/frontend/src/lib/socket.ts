@@ -1,44 +1,40 @@
-import { configVariables } from '@adminvault/shared-services';
+'use client';
 
-let socketInstance: any | null = null;
+import { io, Socket } from 'socket.io-client';
 
-export const getSocket = (): any => {
-    if (!socketInstance) {
-        // Use 127.0.0.1 instead of localhost for better compatibility on Windows
-        // and allow polling as a fallback transport to prevent timeout errors
-        const baseUrl = configVariables.APP_AVS_SERVICE_URL; // e.g. https://api.inolyse.live/api
+let socketInstance: Socket | null = null;
 
-        console.log(`[Socket] Initializing connection to ${baseUrl}/tickets`);
+const baseUrl =
+  process.env.NEXT_PUBLIC_API_URL || 'https://api.inolyse.live';
 
-        socketInstance = io(`${baseUrl}/tickets`, {
-            transports: ['polling', 'websocket'], // Allow polling + websocket
-            autoConnect: true,
-            reconnection: true,
-            reconnectionAttempts: 10,
-            reconnectionDelay: 1000,
-            timeout: 20000, // Increase timeout to 20s
-        });
+export function getSocket(): Socket {
+  if (!socketInstance) {
+    socketInstance = io(`${baseUrl}/tickets`, {
+      path: '/socket.io',
+      transports: ['websocket'],
+      withCredentials: true,
+      autoConnect: true,
+    });
 
-        socketInstance.on('connect', () => {
-            console.log('[Socket] Successfully connected to Tickets namespace');
-        });
+    socketInstance.on('connect', () => {
+      console.log('[Socket] Connected:', socketInstance?.id);
+    });
 
-        socketInstance.on('disconnect', (reason: string) => {
-            console.log('[Socket] Disconnected:', reason);
-        });
+    socketInstance.on('disconnect', (reason) => {
+      console.warn('[Socket] Disconnected:', reason);
+    });
 
-        socketInstance.on('connect_error', (error: any) => {
-            console.error('[Socket] Connection error:', error.message);
-            // If websocket fails, it will automatically fallback to polling if allowed
-        });
-    }
-    return socketInstance;
-};
+    socketInstance.on('connect_error', (error) => {
+      console.error('[Socket] Connection error:', error.message);
+    });
+  }
 
-export const disconnectSocket = () => {
-    if (socketInstance) {
-        console.log('[Socket] Explicitly disconnecting');
-        socketInstance.disconnect();
-        socketInstance = null;
-    }
-};
+  return socketInstance;
+}
+
+export function disconnectSocket() {
+  if (socketInstance) {
+    socketInstance.disconnect();
+    socketInstance = null;
+  }
+}

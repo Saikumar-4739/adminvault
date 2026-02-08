@@ -4,7 +4,6 @@ import { ToastProvider } from '@/contexts/ToastContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Inter, Outfit, Roboto } from 'next/font/google';
-import { WebSocketProvider } from '@/contexts/WebSocketContext';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { CommandPalette } from '@/components/CommandPalette';
 
@@ -51,12 +50,10 @@ export default function RootLayout({
         <ThemeProvider>
           <ToastProvider>
             <AuthProvider>
-              <WebSocketProvider>
                 <MainLayout>
                   {children}
                 </MainLayout>
                 <CommandPalette />
-              </WebSocketProvider>
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>
