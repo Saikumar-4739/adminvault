@@ -1,13 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { WebSocketEvent } from '@adminvault/shared-models';
 import { configVariables } from '@adminvault/shared-services';
 
 interface WebSocketContextType {
-    socket: Socket | null;
+    socket: any | null;
     isConnected: boolean;
     connectionStatus: 'connected' | 'disconnected' | 'reconnecting' | 'error';
     subscribe: (event: string, handler: (...args: any[]) => void) => void;
@@ -24,7 +24,7 @@ interface WebSocketProviderProps {
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
     const { user, token } = useAuth();
-    const [socket, setSocket] = useState<Socket | null>(null);
+    const [socket, setSocket] = useState<any | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting' | 'error'>('disconnected');
     const [error, setError] = useState<string | null>(null);
@@ -65,7 +65,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
             reconnectionDelayMax: 5000,
             timeout: 10000,
             transports: ['websocket', 'polling'],
-        });
+        } as any);
 
         // Connection event handlers
         newSocket.on('connect', () => {
