@@ -1,8 +1,7 @@
 /* Import Inter font handled via next/font in layout.tsx */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+;
 
 /* Hide scrollbar utility */
 @layer utilities {
