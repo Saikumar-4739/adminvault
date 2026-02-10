@@ -10,7 +10,7 @@ echo "📥 Pulling latest code..."
 git pull origin main
 
 echo "📦 Installing dependencies..."
-npm install --omit=dev
+npm install
 
 echo "🔨 Building shared libs..."
 npm run build:shared
