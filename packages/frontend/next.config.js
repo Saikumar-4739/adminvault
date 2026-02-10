@@ -11,7 +11,7 @@ const nextConfig = {
   // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
   reactStrictMode: false,
-  trailingSlash: false,
+  trailingSlash: true,
   transpilePackages: [
     '@adminvault/shared-services',
     '@adminvault/shared-models',
@@ -90,7 +90,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: process.env.APP_AVS_SERVICE_URL || 'https://api.inolyse.live/api/:path*',
+        destination: process.env.APP_AVS_SERVICE_URL || 'https://adminvault.inolyse.live/api/:path*',
       },
     ];
   },
