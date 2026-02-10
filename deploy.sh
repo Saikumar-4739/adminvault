@@ -18,6 +18,10 @@ npm run build:shared
 echo "🔨 Building backend..."
 npx nx build backend
 
+echo "🧹 Cleaning up old build artifacts..."
+rm -rf packages/frontend/out
+rm -rf dist
+
 echo "🔨 Building frontend..."
 npx nx build frontend
 
