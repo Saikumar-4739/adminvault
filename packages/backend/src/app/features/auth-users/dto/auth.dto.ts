@@ -1,5 +1,5 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { LoginUserModel, RegisterUserModel, ResetPasswordModel, ForgotPasswordModel, UpdateUserModel, UserRoleEnum } from '@adminvault/shared-models';
+import { LoginUserModel, RegisterUserModel, ResetPasswordModel, ForgotPasswordModel, UpdateUserModel, UserRoleEnum, RequestAccessModel } from '@adminvault/shared-models';
 
 export class LoginUserDto extends LoginUserModel {
     @IsEmail()
@@ -86,11 +86,6 @@ export class UpdateUserDto extends UpdateUserModel {
     @IsOptional()
     @IsEnum(UserRoleEnum)
     role?: UserRoleEnum;
-}
-export class RequestAccessModel {
-    name: string;
-    email: string;
-    description?: string;
 }
 
 export class RequestAccessDto extends RequestAccessModel {

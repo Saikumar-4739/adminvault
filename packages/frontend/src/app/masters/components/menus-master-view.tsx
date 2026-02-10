@@ -201,8 +201,8 @@ export const MenusMasterView: React.FC<MenusMasterViewProps> = ({ onBack }) => {
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Menu" : "Add Menu"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <Input label="Label" value={formData.label} onChange={(e) => setFormData({ ...formData, label: e.target.value })} required />
-                        <Input label="Key (Unique)" value={formData.key} onChange={(e) => setFormData({ ...formData, key: e.target.value })} required disabled={isEditMode} />
+                        <Input label="Label" value={formData.label} onChange={(e) => setFormData({ ...formData, label: e.target.value })} className="h-14" required />
+                        <Input label="Key (Unique)" value={formData.key} onChange={(e) => setFormData({ ...formData, key: e.target.value })} className="h-14" required disabled={isEditMode} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -219,7 +219,7 @@ export const MenusMasterView: React.FC<MenusMasterViewProps> = ({ onBack }) => {
                                 ))}
                             </select>
                         </div>
-                        <Input label="Display Order" type="number" value={formData.displayOrder} onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) })} />
+                        <Input label="Display Order" type="number" value={formData.displayOrder} onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) })} className="h-14" />
                     </div>
 
                     <div>

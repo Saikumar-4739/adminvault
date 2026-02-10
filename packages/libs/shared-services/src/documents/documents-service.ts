@@ -1,5 +1,6 @@
-import { AxiosRequestConfig } from "axios";
+import { AxiosInstance } from "../axios-instance";
 import { CommonAxiosService } from "../common-axios-service";
+import { AxiosRequestConfig } from "axios";
 import { DeleteDocumentModel, GetDocumentModel, GetAllDocumentsResponseModel, GetDocumentResponseModel, UploadDocumentResponseModel, UploadDocumentModel, GlobalResponse, GetAllDocumentsRequestModel } from '@adminvault/shared-models';
 
 export class DocumentsService extends CommonAxiosService {
@@ -37,7 +38,13 @@ export class DocumentsService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllDocuments'), reqObj, config);
     }
 
+    async downloadFile(id: number): Promise<Blob> {
+        return await AxiosInstance.get(`${this.URL}${this.getURLwithMainEndPoint(`downloadDocument/${id}`)}`, {
+            responseType: 'blob'
+        }).then((response: any) => response.data);
+    }
+
     getDownloadUrl(id: number): string {
-        return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}${this.getURLwithMainEndPoint(`downloadDocument/${id}`)}`;
+        return `${this.URL}${this.getURLwithMainEndPoint(`downloadDocument/${id}`)}`;
     }
 }

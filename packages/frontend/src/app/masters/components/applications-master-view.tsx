@@ -196,11 +196,11 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
 
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Application" : "Add Application"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input label="Application Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-                    <Input label="Application Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
-                    <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-                    <Input label="Owner Name" value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} />
-                    <Input label="App Release Date" type="date" value={formData.appReleaseDate} onChange={(e) => setFormData({ ...formData, appReleaseDate: e.target.value })} />
+                    <Input label="Application Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-14" required />
+                    <Input label="Application Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="h-14" />
+                    <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="h-14" />
+                    <Input label="Owner Name" value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} className="h-14" />
+                    <Input label="App Release Date" type="date" value={formData.appReleaseDate} onChange={(e) => setFormData({ ...formData, appReleaseDate: e.target.value })} className="h-14" />
 
                     <div className="flex items-center gap-2">
                         <input

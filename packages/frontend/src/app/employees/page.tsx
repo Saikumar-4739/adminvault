@@ -647,7 +647,7 @@ const EmployeesPage: React.FC = () => {
 
                         <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-700">
                             <Button variant="outline" onClick={handleCloseModal} type="button" className="rounded-xl">Cancel</Button>
-                            <Button variant="primary" type="submit" className="rounded-xl px-6">{editingEmployee ? 'Save Changes' : 'Create Member'}</Button>
+                            <Button variant="primary" type="submit" className="rounded-xl px-6">{editingEmployee ? 'Save Changes' : 'Add Employee'}</Button>
                         </div>
                     </form>
                 </Modal>

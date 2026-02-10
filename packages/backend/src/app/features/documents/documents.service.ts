@@ -10,7 +10,8 @@ import { DocumentEntity } from './entities/document.entity';
 
 @Injectable()
 export class DocumentsService {
-    private readonly uploadPath = path.join(process.cwd(), 'uploads', 'documents');
+    // Ensure uploads are stored in the workspace root, regardless of where the process is started
+    private readonly uploadPath = path.resolve(__dirname, '../../../../../../uploads/documents');
 
     constructor(
         private readonly dataSource: DataSource,
@@ -98,7 +99,14 @@ export class DocumentsService {
             await transManager.getRepository(DocumentEntity).delete(reqModel.id);
 
             // Delete file from disk
-            if (fs.existsSync(document.filePath)) {
+            // Use dynamic path construction to ensure we look in the correct root uploads folder
+            // This fixes issues where the DB might contain stale absolute paths from different environments
+            const currentFilePath = path.join(this.uploadPath, document.fileName);
+
+            if (fs.existsSync(currentFilePath)) {
+                fs.unlinkSync(currentFilePath);
+            } else if (document.filePath && fs.existsSync(document.filePath)) {
+                // Fallback to stored path if relative path fails (legacy support)
                 fs.unlinkSync(document.filePath);
             }
 
@@ -165,10 +173,20 @@ export class DocumentsService {
             if (!document) {
                 throw new ErrorResponse(404, 'Document not found');
             }
-            if (!fs.existsSync(document.filePath)) {
-                throw new ErrorResponse(404, 'File not found on disk');
+
+            // Construct path dynamically to enforce root uploads directory usage
+            let downloadPath = path.join(this.uploadPath, document.fileName);
+
+            if (!fs.existsSync(downloadPath)) {
+                // Try legacy path if new path fails
+                if (document.filePath && fs.existsSync(document.filePath)) {
+                    downloadPath = document.filePath;
+                } else {
+                    throw new ErrorResponse(404, 'File not found on disk');
+                }
             }
-            return new DownloadDocumentResponseModel(true, 200, 'Document ready for download', document.filePath, document.originalName);
+
+            return new DownloadDocumentResponseModel(true, 200, 'Document ready for download', downloadPath, document.originalName);
         } catch (error) {
             throw error;
         }

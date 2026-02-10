@@ -15,7 +15,6 @@ import { DashboardModule } from './features/dashboard/dashboard.module';
 import { DocumentsModule } from './features/documents/documents.module';
 import { AdministrationModule } from './features/administration/administration.module';
 import { WorkflowModule } from './features/workflow/workflow.module';
-import { AiBotModule } from './features/administration/ai-bot/ai-bot.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { ProcurementModule } from './features/procurement/procurement.module';
 import configuration from '../config/configuration';
@@ -32,7 +31,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ['.env', 'packages/backend/.env'],
       load: [configuration],
     }),
     DatabaseModule,
@@ -48,7 +47,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     DocumentsModule,
     AdministrationModule,
     WorkflowModule,
-    AiBotModule,
     KnowledgeBaseModule,
     ProcurementModule,
     EventEmitterModule.forRoot(),

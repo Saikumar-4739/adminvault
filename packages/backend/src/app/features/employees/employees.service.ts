@@ -161,23 +161,34 @@ export class EmployeesService {
                 employees = await this.employeesRepo.find();
             }
 
-            const deptIds = [...new Set(employees.map(e => e.departmentId))];
+            const deptIds = [...new Set(employees.map(e => Number(e.departmentId)))];
+            console.log('DEBUG: deptIds (casted to number):', deptIds);
+
             const deptMap = new Map<number, string>();
 
             if (deptIds.length > 0) {
                 const departments = await this.dataSource.getRepository(DepartmentsMasterEntity).find({
                     where: { id: In(deptIds) }
                 });
-                departments.forEach(d => deptMap.set(d.id, d.name));
+                console.log('DEBUG: Departments found:', departments.length);
+                if (departments.length > 0) {
+                    console.log('DEBUG: First Department:', departments[0]);
+                    console.log('DEBUG: Department ID type:', typeof departments[0].id);
+                }
+
+                departments.forEach(d => {
+                    // console.log(`DEBUG: Mapping Dept ID ${d.id} (${typeof d.id}) -> ${d.name}`);
+                    deptMap.set(Number(d.id), d.name);
+                });
             }
 
-            const managerIds = [...new Set(employees.filter(e => e.managerId).map(e => e.managerId))];
+            const managerIds = [...new Set(employees.filter(e => e.managerId).map(e => Number(e.managerId)))];
             const managerMap = new Map<number, string>();
             if (managerIds.length > 0) {
                 const managers = await this.employeesRepo.find({
                     where: { id: In(managerIds) }
                 });
-                managers.forEach(m => managerMap.set(m.id, `${m.firstName} ${m.lastName}`));
+                managers.forEach(m => managerMap.set(Number(m.id), `${m.firstName} ${m.lastName}`));
             }
 
             const employeeResponses = employees.map(emp => new EmployeeResponseModel(
@@ -191,13 +202,13 @@ export class EmployeesService {
                 emp.phNumber,
                 emp.billingAmount,
                 emp.remarks,
-                deptMap.get(emp.departmentId) || `Dept ID: ${emp.departmentId}`,
+                deptMap.get(Number(emp.departmentId)) || `Dept ID: ${emp.departmentId}`,
                 emp.slackUserId,
                 emp.slackDisplayName,
                 emp.slackAvatar,
                 emp.isSlackActive,
                 emp.managerId,
-                managerMap.get(emp.managerId) || ''
+                managerMap.get(Number(emp.managerId)) || ''
             ));
             return new GetAllEmployeesResponseModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {

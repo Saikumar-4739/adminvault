@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreateSlackUserModel, UpdateSlackUserModel, SlackUserModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateSlackUserModel, UpdateSlackUserModel, SlackUserModel, IdRequestModel, CompanyIdRequestModel, CompanyDropdownModel } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,7 +10,7 @@ import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Plus, Pencil, Trash2, ArrowLeft, User, Search } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
-import { DepartmentService, EmployeesService, SlackUserService } from '@adminvault/shared-services';
+import { DepartmentService, EmployeesService, SlackUserService, CompanyService } from '@adminvault/shared-services';
 
 interface EmployeeOption {
     id: number;
@@ -18,6 +18,7 @@ interface EmployeeOption {
     email: string;
     phone: string;
     department: string;
+    slackUserId?: string;
     manager?: string;
 }
 
@@ -42,6 +43,9 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
     const slackUserService = new SlackUserService();
     const departmentService = new DepartmentService();
     const employeeService = new EmployeesService();
+    const companyService = new CompanyService();
+    const [companies, setCompanies] = useState<CompanyDropdownModel[]>([]);
+    const [filterCompanyId, setFilterCompanyId] = useState<string>('all');
     const [formData, setFormData] = useState({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '' });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -71,7 +75,12 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
     const fetchDependencies = async (): Promise<void> => {
         try {
             const req = new CompanyIdRequestModel(user?.companyId || 0);
-            const [empRes, deptRes] = await Promise.all([employeeService.getAllEmployees(req), departmentService.getAllDepartments()]);
+            const [empRes, deptRes, compRes] = await Promise.all([
+                employeeService.getAllEmployees(req),
+                departmentService.getAllDepartments(),
+                companyService.getAllCompaniesDropdown()
+            ]);
+
             if (empRes.status && empRes.data) {
                 setEmployees(empRes.data.map((e: any) => ({
                     id: e.id,
@@ -79,12 +88,17 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                     email: e.email,
                     phone: e.phNumber,
                     department: e.departmentName,
+                    slackUserId: e.slackUserId,
                     manager: e.managerName
                 })));
             }
 
             if (deptRes.status && deptRes.departments) {
                 setDepartments(deptRes.departments);
+            }
+
+            if (compRes.status && compRes.data) {
+                setCompanies(compRes.data);
             }
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message);
@@ -104,6 +118,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                 email: emp.email,
                 phone: emp.phone || '',
                 department: emp.department || '',
+                slackUserId: emp.slackUserId || '',
                 employeeId: emp.id.toString()
             }));
         }
@@ -186,11 +201,15 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         setFormData({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '' });
     };
 
-    const filteredUsers = users.filter((user: SlackUserModel) =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (user.displayName && user.displayName.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    const filteredUsers = users.filter((u: SlackUserModel) => {
+        const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (u.displayName && u.displayName.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        const matchesCompany = filterCompanyId === 'all' || u.companyId?.toString() === filterCompanyId;
+
+        return matchesSearch && matchesCompany;
+    });
 
     return (
         <>
@@ -200,6 +219,18 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                         <h3 className="font-bold text-slate-800 dark:text-slate-100">Slack Users</h3>
                     </div>
                     <div className="flex items-center gap-3">
+                        <select
+                            value={filterCompanyId}
+                            onChange={(e) => setFilterCompanyId(e.target.value)}
+                            className="hidden md:block px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                        >
+                            <option value="all">All Companies</option>
+                            {companies.map((comp) => (
+                                <option key={comp.id} value={comp.id}>
+                                    {comp.name}
+                                </option>
+                            ))}
+                        </select>
                         <div className="relative w-64 hidden md:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <input
@@ -222,14 +253,15 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-4">
                     <div className="overflow-x-auto h-full">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left border-collapse border border-slate-200 dark:border-slate-700">
                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
                                 <tr>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">User Details</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Slack ID</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Role & Dept</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border-b border-slate-200 dark:border-slate-700">Status</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border-b border-slate-200 dark:border-slate-700">Actions</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">User Details</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Company</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Slack ID</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Role & Dept</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border border-slate-200 dark:border-slate-700">Status</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border border-slate-200 dark:border-slate-700">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
@@ -238,30 +270,33 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                 ) : (
                                     filteredUsers.map((item, index) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
+                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
+                                                <div className="flex items-center justify-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0">
                                                         <User className="h-4 w-4" />
                                                     </div>
-                                                    <div>
+                                                    <div className="text-left">
                                                         <div className="font-medium text-slate-900 dark:text-white text-sm">{item.name}</div>
                                                         <div className="text-xs text-slate-500 dark:text-slate-400">{item.email}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
+                                                <div className="text-sm text-slate-700 dark:text-slate-300 font-medium">{item.companyName || '-'}</div>
+                                            </td>
+                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
                                                 {item.slackUserId ? (
-                                                    <div className="flex flex-col">
+                                                    <div className="flex flex-col items-center">
                                                         <span className="text-sm font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit">{item.slackUserId}</span>
                                                         <span className="text-xs text-indigo-500 mt-0.5">@{item.displayName || '-'}</span>
                                                     </div>
                                                 ) : '-'}
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
                                                 <div className="text-sm text-slate-700 dark:text-slate-300">{item.role || '-'}</div>
                                                 {item.department && <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{item.department}</div>}
                                             </td>
-                                            <td className="px-6 py-4 text-center">
+                                            <td className="px-6 py-4 text-center border border-slate-200 dark:border-slate-700">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${item.isActive
                                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
                                                     : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
@@ -269,7 +304,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                                     {item.isActive ? 'Active' : 'Inactive'}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-center">
+                                            <td className="px-6 py-4 text-center border border-slate-200 dark:border-slate-700">
                                                 <div className="flex justify-center gap-2">
                                                     <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
                                                         <Pencil className="h-4 w-4" />
@@ -299,23 +334,34 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                         >
                             <option value="">Select Employee</option>
                             {employees.map(emp => (
-                                <option key={emp.id} value={emp.id}>{emp.name} ({emp.department}){emp.manager ? ` - Mgr: ${emp.manager}` : ''}</option>
+                                <option key={emp.id} value={emp.id}>
+                                    {emp.name} {emp.slackUserId ? `(${emp.slackUserId})` : ''} {emp.manager ? ` - Mgr: ${emp.manager}` : ''}
+                                </option>
                             ))}
                         </select>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-                        <Input label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                        <Input label="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-14" required />
+                        <Input label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-14" required />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Slack User ID" value={formData.slackUserId} onChange={(e) => setFormData({ ...formData, slackUserId: e.target.value })} />
-                        <Input label="Display Name" value={formData.displayName} onChange={(e) => setFormData({ ...formData, displayName: e.target.value })} />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Role" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} />
+                        <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Company</label>
+                            <select
+                                value={formData.companyId}
+                                onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                            >
+                                <option value="">Select Company</option>
+                                {companies.map((comp) => (
+                                    <option key={comp.id} value={comp.id}>
+                                        {comp.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Department</label>
                             <select
@@ -333,9 +379,17 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                         </div>
                     </div>
 
-                    <Input label="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input label="Slack User ID" value={formData.slackUserId} onChange={(e) => setFormData({ ...formData, slackUserId: e.target.value })} className="h-14" />
+                        <Input label="Display Name" value={formData.displayName} onChange={(e) => setFormData({ ...formData, displayName: e.target.value })} className="h-14" />
+                    </div>
 
-                    <Input label="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input label="Role" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="h-14" />
+                        <Input label="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="h-14" />
+                    </div>
+
+                    <Input label="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="h-14" />
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <Button variant="outline" onClick={handleCloseModal} type="button">Cancel</Button>

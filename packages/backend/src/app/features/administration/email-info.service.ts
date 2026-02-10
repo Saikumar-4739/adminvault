@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as nodemailer from 'nodemailer';
 import { EmailInfoEntity } from './entities/email-info.entity';
-import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel, GetAllEmailInfoModel, EmailStatsResponseModel, EmailStatusEnum, RequestAccessModel, GlobalResponse, CompanyIdRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel } from '@adminvault/shared-models';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel, GetAllEmailInfoModel, EmailStatsResponseModel, EmailStatusEnum, RequestAccessModel, GlobalResponse, CompanyIdRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, SendAssetApprovalEmailModel } from '@adminvault/shared-models';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse } from '@adminvault/backend-utils';
 import { ConfigService } from '@nestjs/config';
@@ -118,8 +118,9 @@ export class EmailInfoService {
         const adminEmail = 'inolyse@gmail.com';
         const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
 
+        const emailUser = this.configService.get<string>('EMAIL_USER');
         const mailOptions = {
-            from: `"AdminVault System" <no-reply@adminvault.com>`,
+            from: `"AdminVault System" <${emailUser}>`,
             to: adminEmail,
             subject: `[Priority: Action Required] New Access Request from ${request.name}`,
             html: `
@@ -188,14 +189,22 @@ export class EmailInfoService {
             newRequest.name = request.name;
             newRequest.email = request.email;
             newRequest.description = request.description;
-            // Use current transaction manager if any, but sendAccessRequestEmail is usually called standalone
-            await this.accessRequestRepo.save(newRequest);
+
+            try {
+                await this.accessRequestRepo.save(newRequest);
+                this.logger.log(`Access request saved to DB for ${request.email}`);
+            } catch (dbError) {
+                this.logger.error('Failed to save access request to database', dbError);
+                // We might still want to try sending the email even if DB save fails, 
+                // but usually, if DB fails, it's a sign of a larger issue.
+                // For now, let's continue to email part but log it.
+            }
 
             const info = await this.transporter.sendMail(mailOptions);
             this.logger.log(`Access request email sent: ${info.messageId}`);
             return true;
         } catch (error) {
-            this.logger.error('Failed to process and send access request', error);
+            this.logger.error('Failed to send access request email', error);
             return false;
         }
     }
@@ -206,8 +215,9 @@ export class EmailInfoService {
 
         const priorityColor = ticket.priorityEnum === 'HIGH' ? '#ef4444' : ticket.priorityEnum === 'MEDIUM' ? '#f59e0b' : '#10b981';
 
+        const emailUser = this.configService.get<string>('EMAIL_USER');
         const mailOptions = {
-            from: `"AdminVault Support" <no-reply@adminvault.com>`,
+            from: `"AdminVault Support" <${emailUser}>`,
             to: recipientEmail,
             subject: `[Ticket Received] ${ticket.ticketCode} - ${ticket.subject}`,
             html: `
@@ -274,8 +284,9 @@ export class EmailInfoService {
         const { email, token } = reqModel;
         const resetLink = `${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'}/reset-password?token=${token}`;
 
+        const emailUser = this.configService.get<string>('EMAIL_USER');
         const mailOptions = {
-            from: `"AdminVault Security" <no-reply@adminvault.com>`,
+            from: `"AdminVault Security" <${emailUser}>`,
             to: email,
             subject: `[Security] Password Reset Request`,
             html: `
@@ -314,6 +325,14 @@ export class EmailInfoService {
         };
 
         try {
+            const emailUser = this.configService.get<string>('EMAIL_USER');
+            const emailPass = this.configService.get<string>('EMAIL_PASS');
+
+            if (!emailUser || !emailPass) {
+                this.logger.error('Cannot send password reset email: EMAIL_USER or EMAIL_PASS environment variables are missing.');
+                return false;
+            }
+
             const info = await this.transporter.sendMail(mailOptions);
             this.logger.log(`Reset email sent to ${email}: ${info.messageId}`);
             return true;
@@ -325,5 +344,98 @@ export class EmailInfoService {
 
     async getAllAccessRequests(): Promise<AccessRequestEntity[]> {
         return await this.accessRequestRepo.find({ order: { createdAt: 'DESC' } });
+    }
+
+    async sendAssetApprovalEmail(reqModel: SendAssetApprovalEmailModel): Promise<boolean> {
+        const { approverEmail, requesterName, message, assetStats } = reqModel;
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+        const emailUser = this.configService.get<string>('EMAIL_USER');
+        const emailPass = this.configService.get<string>('EMAIL_PASS');
+
+        this.logger.log(`Attempting to send email. User: ${emailUser ? 'Set' : 'Missing'}, Pass: ${emailPass ? 'Set' : 'Missing'}`);
+        if (!emailUser || !emailPass) {
+            this.logger.error('Email credentials missing');
+            return false;
+        }
+
+        const statsHtml = assetStats ? `
+            <div style="background-color: #f1f5f9; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                <h3 style="margin-top: 0; color: #475569; font-size: 14px; text-transform: uppercase;">Inventory Overview</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div style="padding: 12px; background: white; border-radius: 8px;">
+                        <div style="font-size: 20px; font-weight: bold; color: #0f172a;">${assetStats.total}</div>
+                        <div style="font-size: 12px; color: #64748b;">Total Assets</div>
+                    </div>
+                    <div style="padding: 12px; background: white; border-radius: 8px;">
+                        <div style="font-size: 20px; font-weight: bold; color: #10b981;">${assetStats.inUse}</div>
+                        <div style="font-size: 12px; color: #64748b;">Active / In Use</div>
+                    </div>
+                    <div style="padding: 12px; background: white; border-radius: 8px;">
+                        <div style="font-size: 20px; font-weight: bold; color: #3b82f6;">${assetStats.available}</div>
+                        <div style="font-size: 12px; color: #64748b;">Available</div>
+                    </div>
+                    <div style="padding: 12px; background: white; border-radius: 8px;">
+                        <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">${assetStats.maintenance}</div>
+                        <div style="font-size: 12px; color: #64748b;">Maintenance</div>
+                    </div>
+                </div>
+            </div>
+        ` : '';
+
+        const mailOptions = {
+            from: `"AdminVault Assets" <${emailUser}>`,
+            to: approverEmail,
+            subject: `[Approval Request] Asset Inventory Review - ${requesterName}`,
+            html: `
+                <div style="font-family: 'Inter', sans-serif; background-color: #f8fafc; padding: 40px 20px; color: #1e293b;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                        
+                        <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 32px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800;">Asset Approval Request</h1>
+                            <p style="color: #a7f3d0; margin-top: 8px;">AdminVault Inventory Control</p>
+                        </div>
+
+                        <div style="padding: 32px;">
+                            <p style="font-size: 16px; line-height: 1.6; color: #334155; margin-bottom: 24px;">
+                                Hello, <strong>${requesterName}</strong> has requested your approval for the current asset inventory state.
+                            </p>
+
+                            ${message ? `
+                                <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 16px; margin-bottom: 24px; color: #166534; font-style: italic;">
+                                    "${message}"
+                                </div>
+                            ` : ''}
+
+                            ${statsHtml}
+
+                            <div style="text-align: center; margin-top: 32px;">
+                                <a href="${frontendUrl}/assets" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                                    Review Inventory
+                                </a>
+                            </div>
+                        </div>
+
+                        <div style="padding: 24px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                                This is an automated notification. Verify specific asset details in the dashboard.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `,
+        };
+
+        try {
+            this.logger.log(`Sending email to: ${approverEmail} from: ${emailUser}`);
+            const info = await this.transporter.sendMail(mailOptions);
+            this.logger.log(`Asset approval email sent to ${approverEmail}: ${info.messageId}`);
+            return true;
+        } catch (error) {
+            this.logger.error(`Error sending asset approval email to ${approverEmail}`, error);
+            if (error instanceof Error) {
+                this.logger.error(`Error stack: ${error.stack}`);
+            }
+            return false;
+        }
     }
 }

@@ -65,12 +65,6 @@ const ForgotPasswordPage: React.FC = () => {
                                 <ArrowLeft className="h-4 w-4" />
                                 Back to Login
                             </Link>
-                            <div className="inline-flex items-center gap-3 mb-4">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
-                                    <Shield className="h-6 w-6 text-white" />
-                                </div>
-                                <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">AdminVault</h1>
-                            </div>
                             <h2 className={`text-3xl font-black mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Request Password</h2>
                             <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Enter your email to request a password from the administrator</p>
                         </div>

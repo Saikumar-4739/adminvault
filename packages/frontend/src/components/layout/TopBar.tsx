@@ -2,19 +2,22 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChevronDown, LogOut, Moon, Sun, Bell, Search, Globe, Terminal } from 'lucide-react';
+import { ChevronDown, LogOut, Moon, Sun, Bell, Globe, Terminal } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getSocket } from '@/lib/socket';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
 
-const TopBar: React.FC = () => {
+interface TopBarProps {
+    onMenuClick?: () => void;
+}
+
+const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const { user, logout } = useAuth();
     const { isDarkMode, toggleDarkMode } = useTheme();
-    const { stats, isLoading: statsLoading } = useDashboardStats();
+    const [currentTime, setCurrentTime] = useState(new Date());
     const menuRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
 
@@ -46,32 +49,46 @@ const TopBar: React.FC = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
     const handleLogout = async () => {
         await logout();
         window.location.href = '/login';
     };
 
     return (
-        <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 sticky top-0 z-30 transition-all duration-300">
+        <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30 transition-all duration-300">
             {/* Left: Section Title / Global Context */}
             <div className="flex items-center gap-4">
+                {/* Mobile Menu Toggle */}
+                <button
+                    onClick={onMenuClick}
+                    className="lg:hidden p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
 
-                <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-transparent hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
-                    <Globe className="h-3.5 w-3.5 text-slate-400" />
-                    <span className="text-[10px] font-black uppercase tracking-tight text-slate-500 dark:text-slate-400">
-                        {statsLoading ? 'Critical: --' : `Critical Issues: ${stats?.systemHealth.openCriticalTickets || 0}`}
-                    </span>
+                <div className="flex items-center gap-4 px-4 lg:px-6 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md min-w-[200px] lg:min-w-[280px]">
+                    <Globe className="h-4 w-4 text-blue-500 animate-pulse shrink-0" />
+                    <div className="flex items-center gap-3 whitespace-nowrap">
+                        <span className="hidden sm:inline text-[11px] font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
+                            {currentTime.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                        <div className="hidden sm:block w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                        <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 tabular-nums tracking-widest uppercase">
+                            {currentTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                    </div>
                 </div>
             </div>
 
             {/* Right: Tools & Identity */}
             <div className="flex items-center gap-2">
-                {/* Search Prompt */}
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer group mr-4 border border-transparent hover:border-slate-200 dark:hover:border-slate-800">
-                    <Search className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                    <span className="text-xs font-semibold text-slate-400 tracking-tight">Search...</span>
-                    <span className="ml-2 text-[9px] font-black text-slate-300 dark:text-slate-700 bg-white dark:bg-slate-950 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-800">⌘K</span>
-                </div>
 
                 {/* Notifications */}
                 <div className="relative" ref={notificationRef}>

@@ -261,7 +261,10 @@ export class AuthUsersService {
      */
     async requestAccess(reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {
-            await this.emailService.sendAccessRequestEmail(reqModel);
+            const success = await this.emailService.sendAccessRequestEmail(reqModel);
+            if (!success) {
+                throw new ErrorResponse(0, "Failed to send access request email. Please try again later.");
+            }
             return new GlobalResponse(true, 0, "Access request sent successfully");
         } catch (error) {
             throw error;
@@ -434,7 +437,10 @@ export class AuthUsersService {
             await this.authUsersRepo.save(user);
 
             // Send Reset Email
-            await this.emailService.sendPasswordResetEmail(new SendPasswordResetEmailModel(user.email, token));
+            const success = await this.emailService.sendPasswordResetEmail(new SendPasswordResetEmailModel(user.email, token));
+            if (!success) {
+                throw new ErrorResponse(0, "Failed to send password reset email. Please try again later.");
+            }
 
             return new GlobalResponse(true, 200, "Password reset instructions sent.");
         } catch (error) {

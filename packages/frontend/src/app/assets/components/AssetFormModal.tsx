@@ -45,7 +45,9 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
         ipAddress: '',
         batteryLevel: '',
         storageTotal: '',
-        storageAvailable: ''
+        storageAvailable: '',
+        assignedToEmployeeId: undefined as number | undefined,
+        previousUserEmployeeId: undefined as number | undefined
     });
 
     const getCompanyId = useCallback((): number => {
@@ -114,7 +116,9 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                     ipAddress: asset.ipAddress || '',
                     batteryLevel: asset.batteryLevel?.toString() || '',
                     storageTotal: asset.storageTotal || '',
-                    storageAvailable: asset.storageAvailable || ''
+                    storageAvailable: asset.storageAvailable || '',
+                    assignedToEmployeeId: asset.assignedToEmployeeId,
+                    previousUserEmployeeId: asset.previousUserEmployeeId
                 });
             } else {
                 setFormData({
@@ -136,7 +140,9 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                     ipAddress: '',
                     batteryLevel: '',
                     storageTotal: '',
-                    storageAvailable: ''
+                    storageAvailable: '',
+                    assignedToEmployeeId: undefined,
+                    previousUserEmployeeId: undefined
                 });
             }
         }
@@ -293,40 +299,24 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
                     <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Device Telemetry</h3>
 
+                    {/* Row 1: System Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <Select
-                            label="Compliance Status"
-                            name="complianceStatus"
-                            value={formData.complianceStatus}
-                            onChange={handleChange}
-                            options={[
-                                { value: ComplianceStatusEnum.UNKNOWN, label: 'Unknown' },
-                                { value: ComplianceStatusEnum.COMPLIANT, label: 'Compliant' },
-                                { value: ComplianceStatusEnum.NON_COMPLIANT, label: 'Non-Compliant' },
-                                { value: ComplianceStatusEnum.PENDING, label: 'Pending' }
-                            ]}
-                        />
-                        <Select
-                            label="Encryption Status"
-                            name="encryptionStatus"
-                            value={formData.encryptionStatus}
-                            onChange={handleChange}
-                            options={[
-                                { value: EncryptionStatusEnum.UNKNOWN, label: 'Unknown' },
-                                { value: EncryptionStatusEnum.ENCRYPTED, label: 'Encrypted' },
-                                { value: EncryptionStatusEnum.NOT_ENCRYPTED, label: 'Not Encrypted' },
-                                { value: EncryptionStatusEnum.NOT_APPLICABLE, label: 'Not Applicable' }
-                            ]}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <Input
                             label="OS Version"
                             name="osVersion"
                             value={formData.osVersion}
                             onChange={handleChange}
                         />
+                        <Input
+                            label="Storage Total"
+                            name="storageTotal"
+                            value={formData.storageTotal}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    {/* Row 2: Network Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
                             label="MAC Address"
                             name="macAddress"
@@ -337,32 +327,6 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                             label="IP Address"
                             name="ipAddress"
                             value={formData.ipAddress}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Input
-                            label="Battery Level (%)"
-                            name="batteryLevel"
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={formData.batteryLevel}
-                            onChange={handleChange}
-                        />
-                        <Input
-                            label="Storage Total"
-                            name="storageTotal"
-                            placeholder="e.g. 512 GB"
-                            value={formData.storageTotal}
-                            onChange={handleChange}
-                        />
-                        <Input
-                            label="Storage Available"
-                            name="storageAvailable"
-                            placeholder="e.g. 120 GB"
-                            value={formData.storageAvailable}
                             onChange={handleChange}
                         />
                     </div>

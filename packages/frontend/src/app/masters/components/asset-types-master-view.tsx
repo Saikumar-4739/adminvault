@@ -180,6 +180,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                         label="Asset Type Name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="h-14"
                         required
                     />
 
@@ -187,6 +188,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                         label="Asset Code"
                         value={formData.code}
                         onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                        className="h-14"
                     />
 
                     <div>

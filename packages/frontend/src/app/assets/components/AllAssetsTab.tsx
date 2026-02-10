@@ -19,15 +19,24 @@ interface AllAssetsTabProps {
 
 export const AllAssetsTab: React.FC<AllAssetsTabProps> = ({ assets, isLoading, status, onEdit, onDelete, onPrint, onHistory, onAssign }: AllAssetsTabProps) => {
 
+    console.log(`AllAssetsTab[${status}] received ${assets?.length} assets`);
+
     const filteredAssets = status
         ? assets.filter(a => {
             const assetStatus = (a.status || '').toString().toLowerCase();
             const targetStatus = status.toLowerCase();
-            return assetStatus === targetStatus ||
+            const match = assetStatus === targetStatus ||
                 (targetStatus === 'available' && assetStatus === 'available') ||
-                (targetStatus === 'in_use' && (assetStatus === 'in_use' || assetStatus === 'inuse'));
+                (targetStatus === 'in_use' && (assetStatus === 'in_use' || assetStatus === 'inuse')) ||
+                (targetStatus === 'maintenance' && assetStatus === 'maintenance') ||
+                (targetStatus === 'retired' && assetStatus === 'retired');
+
+            // console.log(`Filter [${status}]: asset=${a.assetName} status=${assetStatus} match=${match}`);
+            return match;
         })
         : assets;
+
+    console.log(`AllAssetsTab[${status}] showing ${filteredAssets.length} assets`);
 
     if (isLoading) return (
         <div className="flex justify-center py-10">

@@ -98,12 +98,12 @@ export class AssetInfoService {
             existing.brandId = reqModel.brandId;
             existing.model = reqModel.model;
             existing.configuration = reqModel.configuration;
-            existing.assignedToEmployeeId = reqModel.assignedToEmployeeId;
-            existing.previousUserEmployeeId = reqModel.previousUserEmployeeId;
-            existing.purchaseDate = reqModel.purchaseDate ? new Date(reqModel.purchaseDate) : null;
-            existing.warrantyExpiry = reqModel.warrantyExpiry ? new Date(reqModel.warrantyExpiry) : null;
-            existing.userAssignedDate = reqModel.userAssignedDate ? new Date(reqModel.userAssignedDate) : null;
-            existing.lastReturnDate = reqModel.lastReturnDate ? new Date(reqModel.lastReturnDate) : null;
+            existing.assignedToEmployeeId = reqModel.assignedToEmployeeId !== undefined ? reqModel.assignedToEmployeeId : existing.assignedToEmployeeId;
+            existing.previousUserEmployeeId = reqModel.previousUserEmployeeId !== undefined ? reqModel.previousUserEmployeeId : existing.previousUserEmployeeId;
+            existing.purchaseDate = reqModel.purchaseDate !== undefined ? (reqModel.purchaseDate ? new Date(reqModel.purchaseDate) : null) : existing.purchaseDate;
+            existing.warrantyExpiry = reqModel.warrantyExpiry !== undefined ? (reqModel.warrantyExpiry ? new Date(reqModel.warrantyExpiry) : null) : existing.warrantyExpiry;
+            existing.userAssignedDate = reqModel.userAssignedDate !== undefined ? (reqModel.userAssignedDate ? new Date(reqModel.userAssignedDate) : null) : existing.userAssignedDate;
+            existing.lastReturnDate = reqModel.lastReturnDate !== undefined ? (reqModel.lastReturnDate ? new Date(reqModel.lastReturnDate) : null) : existing.lastReturnDate;
 
             existing.complianceStatus = reqModel.complianceStatus || existing.complianceStatus;
             existing.lastSync = reqModel.lastSync ? new Date(reqModel.lastSync) : existing.lastSync;
@@ -115,7 +115,19 @@ export class AssetInfoService {
             existing.storageTotal = reqModel.storageTotal || existing.storageTotal;
             existing.storageAvailable = reqModel.storageAvailable || existing.storageAvailable;
             existing.userId = userId || existing.userId;
-            existing.assetStatusEnum = reqModel.assignedToEmployeeId ? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE) : (reqModel.assetStatusEnum || existing.assetStatusEnum || AssetStatusEnum.AVAILABLE);
+
+            // Only update status if explicitly provided, otherwise keep existing
+            // If assignedToEmployeeId is being set (or already exists and not being cleared), ensure status reflects IN_USE unless specific status overrides
+            const effectiveAssignedTo = reqModel.assignedToEmployeeId !== undefined ? reqModel.assignedToEmployeeId : existing.assignedToEmployeeId;
+
+            if (reqModel.assetStatusEnum) {
+                existing.assetStatusEnum = reqModel.assetStatusEnum;
+            } else if (effectiveAssignedTo) {
+                // If assigned, ensure it's not available
+                if (existing.assetStatusEnum === AssetStatusEnum.AVAILABLE) {
+                    existing.assetStatusEnum = AssetStatusEnum.IN_USE;
+                }
+            }
             await transManager.getRepository(AssetInfoEntity).save(existing);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Asset updated successfully");
@@ -212,7 +224,8 @@ export class AssetInfoService {
     async getAssetStatistics(reqModel: CompanyIdRequestModel): Promise<AssetStatisticsResponseModel> {
         try {
             const companyId = reqModel.companyId;
-            if (!companyId) {
+            // Allow 0 for all companies
+            if (companyId === undefined || companyId === null) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
 
@@ -243,7 +256,7 @@ export class AssetInfoService {
      */
     async searchAssets(reqModel: AssetSearchRequestModel): Promise<GetAllAssetsModel> {
         try {
-            if (!reqModel.companyId) {
+            if (reqModel.companyId === undefined || reqModel.companyId === null) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
 
@@ -266,7 +279,8 @@ export class AssetInfoService {
     async getAssetsWithAssignments(reqModel: CompanyIdRequestModel): Promise<GetAssetsWithAssignmentsResponseModel> {
         try {
             const companyId = reqModel.companyId;
-            if (!companyId) {
+            // Allow 0 for all companies
+            if (companyId === undefined || companyId === null) {
                 throw new ErrorResponse(0, "Company ID is required");
             }
             const assets = await this.assetInfoRepo.getAssetsWithAssignments(reqModel);

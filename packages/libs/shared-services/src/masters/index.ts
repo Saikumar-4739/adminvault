@@ -5,5 +5,4 @@ export * from './brand-service';
 export * from './vendor-service';
 export * from './application-service';
 export * from './slack-user-service';
-export * from './password-vault-service';
 

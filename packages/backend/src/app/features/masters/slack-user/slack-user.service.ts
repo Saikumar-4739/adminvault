@@ -67,8 +67,14 @@ export class SlackUserService {
 
     async getAllSlackUsers(): Promise<GetAllSlackUsersResponseModel> {
         try {
-            const users = await this.slackUserRepo.find();
-            return new GetAllSlackUsersResponseModel(true, 200, 'Slack Users retrieved successfully', users as any);
+            const users = await this.slackUserRepo.find({
+                relations: ['companyInfo']
+            });
+            const mappedUsers = users.map(u => ({
+                ...u,
+                companyName: u.companyInfo?.companyName
+            }));
+            return new GetAllSlackUsersResponseModel(true, 200, 'Slack Users retrieved successfully', mappedUsers as any);
         } catch (error) {
             throw new ErrorResponse(500, 'Failed to fetch Slack Users');
         }

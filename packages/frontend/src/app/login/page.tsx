@@ -366,6 +366,37 @@ const LoginPage: React.FC = () => {
                                         </div>
                                     </div>
 
+                                    {/* Submit Button */}
+                                    <Button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="w-full py-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all disabled:opacity-50 group/btn relative overflow-hidden text-lg uppercase tracking-tight"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
+                                        {isLoading ? (
+                                            <div className="flex items-center justify-center gap-2 relative z-10">
+                                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                                                <span>Signing in...</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-center gap-2 relative z-10">
+                                                <span>Sign In</span>
+                                                <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
+                                            </div>
+                                        )}
+                                    </Button>
+
+                                    <div className="relative py-4">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <div className={`w-full border-t ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}></div>
+                                        </div>
+                                        <div className="relative flex justify-center text-xs uppercase">
+                                            <span className={`px-2 px-4 backdrop-blur-xl ${isDarkMode ? 'bg-slate-900/50 text-gray-500' : 'bg-white text-gray-400'}`}>Or continue with</span>
+                                        </div>
+                                    </div>
+
+
+
                                     {/* Google Login Button */}
                                     <Button
                                         type="button"
@@ -396,34 +427,6 @@ const LoginPage: React.FC = () => {
                                         Sign in with Google
                                     </Button>
 
-                                    <div className="relative py-4">
-                                        <div className="absolute inset-0 flex items-center">
-                                            <div className={`w-full border-t ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}></div>
-                                        </div>
-                                        <div className="relative flex justify-center text-xs uppercase">
-                                            <span className={`px-2 px-4 backdrop-blur-xl ${isDarkMode ? 'bg-slate-900/50 text-gray-500' : 'bg-white text-gray-400'}`}>Or continue with</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Submit Button */}
-                                    <Button
-                                        type="submit"
-                                        disabled={isLoading}
-                                        className="w-full py-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all disabled:opacity-50 group/btn relative overflow-hidden text-lg uppercase tracking-tight"
-                                    >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
-                                        {isLoading ? (
-                                            <div className="flex items-center justify-center gap-2 relative z-10">
-                                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                                                <span>Signing in...</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center justify-center gap-2 relative z-10">
-                                                <span>Sign In</span>
-                                                <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
-                                            </div>
-                                        )}
-                                    </Button>
                                     {/* Additional Links */}
                                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
                                         <Link

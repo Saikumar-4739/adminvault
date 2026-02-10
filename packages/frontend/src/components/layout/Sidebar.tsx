@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { iamService } from '@/lib/api/services';
 
-import { Package, Ticket, LayoutDashboard, Database, KeySquare, ChevronLeft, ChevronRight, PieChart, UserCircle, Plus, GitPullRequest, ShoppingCart, Users, Network, Cpu, BookOpen, Mail, ShieldCheck } from 'lucide-react';
+import { Package, Ticket, LayoutDashboard, Database, KeySquare, ChevronLeft, ChevronRight, PieChart, UserCircle, Plus, GitPullRequest, ShoppingCart, Users, Network, Cpu, BookOpen, Mail, FileText } from 'lucide-react';
 
 const DEFAULT_NAVIGATION = [
     {
@@ -15,6 +15,7 @@ const DEFAULT_NAVIGATION = [
             { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, key: 'dashboard' },
             { name: 'Configuration', href: '/masters', icon: Database, key: 'masters' },
             { name: 'Reports', href: '/reports', icon: PieChart, key: 'reports' },
+            { name: 'Document Vault', href: '/documents', icon: FileText, key: 'document-hub' },
             { name: 'Emails Info', href: '/emails', icon: Mail, key: 'emails' },
         ]
     },
@@ -32,7 +33,6 @@ const DEFAULT_NAVIGATION = [
         items: [
             { name: 'Network', href: '/network', icon: Network, key: 'network' },
             { name: 'Approvals', href: '/approvals', icon: GitPullRequest, key: 'approvals' },
-            { name: 'IAM', href: '/iam', icon: ShieldCheck, key: 'iam' },
         ]
     },
     {
@@ -51,11 +51,21 @@ const DEFAULT_NAVIGATION = [
     }
 ];
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     const pathname = usePathname();
     const { user, allowedMenus, updateMenus } = useAuth();
 
     const [isCollapsed, setIsCollapsed] = useState(false);
+
+    // Close mobile menu on route change
+    useEffect(() => {
+        if (onClose) onClose();
+    }, [pathname, onClose]);
 
     useEffect(() => {
         const stored = localStorage.getItem('sidebar_collapsed');
@@ -85,18 +95,31 @@ export const Sidebar: React.FC = () => {
     if (!user) return null;
 
     return (
-        <aside className={`h-screen flex flex-col transition-all duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 ${isCollapsed ? 'w-20' : 'w-72'}`}>
+        <aside className={`
+            fixed lg:static inset-y-0 left-0 z-50
+            h-screen flex flex-col transition-all duration-300 ease-in-out 
+            border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950
+            ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+            ${isCollapsed ? 'lg:w-20' : 'lg:w-72 w-72'}
+        `}>
             {/* Logo Area */}
             <div className={`h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-900 ${isCollapsed ? 'justify-center px-2' : ''}`}>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full">
                     <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
                         <Cpu className="h-5 w-5" />
                     </div>
-                    {!isCollapsed && (
-                        <h1 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                    {(!isCollapsed || isOpen) && (
+                        <h1 className="text-lg font-black text-slate-900 dark:text-white tracking-tight flex-1">
                             AdminVault
                         </h1>
                     )}
+                    {/* Mobile Close Button */}
+                    <button
+                        onClick={onClose}
+                        className="lg:hidden p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                    </button>
                 </div>
             </div>
 
@@ -123,7 +146,7 @@ export const Sidebar: React.FC = () => {
 
                     return (
                         <div key={group.title} className="mb-6">
-                            {!isCollapsed && (
+                            {(!isCollapsed || isOpen) && (
                                 <h3 className="px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
                                     {group.title}
                                 </h3>
@@ -139,16 +162,16 @@ export const Sidebar: React.FC = () => {
                                             className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${isActive
                                                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
-                                                } ${isCollapsed ? 'justify-center px-0' : ''}`}
-                                            title={isCollapsed ? item.name : ''}
+                                                } ${isCollapsed && !isOpen ? 'justify-center px-0' : ''}`}
+                                            title={isCollapsed && !isOpen ? item.name : ''}
                                         >
                                             <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
-                                            {!isCollapsed && (
+                                            {(!isCollapsed || isOpen) && (
                                                 <span className="text-sm font-semibold tracking-tight truncate">
                                                     {item.name}
                                                 </span>
                                             )}
-                                            {isActive && !isCollapsed && (
+                                            {isActive && (!isCollapsed || isOpen) && (
                                                 <div className="ml-auto w-1 h-4 bg-blue-600 rounded-full" />
                                             )}
                                         </Link>
@@ -161,7 +184,7 @@ export const Sidebar: React.FC = () => {
             </div>
 
             {/* Footer / Toggle */}
-            <div className={`p-4 border-t border-slate-100 dark:border-slate-900 flex flex-col gap-4 ${isCollapsed ? 'items-center' : ''}`}>
+            <div className={`p-4 border-t border-slate-100 dark:border-slate-900 flex flex-col gap-4 ${isCollapsed && !isOpen ? 'items-center' : ''} hidden lg:flex`}>
                 <div className={`flex ${isCollapsed ? 'justify-center w-full' : 'justify-between items-center px-1'}`}>
                     <button
                         onClick={toggleCollapse}

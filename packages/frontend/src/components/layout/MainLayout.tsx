@@ -2,24 +2,45 @@
 
 import { usePathname } from 'next/navigation';
 
-import { memo } from 'react';
+import React, { memo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { AiAssistant } from '../ui/AiAssistant';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { CommandPalette } from '../CommandPalette';
 
+
 // Memoize the layout shell to prevent unnecessary re-renders
 const LayoutShell = memo(function LayoutShell({ children, isLoading }: { children: React.ReactNode, isLoading: boolean }) {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+    const toggleMobileMenu = React.useCallback(() => {
+        setIsMobileMenuOpen(prev => !prev);
+    }, []);
+
+    const closeMobileMenu = React.useCallback(() => {
+        setIsMobileMenuOpen(false);
+    }, []);
+
     return (
         <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
-            <Sidebar />
-            <div className="flex-1 flex flex-col overflow-hidden relative">
-                <TopBar />
-                <main className="flex-1 overflow-y-auto scrollbar-hide">
+            {/* Mobile Backdrop */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+                    onClick={closeMobileMenu}
+                />
+            )}
+
+            <Sidebar
+                isOpen={isMobileMenuOpen}
+                onClose={closeMobileMenu}
+            />
+
+            <div className="flex-1 flex flex-col overflow-hidden relative w-full">
+                <TopBar onMenuClick={toggleMobileMenu} />
+                <main className="flex-1 overflow-y-auto scrollbar-hide w-full">
                     {children}
                 </main>
-                <AiAssistant />
                 <CommandPalette />
             </div>
         </div>
@@ -34,8 +55,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const pathname = usePathname();
     const { isAuthenticated, isLoading } = useAuth();
 
-    // Define public paths that shouldn't show the sidebar/topbar
-    const isPublicPage = ['/login', '/register', '/forgot-password', '/'].includes(pathname || '');
+    // Normalize pathname to handle potential trailing slashes in production environments
+    const normalizedPathname = (pathname || '').replace(/\/$/, '') || '/';
+    const isPublicPage = ['/login', '/register', '/forgot-password', '/'].includes(normalizedPathname);
 
     // If it's a public page, just render children without layout
     if (isPublicPage) {

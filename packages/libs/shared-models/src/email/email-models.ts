@@ -128,3 +128,37 @@ export class SendPasswordResetEmailModel {
         this.token = token;
     }
 }
+
+export class SendAssetApprovalEmailModel {
+    approverEmail: string;
+    companyId: number;
+    requesterName: string;
+    message?: string;
+    assetStats?: {
+        total: number;
+        available: number;
+        inUse: number;
+        maintenance: number;
+        retired: number;
+    };
+
+    constructor(
+        approverEmail: string,
+        companyId: number,
+        requesterName: string,
+        message?: string,
+        assetStats?: {
+            total: number;
+            available: number;
+            inUse: number;
+            maintenance: number;
+            retired: number;
+        }
+    ) {
+        this.approverEmail = approverEmail;
+        this.companyId = companyId;
+        this.requesterName = requesterName;
+        this.message = message;
+        this.assetStats = assetStats;
+    }
+}

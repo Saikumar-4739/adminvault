@@ -66,12 +66,6 @@ export interface ExpenseCategory extends MasterBase {
     budgetLimit?: number;
 }
 
-export interface PasswordVault extends MasterBase {
-    password: string;
-    username?: string;
-    url?: string;
-    notes?: string;
-}
 
 export interface SlackUserModel extends MasterBase {
     email: string;
@@ -83,6 +77,7 @@ export interface SlackUserModel extends MasterBase {
     notes?: string;
     avatar?: string;
     employeeId?: number;
+    companyName?: string;
 }
 
 // ============================================
@@ -236,20 +231,6 @@ export class CreateExpenseCategoryModel extends CreateMasterModel {
     }
 }
 
-export class CreatePasswordVaultModel extends CreateMasterModel {
-    password: string;
-    username?: string;
-    url?: string;
-    notes?: string;
-
-    constructor(userId: number, companyId: number, name: string, password: string, description?: string, isActive?: boolean, username?: string, url?: string, notes?: string, id?: number) {
-        super(userId, companyId, name, description, isActive, id);
-        this.password = password;
-        this.username = username;
-        this.url = url;
-        this.notes = notes;
-    }
-}
 
 // ============================================
 // REQUEST MODELS - UPDATE
@@ -408,27 +389,6 @@ export class UpdateExpenseCategoryModel {
     }
 }
 
-export class UpdatePasswordVaultModel {
-    id: number;
-    name: string;
-    password: string;
-    description?: string;
-    isActive: boolean;
-    username?: string;
-    url?: string;
-    notes?: string;
-
-    constructor(id: number, name: string, password: string, description?: string, isActive = true, username?: string, url?: string, notes?: string) {
-        this.id = id;
-        this.name = name;
-        this.password = password;
-        this.description = description;
-        this.isActive = isActive;
-        this.username = username;
-        this.url = url;
-        this.notes = notes;
-    }
-}
 
 // ============================================
 // RESPONSE MODELS - GET ALL
@@ -514,14 +474,6 @@ export class GetAllExpenseCategoriesResponseModel extends GlobalResponse {
     }
 }
 
-export class GetAllPasswordVaultsResponseModel extends GlobalResponse {
-    passwordVaults: PasswordVault[];
-
-    constructor(status: boolean, code: number, message: string, passwordVaults: PasswordVault[]) {
-        super(status, code, message);
-        this.passwordVaults = passwordVaults;
-    }
-}
 
 export class GetAllSlackUsersResponseModel extends GlobalResponse {
     slackUsers: SlackUserModel[];
@@ -616,14 +568,6 @@ export class CreateExpenseCategoryResponseModel extends GlobalResponse {
     }
 }
 
-export class CreatePasswordVaultResponseModel extends GlobalResponse {
-    passwordVault: PasswordVault;
-
-    constructor(status: boolean, code: number, message: string, passwordVault: PasswordVault) {
-        super(status, code, message);
-        this.passwordVault = passwordVault;
-    }
-}
 
 // ============================================
 // RESPONSE MODELS - UPDATE (Single Item)
@@ -700,14 +644,6 @@ export class UpdateExpenseCategoryResponseModel extends GlobalResponse {
     }
 }
 
-export class UpdatePasswordVaultResponseModel extends GlobalResponse {
-    passwordVault: PasswordVault;
-
-    constructor(status: boolean, code: number, message: string, passwordVault: PasswordVault) {
-        super(status, code, message);
-        this.passwordVault = passwordVault;
-    }
-}
 
 export class CreateSlackUserResponseModel extends GlobalResponse {
     slackUser: SlackUserModel;
@@ -761,57 +697,6 @@ export class UpdateSlackUserModel {
     }
 }
 
-export class GetAllVaultEntriesModel {
-    companyId: number;
-    userId: number;
-
-    constructor(companyId: number, userId: number) {
-        this.companyId = companyId;
-        this.userId = userId;
-    }
-}
-
-export class GetVaultEntryModel {
-    id: number;
-    userId: number;
-
-    constructor(id: number, userId: number) {
-        this.id = id;
-        this.userId = userId;
-    }
-}
-
-export class DeleteVaultEntryModel {
-    id: number;
-    userId: number;
-
-    constructor(id: number, userId: number) {
-        this.id = id;
-        this.userId = userId;
-    }
-}
-
-export class GetDecryptedPasswordModel {
-    id: number;
-    userId: number;
-
-    constructor(id: number, userId: number) {
-        this.id = id;
-        this.userId = userId;
-    }
-}
-
-export class SearchVaultByCategoryModel {
-    category: string;
-    companyId: number;
-    userId: number;
-
-    constructor(category: string, companyId: number, userId: number) {
-        this.category = category;
-        this.companyId = companyId;
-        this.userId = userId;
-    }
-}
 
 
 
@@ -941,50 +826,4 @@ export class AssetTypeDropdownResponse extends GlobalResponse {
     }
 }
 
-export class ToggleVaultFavoriteModel {
-    id: number;
-    userId: number;
-
-    constructor(id: number, userId: number) {
-        this.id = id;
-        this.userId = userId;
-    }
-}
-
-export class GetVaultCategoriesModel {
-    companyId: number;
-    userId: number;
-
-    constructor(companyId: number, userId: number) {
-        this.companyId = companyId;
-        this.userId = userId;
-    }
-}
-
-export class GetVaultEntryResponseModel extends GlobalResponse {
-    vaultEntry: PasswordVault | null;
-
-    constructor(status: boolean, code: number, message: string, vaultEntry: PasswordVault | null) {
-        super(status, code, message);
-        this.vaultEntry = vaultEntry;
-    }
-}
-
-export class GetDecryptedPasswordResponseModel extends GlobalResponse {
-    password: string;
-
-    constructor(status: boolean, code: number, message: string, password: string) {
-        super(status, code, message);
-        this.password = password;
-    }
-}
-
-export class GetVaultCategoriesResponseModel extends GlobalResponse {
-    categories: string[];
-
-    constructor(status: boolean, code: number, message: string, categories: string[]) {
-        super(status, code, message);
-        this.categories = categories;
-    }
-}
 

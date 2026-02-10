@@ -6,6 +6,7 @@ import {
     Activity, CheckCircle2, User, RefreshCw
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
+import { Select } from '@/components/ui/Select';
 
 import { ModernTabs } from './components/ModernTabs';
 import { AllAssetsTab } from './components/AllAssetsTab';
@@ -17,11 +18,12 @@ const BulkImportModal = dynamic(() => import('./components/BulkImportModal').the
 const AdvancedFilterModal = dynamic(() => import('./components/AdvancedFilterModal').then(mod => mod.AdvancedFilterModal), { ssr: false });
 const AssetFormModal = dynamic(() => import('./components/AssetFormModal').then(mod => mod.AssetFormModal), { ssr: false });
 const AssignAssetModal = dynamic(() => import('./components/AssignAssetModal').then(mod => mod.AssignAssetModal), { ssr: false });
+const RequestApprovalModal = dynamic(() => import('./components/RequestApprovalModal').then(mod => mod.RequestApprovalModal), { ssr: false });
 
 import { PageHeader } from '@/components/ui/PageHeader';
+
 import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
-import { useAuth } from '@/contexts/AuthContext';
-import { assetService } from '@/lib/api/services';
+import { assetService, companyService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { AssetSearchRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 
@@ -57,8 +59,9 @@ interface AssetStatistics {
 }
 
 const AssetsPage: React.FC = () => {
-    const { user } = useAuth();
-    const companyId = Number(user?.companyId || 1);
+    // const { user } = useAuth(); // user is not used anymore
+    const [selectedCompanyId, setSelectedCompanyId] = useState<number>(0);
+    const [companies, setCompanies] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState('store');
 
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
@@ -68,6 +71,7 @@ const AssetsPage: React.FC = () => {
     const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState<any>(null);
 
     const [assets, setAssets] = useState<Asset[]>([]);
@@ -75,11 +79,22 @@ const AssetsPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
+    const fetchCompanies = React.useCallback(async () => {
+        try {
+            const response: any = await companyService.getAllCompanies();
+            if (response.status) {
+                setCompanies(response.data || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch companies:', error);
+        }
+    }, []);
+
     const fetchAssets = React.useCallback(async () => {
-        if (!companyId) return;
+        // if (!selectedCompanyId) return; // Allow 0
         setIsLoading(true);
         try {
-            const req = new CompanyIdRequestModel(companyId);
+            const req = new CompanyIdRequestModel(selectedCompanyId);
             const response = await assetService.getAssetsWithAssignments(req);
             if (response.status) {
                 const data = (response as any).assets || [];
@@ -114,12 +129,12 @@ const AssetsPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [companyId]);
+    }, [selectedCompanyId]);
 
     const fetchStatistics = React.useCallback(async () => {
-        if (!companyId) return;
+        // if (!selectedCompanyId) return; // Allow 0
         try {
-            const req = new CompanyIdRequestModel(companyId);
+            const req = new CompanyIdRequestModel(selectedCompanyId);
             const response = await assetService.getAssetStatistics(req);
             if (response.status) {
                 setStatistics(response.statistics);
@@ -127,7 +142,7 @@ const AssetsPage: React.FC = () => {
         } catch (err: any) {
             AlertMessages.getErrorMessage(err.message || 'Failed to fetch statistics');
         }
-    }, [companyId]);
+    }, [selectedCompanyId]);
 
     const refresh = React.useCallback(() => {
         fetchAssets();
@@ -139,6 +154,10 @@ const AssetsPage: React.FC = () => {
     }, [refresh]);
 
     React.useEffect(() => {
+        fetchCompanies();
+    }, [fetchCompanies]);
+
+    React.useEffect(() => {
         if (fetchError) {
             AlertMessages.getErrorMessage(fetchError);
             setFetchError(null);
@@ -146,11 +165,11 @@ const AssetsPage: React.FC = () => {
     }, [fetchError]);
 
     const searchAssets = React.useCallback(async (filters: any) => {
-        if (!companyId) return;
+        // if (!selectedCompanyId) return; // Allow 0
         setIsLoading(true);
         try {
             const request = new AssetSearchRequestModel(
-                companyId,
+                selectedCompanyId,
                 filters.searchQuery,
                 filters.statusFilter,
                 filters.brandIds,
@@ -193,7 +212,7 @@ const AssetsPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [companyId]);
+    }, [selectedCompanyId]);
 
     const tabs = [
         { id: 'store', label: 'Store Assets', icon: Warehouse, gradient: 'from-emerald-500 to-teal-500' },
@@ -239,6 +258,11 @@ const AssetsPage: React.FC = () => {
         }
     };
 
+    const handleCompanyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newCompanyId = Number(e.target.value);
+        setSelectedCompanyId(newCompanyId);
+    };
+
     const handlePrint = (asset: any) => {
         setSelectedAsset(asset);
         setIsQRModalOpen(true);
@@ -249,18 +273,28 @@ const AssetsPage: React.FC = () => {
         setIsTimelineModalOpen(true);
     };
 
-    const StatCard = ({ label, value, icon, gradient }: any) => (
-        <Card className="overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-900">
-            <CardContent className="p-3 relative">
-                <div className="flex items-center justify-between">
+    const StatCard = ({ label, value, icon, gradient, trend }: any) => (
+        <Card className="overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-300 bg-white dark:bg-slate-900 group">
+            <CardContent className="p-4 relative">
+                <div className="flex items-start justify-between">
                     <div>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-tight mb-0.5">{label}</p>
-                        <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight tabular-nums">{value || 0}</h3>
+                        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 opacity-90">{label}</p>
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-none tracking-tight">{value || 0}</h3>
+                            {trend && (
+                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded-full">
+                                    {trend}
+                                </span>
+                            )}
+                        </div>
                     </div>
-                    <div className={`p-1.5 rounded-lg bg-gradient-to-br ${gradient} text-white shadow-md`}>
-                        {React.cloneElement(icon, { className: 'h-4 w-4' })}
+                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        {React.cloneElement(icon, { className: 'h-5 w-5' })}
                     </div>
                 </div>
+
+                {/* Decorative background blur */}
+                <div className={`absolute -bottom-4 -right-4 w-24 h-24 bg-gradient-to-br ${gradient} rounded-full opacity-[0.03] blur-xl group-hover:opacity-[0.08] transition-opacity duration-300`}></div>
             </CardContent>
         </Card>
     );
@@ -292,7 +326,16 @@ const AssetsPage: React.FC = () => {
                         variant: 'primary'
                     }
                 ]}
-            />
+            >
+                <div className="w-64">
+                    <Select
+                        options={[{ value: 0, label: 'All Companies' }, ...companies.map(c => ({ value: c.id, label: c.companyName }))]}
+                        value={selectedCompanyId}
+                        onChange={handleCompanyChange}
+                        className="h-8 text-sm"
+                    />
+                </div>
+            </PageHeader>
 
             {/* Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -387,14 +430,14 @@ const AssetsPage: React.FC = () => {
                 <AssetTimelineModal
                     isOpen={isTimelineModalOpen}
                     asset={selectedAsset}
-                    companyId={companyId}
+                    companyId={selectedCompanyId}
                     onClose={() => setIsTimelineModalOpen(false)}
                 />
             )}
             {isBulkImportOpen && (
                 <BulkImportModal
                     isOpen={isBulkImportOpen}
-                    companyId={companyId}
+                    companyId={selectedCompanyId}
                     onSuccess={() => { /* handled */ }}
                     onClose={() => setIsBulkImportOpen(false)}
                 />
@@ -430,6 +473,13 @@ const AssetsPage: React.FC = () => {
                     }}
                 />
 
+            )}
+            {isApprovalModalOpen && (
+                <RequestApprovalModal
+                    isOpen={isApprovalModalOpen}
+                    onClose={() => setIsApprovalModalOpen(false)}
+                    statistics={statistics}
+                />
             )}
             <DeleteConfirmationModal
                 isOpen={isDeleteModalOpen}

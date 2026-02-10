@@ -204,11 +204,11 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
 
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Device Brand" : "Add Device Brand"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input label="Brand Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+                    <Input label="Brand Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-14" required />
 
-                    <Input label="Brand Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
+                    <Input label="Brand Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="h-14" />
 
-                    <Input label="Website" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
+                    <Input label="Website" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} className="h-14" />
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Rating

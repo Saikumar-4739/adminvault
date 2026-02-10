@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/Button';
 import { Mail, User, Shield, ArrowLeft, Send } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { authService } from '@/lib/api/services';
-import { RequestAccessModel } from '@adminvault/shared-models';
 import Link from 'next/link';
 
 const RequestAccessPage: React.FC = () => {
     const router = useRouter();
-    const [formData, setFormData] = useState({ name: '', email: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', description: '' });
     const [isLoading, setIsLoading] = useState(false);
     const [isDarkMode] = useState(true);
 
@@ -19,13 +18,17 @@ const RequestAccessPage: React.FC = () => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const req = new RequestAccessModel(formData.name, formData.email);
-            const response = await authService.requestAccess(req);
-            if (response.status) {
+            const response = await authService.requestAccess({
+                name: formData.name,
+                email: formData.email,
+                description: formData.description
+            } as any);
+
+            if (response && response.status) {
                 AlertMessages.getSuccessMessage('Access request sent to admin successfully.');
                 setTimeout(() => router.push('/login'), 3000);
             } else {
-                AlertMessages.getErrorMessage(response.message || 'Failed to send access request.');
+                AlertMessages.getErrorMessage(response?.message || 'Failed to send access request.');
             }
         } catch (error: any) {
             AlertMessages.getErrorMessage(error?.message || 'An error occurred.');
@@ -34,7 +37,7 @@ const RequestAccessPage: React.FC = () => {
         }
     }, [formData, router]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -70,12 +73,6 @@ const RequestAccessPage: React.FC = () => {
                                 <ArrowLeft className="h-4 w-4" />
                                 Back to Login
                             </Link>
-                            <div className="inline-flex items-center gap-3 mb-4">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
-                                    <Shield className="h-6 w-6 text-white" />
-                                </div>
-                                <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">AdminVault</h1>
-                            </div>
                             <h2 className={`text-3xl font-black mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Request Access</h2>
                             <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Send your details to the administrator</p>
                         </div>
@@ -129,10 +126,33 @@ const RequestAccessPage: React.FC = () => {
                                 </div>
                             </div>
 
+                            <div className="space-y-2">
+                                <label className={`block text-sm font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                                    Request Reason (Description)
+                                </label>
+                                <div className="relative group/input">
+                                    <div className="absolute top-3.5 left-0 pl-3.5 flex items-start pointer-events-none">
+                                        <Shield className="h-4 w-4 text-gray-500 group-focus-within/input:text-blue-400 transition-colors" />
+                                    </div>
+                                    <textarea
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        placeholder="I need access to manage..."
+                                        rows={3}
+                                        disabled={isLoading}
+                                        className={`w-full pl-10 pr-4 py-3.5 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all disabled:opacity-50 ${isDarkMode
+                                            ? 'bg-slate-800/50 border border-slate-600 text-white placeholder-gray-500 hover:border-slate-500'
+                                            : 'bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 hover:border-gray-400'
+                                            }`}
+                                    />
+                                </div>
+                            </div>
+
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all disabled:opacity-50 group/btn relative overflow-hidden text-lg uppercase"
+                                className="w-full py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all disabled:opacity-50 group/btn relative overflow-hidden text-lg uppercase"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
                                 {isLoading ? (

@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { iamService, authService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 import { UserPermissionsModal } from './components/user-permissions-modal';
+import { MenusMasterView } from '../masters/components/menus-master-view';
+import { LayoutGrid } from 'lucide-react';
 
 interface PermissionSet {
     create: boolean;
@@ -17,7 +19,7 @@ interface PermissionSet {
 }
 
 export default function IamPage() {
-    const [activeTab, setActiveTab] = useState<'iam' | 'users'>('users');
+    const [activeTab, setActiveTab] = useState<'iam' | 'users' | 'menus'>('users');
     const [roles, setRoles] = useState<string[]>([]);
     const [menus, setMenus] = useState<string[]>([]);
     const [users, setUsers] = useState<any[]>([]);
@@ -151,6 +153,18 @@ export default function IamPage() {
                     <div className="flex items-center gap-2">
                         <Shield className="w-4 h-4" />
                         Role Matrix
+                    </div>
+                </button>
+                <button
+                    onClick={() => setActiveTab('menus')}
+                    className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors ${activeTab === 'menus'
+                        ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                        : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
+                        }`}
+                >
+                    <div className="flex items-center gap-2">
+                        <LayoutGrid className="w-4 h-4" />
+                        Menus & Submenus
                     </div>
                 </button>
             </div>
@@ -304,6 +318,12 @@ export default function IamPage() {
                                 </div>
                             </CardHeader>
                         </Card>
+                    </div>
+                )}
+
+                {activeTab === 'menus' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <MenusMasterView />
                     </div>
                 )}
 

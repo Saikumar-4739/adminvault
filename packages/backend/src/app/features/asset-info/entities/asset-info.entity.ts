@@ -1,4 +1,4 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, DeleteDateColumn } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@adminvault/shared-models';
 
@@ -74,4 +74,7 @@ export class AssetInfoEntity extends CommonBaseEntity {
 
     @Column('varchar', { name: 'storage_available', length: 20, nullable: true, comment: 'Available storage capacity' })
     storageAvailable: string;
+
+    @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+    deletedAt: Date;
 }

@@ -1,5 +1,6 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { MasterBaseEntity } from '../../../../../database/master-base.entity';
+import { CompanyInfoEntity } from '../../company-info/entities/company-info.entity';
 
 @Entity('slack_users')
 @Index('idx_slack_user_email', ['email'])
@@ -34,6 +35,10 @@ export class SlackUsersMasterEntity extends MasterBaseEntity {
 
     @Column('bigint', { name: 'company_id', nullable: false, comment: 'Company ID Reference' })
     companyId: number;
+
+    @ManyToOne(() => CompanyInfoEntity)
+    @JoinColumn({ name: 'company_id' })
+    companyInfo: CompanyInfoEntity;
 
     @Column('bigint', { name: 'employee_id', nullable: true, comment: 'Linked Employee ID' })
     employeeId: number;

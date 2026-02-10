@@ -96,7 +96,7 @@ const ProcurementPage: React.FC = () => {
                     <input
                         type="text"
                         placeholder="Search POs, vendors, or items..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+                        className="w-full pl-10 pr-4 h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />

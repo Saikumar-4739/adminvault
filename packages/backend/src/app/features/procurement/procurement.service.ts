@@ -24,7 +24,12 @@ export class ProcurementService {
     async createPO(data: CreatePOModel, userId?: number, userEmail?: string, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const employee = await this.employeeRepo.findOne({ where: { email: userEmail } });
+            const employee = await this.employeeRepo.findOne({
+                where: [
+                    { userId: userId },
+                    { email: userEmail }
+                ]
+            });
             if (!employee) {
                 throw new ErrorResponse(404, 'Employee profile not found for current user');
             }

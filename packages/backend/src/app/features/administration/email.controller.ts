@@ -3,7 +3,7 @@ import { EmailInfoService } from './email-info.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetAllEmailInfoModel, EmailStatsResponseModel, CompanyIdRequestModel, GetEmailInfoModel, GetEmailInfoByIdModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel } from '@adminvault/shared-models';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetAllEmailInfoModel, EmailStatsResponseModel, CompanyIdRequestModel, GetEmailInfoModel, GetEmailInfoByIdModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel, SendAssetApprovalEmailModel } from '@adminvault/shared-models';
 
 @ApiTags('Email Settings')
 @Controller('administration/email')
@@ -98,6 +98,17 @@ export class EmailController {
     async sendAccessRequestEmail(@Body() req: RequestAccessModel): Promise<GlobalResponse> {
         try {
             const result = await this.emailService.sendAccessRequestEmail(req);
+            return new GlobalResponse(result, result ? 200 : 500, result ? 'Email sent successfully' : 'Failed to send email');
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('sendAssetApprovalEmail')
+    @ApiBody({ type: SendAssetApprovalEmailModel })
+    async sendAssetApprovalEmail(@Body() req: SendAssetApprovalEmailModel): Promise<GlobalResponse> {
+        try {
+            const result = await this.emailService.sendAssetApprovalEmail(req);
             return new GlobalResponse(result, result ? 200 : 500, result ? 'Email sent successfully' : 'Failed to send email');
         } catch (error) {
             return returnException(GlobalResponse, error);

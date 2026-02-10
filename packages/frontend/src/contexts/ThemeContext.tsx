@@ -14,11 +14,9 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [fontFamily, setFontFamilyState] = useState('var(--font-outfit)');
-    const [mounted, setMounted] = useState(false);
 
     // Load theme from localStorage on mount
     useEffect(() => {
-        setMounted(true);
         const storedTheme = localStorage.getItem('theme');
         const storedFont = localStorage.getItem('font-family');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -76,10 +74,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         document.documentElement.style.setProperty('--app-font', font);
     };
 
-    // Prevent flash of unstyled content
-    if (!mounted) {
-        return null;
-    }
+    // We no longer return null if not mounted to allow pre-rendering
+    // during static export. Components will render with default theme
+    // and then hydrate with the stored theme on the client.
 
     return (
         <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode, fontFamily, setFontFamily }}>

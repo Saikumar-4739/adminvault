@@ -136,10 +136,23 @@ const DocumentsPage: React.FC = () => {
         }
     }, [documentToDelete, fetchDocuments, user]);
 
-    const handleDownload = useCallback((id: number) => {
-        const url = documentsService.getDownloadUrl(id);
-        window.open(url, '_blank');
-    }, []);
+    const handleDownload = useCallback(async (id: number) => {
+        try {
+            const doc = documents.find(d => d.id === id);
+            const blob = await documentsService.downloadFile(id);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', doc ? doc.originalName : `document-${id}`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Download failed:', error);
+            AlertMessages.getErrorMessage('Failed to download document. Please try again.');
+        }
+    }, [documents]);
 
     const filteredDocuments = useMemo(() => {
         return documents.filter(doc => {

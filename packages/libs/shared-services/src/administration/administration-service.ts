@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { BulkSetSettingsModel, CompanyIdRequestModel, CreateEmailInfoModel, CreatePasswordVaultModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, GetAllEmailInfoModel, GetAllPasswordVaultsResponseModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UpdatePasswordVaultModel, UserIdNumRequestModel, GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel, GetAllVaultEntriesModel, GetVaultEntryModel, GetVaultEntryResponseModel, DeleteVaultEntryModel, GetDecryptedPasswordModel, GetDecryptedPasswordResponseModel, SearchVaultByCategoryModel, ToggleVaultFavoriteModel, GetVaultCategoriesModel, GetVaultCategoriesResponseModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel } from '@adminvault/shared-models';
+import { BulkSetSettingsModel, CompanyIdRequestModel, CreateEmailInfoModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, GetAllEmailInfoModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UserIdNumRequestModel, GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel, SendAssetApprovalEmailModel } from '@adminvault/shared-models';
 
 export class AdministrationService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -41,44 +41,6 @@ export class AdministrationService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/getAllSettingsByCategory'), reqModel, config);
     }
 
-    // --- PASSWORD VAULT ---
-
-    async findAllVaultEntries(reqModel: GetAllVaultEntriesModel, config?: AxiosRequestConfig): Promise<GetAllPasswordVaultsResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/getAllVaultEntries'), reqModel, config);
-    }
-
-    async findOneVaultEntry(reqModel: GetVaultEntryModel, config?: AxiosRequestConfig): Promise<GetVaultEntryResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/getVaultEntry'), reqModel, config);
-    }
-
-    async createVaultEntry(reqModel: CreatePasswordVaultModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/createVaultEntry'), reqModel, config);
-    }
-
-    async updateVaultEntry(reqModel: UpdatePasswordVaultModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/updateVaultEntry'), reqModel, config);
-    }
-
-    async deleteVaultEntry(reqModel: DeleteVaultEntryModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/deleteVaultEntry'), reqModel, config);
-    }
-
-    async getDecryptedVaultPassword(reqModel: GetDecryptedPasswordModel, config?: AxiosRequestConfig): Promise<GetDecryptedPasswordResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/getDecryptedVaultPassword'), reqModel, config);
-    }
-
-    async searchVaultByCategory(reqModel: SearchVaultByCategoryModel, config?: AxiosRequestConfig): Promise<GetAllPasswordVaultsResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/searchVaultByCategory'), reqModel, config);
-    }
-
-    async toggleVaultFavorite(reqModel: ToggleVaultFavoriteModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/toggleVaultFavorite'), reqModel, config);
-    }
-
-    async getVaultCategories(reqModel: GetVaultCategoriesModel, config?: AxiosRequestConfig): Promise<GetVaultCategoriesResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('password-vault/getVaultCategories'), reqModel, config);
-    }
-
     // --- EMAIL ---
 
     async getAllEmailInfo(reqModel: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllEmailInfoModel> {
@@ -115,5 +77,9 @@ export class AdministrationService extends CommonAxiosService {
 
     async sendAccessRequestEmail(reqModel: RequestAccessModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('email/sendAccessRequestEmail'), reqModel, config);
+    }
+
+    async sendAssetApprovalEmail(reqModel: SendAssetApprovalEmailModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('email/sendAssetApprovalEmail'), reqModel, config);
     }
 }

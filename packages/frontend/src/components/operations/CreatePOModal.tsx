@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Plus, Trash2, ShoppingCart } from 'lucide-react';
-import { CreatePOModel, POItemModel, Vendor, AssetType } from '@adminvault/shared-models';
-import { vendorService, assetTypeService, procurementService } from '@/lib/api/services';
+import { CreatePOModel, POItemModel, Vendor } from '@adminvault/shared-models';
+import { vendorService, procurementService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -21,7 +21,6 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
     const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [vendors, setVendors] = useState<Vendor[]>([]);
-    const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
 
     const [formData, setFormData] = useState<any>({
         vendorId: 0,
@@ -41,9 +40,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
         if (!user?.companyId) return;
         try {
             const vRes = await vendorService.getAllVendors();
-            const aRes = await assetTypeService.getAllAssetTypes();
             setVendors(vRes.vendors || []);
-            setAssetTypes(aRes.assetTypes || []);
         } catch (err: any) {
             console.error('Failed to fetch masters', err);
         }
@@ -165,7 +162,6 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
 
                     <Input
                         label="Reference / SKU Prefix"
-                        placeholder="Optional"
                         value={formData.notes || ''}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
@@ -185,10 +181,9 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                     <div className="space-y-3">
                         {formData.items.map((item: any, index: number) => (
                             <div key={index} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 grid grid-cols-12 gap-3 items-end group">
-                                <div className="col-span-12 md:col-span-4">
+                                <div className="col-span-12 md:col-span-7">
                                     <Input
                                         label="Item Name"
-                                        placeholder="e.g. Dell Latitude 5420"
                                         value={item.itemName}
                                         onChange={(e) => updateItem(index, 'itemName', e.target.value)}
                                         className="bg-white dark:bg-slate-900"
@@ -214,18 +209,6 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                                         className="bg-white dark:bg-slate-900"
                                     />
                                 </div>
-                                <div className="col-span-10 md:col-span-3">
-                                    <Select
-                                        label="Asset Type"
-                                        value={item.assetTypeId || 0}
-                                        onChange={(e) => updateItem(index, 'assetTypeId', Number(e.target.value))}
-                                        className="bg-white dark:bg-slate-900"
-                                        options={[
-                                            { label: 'Assign Later', value: 0 },
-                                            ...assetTypes.map(at => ({ label: at.name, value: at.id }))
-                                        ]}
-                                    />
-                                </div>
                                 <div className="col-span-2 md:col-span-1 pb-1 flex justify-center">
                                     <button
                                         type="button"
@@ -244,7 +227,6 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                     <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Additional Notes</label>
                     <textarea
                         className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all min-h-[100px]"
-                        placeholder="Add any specific instructions for the vendor or internal team..."
                         value={formData.notes || ''}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />

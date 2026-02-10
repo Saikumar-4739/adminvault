@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Lock, Search, FileText, Settings2, Upload } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Search, FileText, Settings2, Upload, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
@@ -17,7 +17,6 @@ const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-
 const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Applications...</p> });
 const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Slack Integration...</p> });
 const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Vendors...</p> });
-const MenusMasterView = dynamic(() => import('./components/menus-master-view').then(mod => mod.MenusMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Menus...</p> });
 
 interface MasterItem {
     id: string;
@@ -51,14 +50,6 @@ const MastersPage: React.FC = () => {
             icon: Users,
             color: 'from-purple-500 to-indigo-600',
             component: DepartmentsMasterView
-        },
-        {
-            id: 'menus',
-            title: 'Menus & Submenus',
-            description: 'Manage application navigation and menu structures',
-            icon: Settings2,
-            color: 'from-indigo-500 to-blue-600',
-            component: MenusMasterView
         },
         {
             id: 'asset-types',
@@ -100,22 +91,22 @@ const MastersPage: React.FC = () => {
             color: 'from-indigo-600 to-violet-700',
             component: VendorsMasterView
         },
-        {
-            id: 'password-vault',
-            title: 'Password Vault',
-            description: 'Secure password and credential storage',
-            icon: Lock,
-            color: 'from-slate-600 to-slate-800',
-            href: '/password-vault'
-        },
 
         {
             id: 'document-hub',
-            title: 'Documents',
+            title: 'Document Vault',
             description: 'Manage organizational documents and templates',
             icon: FileText,
             color: 'from-blue-600 to-indigo-700',
             href: '/documents'
+        },
+        {
+            id: 'iam',
+            title: 'IAM & Permissions',
+            description: 'Manage identity access, roles, and menu permissions',
+            icon: ShieldCheck,
+            color: 'from-orange-500 to-rose-600',
+            href: '/iam'
         },
     ];
 

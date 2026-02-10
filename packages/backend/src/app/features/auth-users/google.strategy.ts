@@ -6,9 +6,16 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     constructor(private configService: ConfigService) {
+        const clientID = configService.get<string>('GOOGLE_CLIENT_ID');
+        const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET');
+
+        if (!clientID || !clientSecret || clientID === 'your-google-client-id') {
+            console.warn('GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing or using placeholder in environment variables. Google Sign-in will not work.');
+        }
+
         super({
-            clientID: configService.get<string>('GOOGLE_CLIENT_ID'),
-            clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET'),
+            clientID: clientID,
+            clientSecret: clientSecret,
             callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL', 'http://localhost:3001/auth-users/google/callback'),
             scope: ['email', 'profile'],
         });
