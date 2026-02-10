@@ -11,6 +11,7 @@ const nextConfig = {
   // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
   reactStrictMode: false,
+  trailingSlash: true,
   transpilePackages: [
     '@adminvault/shared-services',
     '@adminvault/shared-models',
@@ -19,9 +20,6 @@ const nextConfig = {
 
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   experimental: {
     workerThreads: false,
@@ -33,14 +31,14 @@ const nextConfig = {
   compress: true, // Enable gzip compression
   productionBrowserSourceMaps: false, // Disable source maps in production
 
-output: 'export',
+  output: 'export',
 
 
   // Optimize images
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
-unoptimized: true
+    unoptimized: true
   },
 
   // Modularize imports disabled temporarily to debug 404s
