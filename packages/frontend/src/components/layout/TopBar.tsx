@@ -148,6 +148,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                         </div>
                         <div className="hidden sm:block text-left">
                             <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">{user?.fullName || 'User'}</p>
+                            <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-none mt-1">{user?.email}</p>
                         </div>
                         <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
                     </button>

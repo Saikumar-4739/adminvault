@@ -97,7 +97,6 @@
     "@nestjs/websockets": "^11.1.11",
     "@types/nodemailer": "^7.0.4",
     "@types/pg": "^8.16.0",
-    "@types/socket.io-client": "^1.4.36",
     "@types/ua-parser-js": "^0.7.39",
     "axios": "^1.13.5",
     "axios-retry": "^4.5.0",

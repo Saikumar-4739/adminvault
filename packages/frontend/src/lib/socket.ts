@@ -1,13 +1,13 @@
 'use client';
 
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 
-let socketInstance: Socket | null = null;
+let socketInstance: any = null;
 
 const baseUrl =
-  process.env.NEXT_PUBLIC_API_URL || 'https://api.inolyse.live';
+  process.env.NEXT_PUBLIC_API_URL || 'https://adminvault.inolyse.live/api';
 
-export function getSocket(): Socket {
+export function getSocket(): any {
   if (!socketInstance) {
     socketInstance = io(`${baseUrl}/tickets`, {
       path: '/socket.io',
@@ -20,11 +20,11 @@ export function getSocket(): Socket {
       console.log('[Socket] Connected:', socketInstance?.id);
     });
 
-    socketInstance.on('disconnect', (reason) => {
+    socketInstance.on('disconnect', (reason: string) => {
       console.warn('[Socket] Disconnected:', reason);
     });
 
-    socketInstance.on('connect_error', (error) => {
+    socketInstance.on('connect_error', (error: any) => {
       console.error('[Socket] Connection error:', error.message);
     });
   }

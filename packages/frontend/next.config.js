@@ -11,7 +11,7 @@ const nextConfig = {
   // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
   reactStrictMode: false,
-  trailingSlash: true,
+  trailingSlash: false,
   transpilePackages: [
     '@adminvault/shared-services',
     '@adminvault/shared-models',

@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
-import { Lock, Mail, Shield, Eye, EyeOff, ArrowRight, Sparkles, Zap, Users, CheckCircle2, TrendingUp, Moon, Sun, BookOpen, Package } from 'lucide-react';
+import { Lock, Mail, Shield, Eye, EyeOff, ArrowRight, Sparkles, Users, Moon, Sun, BookOpen, Package } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { LoginUserModel } from '@adminvault/shared-models';
 import Link from 'next/link';
@@ -21,6 +21,11 @@ const LoginPage: React.FC = () => {
         if (isAuthenticated) {
             router.push('/dashboard');
         }
+        // Load saved email on mount
+        const savedEmail = localStorage.getItem('last_login_email');
+        if (savedEmail) {
+            setFormData(prev => ({ ...prev, email: savedEmail }));
+        }
     }, [isAuthenticated, router]);
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -29,6 +34,8 @@ const LoginPage: React.FC = () => {
             const req = new LoginUserModel(formData.email, formData.password);
             const user = await login(req);
             if (user) {
+                // Save email for next time
+                localStorage.setItem('last_login_email', formData.email);
                 AlertMessages.getSuccessMessage('Logged in successfully!');
                 router.push('/dashboard');
             } else {

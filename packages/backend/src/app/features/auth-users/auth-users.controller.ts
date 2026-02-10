@@ -148,6 +148,17 @@ export class AuthUsersController {
             return returnException(GlobalResponse, error);
         }
     }
+
+    @Get('getMe')
+    @ApiOperation({ summary: 'Get current user profile' })
+    async getMe(@Req() req: any): Promise<LoginResponseModel> {
+        try {
+            return await this.service.getMe(req.user.userId);
+        } catch (error) {
+            return returnException(LoginResponseModel, error);
+        }
+    }
+
     @Get('google')
     @Public()
     @UseGuards(AuthGuard('google'))
@@ -171,12 +182,6 @@ export class AuthUsersController {
                 companyId: user.companyId,
                 role: user.userRole
             };
-
-            // Note: Since I can't easily access the private token generation methods from within the controller 
-            // without making them public or adding a service method, I'll assume I should have a service method 
-            // for generating tokens from a user object.
-            // For now, I'll redirect to the frontend with the tokens in the URL or handle it as a session.
-            // Best practice for NestJS with Passport is often to use the service to generate response.
 
             const response = await this.service.loginUserFromOAuth(user);
 

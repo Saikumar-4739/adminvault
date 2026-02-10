@@ -24,32 +24,33 @@ Logger.log(`Environment variables loaded. MICROSOFT_CLIENT_ID: ${process.env.MIC
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
- const allowedOrigins = [
-  'https://inolyse.live',
-  'https://www.inolyse.live',
-  'http://localhost:3000',
-  'http://localhost:4200',
-];
+  const allowedOrigins = [
+    'https://adminvault.inolyse.live',
+    'https://inolyse.live',
+    'https://www.inolyse.live',
+    'http://localhost:3000',
+    'http://localhost:4200',
+  ];
 
-app.enableCors({
-  origin: (origin, callback) => {
-    // Allow server-to-server or curl requests
-    if (!origin) return callback(null, true);
+  app.enableCors({
+    origin: (origin, callback) => {
+      // Allow server-to-server or curl requests
+      if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
 
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-  ],
-});
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+    ],
+  });
 
   app.setGlobalPrefix('api');
 
