@@ -90,7 +90,7 @@ export class EmailInfoService {
 
     async getAllEmailInfo(reqModel: CompanyIdRequestModel): Promise<GetAllEmailInfoModel> {
         const data = await this.emailInfoRepo.getEmailsWithEmployee(reqModel.companyId);
-        const responses = data.map(info => new EmailInfoResponseModel(info.id, info.company_id, info.email_type, info.department, info.email, info.employee_id));
+        const responses = data.map(info => new EmailInfoResponseModel(info.id, info.company_id, info.email_type, info.department, info.email, info.employee_id, info.employee_name));
         return new GetAllEmailInfoModel(true, 200, "Email info retrieved successfully", responses);
     }
 

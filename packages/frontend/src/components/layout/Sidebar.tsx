@@ -16,7 +16,6 @@ const DEFAULT_NAVIGATION = [
             { name: 'Configuration', href: '/masters', icon: Database, key: 'masters' },
             { name: 'Reports', href: '/reports', icon: PieChart, key: 'reports' },
             { name: 'Document Vault', href: '/documents', icon: FileText, key: 'document-hub' },
-            { name: 'Emails Info', href: '/emails', icon: Mail, key: 'emails' },
         ]
     },
     {
@@ -26,12 +25,14 @@ const DEFAULT_NAVIGATION = [
             { name: 'Assets', href: '/assets', icon: Package, key: 'assets' },
             { name: 'Procurement', href: '/procurement', icon: ShoppingCart, key: 'procurement' },
             { name: 'Licenses', href: '/licenses', icon: KeySquare, key: 'licenses' },
+            { name: 'Emails', href: '/emails', icon: Mail, key: 'emails' },
         ]
     },
     {
-        title: 'Network & Security',
+        title: 'Global Routing & Identity',
         items: [
-            { name: 'Network', href: '/network', icon: Network, key: 'network' },
+            { name: 'Global Routing', href: '/network', icon: Network, key: 'network' },
+            { name: 'Identity Management', href: '/iam', icon: KeySquare, key: 'iam' },
             { name: 'Approvals', href: '/approvals', icon: GitPullRequest, key: 'approvals' },
         ]
     },

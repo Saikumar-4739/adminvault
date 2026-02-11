@@ -100,14 +100,14 @@ const MastersPage: React.FC = () => {
             color: 'from-blue-600 to-indigo-700',
             href: '/documents'
         },
-        {
-            id: 'iam',
-            title: 'IAM & Permissions',
-            description: 'Manage identity access, roles, and menu permissions',
-            icon: ShieldCheck,
-            color: 'from-orange-500 to-rose-600',
-            href: '/iam'
-        },
+        // {
+        //     id: 'iam',
+        //     title: 'IAM & Permissions',
+        //     description: 'Manage identity access, roles, and menu permissions',
+        //     icon: ShieldCheck,
+        //     color: 'from-orange-500 to-rose-600',
+        //     href: '/iam'
+        // },
     ];
 
     const selectedMasterData = masters.find(m => m.id === selectedMaster);

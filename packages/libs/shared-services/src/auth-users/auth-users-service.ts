@@ -50,4 +50,8 @@ export class AuthUsersService extends CommonAxiosService {
     async getMe(config?: AxiosRequestConfig): Promise<LoginResponseModel> {
         return await this.axiosGetCall(this.getURLwithMainEndPoint('getMe'), config);
     }
+
+    getGoogleAuthUrl() {
+        return this.URL + this.getURLwithMainEndPoint('google');
+    }
 }

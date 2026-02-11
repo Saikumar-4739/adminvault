@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
@@ -228,6 +229,10 @@ const DashboardPage: React.FC = () => {
             transition: { type: 'spring', stiffness: 100, damping: 20 } as any
         }
     };
+
+    if (isLoading && !stats) {
+        return <LoadingScreen message="Quantum Processing Data..." />;
+    }
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>

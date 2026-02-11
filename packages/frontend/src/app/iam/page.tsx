@@ -125,7 +125,7 @@ export default function IamPage() {
         <div className="p-4 lg:p-6 min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white space-y-4">
             <PageHeader
                 icon={<ShieldCheck />}
-                title="IAM"
+                title="Identity Management"
                 description="Manage identity access policies and role-based permissions."
             />
 

@@ -6,6 +6,7 @@ import React, { memo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { LoadingScreen } from '../ui/LoadingScreen';
 import { CommandPalette } from '../CommandPalette';
 
 
@@ -71,5 +72,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     }
 
     // Show layout shell for authenticated users OR while loading (to prevent flash)
-    return <LayoutShell isLoading={isLoading}>{children}</LayoutShell>;
+    if (isLoading) {
+        return <LoadingScreen message="Verifying access..." />;
+    }
+
+    return (
+        <LayoutShell isLoading={isLoading}>
+            {children}
+        </LayoutShell>
+    );
 }

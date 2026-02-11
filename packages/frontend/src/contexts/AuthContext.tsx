@@ -71,34 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (credentials: LoginUserModel): Promise<User | undefined> => {
         try {
-            // Attempt to get geolocation coordinates
-            let latitude: number | undefined;
-            let longitude: number | undefined;
-
-            try {
-                const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-                    if (!navigator.geolocation) {
-                        reject(new Error('Geolocation not supported'));
-                        return;
-                    }
-                    navigator.geolocation.getCurrentPosition(resolve, reject, {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0 // Fetch fresh position
-                    });
-                });
-                latitude = position.coords.latitude;
-                longitude = position.coords.longitude;
-                console.log('✅ GPS obtained:', latitude, longitude);
-            } catch (geoError) {
-                console.warn('⚠️ Geolocation fallback to IP:', geoError);
-            }
-
             const loginData = new LoginUserModel(
                 credentials.email,
-                credentials.password,
-                latitude,
-                longitude
+                credentials.password
             );
             const response: LoginResponseModel = await authService.loginUser(loginData);
             const tokenToSave = response.accessToken || (response as any)?.access_token;

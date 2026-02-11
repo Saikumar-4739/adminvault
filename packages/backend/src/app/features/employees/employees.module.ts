@@ -7,8 +7,13 @@ import { EmployeesRepository } from './repositories/employees.repository';
 import { EmployeesBulkService } from './employees-bulk.service';
 import { DepartmentRepository } from '../masters/department/repositories/department.repository';
 
+import { AdministrationModule } from '../administration/administration.module';
+
 @Module({
-    imports: [TypeOrmModule.forFeature([EmployeesEntity])],
+    imports: [
+        TypeOrmModule.forFeature([EmployeesEntity]),
+        AdministrationModule
+    ],
     controllers: [EmployeesController],
     providers: [EmployeesService, EmployeesRepository, EmployeesBulkService, DepartmentRepository],
     exports: [EmployeesService, EmployeesRepository],

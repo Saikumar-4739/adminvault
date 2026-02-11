@@ -6,13 +6,15 @@ import { CompanyInfoEntity } from '../masters/company-info/entities/company-info
 import { DepartmentsMasterEntity } from '../masters/department/entities/department.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, CompanyIdRequestModel, CreateEmailInfoModel, EmailTypeEnum } from '@adminvault/shared-models';
+import { EmailInfoService } from '../administration/email-info.service';
 
 @Injectable()
 export class EmployeesService {
     constructor(
         private dataSource: DataSource,
-        private employeesRepo: EmployeesRepository
+        private employeesRepo: EmployeesRepository,
+        private emailInfoService: EmailInfoService
     ) { }
 
     async createEmployee(reqModel: CreateEmployeeModel): Promise<GlobalResponse> {
@@ -57,9 +59,20 @@ export class EmployeesService {
             newEmployee.departmentId = reqModel.departmentId;
             newEmployee.remarks = reqModel.remarks;
             newEmployee.managerId = reqModel.managerId;
-            await transManager.getRepository(EmployeesEntity).save(newEmployee);
+            const savedEmployee = await transManager.getRepository(EmployeesEntity).save(newEmployee);
+
+            // Automatically create Individual Identity (Email Info)
+            const emailReq = new CreateEmailInfoModel(
+                reqModel.companyId,
+                EmailTypeEnum.USER,
+                deptExists.name,
+                reqModel.email,
+                savedEmployee.id
+            );
+            await this.emailInfoService.createEmailInfo(emailReq);
+
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 0, "Employee created successfully");
+            return new GlobalResponse(true, 0, "Employee and Identity created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
             throw error;

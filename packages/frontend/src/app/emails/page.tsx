@@ -21,7 +21,7 @@ type EmailCategory = 'COMPANY' | 'USER' | 'GROUP';
 
 const CategoryConfig: Record<EmailCategory, { label: string, icon: any, color: string, types: EmailTypeEnum[] }> = {
     COMPANY: {
-        label: 'Enterprise Routing',
+        label: 'Global Routing',
         icon: Globe,
         color: 'indigo',
         types: [EmailTypeEnum.COMPANY, EmailTypeEnum.SUPPORT, EmailTypeEnum.BILLING, EmailTypeEnum.GENERAL]
@@ -58,7 +58,7 @@ const InfoEmailsPage: React.FC = () => {
     const [departments, setDepartments] = useState<any[]>([]);
     const [emailInfoList, setEmailInfoList] = useState<EmailInfoResponseModel[]>([]);
     const [selectedOrg, setSelectedOrg] = useState<string>('');
-    const [activeTab, setActiveTab] = useState<EmailCategory>('COMPANY');
+    const [activeTab, setActiveTab] = useState<EmailCategory>('USER');
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -188,12 +188,12 @@ const InfoEmailsPage: React.FC = () => {
 
     const groupedData = useMemo(() => {
         const groups: Record<string, typeof emailInfoList> = {};
+        const emailDepts = [...new Set(filteredEmails.map(e => e.department || 'Unassigned'))];
+        const masterDepts = departments.map(d => d.name);
 
-        // Use the fetched departments from the masters service
-        const deptNames = departments.map(d => d.name);
-
-        // Add "Unassigned" to catch any emails not matched to a legitimate department
-        const allPossibleDepts = [...deptNames, 'Unassigned'];
+        // Combine all departments present in either the master list or the actual email data
+        const allPossibleDepts = [...new Set([...masterDepts, ...emailDepts])];
+        if (!allPossibleDepts.includes('Unassigned')) allPossibleDepts.push('Unassigned');
 
         allPossibleDepts.forEach(dept => {
             const emailsInDept = filteredEmails.filter(email => {
@@ -201,9 +201,11 @@ const InfoEmailsPage: React.FC = () => {
                 return emailDept === dept;
             });
 
-            // Only show groups that have emails or show all empty groups when not searching
-            if (emailsInDept.length > 0 || (searchQuery === '' && dept !== 'Unassigned')) {
+            // Only show groups that have emails or show master groups when not searching
+            if (emailsInDept.length > 0) {
                 groups[dept] = emailsInDept;
+            } else if (searchQuery === '' && masterDepts.includes(dept)) {
+                groups[dept] = [];
             }
         });
 
@@ -217,7 +219,7 @@ const InfoEmailsPage: React.FC = () => {
                 <PageHeader
                     icon={<Mail />}
                     title="Emails"
-                    description="Global routing and identity management"
+                    description="Global Routing and Identity Management"
                     gradient="from-indigo-600 to-violet-700"
                     actions={[
                         {
@@ -358,6 +360,14 @@ const InfoEmailsPage: React.FC = () => {
                                                                 </span>
                                                             </div>
                                                             <p className="font-bold truncate text-[13px] text-slate-800 dark:text-slate-200">{acc.email}</p>
+                                                            {acc.emailType === EmailTypeEnum.USER && acc.employeeName && (
+                                                                <div className="mt-2 flex items-center gap-1.5 py-1 px-2 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100/50 dark:border-indigo-900/30 w-fit">
+                                                                    <User className="w-3 h-3 text-indigo-500" />
+                                                                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tight">
+                                                                        {acc.employeeName}
+                                                                    </span>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <button
                                                             onClick={() => handleDeleteEmailInfo(acc.id)}

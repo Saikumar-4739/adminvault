@@ -62,6 +62,7 @@ export class EmailInfoResponseModel {
     department: string;
     email: string;
     employeeId?: number;
+    employeeName?: string;
 
     constructor(
         id: number,
@@ -69,7 +70,8 @@ export class EmailInfoResponseModel {
         emailType: EmailTypeEnum,
         department: string,
         email: string,
-        employeeId?: number
+        employeeId?: number,
+        employeeName?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -77,6 +79,7 @@ export class EmailInfoResponseModel {
         this.department = department;
         this.email = email;
         this.employeeId = employeeId;
+        this.employeeName = employeeName;
     }
 }
 
