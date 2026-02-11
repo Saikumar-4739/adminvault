@@ -688,6 +688,36 @@ export class ReportsService {
         }));
     }
 
+    async getLicenseReports(format = 'summary') {
+        const query = `
+            SELECT 
+                l.id,
+                l.assigned_date AS assignedDate,
+                l.expiry_date AS expiryDate,
+                l.remarks,
+                c.company_name AS companyName,
+                a.name AS softwareName,
+                CONCAT(e.first_name, ' ', e.last_name) AS assignedEmployee
+            FROM licenses l
+            LEFT JOIN company_info c ON l.company_id = c.id
+            LEFT JOIN applications a ON l.application_id = a.id
+            LEFT JOIN employees e ON l.assigned_employee_id = e.id
+            ORDER BY l.created_at DESC
+        `;
+
+        const rawResults = await this.dataSource.query(query);
+
+        return rawResults.map((row: any) => ({
+            'ID': row.id,
+            'Software': row.softwareName || 'N/A',
+            'Company': row.companyName || 'N/A',
+            'Assigned Employee': row.assignedEmployee || 'Unassigned',
+            'Assigned Date': row.assignedDate || 'N/A',
+            'Expiry Date': row.expiryDate || 'N/A',
+            'Remarks': row.remarks || '---'
+        }));
+    }
+
     async getDeviceBrandsReport(format = 'summary') {
         const query = `
             SELECT 
@@ -743,6 +773,9 @@ export class ReportsService {
                 break;
             case 'Employees by Department Report':
                 data = await this.getEmployeesByDepartmentReport(fetchFormat);
+                break;
+            case 'License Assignment Report':
+                data = await this.getLicenseReports(fetchFormat);
                 break;
             case 'Ticket Summary Report':
                 data = await this.getTicketReports(fetchFormat);

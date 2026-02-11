@@ -18,6 +18,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     const { user, logout } = useAuth();
     const { isDarkMode, toggleDarkMode } = useTheme();
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [mounted, setMounted] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +51,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     }, []);
 
     useEffect(() => {
+        setMounted(true);
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
@@ -76,13 +78,21 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                 <div className="flex items-center gap-4 px-4 lg:px-6 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md min-w-[200px] lg:min-w-[280px]">
                     <Globe className="h-4 w-4 text-blue-500 animate-pulse shrink-0" />
                     <div className="flex items-center gap-3 whitespace-nowrap">
-                        <span className="hidden sm:inline text-[11px] font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
-                            {currentTime.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </span>
-                        <div className="hidden sm:block w-px h-3 bg-slate-200 dark:bg-slate-800" />
-                        <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 tabular-nums tracking-widest uppercase">
-                            {currentTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                        </span>
+                        {mounted ? (
+                            <>
+                                <span className="hidden sm:inline text-[11px] font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
+                                    {currentTime.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                </span>
+                                <div className="hidden sm:block w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                                <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 tabular-nums tracking-widest uppercase">
+                                    {currentTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                </span>
+                            </>
+                        ) : (
+                            <span className="text-[11px] font-black text-slate-400 tabular-nums tracking-tight animate-pulse">
+                                INITIALIZING...
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>

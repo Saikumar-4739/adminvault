@@ -1,7 +1,8 @@
 /* Import Inter font handled via next/font in layout.tsx */
 
 @import "tailwindcss";
-;
+@config "../../tailwind.config.js";
+@variant dark (&:where(.dark, .dark *));
 
 /* Hide scrollbar utility */
 @layer utilities {

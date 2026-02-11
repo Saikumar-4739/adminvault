@@ -4,16 +4,15 @@ import { getSocket } from '@/lib/socket';
 /**
  * Base hook for WebSocket functionality
  * NOT exported - used internally by other hooks
+ * @param namespace The namespace to connect to
  */
-const useWebSocket = () => {
+const useWebSocket = (namespace: string = '/ws') => {
     const [isConnected, setIsConnected] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting' | 'error'>('disconnected');
     const [error, setError] = useState<string | null>(null);
 
-    // Initial value for isConnected to avoid hydration mismatch if possible, 
-    // but socket is client-only.
-
-    const socket = typeof window !== 'undefined' ? getSocket() : null;
+    // Get socket for the specified namespace
+    const socket = typeof window !== 'undefined' ? getSocket(namespace) : null;
 
     useEffect(() => {
         if (!socket) return;
@@ -46,7 +45,7 @@ const useWebSocket = () => {
             socket.off('disconnect', onDisconnect);
             socket.off('connect_error', onConnectError);
         };
-    }, [socket]);
+    }, [socket, namespace]);
 
     const subscribe = useCallback((event: string, handler: (...args: any[]) => void) => {
         socket?.on(event, handler);
@@ -66,7 +65,8 @@ const useWebSocket = () => {
         emit,
         isConnected,
         connectionStatus,
-        error
+        error,
+        socket
     };
 };
 
@@ -78,9 +78,10 @@ const useWebSocket = () => {
 export const useWebSocketEvent = (
     event: string,
     handler: (...args: any[]) => void,
-    dependencies: any[] = []
+    dependencies: any[] = [],
+    namespace: string = '/ws'
 ) => {
-    const { subscribe, unsubscribe, isConnected } = useWebSocket();
+    const { subscribe, unsubscribe, isConnected } = useWebSocket(namespace);
     const handlerRef = useRef(handler);
 
     // Update handler ref when it changes
@@ -102,23 +103,23 @@ export const useWebSocketEvent = (
         return () => {
             unsubscribe(event, wrappedHandler);
         };
-    }, [event, isConnected, subscribe, unsubscribe, ...dependencies]);
+    }, [event, isConnected, subscribe, unsubscribe, namespace, ...dependencies]);
 };
 
 /**
  * Hook for emitting WebSocket events
  */
-export const useWebSocketEmit = () => {
-    const { emit, isConnected } = useWebSocket();
+export const useWebSocketEmit = (namespace: string = '/ws') => {
+    const { emit, isConnected } = useWebSocket(namespace);
 
     const safeEmit = useCallback((event: string, data?: any) => {
         if (!isConnected) {
-            console.warn(`[useWebSocketEmit] Cannot emit ${event}: not connected`);
+            console.warn(`[useWebSocketEmit] Cannot emit ${event} on ${namespace}: not connected`);
             return false;
         }
         emit(event, data);
         return true;
-    }, [emit, isConnected]);
+    }, [emit, isConnected, namespace]);
 
     return { emit: safeEmit, isConnected };
 };
@@ -126,8 +127,8 @@ export const useWebSocketEmit = () => {
 /**
  * Hook for WebSocket connection status
  */
-export const useWebSocketStatus = () => {
-    const { isConnected, connectionStatus, error } = useWebSocket();
+export const useWebSocketStatus = (namespace: string = '/ws') => {
+    const { isConnected, connectionStatus, error } = useWebSocket(namespace);
 
     return {
         isConnected,

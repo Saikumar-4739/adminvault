@@ -7,7 +7,7 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, CreateTicketModel } from '@adminvault/shared-models';
-import { Building2, CheckCircle, Ticket, Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, AlertTriangle, Send, MessageSquare, List, Plus, Clock, ChevronRight, Hash, Layers } from 'lucide-react';
+import { Building2, CheckCircle, Ticket, Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, Send, MessageSquare, List, Plus, Clock, ChevronRight, Hash } from 'lucide-react';
 import { getSocket } from '@/lib/socket';
 import { PageHeader } from '@/components/ui/PageHeader';
 
@@ -99,7 +99,7 @@ const CreateTicketPage: React.FC = () => {
 
     // WebSocket for real-time ticket updates (User status changes)
     useEffect(() => {
-        const socket = getSocket();
+        const socket = getSocket('/tickets');
 
         socket.on('ticketUpdated', (updatedTicket: any) => {
             // Refresh to get latest data if one of our tickets was updated
@@ -188,7 +188,7 @@ const CreateTicketPage: React.FC = () => {
                 <PageHeader
                     icon={<Building2 />}
                     title="Support Hub"
-                    description="Enterprise Assistance"
+                    description="Submit a support ticket"
                     gradient="from-indigo-600 to-violet-600"
                 >
                     <div className="flex items-center p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
@@ -324,15 +324,13 @@ const CreateTicketPage: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        /* Compact Professional Form */
-                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full items-start">
-                            {/* Form Column */}
-                            <div className="xl:col-span-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        /* Simplified Centered Form */
+                        <div className="max-w-4xl mx-auto w-full">
+                            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-3">
-                                    <Layers className="h-5 w-5 text-indigo-600" />
+                                    <Plus className="h-5 w-5 text-indigo-600" />
                                     <div>
-                                        <h3 className="text-base font-black text-slate-900 dark:text-white leading-none">Submission Portal</h3>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Formal Support Request</p>
+                                        <h3 className="text-base font-black text-slate-900 dark:text-white leading-none">New Ticket</h3>
                                     </div>
                                 </div>
 
@@ -341,7 +339,7 @@ const CreateTicketPage: React.FC = () => {
                                     <div className="space-y-3">
                                         <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
                                             <ChevronRight className="h-3 w-3 text-indigo-500" />
-                                            Issue Description
+                                            Subject
                                         </label>
                                         <Input
                                             value={formData.subject}
@@ -357,7 +355,7 @@ const CreateTicketPage: React.FC = () => {
                                         <div className="space-y-4">
                                             <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
                                                 <ChevronRight className="h-3 w-3 text-indigo-500" />
-                                                Classification
+                                                Category
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {Object.values(TicketCategoryEnum).map((cat) => {
@@ -387,7 +385,7 @@ const CreateTicketPage: React.FC = () => {
                                         <div className="space-y-4">
                                             <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
                                                 <ChevronRight className="h-3 w-3 text-indigo-500" />
-                                                Impact Level
+                                                Priority
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {Object.values(TicketPriorityEnum).map((prio) => {
@@ -413,15 +411,7 @@ const CreateTicketPage: React.FC = () => {
                                     </div>
 
                                     {/* Action Footnote */}
-                                    <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
-                                        <div className="flex items-center gap-3 text-slate-400 group">
-                                            <div className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center">
-                                                <AlertTriangle className="h-4 w-4 opacity-50" />
-                                            </div>
-                                            <p className="text-[10px] font-bold uppercase tracking-widest max-w-[200px]">
-                                                Request will be routed to the respective department immediately.
-                                            </p>
-                                        </div>
+                                    <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                                         <Button
                                             type="submit"
                                             variant="primary"
@@ -433,49 +423,6 @@ const CreateTicketPage: React.FC = () => {
                                         </Button>
                                     </div>
                                 </form>
-                            </div>
-
-                            {/* Informational Column */}
-                            <div className="xl:col-span-4 space-y-6">
-                                <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white shadow-2xl shadow-indigo-500/30">
-                                    <h4 className="text-base font-black uppercase tracking-[0.2em] mb-4">Portal Metrics</h4>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-                                            <span className="text-[11px] font-bold uppercase tracking-widest opacity-80">Mean Response</span>
-                                            <span className="text-xl font-black">1.2 hrs</span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-                                            <span className="text-[11px] font-bold uppercase tracking-widest opacity-80">Resolution Rate</span>
-                                            <span className="text-xl font-black">94.8%</span>
-                                        </div>
-                                    </div>
-                                    <div className="mt-6 flex items-center gap-3">
-                                        <div className="flex -space-x-2">
-                                            {[1, 2, 3].map(i => (
-                                                <div key={i} className="w-8 h-8 rounded-full bg-slate-800 border-2 border-indigo-600" />
-                                            ))}
-                                        </div>
-                                        <span className="text-[10px] font-black uppercase tracking-tighter opacity-70">+14 Active Technicians</span>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6">
-                                    <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4">Guidelines</h4>
-                                    <ul className="space-y-4">
-                                        {[
-                                            'Explicitly state the hardware serial if applicable.',
-                                            'Mention any error codes specifically displayed.',
-                                            'Screenshot uploads available in the chat view later.'
-                                        ].map((text, i) => (
-                                            <li key={i} className="flex gap-3 items-start">
-                                                <div className="w-5 h-5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                                                </div>
-                                                <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-relaxed uppercase tracking-tight">{text}</p>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
                             </div>
                         </div>
                     )}

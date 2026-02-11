@@ -16,12 +16,12 @@ export function formatDate(date: Date | string | null | undefined): string {
     const d = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(d.getTime())) return '-';
 
-    // Format as DD-MM-YYYY
+    // Format as MM/DD/YYYY
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
 
-    return `${day}-${month}-${year}`;
+    return `${month}/${day}/${year}`;
 }
 
 /**

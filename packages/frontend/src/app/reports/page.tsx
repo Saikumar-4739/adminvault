@@ -80,6 +80,15 @@ const ReportsPage: React.FC = () => {
                 { name: 'Department Summary Report', description: 'Department overview with employee and asset counts', icon: Users, stats: 'Structure' },
                 { name: 'Device Brands Report', description: 'Brand distribution across device types with asset counts', icon: Package, stats: 'Inventory' },
             ]
+        },
+        {
+            id: 'licenses',
+            title: 'License Reports',
+            description: 'Software license allocation and expiry tracking',
+            icon: FileText,
+            reports: [
+                { name: 'License Assignment Report', description: 'Complete list of software licenses assigned to employees with expiry tracking', icon: BarChart3, stats: 'Assignments' },
+            ]
         }
     ];
 
@@ -144,55 +153,55 @@ const ReportsPage: React.FC = () => {
                     // Detailed Report View
                     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
                         {/* Navigation Actions */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-4">
                             <button
                                 onClick={() => { setSelectedReport(null); setReportData(null); }}
-                                className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors"
+                                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors"
                             >
-                                <ArrowLeft className="h-4 w-4" />
-                                Return to Hub
+                                <ArrowLeft className="h-3.5 w-3.5" />
+                                Hub
                             </button>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                                 <Button
                                     variant="outline"
                                     onClick={() => downloadFullReport('excel')}
                                     disabled={!reportData || isExporting}
-                                    leftIcon={<FileSpreadsheet className="h-4 w-4" />}
-                                    className="h-10 text-xs font-black uppercase tracking-widest shadow-sm border-2"
+                                    leftIcon={<FileSpreadsheet className="h-3.5 w-3.5" />}
+                                    className="h-8 px-3 text-[9px] font-black uppercase tracking-widest shadow-sm border"
                                 >
-                                    Export XLSX
+                                    XLSX
                                 </Button>
                                 <Button
                                     variant="outline"
                                     onClick={() => downloadFullReport('pdf')}
                                     disabled={!reportData || isExporting}
-                                    leftIcon={<FileDown className="h-4 w-4" />}
-                                    className="h-10 text-xs font-black uppercase tracking-widest shadow-sm border-2"
+                                    leftIcon={<FileDown className="h-3.5 w-3.5" />}
+                                    className="h-8 px-3 text-[9px] font-black uppercase tracking-widest shadow-sm border"
                                 >
-                                    Export PDF
+                                    PDF
                                 </Button>
                             </div>
                         </div>
 
                         {/* Report Context Card */}
-                        <div className="p-8 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 shadow-xl">
-                            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-2 uppercase">{selectedReport}</h1>
-                            <p className="text-slate-500 dark:text-slate-400 font-medium">
+                        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 shadow-sm">
+                            <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white mb-1 uppercase">{selectedReport}</h1>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                                 {reportCategories.find(c => c.reports.some(r => r.name === selectedReport))?.reports.find(r => r.name === selectedReport)?.description}
                             </p>
                         </div>
 
                         {/* Content Processing Area */}
-                        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden min-h-[500px]">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden min-h-[300px]">
                             {!reportData ? (
-                                <div className="flex flex-col items-center justify-center min-h-[500px] p-12 text-center space-y-8">
-                                    <div className="w-24 h-24 bg-slate-50 dark:bg-white/5 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-white/10 flex items-center justify-center animate-pulse">
-                                        <FileText className="h-10 w-10 text-slate-300" />
+                                <div className="flex flex-col items-center justify-center min-h-[300px] p-8 text-center space-y-4">
+                                    <div className="w-12 h-12 bg-slate-50 dark:bg-white/5 rounded-xl border border-dashed border-slate-200 dark:border-white/10 flex items-center justify-center animate-pulse">
+                                        <FileText className="h-6 w-6 text-slate-300" />
                                     </div>
-                                    <div className="max-w-sm space-y-2">
-                                        <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-widest">Protocol Staged</h2>
-                                        <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
+                                    <div className="max-w-xs space-y-1">
+                                        <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Protocol Staged</h2>
+                                        <p className="text-slate-500 dark:text-slate-400 font-medium text-[10px] leading-relaxed">
                                             Synthesizing live environmental data for generating the latest operational intelligence.
                                         </p>
                                     </div>
@@ -200,9 +209,9 @@ const ReportsPage: React.FC = () => {
                                         variant="primary"
                                         onClick={generateReport}
                                         isLoading={isLoading}
-                                        className="h-14 px-12 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-600/20"
+                                        className="h-10 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20"
                                     >
-                                        Execute Report Generation
+                                        Execute Generation
                                     </Button>
                                 </div>
                             ) : (
@@ -221,9 +230,9 @@ const ReportsPage: React.FC = () => {
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-50 dark:divide-white/5">
                                                     {reportData.slice(0, 100).map((row: any, idx: number) => (
-                                                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                                                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group border-b border-slate-50 dark:border-white/5 last:border-0">
                                                             {Object.values(row).map((cell: any, cellIdx: number) => (
-                                                                <td key={cellIdx} className="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap group-hover:text-indigo-500 transition-colors">
+                                                                <td key={cellIdx} className="px-6 py-4 text-[11px] font-bold text-slate-600 dark:text-slate-400 min-w-[120px] max-w-[300px] break-words group-hover:text-indigo-500 transition-colors leading-normal">
                                                                     {cell === null || cell === undefined ? <span className="opacity-20">---</span> : String(cell)}
                                                                 </td>
                                                             ))}
@@ -296,7 +305,7 @@ const ReportsPage: React.FC = () => {
                                         <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{activeCategory.description}</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
                                         {activeCategoryReports.length > 0 ? (
                                             activeCategoryReports.map((report, idx) => {
                                                 const ReportIcon = report.icon;
@@ -304,24 +313,20 @@ const ReportsPage: React.FC = () => {
                                                     <button
                                                         key={idx}
                                                         onClick={() => setSelectedReport(report.name)}
-                                                        className="group p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-xl hover:-translate-y-0.5 transition-all text-left relative overflow-hidden"
+                                                        className="group p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-md hover:-translate-y-0.5 transition-all text-left relative overflow-hidden"
                                                     >
-                                                        <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                                                            <ReportIcon className="h-16 w-16 text-indigo-500" />
-                                                        </div>
-
-                                                        <div className="flex items-start justify-between mb-4 relative z-10">
-                                                            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform shadow-sm">
-                                                                <ReportIcon className="h-4 w-4" />
+                                                        <div className="flex items-center justify-between mb-2.5 relative z-10">
+                                                            <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform shadow-sm">
+                                                                <ReportIcon className="h-3.5 w-3.5" />
                                                             </div>
-                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider bg-slate-100 dark:bg-white/5 px-2 py-1 rounded-full border border-slate-200 dark:border-white/5">
+                                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-white/5 px-1.5 py-0.5 rounded-md border border-slate-100 dark:border-white/5">
                                                                 {report.stats}
                                                             </span>
                                                         </div>
-                                                        <h4 className="text-sm font-black text-slate-900 dark:text-white mb-1.5 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight relative z-10">
+                                                        <h4 className="text-[11px] font-black text-slate-900 dark:text-white mb-1 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight relative z-10">
                                                             {report.name}
                                                         </h4>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed relative z-10">
+                                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight line-clamp-2 relative z-10">
                                                             {report.description}
                                                         </p>
                                                     </button>

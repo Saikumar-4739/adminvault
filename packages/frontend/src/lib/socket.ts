@@ -1,41 +1,61 @@
 'use client';
 
-import { io } from 'socket.io-client';
+import io from 'socket.io-client';
+import { configVariables } from '@adminvault/shared-services';
 
-let socketInstance: any = null;
+const socketInstances: Record<string, any> = {};
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_API_URL || 'https://adminvault.inolyse.live/api';
+// Use standardized base URL from config
+const baseUrl = configVariables.APP_AVS_SERVICE_URL.replace(/\/api$/, '');
 
-export function getSocket(): any {
-  if (!socketInstance) {
-    socketInstance = io(`${baseUrl}/tickets`, {
+/**
+ * Get or create a socket instance for a specific namespace
+ * @param namespace The namespace to connect to (e.g., '/ws', '/tickets')
+ */
+export function getSocket(namespace: string = '/ws'): any {
+  // Normalize namespace
+  const ns = namespace.startsWith('/') ? namespace : `/${namespace}`;
+  const socketKey = `${baseUrl}${ns}`;
+
+  if (!socketInstances[socketKey]) {
+    console.log(`[Socket] Initializing connection to: ${socketKey}`);
+
+    socketInstances[socketKey] = (io as any)(socketKey, {
       path: '/socket.io',
       transports: ['websocket'],
       withCredentials: true,
       autoConnect: true,
     });
 
-    socketInstance.on('connect', () => {
-      console.log('[Socket] Connected:', socketInstance?.id);
+    socketInstances[socketKey].on('connect', () => {
+      console.log(`[Socket] Connected to ${ns}:`, socketInstances[socketKey].id);
     });
 
-    socketInstance.on('disconnect', (reason: string) => {
-      console.warn('[Socket] Disconnected:', reason);
+    socketInstances[socketKey].on('disconnect', (reason: string) => {
+      console.warn(`[Socket] Disconnected from ${ns}:`, reason);
     });
 
-    socketInstance.on('connect_error', (error: any) => {
-      console.error('[Socket] Connection error:', error.message);
+    socketInstances[socketKey].on('connect_error', (error: any) => {
+      console.error(`[Socket] Connection error on ${ns}:`, error.message);
     });
   }
 
-  return socketInstance;
+  return socketInstances[socketKey];
 }
 
+/**
+ * Disconnect all socket instances
+ */
+export function disconnectAllSockets() {
+  Object.keys(socketInstances).forEach((key) => {
+    socketInstances[key].disconnect();
+    delete socketInstances[key];
+  });
+}
+
+/**
+ * Compatibility export for original single disconnect
+ */
 export function disconnectSocket() {
-  if (socketInstance) {
-    socketInstance.disconnect();
-    socketInstance = null;
-  }
+  disconnectAllSockets();
 }
-

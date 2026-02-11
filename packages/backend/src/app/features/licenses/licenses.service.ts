@@ -52,14 +52,14 @@ export class LicensesService {
         ]);
 
         // Create Lookup Maps
-        const companyMap = new Map<number, CompanyInfoEntity>(companies.map(c => [c.id, c] as [number, CompanyInfoEntity]));
-        const appMap = new Map<number, ApplicationsMasterEntity>(applications.map(a => [a.id, a] as [number, ApplicationsMasterEntity]));
-        const empMap = new Map<number, EmployeesEntity>(employees.map(e => [e.id, e] as [number, EmployeesEntity]));
+        const companyMap = new Map<number, CompanyInfoEntity>(companies.map(c => [Number(c.id), c] as [number, CompanyInfoEntity]));
+        const appMap = new Map<number, ApplicationsMasterEntity>(applications.map(a => [Number(a.id), a] as [number, ApplicationsMasterEntity]));
+        const empMap = new Map<number, EmployeesEntity>(employees.map(e => [Number(e.id), e] as [number, EmployeesEntity]));
 
         const licenseResponses = licenses.map(l => {
-            const company = companyMap.get(l.companyId);
-            const app = appMap.get(l.applicationId);
-            const emp = l.assignedEmployeeId ? empMap.get(l.assignedEmployeeId) : undefined;
+            const company = companyMap.get(Number(l.companyId));
+            const app = appMap.get(Number(l.applicationId));
+            const emp = l.assignedEmployeeId ? empMap.get(Number(l.assignedEmployeeId)) : undefined;
 
             return new LicenseResponseModel(
                 l.id,

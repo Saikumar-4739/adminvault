@@ -9,13 +9,14 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { LoginUserModel } from '@adminvault/shared-models';
 import Link from 'next/link';
 import { configVariables } from '@adminvault/shared-services';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const LoginPage: React.FC = () => {
     const router = useRouter();
     const { login, isLoading, isAuthenticated } = useAuth();
+    const { isDarkMode, toggleDarkMode } = useTheme();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(true);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -54,10 +55,6 @@ const LoginPage: React.FC = () => {
         }));
     }, []);
 
-    const toggleTheme = useCallback(() => {
-        setIsDarkMode(prev => !prev);
-    }, []);
-
     return (
         <div className={`min-h-screen relative flex items-center justify-center overflow-hidden transition-colors duration-700 ${isDarkMode
             ? 'bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900'
@@ -65,7 +62,7 @@ const LoginPage: React.FC = () => {
             }`}>
             {/* Theme Toggle Button */}
             <button
-                onClick={toggleTheme}
+                onClick={toggleDarkMode}
                 className={`absolute top-8 right-8 z-50 p-3 rounded-2xl backdrop-blur-xl border transition-all duration-500 group ${isDarkMode
                     ? 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 hover:border-slate-600'
                     : 'bg-white shadow-lg shadow-slate-200/50 border-slate-200 hover:border-slate-300 hover:scale-105'

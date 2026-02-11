@@ -143,7 +143,7 @@ const TicketsPage: React.FC = () => {
     useEffect(() => {
         if (!isAdmin) return;
 
-        const socket = getSocket();
+        const socket = getSocket('/tickets');
         socket.emit('joinAdmins');
 
         socket.on('ticketCreated', (newTicket: any) => {
@@ -314,16 +314,8 @@ const TicketsPage: React.FC = () => {
             <PageHeader
                 icon={<Ticket />}
                 title="Support Tickets"
-                description={viewMode === 'my' ? 'Track your support requests' : 'Manage all support requests'}
+                description="Manage all support requests"
                 gradient="from-indigo-500 to-purple-600"
-                actions={[
-                    {
-                        label: 'Create Ticket',
-                        onClick: () => setIsModalOpen(true),
-                        icon: <PlusCircle className="h-4 w-4" />,
-                        variant: 'primary'
-                    }
-                ]}
             >
                 <div className="flex items-center gap-3 w-full">
                     {/* Search */}

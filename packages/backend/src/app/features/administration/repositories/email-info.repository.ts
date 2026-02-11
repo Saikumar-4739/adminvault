@@ -18,7 +18,7 @@ export class EmailInfoRepository extends Repository<EmailInfoEntity> {
                 'email.department as department',
                 'email.email as email',
                 'email.employee_id as employee_id',
-                'CONCAT(emp.first_name, " ", emp.last_name) as employee_name'
+                "CONCAT(emp.first_name, ' ', emp.last_name) as employee_name"
             ]);
 
         if (companyId) {

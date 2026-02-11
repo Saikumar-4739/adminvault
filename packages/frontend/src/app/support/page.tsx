@@ -43,7 +43,7 @@ const SupportChatPage: React.FC = () => {
 
         fetchTicket();
 
-        const socket = getSocket();
+        const socket = getSocket('/tickets');
         console.log(`[SupportChat] Connecting to ticket room: ${ticketId}`);
 
         const handleJoin = () => {
@@ -105,7 +105,7 @@ const SupportChatPage: React.FC = () => {
             return;
         }
 
-        const socket = getSocket();
+        const socket = getSocket('/tickets');
 
         // Determine sender type more robustly
         const isAdmin = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'super_admin';

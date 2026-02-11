@@ -12,21 +12,21 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(true);
     const [fontFamily, setFontFamilyState] = useState('var(--font-outfit)');
 
     // Load theme from localStorage on mount
     useEffect(() => {
         const storedTheme = localStorage.getItem('theme');
         const storedFont = localStorage.getItem('font-family');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-        if (storedTheme === 'dark' || (!storedTheme && systemPrefersDark)) {
-            setIsDarkMode(true);
-            document.documentElement.classList.add('dark');
-        } else {
+        if (storedTheme === 'light') {
             setIsDarkMode(false);
-            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.toggle('dark', false);
+        } else {
+            // Default to dark if 'dark' is stored OR no theme is stored
+            setIsDarkMode(true);
+            document.documentElement.classList.toggle('dark', true);
         }
 
         if (storedFont) {

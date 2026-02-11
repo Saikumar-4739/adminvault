@@ -1,4 +1,4 @@
-import { AxiosInstance } from '../axios-instance';
+import { CommonAxiosService } from '../common-axios-service';
 import {
     NetworkStatsResponse,
     NetworkHealthStatus,
@@ -10,36 +10,29 @@ import {
  * Network Monitoring Service
  * Handles API calls for network statistics and health monitoring
  */
-export class NetworkService {
-    private readonly baseUrl = '/network';
+export class NetworkService extends CommonAxiosService {
+    private getURLwithMainEndPoint(childUrl: string) {
+        return '/network/' + childUrl;
+    }
 
     /**
      * Get current network statistics
      */
     async getNetworkStats(): Promise<GlobalResponse<NetworkStatsResponse>> {
-        const response = await AxiosInstance.get<GlobalResponse<NetworkStatsResponse>>(
-            `${this.baseUrl}/stats`
-        );
-        return response.data;
+        return await this.axiosGetCall(this.getURLwithMainEndPoint('stats'));
     }
 
     /**
      * Get network health status
      */
     async getNetworkHealth(): Promise<GlobalResponse<NetworkHealthStatus>> {
-        const response = await AxiosInstance.get<GlobalResponse<NetworkHealthStatus>>(
-            `${this.baseUrl}/health`
-        );
-        return response.data;
+        return await this.axiosGetCall(this.getURLwithMainEndPoint('health'));
     }
 
     /**
      * Get active connections
      */
     async getActiveConnections(): Promise<GlobalResponse<ConnectionMetrics[]>> {
-        const response = await AxiosInstance.get<GlobalResponse<ConnectionMetrics[]>>(
-            `${this.baseUrl}/connections`
-        );
-        return response.data;
+        return await this.axiosGetCall(this.getURLwithMainEndPoint('connections'));
     }
 }
