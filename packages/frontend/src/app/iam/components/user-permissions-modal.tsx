@@ -7,13 +7,14 @@ import { Check, X, Loader2, Info } from 'lucide-react';
 import { iamService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { ScopeSelector } from './scope-selector';
 
 interface PermissionSet {
-    // ... (rest omitted, will be handled by more precise replacement)
     create: boolean;
     read: boolean;
     update: boolean;
     delete: boolean;
+    scopes?: string[];
 }
 
 interface UserPermissionsModalProps {
@@ -136,18 +137,31 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
 
                                 return (
                                     <tr key={menuKey} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
-                                        <td className="py-2 pr-4">
+                                        <td className="py-3 pr-4 align-top">
                                             <div className="flex flex-col">
                                                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{menu.label || menu}</span>
                                                 {isOverridden && <span className="text-[8px] font-bold text-indigo-500 uppercase tracking-tighter italic">Override Active</span>}
                                                 {!isOverridden && <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Inherited</span>}
+
+                                                {perms.read && (
+                                                    <ScopeSelector
+                                                        selected={perms.scopes}
+                                                        onChange={(scopes) => {
+                                                            const current = overrides[menuKey] || roleMenus[menuKey] || { create: false, read: false, update: false, delete: false, scopes: [] };
+                                                            setOverrides(prev => ({
+                                                                ...prev,
+                                                                [menuKey]: { ...current, scopes }
+                                                            }));
+                                                        }}
+                                                    />
+                                                )}
                                             </div>
                                         </td>
                                         {(['create', 'read', 'update', 'delete'] as const).map(type => (
-                                            <td key={type} className="py-2 text-center">
+                                            <td key={type} className="py-3 text-center align-top">
                                                 <button
                                                     onClick={() => handleToggle(menuKey, type)}
-                                                    className={`w-5 h-5 rounded flex items-center justify-center transition-all ${perms[type]
+                                                    className={`w-5 h-5 rounded flex items-center justify-center transition-all mx-auto ${perms[type]
                                                         ? 'bg-emerald-500 text-white shadow-sm'
                                                         : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600'
                                                         }`}
@@ -156,9 +170,9 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                                                 </button>
                                             </td>
                                         ))}
-                                        <td className="py-2 text-center">
+                                        <td className="py-3 text-center align-top">
                                             {isOverridden && (
-                                                <Button size="xs" variant="outline" onClick={() => handleReset(menuKey)} className="h-5 px-1 text-[8px] uppercase tracking-tighter">
+                                                <Button size="xs" variant="outline" onClick={() => handleReset(menuKey)} className="h-5 px-1 text-[8px] uppercase tracking-tighter mx-auto">
                                                     Reset
                                                 </Button>
                                             )}

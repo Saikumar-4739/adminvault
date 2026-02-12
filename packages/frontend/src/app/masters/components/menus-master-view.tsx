@@ -16,9 +16,10 @@ const ICON_MAP: Record<string, any> = {
 
 interface MenusMasterViewProps {
     onBack?: () => void;
+    filter?: 'parent' | 'child';
 }
 
-export const MenusMasterView: React.FC<MenusMasterViewProps> = ({ onBack }) => {
+export const MenusMasterView: React.FC<MenusMasterViewProps> = ({ onBack, filter }) => {
     const [menus, setMenus] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -119,10 +120,10 @@ export const MenusMasterView: React.FC<MenusMasterViewProps> = ({ onBack }) => {
         setFormData({ label: '', key: '', icon: '', displayOrder: 0, parentId: null, isActive: true });
     };
 
-    const renderMenuRows = (menuItems: any[], depth = 0) => {
-        return menuItems.map((menu: any) => {
+    const renderMenuRows = (menuItems: any[], depth = 0, ignoreChildren = false): React.ReactNode[] => {
+        return menuItems.flatMap((menu: any) => {
             const Icon = ICON_MAP[menu.icon] || Settings2;
-            return (
+            const rows: React.ReactNode[] = [(
                 <tr key={menu.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td className="px-4 py-3 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">
                         <div className="flex items-center gap-2" style={{ paddingLeft: `${depth * 20}px` }}>
@@ -151,7 +152,13 @@ export const MenusMasterView: React.FC<MenusMasterViewProps> = ({ onBack }) => {
                         </div>
                     </td>
                 </tr>
-            );
+            )];
+
+            if (!ignoreChildren && menu.children && menu.children.length > 0) {
+                rows.push(...renderMenuRows(menu.children, depth + 1));
+            }
+
+            return rows;
         });
     };
 
@@ -160,8 +167,10 @@ export const MenusMasterView: React.FC<MenusMasterViewProps> = ({ onBack }) => {
             <Card className="border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[700px] flex flex-col p-0 text-white">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <div>
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest text-xs">Menus & Submenus</h3>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none mt-1">System Navigation Architecture</p>
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest text-xs">
+                            {filter === 'parent' ? 'System Pages' : filter === 'child' ? 'Sub-Pages' : 'Pages & Sub-pages'}
+                        </h3>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none mt-1">Manage system navigation</p>
                     </div>
                     <div className="flex items-center gap-3">
                         {onBack && (
@@ -179,24 +188,40 @@ export const MenusMasterView: React.FC<MenusMasterViewProps> = ({ onBack }) => {
                         <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
                             <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">Display Label</th>
-                                    <th className="px-4 py-3 text-center text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">Unique Key</th>
+                                    <th className="px-4 py-3 text-left text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">Page Name</th>
+                                    <th className="px-4 py-3 text-center text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">Page Key</th>
                                     <th className="px-4 py-3 text-center text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">Order</th>
                                     <th className="px-4 py-3 text-center text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">Status</th>
                                     <th className="px-4 py-3 text-center text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white dark:bg-slate-900/50">
-                                {menus?.length === 0 ? (
-                                    <tr><td colSpan={5} className="p-8 text-center text-slate-500">No menus found</td></tr>
-                                ) : (
-                                    renderMenuRows(menus)
-                                )}
+                                {(() => {
+                                    let itemsToRender = menus || [];
+                                    if (filter === 'parent') {
+                                        itemsToRender = itemsToRender.filter(m => !m.parentId);
+                                    } else if (filter === 'child') {
+                                        // Flatten or just filter children? User likely wants a flat list or filtered tree.
+                                        // Let's show all children flattened for easier sub-menu management.
+                                        const flatten = (items: any[]): any[] => {
+                                            return items.flatMap(item => [
+                                                ...(item.parentId ? [item] : []),
+                                                ...flatten(item.children || [])
+                                            ]);
+                                        };
+                                        itemsToRender = flatten(menus || []);
+                                    }
+
+                                    if (itemsToRender.length === 0) {
+                                        return <tr><td colSpan={5} className="p-8 text-center text-slate-500">No {filter || 'menus'} found</td></tr>;
+                                    }
+                                    return renderMenuRows(itemsToRender, 0, filter === 'child');
+                                })()}
                             </tbody>
                         </table>
                     </div>
                 </CardContent>
-            </Card>
+            </Card >
 
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Menu" : "Add Menu"}>
                 <form onSubmit={handleSubmit} className="space-y-4">

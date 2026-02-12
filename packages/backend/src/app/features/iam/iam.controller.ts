@@ -24,16 +24,8 @@ export class IamController {
     @ApiOperation({ summary: 'Get allowed menus for current user' })
     async getMyMenus(@Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
         try {
-            let role = req.user.role;
             const userId = req.user.userId;
-
-            // Fallback for old tokens
-            if (!role) {
-                const user = await this.authRepo.findOne({ where: { id: userId } });
-                role = user?.userRole;
-            }
-
-            const menus = await this.iamService.getEffectiveMenusForUser(Number(userId), role?.toLowerCase() as any);
+            const menus = await this.iamService.getEffectiveMenusForUser(Number(userId));
             return new GlobalResponse(true, 0, 'Menus retrieved', menus);
         } catch (error) {
             return returnException(GlobalResponse, error);
@@ -41,11 +33,44 @@ export class IamController {
     }
 
     @Get('roles')
-    @ApiOperation({ summary: 'Get all user roles' })
+    @ApiOperation({ summary: 'Get all dynamic roles' })
     async getAllRoles(): Promise<GlobalResponse> {
         try {
             const roles = await this.iamService.getAllRoles();
             return new GlobalResponse(true, 0, 'Roles retrieved', roles);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('roles')
+    @ApiOperation({ summary: 'Create a new role' })
+    async createRole(@Body() dto: any): Promise<GlobalResponse> {
+        try {
+            const role = await this.iamService.createRole(dto);
+            return new GlobalResponse(true, 0, 'Role created', role);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Patch('roles/:id')
+    @ApiOperation({ summary: 'Update a role' })
+    async updateRole(@Req() req: any, @Body() dto: any): Promise<GlobalResponse> {
+        try {
+            const role = await this.iamService.updateRole(Number(req.params.id), dto);
+            return new GlobalResponse(true, 0, 'Role updated', role);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Delete('roles/:id')
+    @ApiOperation({ summary: 'Delete a role' })
+    async deleteRole(@Req() req: any): Promise<GlobalResponse> {
+        try {
+            await this.iamService.deleteRole(Number(req.params.id));
+            return new GlobalResponse(true, 0, 'Role deleted');
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -74,11 +99,45 @@ export class IamController {
     }
 
     @Post('role-menus/update')
-    @ApiOperation({ summary: 'Update menu permissions for a role' })
-    async updateRoleMenus(@Body() body: { role: string, assignments: { menuKey: string, permissions: any }[] }): Promise<GlobalResponse> {
+    @ApiOperation({ summary: 'Update menu permissions for a role key' })
+    async updateRoleMenus(@Body() body: { roleKey: string, assignments: { menuKey: string, permissions: any }[] }): Promise<GlobalResponse> {
         try {
-            await this.iamService.updateRoleMenus(body.role as any, body.assignments);
+            await this.iamService.updateRoleMenus(body.roleKey, body.assignments);
             return new GlobalResponse(true, 0, 'Permissions updated successfully');
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Get('role-menus/:roleKey')
+    @ApiOperation({ summary: 'Get menu keys for a role' })
+    async getMenusForRole(@Req() req: any): Promise<GlobalResponse> {
+        try {
+            const menus = await this.iamService.getMenusForRole(req.params.roleKey);
+            return new GlobalResponse(true, 0, 'Role menus retrieved', menus);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    // User to Role Mapping
+    @Get('user-roles/:userId')
+    @ApiOperation({ summary: 'Get roles for a user' })
+    async getUserRoles(@Req() req: any): Promise<GlobalResponse> {
+        try {
+            const roles = await this.iamService.getUserRoles(Number(req.params.userId));
+            return new GlobalResponse(true, 0, 'User roles retrieved', roles);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('user-roles/:userId/update')
+    @ApiOperation({ summary: 'Update roles for a user' })
+    async updateUserRoles(@Req() req: any, @Body() body: { roleKeys: string[] }): Promise<GlobalResponse> {
+        try {
+            await this.iamService.updateUserRoles(Number(req.params.userId), body.roleKeys);
+            return new GlobalResponse(true, 0, 'User roles updated successfully');
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

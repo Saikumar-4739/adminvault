@@ -12,12 +12,11 @@ import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { GetAllDocumentsRequestModel } from '@adminvault/shared-models';
-import { Spinner } from '@/components/ui/Spinner';
 
 const DocumentsPage: React.FC = () => {
     const { user } = useAuth();
     const [documents, setDocuments] = useState<DocumentModel[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [category, setCategory] = useState('');
@@ -31,7 +30,6 @@ const DocumentsPage: React.FC = () => {
     const fetchDocuments = useCallback(async () => {
         if (!user) return;
         try {
-            setIsLoading(true);
             const req: GetAllDocumentsRequestModel = { companyId: user.companyId };
             const response = await documentsService.getAllDocuments(req);
             if (response.status) {
@@ -42,7 +40,7 @@ const DocumentsPage: React.FC = () => {
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message || 'Failed to fetch documents');
         } finally {
-            setIsLoading(false);
+            // No local loading for initial fetch
         }
     }, [user]);
 
@@ -60,7 +58,7 @@ const DocumentsPage: React.FC = () => {
 
     const handleUpload = useCallback(async () => {
         if (!selectedFile || !user) return;
-        setIsLoading(true);
+        // setIsLoading(true);
 
         try {
             const uploadModel: UploadDocumentModel = {
@@ -248,12 +246,7 @@ const DocumentsPage: React.FC = () => {
                     </div>
                 </div>
 
-                {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                        <Spinner size="lg" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">Synchronizing Secure Vault...</p>
-                    </div>
-                ) : filteredDocuments.length === 0 ? (
+                {filteredDocuments.length === 0 ? (
                     <div className="py-32 flex flex-col items-center justify-center text-center bg-white dark:bg-slate-900/40 rounded-[40px] border border-dashed border-slate-200 dark:border-slate-800">
                         <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800/50 rounded-3xl flex items-center justify-center mb-6 text-slate-300">
                             <FileText className="w-10 h-10" />
@@ -419,6 +412,7 @@ const DocumentsPage: React.FC = () => {
                             <Button
                                 variant="primary"
                                 onClick={handleUpload}
+                                isLoading={isLoading}
                                 disabled={!selectedFile}
                                 className="shadow-lg shadow-indigo-500/20 px-8"
                             >

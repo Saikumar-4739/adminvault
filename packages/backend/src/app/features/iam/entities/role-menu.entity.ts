@@ -2,17 +2,13 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { UserRoleEnum } from '@adminvault/shared-models';
 
 @Entity('role_menus')
-@Index(['role', 'menuKey'], { unique: true })
+@Index(['roleKey', 'menuKey'], { unique: true })
 export class RoleMenuEntity {
     @PrimaryGeneratedColumn({ type: 'bigint' })
     id: number;
 
-    @Column({
-        type: 'enum',
-        enum: UserRoleEnum,
-        default: UserRoleEnum.USER
-    })
-    role: UserRoleEnum;
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    roleKey: string;
 
     @Column({ type: 'varchar', length: 100 })
     menuKey: string;
@@ -23,6 +19,7 @@ export class RoleMenuEntity {
         read: boolean;
         update: boolean;
         delete: boolean;
+        scopes?: string[];
     };
 
     @Column({ type: 'boolean', default: true })

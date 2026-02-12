@@ -5,6 +5,7 @@ export enum UserRoleEnum {
   VIEWER = 'viewer',
   SUPER_ADMIN = 'super_admin',
   SUPPORT_ADMIN = 'support_admin',
+  SITE_ADMIN = 'site_admin',
 }
 
 

@@ -154,7 +154,7 @@ export class AuthUsersService {
             tokenEntity.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
             await this.authTokensRepo.save(tokenEntity);
 
-            const menus = await this.iamService.getEffectiveMenusForUser(user.id, user.userRole);
+            const menus = await this.iamService.getEffectiveMenusForUser(user.id);
 
             const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
             return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken, menus);
@@ -538,7 +538,7 @@ export class AuthUsersService {
         tokenEntity.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
         await this.authTokensRepo.save(tokenEntity);
 
-        const menus = await this.iamService.getEffectiveMenusForUser(user.id, user.userRole);
+        const menus = await this.iamService.getEffectiveMenusForUser(user.id);
 
         const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
         return new LoginResponseModel(true, 0, "User Logged In via OAuth Successfully", userInfo, accessToken, refreshToken, menus);
@@ -557,7 +557,7 @@ export class AuthUsersService {
                 throw new ErrorResponse(404, "User not found");
             }
 
-            const menus = await this.iamService.getEffectiveMenusForUser(user.id, user.userRole);
+            const menus = await this.iamService.getEffectiveMenusForUser(user.id);
             const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
 
             return new LoginResponseModel(true, 0, "Profile retrieved successfully", userInfo, undefined, undefined, menus);

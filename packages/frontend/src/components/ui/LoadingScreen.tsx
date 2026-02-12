@@ -10,7 +10,7 @@ interface LoadingScreenProps {
     message?: string;
 }
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = "Initializing System..." }) => {
+export const LoadingScreen: React.FC<LoadingScreenProps> = () => {
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl transition-all duration-700">
             <div className="relative flex flex-col items-center">
@@ -30,16 +30,6 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = "Initial
                             </div>
                         </div>
                     </div>
-                </div>
-
-                {/* Status Indicator */}
-                <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full backdrop-blur-md shadow-2xl">
-                    <div className="flex gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.3s]"></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.15s]"></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce"></div>
-                    </div>
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">{message}</span>
                 </div>
             </div>
 

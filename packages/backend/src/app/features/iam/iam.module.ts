@@ -8,8 +8,11 @@ import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { SystemMenuEntity } from './entities/system-menu.entity';
 import { UserMenuEntity } from './entities/user-menu.entity';
 
+import { RoleEntity } from './entities/role.entity';
+import { UserRoleEntity } from './entities/user-role.entity';
+
 @Module({
-    imports: [TypeOrmModule.forFeature([RoleMenuEntity, AuthUsersEntity, SystemMenuEntity, UserMenuEntity])],
+    imports: [TypeOrmModule.forFeature([RoleMenuEntity, AuthUsersEntity, SystemMenuEntity, UserMenuEntity, RoleEntity, UserRoleEntity])],
     controllers: [IamController],
     providers: [IamService],
     exports: [IamService],

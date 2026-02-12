@@ -31,5 +31,6 @@ export interface RoleMenuAssignment {
         read: boolean;
         update: boolean;
         delete: boolean;
+        scopes?: string[];
     };
 }

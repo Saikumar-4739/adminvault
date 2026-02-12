@@ -77,11 +77,6 @@ const ApprovalsPage: React.FC = () => {
 
     const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
 
-    if (loading) return (
-        <div className="flex justify-center items-center py-20">
-            <Spinner size="lg" />
-        </div>
-    );
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>

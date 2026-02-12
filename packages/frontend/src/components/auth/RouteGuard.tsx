@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { useEffect, useState } from 'react';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
@@ -54,7 +55,7 @@ export function RouteGuard({
 
     // Show loading state
     if (isLoading) {
-        return null;
+        return <LoadingScreen />;
     }
 
     // Don't render children until authorized

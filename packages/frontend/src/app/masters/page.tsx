@@ -4,19 +4,25 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Search, FileText, Settings2, Upload, ShieldCheck } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Search, FileText, Settings2, Upload, LayoutGrid, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { BulkImportModal } from './components/BulkImportModal';
 
-const CompaniesMasterView = dynamic(() => import('./components/companies-master-view').then(mod => mod.CompaniesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Companies...</p> });
-const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view').then(mod => mod.DepartmentsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Departments...</p> });
-const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view').then(mod => mod.AssetTypesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Asset Types...</p> });
-const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view').then(mod => mod.DeviceBrandsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: device Brands...</p> });
-const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Applications...</p> });
-const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Slack Integration...</p> });
-const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Neutralizing Data Layer: Vendors...</p> });
+const CompaniesMasterView = dynamic(() => import('./components/companies-master-view').then(mod => mod.CompaniesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Companies...</p> });
+const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view').then(mod => mod.DepartmentsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Departments...</p> });
+const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view').then(mod => mod.AssetTypesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Asset Types...</p> });
+const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view').then(mod => mod.DeviceBrandsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading device Brands...</p> });
+const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Applications...</p> });
+const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Slack Integration...</p> });
+const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Vendors...</p> });
+const MenusMasterView = dynamic(() => import('./components/menus-master-view').then(mod => mod.MenusMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Menus...</p> });
+const UserRolesMappingView = dynamic(() => import('./components/user-roles-mapping-view').then(mod => mod.UserRolesMappingView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading User Roles...</p> });
+import { iamService, authService } from '@/lib/api/services';
+import { UserPermissionsModal } from '../iam/components/user-permissions-modal';
+import { useToast } from '@/contexts/ToastContext';
+import { useEffect, useCallback } from 'react';
 
 interface MasterItem {
     id: string;
@@ -91,7 +97,30 @@ const MastersPage: React.FC = () => {
             color: 'from-indigo-600 to-violet-700',
             component: VendorsMasterView
         },
-
+        {
+            id: 'menu-master',
+            title: 'System Pages',
+            description: 'Configure main navigation pages',
+            icon: AppWindow,
+            color: 'from-blue-600 to-indigo-700',
+            component: (props: any) => <MenusMasterView {...props} filter="parent" />
+        },
+        {
+            id: 'submenu-master',
+            title: 'Sub-Pages',
+            description: 'Manage sub-navigation items',
+            icon: LayoutGrid,
+            color: 'from-emerald-600 to-teal-700',
+            component: (props: any) => <MenusMasterView {...props} filter="child" />
+        },
+        {
+            id: 'user-mapping',
+            title: 'Assign Roles',
+            description: 'Assign roles and permissions to users',
+            icon: Users,
+            color: 'from-orange-600 to-rose-700',
+            component: (props: any) => <IAMUserMappingWrapper {...props} />
+        },
         {
             id: 'document-hub',
             title: 'Document Vault',
@@ -100,14 +129,6 @@ const MastersPage: React.FC = () => {
             color: 'from-blue-600 to-indigo-700',
             href: '/documents'
         },
-        // {
-        //     id: 'iam',
-        //     title: 'IAM & Permissions',
-        //     description: 'Manage identity access, roles, and menu permissions',
-        //     icon: ShieldCheck,
-        //     color: 'from-orange-500 to-rose-600',
-        //     href: '/iam'
-        // },
     ];
 
     const selectedMasterData = masters.find(m => m.id === selectedMaster);
@@ -146,8 +167,8 @@ const MastersPage: React.FC = () => {
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN]}>
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 lg:p-8 space-y-6 overflow-y-auto">
                 <PageHeader
-                    title="System Configuration"
-                    description="Enterprise-wide configuration and organization masters"
+                    title="Settings & Masters"
+                    description="General settings and organization masters"
                     icon={<Settings2 />}
                     gradient="from-slate-700 to-slate-900"
                     actions={[
@@ -163,7 +184,7 @@ const MastersPage: React.FC = () => {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input
                             type="text"
-                            placeholder="Search System Configuration..."
+                            placeholder="Search master settings..."
                             className="pl-11 pr-4 py-3 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -184,7 +205,7 @@ const MastersPage: React.FC = () => {
                                 <Search className="h-10 w-10 text-slate-300" />
                             </div>
                             <div className="space-y-1">
-                                <p className="font-black uppercase tracking-widest text-slate-900 dark:text-white">Registry Signal Lost</p>
+                                <p className="font-black uppercase tracking-widest text-slate-900 dark:text-white">No masters found</p>
                                 <p className="text-xs text-slate-500 font-medium">No master nodes matching your query were detected.</p>
                             </div>
                         </div>
@@ -230,5 +251,74 @@ const MastersPage: React.FC = () => {
         </RouteGuard>
     );
 };
+
+function IAMUserMappingWrapper({ onBack }: { onBack: () => void }) {
+    const [users, setUsers] = useState<any[]>([]);
+    const [roles, setRoles] = useState<any[]>([]);
+    const [menus, setMenus] = useState<any[]>([]);
+    const [mappings, setMappings] = useState<Record<string, any>>({});
+    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [isPermModalOpen, setIsPermModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const toast = useToast();
+
+    const fetchData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const [usersRes, rolesRes, menusRes, mappingsRes] = await Promise.all([
+                authService.getAllUsers({ companyId: 1 }),
+                iamService.getRoles(),
+                iamService.getAllMenus(),
+                iamService.getAllRoleMenus()
+            ]);
+
+            setUsers(usersRes.users || []);
+            setRoles(rolesRes.data || []);
+            setMenus(menusRes.data || []);
+
+            const grouped: Record<string, any> = {};
+            (rolesRes.data || []).forEach((r: any) => grouped[r.key] = {});
+            (mappingsRes.data as any[]).forEach(m => {
+                if (grouped[m.roleKey]) {
+                    grouped[m.roleKey][m.menuKey] = m.permissions;
+                }
+            });
+            setMappings(grouped);
+        } catch (error: any) {
+            toast.error("Failed to load mapping data");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toast]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    if (isLoading) return <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading User Roles...</p>;
+
+    return (
+        <div className="space-y-4">
+            <UserRolesMappingView
+                users={users}
+                roles={roles}
+                onBack={onBack}
+                onOverride={(user) => {
+                    setSelectedUser(user);
+                    setIsPermModalOpen(true);
+                }}
+            />
+            {selectedUser && (
+                <UserPermissionsModal
+                    isOpen={isPermModalOpen}
+                    onClose={() => setIsPermModalOpen(false)}
+                    user={selectedUser}
+                    roleMenus={mappings[selectedUser.userRole] || {}}
+                    allMenus={menus}
+                />
+            )}
+        </div>
+    );
+}
 
 export default MastersPage;

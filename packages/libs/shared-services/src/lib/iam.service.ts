@@ -18,8 +18,34 @@ export class IamService extends CommonAxiosService {
         return await this.axiosGetCall('/iam/role-menus/all');
     }
 
-    async updateRoleMenus(role: string, assignments: { menuKey: string, permissions: any }[]): Promise<GlobalResponse> {
-        return await this.axiosPostCall('/iam/role-menus/update', { role, assignments });
+    async updateRoleMenus(roleKey: string, assignments: { menuKey: string, permissions: any }[]): Promise<GlobalResponse> {
+        return await this.axiosPostCall('/iam/role-menus/update', { roleKey, assignments });
+    }
+
+    async getMenusForRole(roleKey: string): Promise<GlobalResponse> {
+        return await this.axiosGetCall(`/iam/role-menus/${roleKey}`);
+    }
+
+    // Role Matrix CRUD
+    async createRole(data: any): Promise<GlobalResponse> {
+        return await this.axiosPostCall('/iam/roles', data);
+    }
+
+    async updateRole(id: number, data: any): Promise<GlobalResponse> {
+        return await this.axiosPatchCall(`/iam/roles/${id}`, data);
+    }
+
+    async deleteRole(id: number): Promise<GlobalResponse> {
+        return await this.axiosDeleteCall(`/iam/roles/${id}`);
+    }
+
+    // User to Role Mapping
+    async getUserRoles(userId: number): Promise<GlobalResponse> {
+        return await this.axiosGetCall(`/iam/user-roles/${userId}`);
+    }
+
+    async updateUserRoles(userId: number, roleKeys: string[]): Promise<GlobalResponse> {
+        return await this.axiosPostCall(`/iam/user-roles/${userId}/update`, { roleKeys });
     }
 
     async getMenus(): Promise<GlobalResponse> {

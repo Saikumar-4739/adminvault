@@ -231,7 +231,7 @@ const DashboardPage: React.FC = () => {
     };
 
     if (isLoading && !stats) {
-        return <LoadingScreen message="Quantum Processing Data..." />;
+        return <LoadingScreen />;
     }
 
     return (

@@ -18,6 +18,7 @@ export class UserMenuEntity {
         read: boolean;
         update: boolean;
         delete: boolean;
+        scopes?: string[];
     };
 
     @Column({ type: 'boolean', default: true })

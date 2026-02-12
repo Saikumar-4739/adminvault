@@ -21,6 +21,9 @@ const AssignAssetModal = dynamic(() => import('./components/AssignAssetModal').t
 const RequestApprovalModal = dynamic(() => import('./components/RequestApprovalModal').then(mod => mod.RequestApprovalModal), { ssr: false });
 
 import { PageHeader } from '@/components/ui/PageHeader';
+import { RouteGuard } from '@/components/auth/RouteGuard';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { UserRoleEnum } from '@adminvault/shared-models';
 
 import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
 import { assetService, companyService } from '@/lib/api/services';
@@ -300,199 +303,201 @@ const AssetsPage: React.FC = () => {
     );
 
     return (
-        <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/50 space-y-6">
-            <PageHeader
-                title="Asset Inventory"
-                description="Manage and track hardware assets across the organization."
-                icon={<Package />}
-                gradient="from-emerald-500 to-teal-600"
-                actions={[
-                    {
-                        label: 'Filter',
-                        onClick: () => setIsFilterModalOpen(true),
-                        icon: <Filter className="h-4 w-4" />,
-                        variant: 'outline'
-                    },
-                    {
-                        label: 'Bulk Import',
-                        onClick: () => setIsBulkImportOpen(true),
-                        icon: <FileUp className="h-4 w-4" />,
-                        variant: 'outline'
-                    },
-                    {
-                        label: 'Add Asset',
-                        onClick: handleAddAsset,
-                        icon: <Plus className="h-4 w-4" />,
-                        variant: 'primary'
-                    }
-                ]}
-            >
-                <div className="w-64">
-                    <Select
-                        options={[{ value: 0, label: 'All Companies' }, ...companies.map(c => ({ value: c.id, label: c.companyName }))]}
-                        value={selectedCompanyId}
-                        onChange={handleCompanyChange}
-                        className="h-8 text-sm"
+        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
+            <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/50 space-y-6">
+                <PageHeader
+                    title="Asset Inventory"
+                    description="Manage and track hardware assets across the organization."
+                    icon={<Package />}
+                    gradient="from-emerald-500 to-teal-600"
+                    actions={[
+                        {
+                            label: 'Filter',
+                            onClick: () => setIsFilterModalOpen(true),
+                            icon: <Filter className="h-4 w-4" />,
+                            variant: 'outline'
+                        },
+                        {
+                            label: 'Bulk Import',
+                            onClick: () => setIsBulkImportOpen(true),
+                            icon: <FileUp className="h-4 w-4" />,
+                            variant: 'outline'
+                        },
+                        {
+                            label: 'Add Asset',
+                            onClick: handleAddAsset,
+                            icon: <Plus className="h-4 w-4" />,
+                            variant: 'primary'
+                        }
+                    ]}
+                >
+                    <div className="w-64">
+                        <Select
+                            options={[{ value: 0, label: 'All Companies' }, ...companies.map(c => ({ value: c.id, label: c.companyName }))]}
+                            value={selectedCompanyId}
+                            onChange={handleCompanyChange}
+                            className="h-8 text-sm"
+                        />
+                    </div>
+                </PageHeader>
+
+                {/* Statistics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <StatCard
+                        label="Total Inventory"
+                        value={statistics?.total}
+                        icon={<Package className="h-6 w-6" />}
+                        gradient="from-indigo-500 to-blue-600"
+                    />
+                    <StatCard
+                        label="Active Units"
+                        value={statistics?.inUse}
+                        icon={<Activity className="h-6 w-6" />}
+                        gradient="from-emerald-500 to-teal-600"
+                    />
+                    <StatCard
+                        label="Available Stock"
+                        value={statistics?.available}
+                        icon={<CheckCircle2 className="h-6 w-6" />}
+                        gradient="from-emerald-500 to-teal-600"
+                    />
+                    <StatCard
+                        label="Under Maintenance"
+                        value={statistics?.maintenance}
+                        icon={<RefreshCw className="h-6 w-6" />}
+                        gradient="from-orange-500 to-amber-600"
                     />
                 </div>
-            </PageHeader>
 
-            {/* Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    label="Total Inventory"
-                    value={statistics?.total}
-                    icon={<Package className="h-6 w-6" />}
-                    gradient="from-indigo-500 to-blue-600"
-                />
-                <StatCard
-                    label="Active Units"
-                    value={statistics?.inUse}
-                    icon={<Activity className="h-6 w-6" />}
-                    gradient="from-emerald-500 to-teal-600"
-                />
-                <StatCard
-                    label="Available Stock"
-                    value={statistics?.available}
-                    icon={<CheckCircle2 className="h-6 w-6" />}
-                    gradient="from-emerald-500 to-teal-600"
-                />
-                <StatCard
-                    label="Under Maintenance"
-                    value={statistics?.maintenance}
-                    icon={<RefreshCw className="h-6 w-6" />}
-                    gradient="from-orange-500 to-amber-600"
+                <ModernTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
+                    <div className="mt-6">
+                        {activeTab === 'store' && (
+                            <AllAssetsTab
+                                assets={assets}
+                                isLoading={isLoading}
+                                status="available"
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onPrint={handlePrint}
+                                onHistory={handleHistory}
+                                onAssign={handleAssign}
+                            />
+                        )}
+                        {activeTab === 'assigned' && (
+                            <AllAssetsTab
+                                assets={assets}
+                                isLoading={isLoading}
+                                status="in_use"
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onPrint={handlePrint}
+                                onHistory={handleHistory}
+                                onAssign={handleAssign}
+                            />
+                        )}
+                        {activeTab === 'maintenance' && (
+                            <AllAssetsTab
+                                assets={assets}
+                                isLoading={isLoading}
+                                status="maintenance"
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onPrint={handlePrint}
+                                onHistory={handleHistory}
+                                onAssign={handleAssign}
+                            />
+                        )}
+                        {activeTab === 'not_used' && (
+                            <AllAssetsTab
+                                assets={assets}
+                                isLoading={isLoading}
+                                status="retired"
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onPrint={handlePrint}
+                                onHistory={handleHistory}
+                                onAssign={handleAssign}
+                            />
+                        )}
+                    </div>
+                </ModernTabs>
+
+                {/* Modals */}
+                {isQRModalOpen && (
+                    <AssetQRModal
+                        isOpen={isQRModalOpen}
+                        asset={selectedAsset}
+                        onClose={() => setIsQRModalOpen(false)}
+                    />
+                )}
+                {isTimelineModalOpen && (
+                    <AssetTimelineModal
+                        isOpen={isTimelineModalOpen}
+                        asset={selectedAsset}
+                        companyId={selectedCompanyId}
+                        onClose={() => setIsTimelineModalOpen(false)}
+                    />
+                )}
+                {isBulkImportOpen && (
+                    <BulkImportModal
+                        isOpen={isBulkImportOpen}
+                        companyId={selectedCompanyId}
+                        onSuccess={() => { /* handled */ }}
+                        onClose={() => setIsBulkImportOpen(false)}
+                    />
+                )}
+                {isFilterModalOpen && (
+                    <AdvancedFilterModal
+                        isOpen={isFilterModalOpen}
+                        initialFilters={{}}
+                        onClose={() => setIsFilterModalOpen(false)}
+                        onApply={(filters) => {
+                            searchAssets(filters);
+                            setIsFilterModalOpen(false);
+                        }}
+                    />
+                )}
+                {isAssetFormOpen && (
+                    <AssetFormModal
+                        isOpen={isAssetFormOpen}
+                        asset={selectedAsset}
+                        onClose={() => setIsAssetFormOpen(false)}
+                        onSuccess={() => {
+                            refresh();
+                        }}
+                    />
+                )}
+                {isAssignModalOpen && (
+                    <AssignAssetModal
+                        isOpen={isAssignModalOpen}
+                        asset={selectedAsset}
+                        onClose={() => setIsAssignModalOpen(false)}
+                        onSuccess={() => {
+                            refresh();
+                        }}
+                    />
+
+                )}
+                {isApprovalModalOpen && (
+                    <RequestApprovalModal
+                        isOpen={isApprovalModalOpen}
+                        onClose={() => setIsApprovalModalOpen(false)}
+                        statistics={statistics}
+                    />
+                )}
+                <DeleteConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => {
+                        setIsDeleteModalOpen(false);
+                        setSelectedAsset(null);
+                    }}
+                    onConfirm={confirmDelete}
+                    title="Delete Asset"
+                    itemName={selectedAsset ? selectedAsset.assetName : undefined}
+                    description="Are you sure you want to delete this asset? This action cannot be undone."
                 />
             </div>
-
-            <ModernTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
-                <div className="mt-6">
-                    {activeTab === 'store' && (
-                        <AllAssetsTab
-                            assets={assets}
-                            isLoading={isLoading}
-                            status="available"
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onPrint={handlePrint}
-                            onHistory={handleHistory}
-                            onAssign={handleAssign}
-                        />
-                    )}
-                    {activeTab === 'assigned' && (
-                        <AllAssetsTab
-                            assets={assets}
-                            isLoading={isLoading}
-                            status="in_use"
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onPrint={handlePrint}
-                            onHistory={handleHistory}
-                            onAssign={handleAssign}
-                        />
-                    )}
-                    {activeTab === 'maintenance' && (
-                        <AllAssetsTab
-                            assets={assets}
-                            isLoading={isLoading}
-                            status="maintenance"
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onPrint={handlePrint}
-                            onHistory={handleHistory}
-                            onAssign={handleAssign}
-                        />
-                    )}
-                    {activeTab === 'not_used' && (
-                        <AllAssetsTab
-                            assets={assets}
-                            isLoading={isLoading}
-                            status="retired"
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onPrint={handlePrint}
-                            onHistory={handleHistory}
-                            onAssign={handleAssign}
-                        />
-                    )}
-                </div>
-            </ModernTabs>
-
-            {/* Modals */}
-            {isQRModalOpen && (
-                <AssetQRModal
-                    isOpen={isQRModalOpen}
-                    asset={selectedAsset}
-                    onClose={() => setIsQRModalOpen(false)}
-                />
-            )}
-            {isTimelineModalOpen && (
-                <AssetTimelineModal
-                    isOpen={isTimelineModalOpen}
-                    asset={selectedAsset}
-                    companyId={selectedCompanyId}
-                    onClose={() => setIsTimelineModalOpen(false)}
-                />
-            )}
-            {isBulkImportOpen && (
-                <BulkImportModal
-                    isOpen={isBulkImportOpen}
-                    companyId={selectedCompanyId}
-                    onSuccess={() => { /* handled */ }}
-                    onClose={() => setIsBulkImportOpen(false)}
-                />
-            )}
-            {isFilterModalOpen && (
-                <AdvancedFilterModal
-                    isOpen={isFilterModalOpen}
-                    initialFilters={{}}
-                    onClose={() => setIsFilterModalOpen(false)}
-                    onApply={(filters) => {
-                        searchAssets(filters);
-                        setIsFilterModalOpen(false);
-                    }}
-                />
-            )}
-            {isAssetFormOpen && (
-                <AssetFormModal
-                    isOpen={isAssetFormOpen}
-                    asset={selectedAsset}
-                    onClose={() => setIsAssetFormOpen(false)}
-                    onSuccess={() => {
-                        refresh();
-                    }}
-                />
-            )}
-            {isAssignModalOpen && (
-                <AssignAssetModal
-                    isOpen={isAssignModalOpen}
-                    asset={selectedAsset}
-                    onClose={() => setIsAssignModalOpen(false)}
-                    onSuccess={() => {
-                        refresh();
-                    }}
-                />
-
-            )}
-            {isApprovalModalOpen && (
-                <RequestApprovalModal
-                    isOpen={isApprovalModalOpen}
-                    onClose={() => setIsApprovalModalOpen(false)}
-                    statistics={statistics}
-                />
-            )}
-            <DeleteConfirmationModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => {
-                    setIsDeleteModalOpen(false);
-                    setSelectedAsset(null);
-                }}
-                onConfirm={confirmDelete}
-                title="Delete Asset"
-                itemName={selectedAsset ? selectedAsset.assetName : undefined}
-                description="Are you sure you want to delete this asset? This action cannot be undone."
-            />
-        </div>
+        </RouteGuard>
     );
 }
 

@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { RoleMenuEntity } from './entities/role-menu.entity';
 import { SystemMenuEntity } from './entities/system-menu.entity';
 import { UserMenuEntity } from './entities/user-menu.entity';
+import { RoleEntity } from './entities/role.entity';
+import { UserRoleEntity } from './entities/user-role.entity';
 import { UserRoleEnum, CreateMenuDto, UpdateMenuDto } from '@adminvault/shared-models';
 
 const DEFAULT_MENUS = [
@@ -20,7 +22,17 @@ const DEFAULT_MENUS = [
     // Network
     { key: 'network', label: 'Network', icon: 'Network', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
     { key: 'approvals', label: 'Approvals', icon: 'CheckSquare', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER] },
-    { key: 'iam', label: 'IAM', icon: 'ShieldCheck', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+    {
+        key: 'iam',
+        label: 'IAM',
+        icon: 'ShieldCheck',
+        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN],
+        children: [
+            { key: 'menu-master', label: 'Menu Master', icon: 'AppWindow', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+            { key: 'submenu-master', label: 'Sub Menu Master', icon: 'LayoutGrid', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+            { key: 'user-mapping', label: 'User mapping', icon: 'Users', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+        ]
+    },
     // Support
     { key: 'tickets', label: 'Tickets', icon: 'Ticket', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER] },
     { key: 'create-ticket', label: 'Create Ticket', icon: 'PlusCircle', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER] },
@@ -40,53 +52,55 @@ export class IamService implements OnModuleInit {
         private systemMenuRepo: Repository<SystemMenuEntity>,
         @InjectRepository(UserMenuEntity)
         private userMenuRepo: Repository<UserMenuEntity>,
+        @InjectRepository(RoleEntity)
+        private roleRepo: Repository<RoleEntity>,
+        @InjectRepository(UserRoleEntity)
+        private userRoleRepo: Repository<UserRoleEntity>,
     ) { }
 
     async onModuleInit() {
-        // await this.seedDefaultMenus();
+        await this.seedDefaultMenus();
     }
 
     async seedDefaultMenus() {
-        // this.logger.debug('Syncing default system menus and role permissions...');
+        this.logger.debug('Syncing default system menus and role permissions...');
 
         try {
             let changesCount = 0;
 
-            // 1. Seed System Menus
-            for (let i = 0; i < DEFAULT_MENUS.length; i++) {
-                const menu = DEFAULT_MENUS[i];
-                let entity = await this.systemMenuRepo.findOne({ where: { key: menu.key } });
+            // Recursive function to seed menus and permissions
+            const seedMenuRecursively = async (menuData: any, parentId: number | null = null, displayOrder: number) => {
+                let entity = await this.systemMenuRepo.findOne({ where: { key: menuData.key } });
 
                 if (!entity) {
                     entity = new SystemMenuEntity();
-                    entity.key = menu.key;
-                    entity.label = menu.label;
-                    entity.icon = menu.icon;
-                    entity.displayOrder = i;
+                    entity.key = menuData.key;
+                    entity.label = menuData.label;
+                    entity.icon = menuData.icon;
+                    entity.parentId = parentId;
+                    entity.displayOrder = displayOrder;
                     await this.systemMenuRepo.save(entity);
-                    this.logger.log(`Created system menu: ${menu.key}`);
+                    this.logger.log(`Created system menu: ${menuData.key}`);
                     changesCount++;
                 } else {
-                    // Update if different
-                    if (entity.label !== menu.label || entity.icon !== menu.icon || entity.displayOrder !== i) {
-                        entity.label = menu.label;
-                        entity.icon = menu.icon;
-                        entity.displayOrder = i;
+                    if (entity.label !== menuData.label || entity.icon !== menuData.icon || entity.displayOrder !== displayOrder || Number(entity.parentId) !== Number(parentId)) {
+                        entity.label = menuData.label;
+                        entity.icon = menuData.icon;
+                        entity.displayOrder = displayOrder;
+                        entity.parentId = parentId;
                         await this.systemMenuRepo.save(entity);
-                        this.logger.log(`Updated system menu: ${menu.key}`);
+                        this.logger.log(`Updated system menu: ${menuData.key}`);
                         changesCount++;
                     }
                 }
-            }
 
-            // 2. Seed Role Menus (Permissions)
-            const fullPermissions = { create: true, read: true, update: true, delete: true };
-            const readOnlyPermissions = { create: false, read: true, update: false, delete: false };
+                // Seed Permissions for this menu
+                const fullPermissions = { create: true, read: true, update: true, delete: true };
+                const readOnlyPermissions = { create: false, read: true, update: false, delete: false };
 
-            for (const menu of DEFAULT_MENUS) {
-                for (const role of menu.roles) {
+                for (const role of menuData.roles) {
                     const exists = await this.roleMenuRepo.findOne({
-                        where: { role, menuKey: menu.key }
+                        where: { roleKey: role as any, menuKey: menuData.key }
                     });
 
                     const targetPermissions = (role === UserRoleEnum.ADMIN || role === UserRoleEnum.SUPER_ADMIN)
@@ -94,24 +108,32 @@ export class IamService implements OnModuleInit {
                         : readOnlyPermissions;
 
                     if (!exists) {
-                        const entity = new RoleMenuEntity();
-                        entity.role = role;
-                        entity.menuKey = menu.key;
-                        entity.isActive = true;
-                        entity.permissions = targetPermissions;
-                        await this.roleMenuRepo.save(entity);
-                        this.logger.log(`Added missing menu permission: ${menu.key} for role ${role}`);
+                        const permEntity = new RoleMenuEntity();
+                        permEntity.roleKey = role as any;
+                        permEntity.menuKey = menuData.key;
+                        permEntity.isActive = true;
+                        permEntity.permissions = targetPermissions;
+                        await this.roleMenuRepo.save(permEntity);
+                        this.logger.log(`Added missing menu permission: ${menuData.key} for role ${role}`);
                         changesCount++;
-                    } else {
-                        // Check deep equality for permissions
-                        if (!this.arePermissionsEqual(exists.permissions, targetPermissions)) {
-                            exists.permissions = targetPermissions;
-                            await this.roleMenuRepo.save(exists);
-                            this.logger.log(`Updated permissions for menu ${menu.key} role ${role}`);
-                            changesCount++;
-                        }
+                    } else if (!this.arePermissionsEqual(exists.permissions, targetPermissions)) {
+                        exists.permissions = targetPermissions;
+                        await this.roleMenuRepo.save(exists);
+                        this.logger.log(`Updated permissions for menu ${menuData.key} role ${role}`);
+                        changesCount++;
                     }
                 }
+
+                // Recurse for children
+                if (menuData.children && menuData.children.length > 0) {
+                    for (let j = 0; j < menuData.children.length; j++) {
+                        await seedMenuRecursively(menuData.children[j], Number(entity.id), j);
+                    }
+                }
+            };
+
+            for (let i = 0; i < DEFAULT_MENUS.length; i++) {
+                await seedMenuRecursively(DEFAULT_MENUS[i], null, i);
             }
 
             if (changesCount > 0) {
@@ -124,22 +146,54 @@ export class IamService implements OnModuleInit {
 
     private arePermissionsEqual(p1: any, p2: any): boolean {
         if (!p1 || !p2) return false;
-        return p1.create === p2.create &&
+
+        const basicEqual = p1.create === p2.create &&
             p1.read === p2.read &&
             p1.update === p2.update &&
             p1.delete === p2.delete;
+
+        if (!basicEqual) return false;
+
+        // Compare scopes
+        const s1 = p1.scopes || [];
+        const s2 = p2.scopes || [];
+        if (s1.length !== s2.length) return false;
+        return s1.every((s: string) => s2.includes(s));
     }
 
-    // Effective Permissions for User (Merged)
-    async getEffectiveMenusForUser(userId: number, role: UserRoleEnum): Promise<any[]> {
+    // Effective Permissions for User (Merged from multiple roles)
+    async getEffectiveMenusForUser(userId: number): Promise<any[]> {
+        const userRoles = await this.userRoleRepo.find({ where: { userId, isActive: true } });
+        const roleKeys = userRoles.map(ur => ur.roleKey);
+
         const allSystemMenus = await this.systemMenuRepo.find({ where: { isActive: true }, order: { displayOrder: 'ASC' } });
-        const rolePermissions = await this.roleMenuRepo.find({ where: { role, isActive: true } });
+
+        // Get permissions from all assigned roles
+        const rolePermissions = await this.roleMenuRepo.find({
+            where: roleKeys.length > 0 ? roleKeys.map(rk => ({ roleKey: rk, isActive: true })) : { isActive: false }
+        });
+
         const userOverrides = await this.userMenuRepo.find({ where: { userId, isActive: true } });
 
         const effectiveMenus = allSystemMenus.map(menu => {
             const override = userOverrides.find(o => o.menuKey === menu.key);
-            const rolePerm = rolePermissions.find(p => p.menuKey === menu.key);
-            let permissions = override?.permissions || rolePerm?.permissions;
+
+            // Merge permissions from all roles for this menu
+            const relevantRolePerms = rolePermissions.filter(p => p.menuKey === menu.key);
+
+            let mergedRolePerms = { create: false, read: false, update: false, delete: false, scopes: [] as string[] };
+
+            relevantRolePerms.forEach(rp => {
+                mergedRolePerms.create = mergedRolePerms.create || rp.permissions.create;
+                mergedRolePerms.read = mergedRolePerms.read || rp.permissions.read;
+                mergedRolePerms.update = mergedRolePerms.update || rp.permissions.update;
+                mergedRolePerms.delete = mergedRolePerms.delete || rp.permissions.delete;
+                if (rp.permissions.scopes) {
+                    mergedRolePerms.scopes = Array.from(new Set([...mergedRolePerms.scopes, ...rp.permissions.scopes]));
+                }
+            });
+
+            let permissions = override?.permissions || mergedRolePerms;
 
             if (!permissions) {
                 permissions = { create: false, read: false, update: false, delete: false };
@@ -209,8 +263,8 @@ export class IamService implements OnModuleInit {
     }
 
     // IAM Role Matrix
-    async getAllRoles(): Promise<string[]> {
-        return Object.values(UserRoleEnum);
+    async getAllRoles(): Promise<RoleEntity[]> {
+        return await this.roleRepo.find({ where: { isActive: true } });
     }
 
     async getAllAvailableMenus(): Promise<string[]> {
@@ -224,12 +278,30 @@ export class IamService implements OnModuleInit {
         });
     }
 
-    async updateRoleMenus(role: UserRoleEnum, menuAssignments: { menuKey: string, permissions: any }[]): Promise<void> {
-        await this.roleMenuRepo.update({ role }, { isActive: false });
+    async createRole(dto: any): Promise<RoleEntity> {
+        const role = new RoleEntity();
+        Object.assign(role, dto);
+        return await this.roleRepo.save(role);
+    }
+
+    async updateRole(id: number, dto: any): Promise<RoleEntity> {
+        const role = await this.roleRepo.findOne({ where: { id: id as any } });
+        if (!role) throw new NotFoundException('Role not found');
+        Object.assign(role, dto);
+        return await this.roleRepo.save(role);
+    }
+
+    async deleteRole(id: number): Promise<void> {
+        await this.roleRepo.delete(id);
+    }
+
+    // Role to Menu Mapping
+    async updateRoleMenus(roleKey: string, menuAssignments: { menuKey: string, permissions: any }[]): Promise<void> {
+        await this.roleMenuRepo.update({ roleKey }, { isActive: false });
 
         for (const assignment of menuAssignments) {
             let entity = await this.roleMenuRepo.findOne({
-                where: { role, menuKey: assignment.menuKey }
+                where: { roleKey, menuKey: assignment.menuKey }
             });
 
             if (entity) {
@@ -238,7 +310,7 @@ export class IamService implements OnModuleInit {
                 await this.roleMenuRepo.save(entity);
             } else {
                 entity = new RoleMenuEntity();
-                entity.role = role;
+                entity.roleKey = roleKey;
                 entity.menuKey = assignment.menuKey;
                 entity.permissions = assignment.permissions;
                 entity.isActive = true;
@@ -247,10 +319,36 @@ export class IamService implements OnModuleInit {
         }
     }
 
-    async getMenusForRole(role: UserRoleEnum): Promise<string[]> {
+    async getMenusForRole(roleKey: string): Promise<string[]> {
         const menus = await this.roleMenuRepo.find({
-            where: { role, isActive: true }
+            where: { roleKey, isActive: true }
         });
         return menus.map(m => m.menuKey);
+    }
+
+    // User to Role Mapping
+    async getUserRoles(userId: number): Promise<UserRoleEntity[]> {
+        return await this.userRoleRepo.find({ where: { userId, isActive: true } });
+    }
+
+    async updateUserRoles(userId: number, roleKeys: string[]): Promise<void> {
+        await this.userRoleRepo.update({ userId }, { isActive: false });
+
+        for (const roleKey of roleKeys) {
+            let entity = await this.userRoleRepo.findOne({
+                where: { userId, roleKey }
+            });
+
+            if (entity) {
+                entity.isActive = true;
+                await this.userRoleRepo.save(entity);
+            } else {
+                entity = new UserRoleEntity();
+                entity.userId = userId;
+                entity.roleKey = roleKey;
+                entity.isActive = true;
+                await this.userRoleRepo.save(entity);
+            }
+        }
     }
 }
