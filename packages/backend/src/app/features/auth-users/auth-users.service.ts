@@ -15,7 +15,63 @@ import { EmailInfoService } from '../administration/email-info.service';
 import { ForgotPasswordModel, ResetPasswordModel, RequestAccessModel, SendPasswordResetEmailModel } from '@adminvault/shared-models';
 import { Request } from 'express';
 import { IUserPayload } from '../../interfaces/auth.interface';
-import { IamService } from '../iam/iam.service';
+
+const DEFAULT_MENUS = [
+    {
+        key: 'main',
+        label: 'Main',
+        icon: 'LayoutGrid',
+        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER],
+        children: [
+            { key: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER] },
+            { key: 'masters', label: 'Masters', icon: 'Settings2', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+            { key: 'reports', label: 'Reports', icon: 'BarChart3', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER] },
+        ]
+    },
+    {
+        key: 'resources',
+        label: 'Resources',
+        icon: 'Library',
+        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER],
+        children: [
+            { key: 'employees', label: 'Employees', icon: 'Users', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER] },
+            { key: 'assets', label: 'Assets', icon: 'Laptop', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER] },
+            { key: 'procurement', label: 'Procurement', icon: 'ShoppingCart', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+            { key: 'licenses', label: 'Licenses', icon: 'Key', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+            { key: 'emails', label: 'Emails', icon: 'Mail', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+        ]
+    },
+    {
+        key: 'global-identity',
+        label: 'Global Routing & Identity',
+        icon: 'Globe',
+        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN],
+        children: [
+            { key: 'network', label: 'Network', icon: 'Network', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+            { key: 'approvals', label: 'Approvals', icon: 'CheckSquare', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER] },
+        ]
+    },
+    {
+        key: 'account',
+        label: 'Account',
+        icon: 'UserCircle',
+        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER],
+        children: [
+            { key: 'profile', label: 'Profile', icon: 'UserCircle', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER] },
+            { key: 'knowledge-base', label: 'Help', icon: 'BookOpen', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER] },
+        ]
+    },
+    {
+        key: 'support',
+        label: 'Support',
+        icon: 'HelpCircle',
+        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER],
+        children: [
+            { key: 'tickets', label: 'Support Tickets', icon: 'Ticket', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER] },
+            { key: 'create-ticket', label: 'Create Ticket', icon: 'PlusCircle', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER] },
+        ]
+    },
+];
 
 const SECRET_KEY = process.env.JWT_SECRET_KEY || (() => {
     if (process.env.NODE_ENV === 'production') {
@@ -41,8 +97,6 @@ export class AuthUsersService {
         @Inject(forwardRef(() => EmailInfoService))
         private emailService: EmailInfoService,
         private jwtService: JwtService,
-        @Inject(forwardRef(() => IamService))
-        private iamService: IamService,
     ) { }
 
 
@@ -154,7 +208,7 @@ export class AuthUsersService {
             tokenEntity.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
             await this.authTokensRepo.save(tokenEntity);
 
-            const menus = await this.iamService.getEffectiveMenusForUser(user.id);
+            const menus = this.getMenusForRole(user.userRole);
 
             const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
             return new LoginResponseModel(true, 0, "User Logged In Successfully", userInfo, accessToken, refreshToken, menus);
@@ -538,7 +592,7 @@ export class AuthUsersService {
         tokenEntity.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
         await this.authTokensRepo.save(tokenEntity);
 
-        const menus = await this.iamService.getEffectiveMenusForUser(user.id);
+        const menus = this.getMenusForRole(user.userRole);
 
         const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
         return new LoginResponseModel(true, 0, "User Logged In via OAuth Successfully", userInfo, accessToken, refreshToken, menus);
@@ -557,12 +611,41 @@ export class AuthUsersService {
                 throw new ErrorResponse(404, "User not found");
             }
 
-            const menus = await this.iamService.getEffectiveMenusForUser(user.id);
+            const menus = this.getMenusForRole(user.userRole);
             const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
 
             return new LoginResponseModel(true, 0, "Profile retrieved successfully", userInfo, undefined, undefined, menus);
         } catch (error) {
             throw error;
         }
+    }
+
+    private getMenusForRole(role: string): any[] {
+        // Super Admin gets everything
+        if (role === UserRoleEnum.SUPER_ADMIN) {
+            return DEFAULT_MENUS.map(m => ({
+                ...m,
+                permissions: { create: true, read: true, update: true, delete: true, scopes: ['*'] },
+                children: m.children?.map(c => ({
+                    ...c,
+                    permissions: { create: true, read: true, update: true, delete: true, scopes: ['*'] }
+                }))
+            }));
+        }
+
+        const fullPermissions = { create: true, read: true, update: true, delete: true };
+        const readOnlyPermissions = { create: false, read: true, update: false, delete: false };
+
+        const filterMenus = (menus: any[]): any[] => {
+            return menus
+                .filter(m => m.roles.includes(role))
+                .map(m => {
+                    const permissions = (role === UserRoleEnum.ADMIN) ? fullPermissions : readOnlyPermissions;
+                    const children = m.children ? filterMenus(m.children) : undefined;
+                    return { ...m, permissions, children };
+                });
+        };
+
+        return filterMenus(DEFAULT_MENUS);
     }
 }

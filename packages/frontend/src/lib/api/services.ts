@@ -1,4 +1,4 @@
-import { AuthUsersService, AdministrationService, EmployeesService, AssetInfoService, AssetTabsService, TicketsService, LicensesService, ReportsService, DashboardService, DocumentsService, CompanyService, WorkflowService, KnowledgeBaseService, ProcurementService, DepartmentService, AssetTypeService, BrandService, VendorService, ApplicationService, SlackUserService, NetworkService, IamService } from '@adminvault/shared-services';
+import { AuthUsersService, AdministrationService, EmployeesService, AssetInfoService, AssetTabsService, TicketsService, LicensesService, ReportsService, DashboardService, DocumentsService, CompanyService, WorkflowService, KnowledgeBaseService, ProcurementService, DepartmentService, AssetTypeService, BrandService, VendorService, ApplicationService, SlackUserService, NetworkService } from '@adminvault/shared-services';
 
 export const authService = new AuthUsersService();
 export const administrationService = new AdministrationService();
@@ -19,7 +19,6 @@ export const reportsService = new ReportsService();
 export const documentsService = new DocumentsService();
 export const companyService = new CompanyService();
 export const emailService = administrationService;
-export const iamService = new IamService();
 export const workflowService = new WorkflowService();
 export const kbService = new KnowledgeBaseService();
 export const procurementService = new ProcurementService();
@@ -43,7 +42,6 @@ export const services = {
     documents: documentsService,
     company: companyService,
     email: emailService,
-    iam: iamService,
     workflow: workflowService,
     kb: kbService,
     procurement: procurementService,

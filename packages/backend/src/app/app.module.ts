@@ -23,7 +23,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { WebSocketModule } from './features/websocket/websocket.module';
 import { NetworkModule } from './features/network/network.module';
-import { IamModule } from './features/iam/iam.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 
@@ -52,7 +51,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     EventEmitterModule.forRoot(),
     WebSocketModule,
     NetworkModule,
-    IamModule,
   ],
   controllers: [AppController],
   providers: [
