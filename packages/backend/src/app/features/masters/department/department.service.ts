@@ -25,13 +25,6 @@ export class DepartmentService {
                 throw new ErrorResponse(0, "Department with this name already exists");
             }
 
-            if (reqModel.code) {
-                const codeExists = await this.deptRepo.findOne({ where: { code: reqModel.code } });
-                if (codeExists) {
-                    throw new ErrorResponse(0, 'Department code already in use');
-                }
-            }
-
             await transManager.startTransaction();
             const repo = transManager.getRepository(DepartmentsMasterEntity);
             const { id, companyId, ...createData } = reqModel;
@@ -61,15 +54,8 @@ export class DepartmentService {
                 throw new ErrorResponse(0, 'Department name cannot be empty');
             }
 
-            if (reqModel.code) {
-                const codeExists = await this.deptRepo.findOne({ where: { code: reqModel.code, id: Not(reqModel.id) } });
-                if (codeExists) {
-                    throw new ErrorResponse(0, 'Department code already in use');
-                }
-            }
-
             await transManager.startTransaction();
-            await transManager.getRepository(DepartmentsMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, code: reqModel.code, isActive: reqModel.isActive });
+            await transManager.getRepository(DepartmentsMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, isActive: reqModel.isActive });
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Department updated successfully');
         } catch (error) {
@@ -98,8 +84,7 @@ export class DepartmentService {
     async getAllDepartments(): Promise<GetAllDepartmentsResponseModel> {
         try {
             const departments = await this.deptRepo.find();
-            const departmentsWithCompanyName = departments.map(dept => ({ id: dept.id, userId: dept.userId, createdAt: dept.createdAt, updatedAt: dept.updatedAt, name: dept.name, description: dept.description, isActive: dept.isActive, code: dept.code }));
-            return new GetAllDepartmentsResponseModel(true, 200, 'Departments retrieved successfully', departmentsWithCompanyName);
+            return new GetAllDepartmentsResponseModel(true, 200, 'Departments retrieved successfully', departments);
         } catch (error) {
             throw error;;
         }

@@ -14,8 +14,7 @@ export class BrandsMasterEntity extends MasterBaseEntity {
     @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether brand is active' })
     isActive: boolean;
 
-    @Column('varchar', { name: 'code', length: 50, nullable: true, comment: 'Brand code' })
-    code: string;
+
 
     @Column('varchar', { name: 'website', length: 500, nullable: true, comment: 'Brand website URL' })
     website: string;

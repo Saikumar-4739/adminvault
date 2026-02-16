@@ -33,9 +33,19 @@ export class CompanyInfoService {
             }
 
             if (reqModel.phone) {
+                if (!/^\d{10}$/.test(reqModel.phone)) {
+                    throw new ErrorResponse(0, 'Phone number must be exactly 10 digits');
+                }
                 const phoneExists = await this.companyInfoRepo.findOne({ where: { phone: reqModel.phone } });
                 if (phoneExists) {
                     throw new ErrorResponse(0, 'Phone number already in use');
+                }
+            }
+
+            if (reqModel.estDate) {
+                const year = new Date(reqModel.estDate).getFullYear();
+                if (year > 2026) {
+                    throw new ErrorResponse(0, 'Establishment year cannot be in the future (max 2026)');
                 }
             }
 
@@ -81,9 +91,19 @@ export class CompanyInfoService {
             }
 
             if (reqModel.phone) {
+                if (!/^\d{10}$/.test(reqModel.phone)) {
+                    throw new ErrorResponse(0, 'Phone number must be exactly 10 digits');
+                }
                 const phoneExists = await this.companyInfoRepo.findOne({ where: { phone: reqModel.phone, id: Not(reqModel.id) } });
                 if (phoneExists) {
                     throw new ErrorResponse(0, 'Phone number already in use');
+                }
+            }
+
+            if (reqModel.estDate) {
+                const year = new Date(reqModel.estDate).getFullYear();
+                if (year > 2026) {
+                    throw new ErrorResponse(0, 'Establishment year cannot be in the future (max 2026)');
                 }
             }
 

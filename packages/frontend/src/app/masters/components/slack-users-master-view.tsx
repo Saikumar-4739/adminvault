@@ -46,7 +46,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
     const companyService = new CompanyService();
     const [companies, setCompanies] = useState<CompanyDropdownModel[]>([]);
     const [filterCompanyId, setFilterCompanyId] = useState<string>('all');
-    const [formData, setFormData] = useState({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const lastFetchedCompanyId = useRef<number | null>(null);
@@ -129,7 +129,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         try {
             const companyIdToUse = Number(formData.companyId) || user?.companyId || 0;
             if (isEditMode && editingId) {
-                const model = new UpdateSlackUserModel(editingId, formData.name, formData.email, formData.notes, true, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, companyIdToUse, undefined, formData.employeeId ? Number(formData.employeeId) : undefined);
+                const model = new UpdateSlackUserModel(editingId, formData.name, formData.email, formData.notes, formData.isActive, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, companyIdToUse, undefined, formData.employeeId ? Number(formData.employeeId) : undefined);
                 const response = await slackUserService.updateSlackUser(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -139,7 +139,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateSlackUserModel(user?.id || 0, companyIdToUse, formData.name, formData.email, formData.notes, true, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, undefined, formData.employeeId ? Number(formData.employeeId) : undefined);
+                const model = new CreateSlackUserModel(user?.id || 0, companyIdToUse, formData.name, formData.email, formData.notes, formData.isActive ?? true, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, undefined, formData.employeeId ? Number(formData.employeeId) : undefined);
                 const response = await slackUserService.createSlackUser(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -167,7 +167,8 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
             phone: item.phone || '',
             notes: item.notes || '',
             companyId: item.companyId?.toString() || '',
-            employeeId: item.employeeId?.toString() || ''
+            employeeId: item.employeeId?.toString() || '',
+            isActive: item.isActive ?? true
         });
         setIsModalOpen(true);
     };
@@ -198,7 +199,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '' });
+        setFormData({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true });
     };
 
     const filteredUsers = users.filter((u: SlackUserModel) => {

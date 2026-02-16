@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreateApplicationModel, UpdateApplicationModel, Application } from '@adminvault/shared-models';
+import { CreateLicenseMasterModel, UpdateLicenseMasterModel, License, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
@@ -10,37 +10,38 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { ApplicationService } from '@adminvault/shared-services';
+import { LicenseMasterService } from '@adminvault/shared-services';
 
-
-interface ApplicationsMasterViewProps {
+interface LicensesMasterViewProps {
     onBack?: () => void;
 }
 
-export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ onBack }) => {
+export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }) => {
     const { user } = useAuth();
-    const [applications, setApplications] = useState<Application[]>([]);
+    const [licenses, setLicenses] = useState<License[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', ownerName: '', appReleaseDate: '', code: '', isActive: true });
+    const [formData, setFormData] = useState({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
-    const applicationService = new ApplicationService();
+    const licenseService = new LicenseMasterService();
     const initialized = useRef(false);
 
     useEffect(() => {
         if (!initialized.current) {
             initialized.current = true;
-            getAllApplications();
+            getAllLicenses();
         }
     }, []);
 
-    const getAllApplications = async (): Promise<void> => {
+    const getAllLicenses = async (): Promise<void> => {
         try {
-            const response = await applicationService.getAllApplications();
+            if (!user?.companyId) return;
+            const req = new CompanyIdRequestModel(user.companyId);
+            const response = await licenseService.getAllLicenses(req);
             if (response.status) {
-                setApplications(response.applications || []);
+                setLicenses(response.licenses || []);
             } else {
                 AlertMessages.getErrorMessage(response.message);
             }
@@ -55,23 +56,22 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
         try {
 
             if (isEditMode && editingId) {
-                const model = new UpdateApplicationModel(editingId, formData.name, formData.description, formData.isActive, formData.ownerName, formData.appReleaseDate ? new Date(formData.appReleaseDate) : undefined, formData.code
-                );
-                const response = await applicationService.updateApplication(model as any);
+                const model = new UpdateLicenseMasterModel(editingId, formData.name, formData.description, formData.isActive, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined);
+                const response = await licenseService.updateLicense(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
-                    getAllApplications();
+                    getAllLicenses();
                 } else {
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateApplicationModel(user.id, user.companyId, formData.name, formData.description, formData.isActive ?? true, formData.ownerName, formData.appReleaseDate ? new Date(formData.appReleaseDate) : undefined, formData.code);
-                const response = await applicationService.createApplication(model);
+                const model = new CreateLicenseMasterModel(user.id, user.companyId, formData.name, formData.description, formData.isActive ?? true, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined);
+                const response = await licenseService.createLicense(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
                     handleCloseModal();
-                    getAllApplications();
+                    getAllLicenses();
                 } else {
                     AlertMessages.getErrorMessage(response.message);
                 }
@@ -81,15 +81,14 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
         }
     };
 
-    const handleEdit = (item: Application): void => {
+    const handleEdit = (item: License): void => {
         setIsEditMode(true);
         setEditingId(item.id);
         setFormData({
             name: item.name,
             description: item.description || '',
-            ownerName: item.ownerName || '',
-            appReleaseDate: item.appReleaseDate ? new Date(item.appReleaseDate).toISOString().split('T')[0] : '',
-            code: item.code || '',
+            purchaseDate: item.purchaseDate ? new Date(item.purchaseDate).toISOString().split('T')[0] : '',
+            expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString().split('T')[0] : '',
             isActive: item.isActive ?? true
         });
         setIsModalOpen(true);
@@ -103,10 +102,10 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
     const handleConfirmDelete = async (): Promise<void> => {
         if (deletingId) {
             try {
-                const response = await applicationService.deleteApplication({ id: deletingId });
+                const response = await licenseService.deleteLicense({ id: deletingId });
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
-                    getAllApplications();
+                    getAllLicenses();
                 } else {
                     AlertMessages.getErrorMessage(response.message);
                 }
@@ -120,7 +119,7 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', ownerName: '', appReleaseDate: '', code: '', isActive: true });
+        setFormData({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true });
     };
 
     const formatDate = (date: Date | string | null | undefined): string => {
@@ -132,7 +131,7 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
         <>
             <Card className="border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100">Applications</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100">Licenses</h3>
                     <div className="flex items-center gap-3">
                         {onBack && (
                             <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
@@ -140,7 +139,7 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
                             </Button>
                         )}
                         <Button size="xs" variant="success" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
-                            Add Application
+                            Add License
                         </Button>
                     </div>
                 </CardHeader>
@@ -149,24 +148,24 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
                         <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
                             <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                 <tr>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Application Name</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Application Code</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Owner Name</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">App Release Date</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">License Name</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Purchase Date</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Expiry Date</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white dark:bg-gray-900">
-                                {applications?.length === 0 ? (
-                                    <tr><td colSpan={6} className="p-8 text-center text-slate-500">No applications found</td></tr>
+                                {licenses?.length === 0 ? (
+                                    <tr><td colSpan={6} className="p-8 text-center text-slate-500">No licenses found</td></tr>
                                 ) : (
-                                    applications?.map((item: Application) => (
+                                    licenses?.map((item: License) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.code || '-'}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.ownerName || '-'}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{formatDate(item.appReleaseDate)}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.description || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{formatDate(item.purchaseDate)}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{formatDate(item.expiryDate)}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${item.isActive
                                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
@@ -194,13 +193,14 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
                 </CardContent>
             </Card>
 
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Application" : "Add Application"}>
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit License" : "Add License"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input label="Application Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-14" required />
-                    <Input label="Application Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="h-14" />
+                    <Input label="License Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-14" required />
                     <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="h-14" />
-                    <Input label="Owner Name" value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} className="h-14" />
-                    <Input label="App Release Date" type="date" value={formData.appReleaseDate} onChange={(e) => setFormData({ ...formData, appReleaseDate: e.target.value })} className="h-14" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Purchase Date" type="date" value={formData.purchaseDate} onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })} className="h-14" />
+                        <Input label="Expiry Date" type="date" value={formData.expiryDate} onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} className="h-14" />
+                    </div>
 
                     <div className="flex items-center gap-2">
                         <input
@@ -226,7 +226,7 @@ export const ApplicationsMasterView: React.FC<ApplicationsMasterViewProps> = ({ 
                 isOpen={isDeleteDialogOpen}
                 onClose={() => setIsDeleteDialogOpen(false)}
                 onConfirm={handleConfirmDelete}
-                itemName="Application"
+                itemName="License"
             />
         </>
     );

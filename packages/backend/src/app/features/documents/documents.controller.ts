@@ -53,9 +53,22 @@ export class DocumentsController {
     }
 
     @Get('downloadDocument/:id')
-    async downloadDocument(@Param('id') id: number, @Res() res: express.Response) {
+    async downloadDocumentGet(@Param('id') id: number, @Res() res: express.Response) {
         try {
             const reqModel: DownloadDocumentRequestModel = { id };
+            const response = await this.service.downloadDocument(reqModel);
+            res.download(response.filePath, response.originalName);
+        } catch (error) {
+            // If error is 403 (Password required), we can't easily handle it in GET for browser download.
+            // But this endpoint is for non-secure or direct downloads.
+            res.status(500).json(returnException(GlobalResponse, error));
+        }
+    }
+
+    @Post('download')
+    @ApiBody({ type: DownloadDocumentRequestModel })
+    async downloadDocumentPost(@Body() reqModel: DownloadDocumentRequestModel, @Res() res: express.Response) {
+        try {
             const response = await this.service.downloadDocument(reqModel);
             res.download(response.filePath, response.originalName);
         } catch (error) {

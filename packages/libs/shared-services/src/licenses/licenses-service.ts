@@ -1,29 +1,23 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GetLicenseStatisticsResponseModel, GlobalResponse, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateLicenseMasterModel, UpdateLicenseMasterModel, DeleteLicenseModel, GetAllLicenseMastersResponseModel, GlobalResponse, CompanyIdRequestModel } from '@adminvault/shared-models';
 
 export class LicensesService extends CommonAxiosService {
-    private getURLwithMainEndPoint(childUrl: string) {
-        return '/licenses/' + childUrl;
+    private baseUrl = 'license';
+
+    async getAllLicenses(req: CompanyIdRequestModel): Promise<GetAllLicenseMastersResponseModel> {
+        return this.axiosPostCall(`${this.baseUrl}/getAllLicenses`, req);
     }
 
-    async getAllLicenses(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllLicensesResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllLicenses'), reqObj, config);
+    async createLicense(model: CreateLicenseMasterModel): Promise<GlobalResponse> {
+        return this.axiosPostCall(`${this.baseUrl}/createLicense`, model);
     }
 
-    async getLicenseStatistics(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetLicenseStatisticsResponseModel> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('getLicenseStatistics'), reqObj, config);
+    async updateLicense(model: UpdateLicenseMasterModel): Promise<GlobalResponse> {
+        return this.axiosPostCall(`${this.baseUrl}/updateLicense`, model);
     }
 
-    async createLicense(reqObj: CreateLicenseModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('createLicense'), reqObj, config);
-    }
-
-    async updateLicense(reqObj: UpdateLicenseModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('updateLicense'), reqObj, config);
-    }
-
-    async deleteLicense(reqObj: DeleteLicenseModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteLicense'), reqObj, config);
+    async deleteLicense(model: { id: number }): Promise<GlobalResponse> {
+        return this.axiosPostCall(`${this.baseUrl}/deleteLicense`, model);
     }
 }

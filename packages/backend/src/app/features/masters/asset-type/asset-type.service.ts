@@ -25,17 +25,11 @@ export class AssetTypeService {
                 throw new ErrorResponse(0, "Asset Type with this name already exists");
             }
 
-            if (reqModel.code) {
-                const existingCode = await this.assetTypeRepo.findOne({ where: { code: reqModel.code } });
-                if (existingCode) {
-                    throw new ErrorResponse(0, "Asset Type code already in use");
-                }
-            }
+
 
             await transManager.startTransaction();
             const entiSave = new AssetTypeMasterEntity();
             entiSave.name = reqModel.name;
-            entiSave.code = reqModel.code;
             entiSave.description = reqModel.description;
             entiSave.isActive = reqModel.isActive;
             entiSave.userId = reqModel.userId;
@@ -64,15 +58,10 @@ export class AssetTypeService {
                 throw new ErrorResponse(0, 'Asset Type name cannot be empty');
             }
 
-            if (reqModel.code) {
-                const codeExists = await this.assetTypeRepo.findOne({ where: { code: reqModel.code, id: Not(reqModel.id) } });
-                if (codeExists) {
-                    throw new ErrorResponse(0, 'Asset Type code already in use');
-                }
-            }
+
 
             await transManager.startTransaction();
-            await transManager.getRepository(AssetTypeMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, code: reqModel.code, isActive: reqModel.isActive });
+            await transManager.getRepository(AssetTypeMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, isActive: reqModel.isActive });
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Asset Type updated successfully');
         } catch (error) {
@@ -101,7 +90,7 @@ export class AssetTypeService {
     async getAllAssetTypes(): Promise<GetAllAssetTypesResponseModel> {
         try {
             const assetTypes = await this.assetTypeRepo.find();
-            const assetTypesWithCompanyName = assetTypes.map(asset => ({ id: asset.id, userId: asset.userId, createdAt: asset.createdAt, updatedAt: asset.updatedAt, name: asset.name, description: asset.description, isActive: asset.isActive, code: asset.code, companyName: '' }));
+            const assetTypesWithCompanyName = assetTypes.map(asset => ({ id: asset.id, userId: asset.userId, createdAt: asset.createdAt, updatedAt: asset.updatedAt, name: asset.name, description: asset.description, isActive: asset.isActive, companyName: '' }));
             return new GetAllAssetTypesResponseModel(true, 200, 'Asset Types retrieved successfully', assetTypesWithCompanyName);
         } catch (error) {
             throw error;

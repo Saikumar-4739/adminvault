@@ -1,0 +1,127 @@
+import { Injectable } from '@nestjs/common';
+import { DataSource, Not } from 'typeorm';
+import { LicenseRepository } from './repositories/license.repository';
+import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
+import { CreateLicenseMasterModel, UpdateLicenseMasterModel, GetAllLicenseMastersResponseModel, IdRequestModel } from '@adminvault/shared-models';
+import { LicensesMasterEntity } from './entities/license.entity';
+import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
+
+@Injectable()
+export class LicenseService {
+    constructor(
+        private dataSource: DataSource,
+        private licenseRepo: LicenseRepository
+    ) { }
+
+    async createLicense(reqModel: CreateLicenseMasterModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            if (!reqModel.name) {
+                throw new ErrorResponse(0, "License name is required");
+            }
+
+            const existingName = await this.licenseRepo.findOne({ where: { name: reqModel.name } });
+            if (existingName) {
+                throw new ErrorResponse(0, "License with this name already exists");
+            }
+
+            await transManager.startTransaction();
+            const newLicense = new LicensesMasterEntity();
+            newLicense.userId = reqModel.userId;
+            newLicense.name = reqModel.name;
+            newLicense.description = reqModel.description;
+            newLicense.isActive = reqModel.isActive;
+
+            // Handle dates
+            if (reqModel.purchaseDate) {
+                const pDate = new Date(reqModel.purchaseDate);
+                if (!isNaN(pDate.getTime())) {
+                    newLicense.purchaseDate = reqModel.purchaseDate;
+                }
+            }
+            if (reqModel.expiryDate) {
+                const eDate = new Date(reqModel.expiryDate);
+                if (!isNaN(eDate.getTime())) {
+                    newLicense.expiryDate = reqModel.expiryDate;
+                }
+            }
+
+            await transManager.getRepository(LicensesMasterEntity).save(newLicense);
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 201, 'License created successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    async getLicense(reqModel: IdRequestModel): Promise<GlobalResponse> {
+        try {
+            const license = await this.licenseRepo.findOne({ where: { id: reqModel.id } });
+            if (!license) {
+                throw new ErrorResponse(404, 'License not found');
+            }
+            return new GlobalResponse(true, 200, 'License retrieved successfully', license);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getAllLicenses(): Promise<GetAllLicenseMastersResponseModel> {
+        try {
+            const licenses = await this.licenseRepo.find();
+            // Map to response model if needed, or just return entities if model matches
+            // In shared-models, GetAllLicenseMastersResponseModel expects List<License>
+            return new GetAllLicenseMastersResponseModel(true, 200, 'Licenses retrieved successfully', licenses);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updateLicense(reqModel: UpdateLicenseMasterModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            const existing = await this.licenseRepo.findOne({ where: { id: reqModel.id } });
+            if (!existing) {
+                throw new ErrorResponse(404, 'License not found');
+            }
+
+            if (reqModel.name !== undefined && reqModel.name.trim() === '') {
+                throw new ErrorResponse(0, 'License name cannot be empty');
+            }
+
+            await transManager.startTransaction();
+
+            // Update fields manually or use object spread, but be careful with undefined
+            const updateData: Partial<LicensesMasterEntity> = {
+                name: reqModel.name,
+                description: reqModel.description,
+                isActive: reqModel.isActive,
+                purchaseDate: reqModel.purchaseDate,
+                expiryDate: reqModel.expiryDate
+            };
+
+            await transManager.getRepository(LicensesMasterEntity).update(reqModel.id, updateData);
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 200, 'License updated successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+
+    async deleteLicense(reqModel: IdRequestModel): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            await transManager.startTransaction();
+            const repo = transManager.getRepository(LicensesMasterEntity);
+            const delEntity = await repo.findOne({ where: { id: reqModel.id } });
+            if (delEntity) await repo.remove(delEntity);
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 200, 'License deleted successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
+            throw error;
+        }
+    }
+}

@@ -18,7 +18,7 @@ export class BrandService {
     async createBrand(reqModel: CreateBrandModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existingBrand = await this.brandRepo.findOne({ where: { name: reqModel.code } });
+            const existingBrand = await this.brandRepo.findOne({ where: { name: reqModel.name } });
             if (existingBrand) {
                 throw new ErrorResponse(400, 'Brand already exists');
             }
@@ -29,7 +29,6 @@ export class BrandService {
             saveEnti.isActive = reqModel.isActive;
             saveEnti.website = reqModel.website;
             saveEnti.rating = reqModel.rating;
-            saveEnti.code = reqModel.code;
             saveEnti.userId = reqModel.userId;
             await transManager.getRepository(BrandsMasterEntity).save(saveEnti);
             await transManager.completeTransaction();
@@ -43,7 +42,7 @@ export class BrandService {
     async getAllBrands(): Promise<GetAllBrandsResponseModel> {
         try {
             const brands = await this.brandRepo.find();
-            const brandsWithCompanyName = brands.map(brand => ({ id: brand.id, userId: brand.userId, createdAt: brand.createdAt, updatedAt: brand.updatedAt, name: brand.name, description: brand.description, isActive: brand.isActive, website: brand.website, rating: brand.rating, code: brand.code }));
+            const brandsWithCompanyName = brands.map(brand => ({ id: brand.id, userId: brand.userId, createdAt: brand.createdAt, updatedAt: brand.updatedAt, name: brand.name, description: brand.description, isActive: brand.isActive, website: brand.website, rating: brand.rating }));
             return new GetAllBrandsResponseModel(true, 200, 'Brands retrieved successfully', brandsWithCompanyName);
         } catch (error) {
             throw error;
@@ -60,7 +59,7 @@ export class BrandService {
             }
 
             await transManager.startTransaction();
-            await transManager.getRepository(BrandsMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, isActive: reqModel.isActive, website: reqModel.website, rating: reqModel.rating, code: reqModel.code });
+            await transManager.getRepository(BrandsMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, isActive: reqModel.isActive, website: reqModel.website, rating: reqModel.rating });
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Brand updated successfully');
         } catch (error) {

@@ -192,8 +192,8 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
                     <Input label="Company Name" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} className="h-14" required />
                     <Input label="Location" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="h-14" />
                     <Input label="Contact Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-14" />
-                    <Input label="Contact Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="h-14" />
-                    <Input label="Establishment Date" type="date" value={formData.estDate} onChange={(e) => setFormData({ ...formData, estDate: e.target.value })} className="h-14" />
+                    <Input label="Contact Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} className="h-14" />
+                    <Input label="Establishment Date" type="date" max="2026-12-31" value={formData.estDate} onChange={(e) => setFormData({ ...formData, estDate: e.target.value })} className="h-14" />
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>
                         <Button variant="primary" type="submit">{isEditMode ? 'Update' : 'Create'}</Button>

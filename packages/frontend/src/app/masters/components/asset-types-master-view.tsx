@@ -23,7 +23,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', code: '', isActive: true });
+    const [formData, setFormData] = useState({ name: '', description: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const initialized = useRef(false);
@@ -54,7 +54,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
         if (!user) return;
         try {
             if (isEditMode && editingId) {
-                const model = new UpdateAssetTypeModel(editingId, formData.name, formData.description, formData.isActive, formData.code);
+                const model = new UpdateAssetTypeModel(editingId, formData.name, formData.description, formData.isActive);
                 const response = await assetTypeService.updateAssetType(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -64,7 +64,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateAssetTypeModel(user.id, 0, formData.name, formData.description, formData.isActive ?? true, formData.code);
+                const model = new CreateAssetTypeModel(user.id, 0, formData.name, formData.description, formData.isActive ?? true);
                 const response = await assetTypeService.createAssetType(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -85,7 +85,6 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
         setFormData({
             name: item.name,
             description: item.description || '',
-            code: item.code || '',
             isActive: item.isActive ?? true
         });
         setIsModalOpen(true);
@@ -116,7 +115,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', code: '', isActive: true });
+        setFormData({ name: '', description: '', isActive: true });
     };
 
     return (
@@ -141,7 +140,6 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                             <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                 <tr>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Asset Type</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Asset Code</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                 </tr>
@@ -153,7 +151,6 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                                     assetTypes?.map((item: AssetType) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.description || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                 <div className="flex justify-center gap-2">
@@ -184,12 +181,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                         required
                     />
 
-                    <Input
-                        label="Asset Code"
-                        value={formData.code}
-                        onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                        className="h-14"
-                    />
+
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

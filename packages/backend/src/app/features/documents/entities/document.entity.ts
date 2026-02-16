@@ -34,4 +34,10 @@ export class DocumentEntity extends CommonBaseEntity {
 
     @Column('varchar', { name: 'tags', length: 500, nullable: true, comment: 'Comma-separated tags' })
     tags: string;
+
+    @Column('boolean', { name: 'is_secure', nullable: false, default: false, comment: 'Is document secure?' })
+    isSecure: boolean;
+
+    @Column('varchar', { name: 'password', length: 255, nullable: true, comment: 'Password hash' })
+    password: string;
 }

@@ -24,9 +24,8 @@ export class VendorService {
                 throw new ErrorResponse(0, "Vendor with this name already exists");
             }
 
-            const existingCode = await this.vendorRepo.findOne({ where: { code: reqModel.code } });
-            if (existingCode) {
-                throw new ErrorResponse(0, "Vendor code already in use");
+            if (reqModel.phone && !/^\d{10}$/.test(reqModel.phone)) {
+                throw new ErrorResponse(0, "Phone number must be exactly 10 digits");
             }
 
             await transManager.startTransaction();
@@ -38,7 +37,6 @@ export class VendorService {
             saveEntity.email = reqModel.email;
             saveEntity.phone = reqModel.phone;
             saveEntity.address = reqModel.address;
-            saveEntity.code = reqModel.code;
             saveEntity.userId = reqModel.userId;
             await transManager.getRepository(VendorsMasterEntity).save(saveEntity);
             await transManager.completeTransaction();
@@ -52,7 +50,7 @@ export class VendorService {
     async getAllVendors(): Promise<GetAllVendorsResponseModel> {
         try {
             const vendors = await this.vendorRepo.find();
-            const vendorsWithCompanyName = vendors.map(vendor => ({ id: vendor.id, userId: vendor.userId, createdAt: vendor.createdAt, updatedAt: vendor.updatedAt, name: vendor.name, description: vendor.description, isActive: vendor.isActive, contactPerson: vendor.contactPerson, email: vendor.email, phone: vendor.phone, address: vendor.address, code: vendor.code, }));
+            const vendorsWithCompanyName = vendors.map(vendor => ({ id: vendor.id, userId: vendor.userId, createdAt: vendor.createdAt, updatedAt: vendor.updatedAt, name: vendor.name, description: vendor.description, isActive: vendor.isActive, contactPerson: vendor.contactPerson, email: vendor.email, phone: vendor.phone, address: vendor.address }));
             return new GetAllVendorsResponseModel(true, 200, 'Vendors retrieved successfully', vendorsWithCompanyName);
         } catch (error) {
             throw error;
@@ -68,7 +66,12 @@ export class VendorService {
             }
 
             await transManager.startTransaction();
-            await transManager.getRepository(VendorsMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, isActive: reqModel.isActive, contactPerson: reqModel.contactPerson, email: reqModel.email, phone: reqModel.phone, address: reqModel.address, code: reqModel.code, });
+            if (reqModel.phone && !/^\d{10}$/.test(reqModel.phone)) {
+                throw new ErrorResponse(0, "Phone number must be exactly 10 digits");
+            }
+
+            await transManager.startTransaction();
+            await transManager.getRepository(VendorsMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, isActive: reqModel.isActive, contactPerson: reqModel.contactPerson, email: reqModel.email, phone: reqModel.phone, address: reqModel.address });
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Vendor updated successfully');
         } catch (error) {

@@ -44,6 +44,12 @@ export class DocumentsService extends CommonAxiosService {
         }).then((response: any) => response.data);
     }
 
+    async downloadSecureDocument(reqObj: { id: number, password?: string }): Promise<Blob> {
+        return await AxiosInstance.post(`${this.URL}${this.getURLwithMainEndPoint('download')}`, reqObj, {
+            responseType: 'blob'
+        }).then((response: any) => response.data);
+    }
+
     getDownloadUrl(id: number): string {
         return `${this.URL}${this.getURLwithMainEndPoint(`downloadDocument/${id}`)}`;
     }

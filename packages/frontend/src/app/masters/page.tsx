@@ -14,9 +14,11 @@ const CompaniesMasterView = dynamic(() => import('./components/companies-master-
 const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view').then(mod => mod.DepartmentsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Departments...</p> });
 const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view').then(mod => mod.AssetTypesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Asset Types...</p> });
 const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view').then(mod => mod.DeviceBrandsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading device Brands...</p> });
-const ApplicationsMasterView = dynamic(() => import('./components/applications-master-view').then(mod => mod.ApplicationsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Applications...</p> });
+const LicensesMasterView = dynamic(() => import('./components/licenses-master-view').then(mod => mod.LicensesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Licenses...</p> });
 const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Slack Integration...</p> });
 const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Vendors...</p> });
+const InfrastructureMasterView = dynamic(() => import('./components/infrastructure-master-view').then(mod => mod.InfrastructureMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Infrastructure...</p> });
+const RemoteMasterView = dynamic(() => import('./components/remote-master-view').then(mod => mod.RemoteMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Remote Tools...</p> });
 
 
 interface MasterItem {
@@ -70,11 +72,27 @@ const MastersPage: React.FC = () => {
         },
         {
             id: 'applications',
-            title: 'Applications',
-            description: 'Manage software applications and integrations',
+            title: 'Licenses',
+            description: 'Manage software licenses and subscriptions',
             icon: AppWindow,
             color: 'from-cyan-500 to-blue-600',
-            component: ApplicationsMasterView
+            component: LicensesMasterView
+        },
+        {
+            id: 'infrastructure',
+            title: 'Infrastructure',
+            description: 'Manage hardware and infrastructure assets',
+            icon: Package,
+            color: 'from-orange-500 to-red-600',
+            component: InfrastructureMasterView
+        },
+        {
+            id: 'remote-tools',
+            title: 'Remote Tools',
+            description: 'Manage remote access tools and credentials',
+            icon: Smartphone,
+            color: 'from-teal-500 to-emerald-600',
+            component: RemoteMasterView
         },
         {
             id: 'slack-users',

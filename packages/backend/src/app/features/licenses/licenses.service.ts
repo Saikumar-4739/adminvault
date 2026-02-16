@@ -6,7 +6,7 @@ import { GlobalResponse } from '@adminvault/backend-utils';
 import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GetLicenseStatisticsResponseModel, LicenseStatsModel, LicenseResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { CompanyLicenseEntity } from './entities/company-license.entity';
 import { CompanyInfoEntity } from '../masters/company-info/entities/company-info.entity';
-import { ApplicationsMasterEntity } from '../masters/application/entities/application.entity';
+import { LicensesMasterEntity } from '../masters/license/entities/license.entity';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 
 @Injectable()
@@ -47,13 +47,13 @@ export class LicensesService {
 
         const [companies, applications, employees] = await Promise.all([
             uniqueCompanyIds.length > 0 ? manager.getRepository(CompanyInfoEntity).find({ where: { id: In(uniqueCompanyIds) } }) : [],
-            uniqueAppIds.length > 0 ? manager.getRepository(ApplicationsMasterEntity).find({ where: { id: In(uniqueAppIds) } }) : [],
+            uniqueAppIds.length > 0 ? manager.getRepository(LicensesMasterEntity).find({ where: { id: In(uniqueAppIds) } }) : [],
             uniqueEmpIds.length > 0 ? manager.getRepository(EmployeesEntity).find({ where: { id: In(uniqueEmpIds) } }) : []
         ]);
 
         // Create Lookup Maps
         const companyMap = new Map<number, CompanyInfoEntity>(companies.map(c => [Number(c.id), c] as [number, CompanyInfoEntity]));
-        const appMap = new Map<number, ApplicationsMasterEntity>(applications.map(a => [Number(a.id), a] as [number, ApplicationsMasterEntity]));
+        const appMap = new Map<number, LicensesMasterEntity>(applications.map(a => [Number(a.id), a] as [number, LicensesMasterEntity]));
         const empMap = new Map<number, EmployeesEntity>(employees.map(e => [Number(e.id), e] as [number, EmployeesEntity]));
 
         const licenseResponses = licenses.map(l => {

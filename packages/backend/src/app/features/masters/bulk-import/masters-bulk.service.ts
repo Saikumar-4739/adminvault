@@ -4,9 +4,9 @@ import { BrandService } from '../brand/brand.service';
 import { DepartmentService } from '../department/department.service';
 import { CompanyInfoService } from '../company-info/company-info.service';
 import { AssetTypeService } from '../asset-type/asset-type.service';
-import { ApplicationService } from '../application/application.service';
+import { LicenseService } from '../license/license.service';
 import { VendorService } from '../vendor/vendor.service';
-import { CreateBrandModel, CreateDepartmentModel, CreateCompanyModel, CreateAssetTypeModel, CreateApplicationModel, CreateVendorModel } from '@adminvault/shared-models';
+import { CreateBrandModel, CreateDepartmentModel, CreateCompanyModel, CreateAssetTypeModel, CreateLicenseMasterModel, CreateVendorModel } from '@adminvault/shared-models';
 import { GlobalResponse } from '@adminvault/backend-utils';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class MastersBulkService {
         private readonly departmentService: DepartmentService,
         private readonly companyService: CompanyInfoService,
         private readonly assetTypeService: AssetTypeService,
-        private readonly applicationService: ApplicationService,
+        private readonly licenseService: LicenseService,
         private readonly vendorService: VendorService,
     ) { }
 
@@ -31,7 +31,7 @@ export class MastersBulkService {
             departments: { success: 0, failed: 0, errors: [] },
             companies: { success: 0, failed: 0, errors: [] },
             assetTypes: { success: 0, failed: 0, errors: [] },
-            applications: { success: 0, failed: 0, errors: [] },
+            licenses: { success: 0, failed: 0, errors: [] },
             vendors: { success: 0, failed: 0, errors: [] },
             others: []
         };
@@ -49,8 +49,8 @@ export class MastersBulkService {
                 await this.processCompanies(worksheet, summary.companies);
             } else if (sheetName === 'assettypes' || sheetName === 'asset types') {
                 await this.processAssetTypes(worksheet, summary.assetTypes);
-            } else if (sheetName === 'applications') {
-                await this.processApplications(worksheet, summary.applications);
+            } else if (sheetName === 'licenses' || sheetName === 'applications') {
+                await this.processLicenses(worksheet, summary.licenses);
             } else if (sheetName === 'vendors') {
                 await this.processVendors(worksheet, summary.vendors);
             } else {
@@ -80,17 +80,16 @@ export class MastersBulkService {
             const code = this.getCellValue(row, headers['code']);
 
             // Minimal validation
-            if (!name || !code) {
+            if (!name) {
                 // Determine if it's an empty row efficiently
                 if (!name && !code) continue;
                 stats.failed++;
-                stats.errors.push(`Row ${i}: Missing name or code`);
+                stats.errors.push(`Row ${i}: Missing name`);
                 continue;
             }
 
             const model: CreateBrandModel = {
                 name: String(name),
-                code: String(code),
                 description: String(this.getCellValue(row, headers['description']) || ''),
                 website: String(this.getCellValue(row, headers['website']) || ''),
                 rating: Number(this.getCellValue(row, headers['rating']) || 0),
@@ -132,7 +131,6 @@ export class MastersBulkService {
 
             const model: CreateDepartmentModel = {
                 name: String(name),
-                code: String(code || ''),
                 description: String(this.getCellValue(row, headers['description']) || ''),
                 isActive: this.getCellValue(row, headers['isactive']) === true || String(this.getCellValue(row, headers['isactive'])).toLowerCase() === 'true',
                 companyId: Number(compId || 1), // Default to 1 if not provided
@@ -164,7 +162,6 @@ export class MastersBulkService {
 
             const model: CreateAssetTypeModel = {
                 name: String(name),
-                code: String(this.getCellValue(row, headers['code']) || ''),
                 description: String(this.getCellValue(row, headers['description']) || ''),
                 isActive: this.getCellValue(row, headers['isactive']) === true || String(this.getCellValue(row, headers['isactive'])).toLowerCase() === 'true',
                 userId: 1
@@ -180,7 +177,7 @@ export class MastersBulkService {
         }
     }
 
-    private async processApplications(sheet: ExcelJS.Worksheet, stats: { success: number, failed: number, errors: string[] }) {
+    private async processLicenses(sheet: ExcelJS.Worksheet, stats: { success: number, failed: number, errors: string[] }) {
         const headers = this.getHeaders(sheet);
         for (let i = 2; i <= sheet.rowCount; i++) {
             const row = sheet.getRow(i);
@@ -193,18 +190,18 @@ export class MastersBulkService {
                 continue;
             }
 
-            const model: CreateApplicationModel = {
+            const model: CreateLicenseMasterModel = {
+                companyId: 1, // Default to 1 as per requirements or extract from sheet
                 name: String(name),
-                code: String(this.getCellValue(row, headers['code']) || ''),
                 description: String(this.getCellValue(row, headers['description']) || ''),
                 isActive: this.getCellValue(row, headers['isactive']) === true || String(this.getCellValue(row, headers['isactive'])).toLowerCase() === 'true',
-                ownerName: String(this.getCellValue(row, headers['ownername']) || ''),
-                appReleaseDate: new Date(String(this.getCellValue(row, headers['appreleasedate']) || new Date().toISOString())),
+                purchaseDate: new Date(String(this.getCellValue(row, headers['purchasedate']) || new Date().toISOString())),
+                expiryDate: new Date(String(this.getCellValue(row, headers['expirydate']) || new Date().toISOString())),
                 userId: 1
             };
 
             try {
-                await this.applicationService.createApplication(model);
+                await this.licenseService.createLicense(model);
                 stats.success++;
             } catch (error: any) {
                 stats.failed++;
@@ -269,7 +266,6 @@ export class MastersBulkService {
 
             const model: CreateVendorModel = {
                 name: String(name),
-                code: String(this.getCellValue(row, headers['code']) || ''),
                 description: String(this.getCellValue(row, headers['description']) || ''),
                 isActive: this.getCellValue(row, headers['isactive']) === true || String(this.getCellValue(row, headers['isactive'])).toLowerCase() === 'true',
                 contactPerson: String(this.getCellValue(row, headers['contactperson']) || ''),

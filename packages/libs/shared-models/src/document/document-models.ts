@@ -14,6 +14,8 @@ export class DocumentModel {
     companyId!: number;
     createdAt?: Date;
     updatedAt?: Date;
+    isSecure?: boolean;
+    password?: string;
 
     constructor(data: Partial<DocumentModel>) {
         Object.assign(this, data);
@@ -26,11 +28,14 @@ export class UploadDocumentModel {
     tags?: string;
     companyId!: number;
     userId!: number;
+    isSecure?: boolean;
+    password?: string;
 }
 
 export class GetAllDocumentsRequestModel {
     companyId?: number;
     category?: string;
+    isSecure?: boolean;
 }
 
 export class DeleteDocumentModel {
@@ -44,6 +49,7 @@ export class GetDocumentModel {
 
 export class DownloadDocumentRequestModel {
     id!: number;
+    password?: string;
 }
 
 export class GlobalDocumentResponseModel extends GlobalResponse<DocumentModel> {

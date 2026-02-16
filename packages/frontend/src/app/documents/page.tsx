@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { documentsService } from '@/lib/api/services';
 import { DocumentModel, UploadDocumentModel } from '@adminvault/shared-models';
 import { Button } from '@/components/ui/Button';
-import { FileText, Upload, Download, Trash2, Search, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Plus, File as FileIcon } from 'lucide-react';
+import { FileText, Upload, Download, Trash2, Search, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Plus, File as FileIcon, Lock } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
@@ -26,6 +26,9 @@ const DocumentsPage: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState<string>('All');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [documentToDelete, setDocumentToDelete] = useState<any>(null);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [secureDocId, setSecureDocId] = useState<number | null>(null);
+    const [securePassword, setSecurePassword] = useState('');
 
     const fetchDocuments = useCallback(async () => {
         if (!user) return;
@@ -137,6 +140,13 @@ const DocumentsPage: React.FC = () => {
     const handleDownload = useCallback(async (id: number) => {
         try {
             const doc = documents.find(d => d.id === id);
+
+            if (doc?.isSecure) {
+                setSecureDocId(id);
+                setIsPasswordModalOpen(true);
+                return;
+            }
+
             const blob = await documentsService.downloadFile(id);
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -151,6 +161,32 @@ const DocumentsPage: React.FC = () => {
             AlertMessages.getErrorMessage('Failed to download document. Please try again.');
         }
     }, [documents]);
+
+    const handleSecureDownload = async () => {
+        if (!secureDocId || !securePassword) return;
+        setIsLoading(true);
+        try {
+            const doc = documents.find(d => d.id === secureDocId);
+            const blob = await documentsService.downloadSecureDocument({ id: secureDocId, password: securePassword });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', doc ? doc.originalName : `document-${secureDocId}`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            setIsPasswordModalOpen(false);
+            setSecurePassword('');
+            setSecureDocId(null);
+        } catch (error: any) {
+            console.error('Secure download failed:', error);
+            AlertMessages.getErrorMessage(error?.response?.data?.message || 'Invalid password or download failed.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const filteredDocuments = useMemo(() => {
         return documents.filter(doc => {
@@ -282,7 +318,10 @@ const DocumentsPage: React.FC = () => {
                                                         {getFileIcon(doc.mimeType)}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="font-bold text-[13px] text-slate-900 dark:text-white truncate max-w-md group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{doc.originalName}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-bold text-[13px] text-slate-900 dark:text-white truncate max-w-md group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{doc.originalName}</p>
+                                                            {doc.isSecure && <Lock className="w-3 h-3 text-amber-500" />}
+                                                        </div>
                                                         <p className="text-[10px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">Vault ID: {doc.id.toString().padStart(4, '0')}</p>
                                                     </div>
                                                 </div>
@@ -431,6 +470,57 @@ const DocumentsPage: React.FC = () => {
                     title="Delete Document"
                     itemName={documentToDelete ? documentToDelete.originalName : undefined}
                 />
+
+                <Modal
+                    isOpen={isPasswordModalOpen}
+                    onClose={() => {
+                        setIsPasswordModalOpen(false);
+                        setSecurePassword('');
+                        setSecureDocId(null);
+                    }}
+                    title="Security Check"
+                    size="sm"
+                >
+                    <div className="space-y-4 pt-4">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 p-3 rounded-xl text-xs font-medium border border-amber-200 dark:border-amber-800 flex items-start gap-2">
+                            <Lock className="w-4 h-4 mt-0.5 shrink-0" />
+                            <p>This document is password protected. Please enter the valid credentials to access the content.</p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Document Password</label>
+                            <input
+                                type="password"
+                                placeholder="Enter password..."
+                                value={securePassword}
+                                onChange={(e) => setSecurePassword(e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
+                                autoFocus
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setIsPasswordModalOpen(false);
+                                    setSecurePassword('');
+                                    setSecureDocId(null);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={handleSecureDownload}
+                                isLoading={isLoading}
+                                disabled={!securePassword}
+                            >
+                                Unlock & Download
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
             </div>
         </RouteGuard>
     );

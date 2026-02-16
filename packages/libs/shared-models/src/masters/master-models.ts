@@ -15,7 +15,6 @@ export interface MasterBase {
 }
 
 export interface Department extends MasterBase {
-    code?: string;
     companyName?: string;
 }
 
@@ -31,8 +30,8 @@ export interface AssetType extends MasterBase {
 
 export interface DeviceBrand extends MasterBase {
     website?: string;
-    code?: string;
     rating?: any;
+    description?: string; // Explicitly adding description if not already in MasterBase (it is, but ensuring clarity)
 }
 
 export interface Vendor extends MasterBase {
@@ -40,7 +39,6 @@ export interface Vendor extends MasterBase {
     email?: string;
     phone?: string;
     address?: string;
-    code?: string;
 }
 
 export interface Location extends MasterBase {
@@ -50,15 +48,13 @@ export interface Location extends MasterBase {
 }
 
 export interface TicketCategory extends MasterBase {
-    code?: string;
     defaultPriority?: 'Low' | 'Medium' | 'High' | null;
 }
 
-export interface Application extends MasterBase {
-    ownerName?: string;
-    appReleaseDate?: Date;
+export interface License extends MasterBase {
+    purchaseDate?: Date;
+    expiryDate?: Date;
     companyName?: string;
-    code?: string;
 }
 
 export interface ExpenseCategory extends MasterBase {
@@ -78,6 +74,7 @@ export interface SlackUserModel extends MasterBase {
     avatar?: string;
     employeeId?: number;
     companyName?: string;
+    isActive: boolean; // Explicit
 }
 
 // ============================================
@@ -102,11 +99,8 @@ export class CreateMasterModel {
 }
 
 export class CreateDepartmentModel extends CreateMasterModel {
-    code?: string;
-
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, id?: number) {
         super(userId, companyId, name, description, isActive, id);
-        this.code = code;
     }
 }
 
@@ -120,24 +114,19 @@ export class CreateDesignationModel extends CreateMasterModel {
 }
 
 export class CreateAssetTypeModel extends CreateMasterModel {
-    code?: string;
-
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, code?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, id?: number) {
         super(userId, 0, name, description, isActive, id);
-        this.code = code;
     }
 }
 
 export class CreateBrandModel extends CreateMasterModel {
     website?: string;
     rating?: number;
-    code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, id?: number) {
         super(userId, 0, name, description, isActive, id);
         this.website = website;
         this.rating = rating;
-        this.code = code;
     }
 }
 
@@ -163,6 +152,7 @@ export class CreateSlackUserModel extends CreateMasterModel {
         this.notes = notes;
         this.avatar = avatar;
         this.employeeId = employeeId;
+        this.isActive = isActive ?? true;
     }
 }
 
@@ -171,15 +161,13 @@ export class CreateVendorModel extends CreateMasterModel {
     email?: string;
     phone?: string;
     address?: string;
-    code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, code?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.contactPerson = contactPerson;
         this.email = email;
         this.phone = phone;
         this.address = address;
-        this.code = code;
     }
 }
 
@@ -207,18 +195,7 @@ export class CreateTicketCategoryModel extends CreateMasterModel {
     }
 }
 
-export class CreateApplicationModel extends CreateMasterModel {
-    ownerName?: string;
-    appReleaseDate?: Date;
-    code?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, ownerName?: string, appReleaseDate?: Date, code?: string, id?: number) {
-        super(userId, companyId, name, description, isActive, id);
-        this.ownerName = ownerName;
-        this.appReleaseDate = appReleaseDate;
-        this.code = code;
-    }
-}
 
 export class CreateExpenseCategoryModel extends CreateMasterModel {
     categoryType?: string;
@@ -240,14 +217,12 @@ export class UpdateDepartmentModel {
     name: string;
     description?: string;
     isActive: boolean;
-    code?: string;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
-        this.code = code;
     }
 }
 
@@ -256,14 +231,12 @@ export class UpdateAssetTypeModel {
     name: string;
     description?: string;
     isActive: boolean;
-    code?: string;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, code?: string) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
-        this.code = code;
     }
 }
 
@@ -274,16 +247,14 @@ export class UpdateBrandModel {
     isActive: boolean;
     website?: string;
     rating?: number;
-    code?: string;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, code?: string) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
         this.website = website;
         this.rating = rating;
-        this.code = code;
     }
 }
 
@@ -296,10 +267,9 @@ export class UpdateVendorModel {
     email?: string;
     phone?: string;
     address?: string;
-    code?: string;
     companyId?: number;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, code?: string, companyId?: number) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, companyId?: number) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -308,7 +278,6 @@ export class UpdateVendorModel {
         this.email = email;
         this.phone = phone;
         this.address = address;
-        this.code = code;
         this.companyId = companyId;
     }
 }
@@ -339,37 +308,17 @@ export class UpdateTicketCategoryModel {
     description?: string;
     isActive: boolean;
     defaultPriority?: 'Low' | 'Medium' | 'High';
-    code?: string;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High', code?: string) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, defaultPriority?: 'Low' | 'Medium' | 'High') {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
         this.defaultPriority = defaultPriority;
-        this.code = code;
     }
 }
 
-export class UpdateApplicationModel {
-    id: number;
-    name: string;
-    description?: string;
-    isActive: boolean;
-    ownerName?: string;
-    appReleaseDate?: Date;
-    code?: string;
 
-    constructor(id: number, name: string, description?: string, isActive = true, ownerName?: string, appReleaseDate?: Date, code?: string) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.isActive = isActive;
-        this.ownerName = ownerName;
-        this.appReleaseDate = appReleaseDate;
-        this.code = code;
-    }
-}
 
 export class UpdateExpenseCategoryModel {
     id: number;
@@ -456,14 +405,7 @@ export class GetAllTicketCategoriesResponseModel extends GlobalResponse {
     }
 }
 
-export class GetAllApplicationsResponseModel extends GlobalResponse {
-    applications: Application[];
 
-    constructor(status: boolean, code: number, message: string, applications: Application[]) {
-        super(status, code, message);
-        this.applications = applications;
-    }
-}
 
 export class GetAllExpenseCategoriesResponseModel extends GlobalResponse {
     expenseCategories: ExpenseCategory[];
@@ -550,14 +492,7 @@ export class CreateTicketCategoryResponseModel extends GlobalResponse {
     }
 }
 
-export class CreateApplicationResponseModel extends GlobalResponse {
-    application: Application;
 
-    constructor(status: boolean, code: number, message: string, application: Application) {
-        super(status, code, message);
-        this.application = application;
-    }
-}
 
 export class CreateExpenseCategoryResponseModel extends GlobalResponse {
     expenseCategory: ExpenseCategory;
@@ -626,14 +561,7 @@ export class UpdateTicketCategoryResponseModel extends GlobalResponse {
     }
 }
 
-export class UpdateApplicationResponseModel extends GlobalResponse {
-    application: Application;
 
-    constructor(status: boolean, code: number, message: string, application: Application) {
-        super(status, code, message);
-        this.application = application;
-    }
-}
 
 export class UpdateExpenseCategoryResponseModel extends GlobalResponse {
     expenseCategory: ExpenseCategory;
@@ -823,6 +751,220 @@ export class AssetTypeDropdownResponse extends GlobalResponse {
     constructor(status: boolean, code: number, message: string, data: AssetTypeDropdownModel[]) {
         super(status, code, message);
         this.data = data;
+    }
+}
+
+export class InfrastructureMaster {
+    id!: number;
+    companyId!: number;
+    deviceName!: string;
+    serialNumber!: string;
+    description?: string;
+    purchaseDate?: Date | string;
+    isActive?: boolean;
+    createdBy!: number;
+    updatedBy?: number;
+    createdAt!: Date | string;
+    updatedAt?: Date | string;
+}
+
+export class CreateInfrastructureMasterModel {
+    createdBy!: number;
+    companyId!: number;
+    deviceName!: string;
+    serialNumber!: string;
+    description?: string;
+    purchaseDate?: Date | string;
+    isActive?: boolean;
+
+    constructor(
+        createdBy: number,
+        companyId: number,
+        deviceName: string,
+        serialNumber: string,
+        description?: string,
+        purchaseDate?: Date | string,
+        isActive?: boolean
+    ) {
+        this.createdBy = createdBy;
+        this.companyId = companyId;
+        this.deviceName = deviceName;
+        this.serialNumber = serialNumber;
+        this.description = description;
+        this.purchaseDate = purchaseDate;
+        this.isActive = isActive;
+    }
+}
+
+export class UpdateInfrastructureMasterModel {
+    id!: number;
+    deviceName?: string;
+    serialNumber?: string;
+    description?: string;
+    purchaseDate?: Date | string;
+    isActive?: boolean;
+
+    constructor(
+        id: number,
+        deviceName?: string,
+        serialNumber?: string,
+        description?: string,
+        purchaseDate?: Date | string,
+        isActive?: boolean
+    ) {
+        this.id = id;
+        this.deviceName = deviceName;
+        this.serialNumber = serialNumber;
+        this.description = description;
+        this.purchaseDate = purchaseDate;
+        this.isActive = isActive;
+    }
+}
+
+export class DeleteInfrastructureMasterModel {
+    id!: number;
+}
+
+export class GetAllInfrastructureMasterResponseModel extends GlobalResponse {
+    data: InfrastructureMaster[];
+    constructor(status: boolean, code: number, message: string, data: InfrastructureMaster[]) {
+        super(status, code, message);
+        this.data = data;
+    }
+}
+
+export class RemoteMaster {
+    id!: number;
+    companyId!: number;
+    remoteToolName!: string;
+    userName!: string;
+    password!: string;
+    notes?: string;
+    isActive?: boolean;
+    createdBy!: number;
+    updatedBy?: number;
+    createdAt!: Date | string;
+    updatedAt?: Date | string;
+}
+
+export class CreateRemoteMasterModel {
+    createdBy!: number;
+    companyId!: number;
+    remoteToolName!: string;
+    userName!: string;
+    password!: string;
+    notes?: string;
+    isActive?: boolean;
+
+    constructor(
+        createdBy: number,
+        companyId: number,
+        remoteToolName: string,
+        userName: string,
+        password: string,
+        notes?: string,
+        isActive?: boolean
+    ) {
+        this.createdBy = createdBy;
+        this.companyId = companyId;
+        this.remoteToolName = remoteToolName;
+        this.userName = userName;
+        this.password = password;
+        this.notes = notes;
+        this.isActive = isActive;
+    }
+}
+
+export class UpdateRemoteMasterModel {
+    id!: number;
+    remoteToolName?: string;
+    userName?: string;
+    password?: string;
+    notes?: string;
+    isActive?: boolean;
+
+    constructor(
+        id: number,
+        remoteToolName?: string,
+        userName?: string,
+        password?: string,
+        notes?: string,
+        isActive?: boolean
+    ) {
+        this.id = id;
+        this.remoteToolName = remoteToolName;
+        this.userName = userName;
+        this.password = password;
+        this.notes = notes;
+        this.isActive = isActive;
+    }
+}
+
+export class DeleteRemoteMasterModel {
+    id!: number;
+}
+
+export class GetAllRemoteMasterResponseModel extends GlobalResponse {
+    data: RemoteMaster[];
+    constructor(status: boolean, code: number, message: string, data: RemoteMaster[]) {
+        super(status, code, message);
+        this.data = data;
+    }
+}
+
+export class CreateLicenseMasterModel extends CreateMasterModel {
+    purchaseDate?: Date;
+    expiryDate?: Date;
+
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, purchaseDate?: Date, expiryDate?: Date, id?: number) {
+        super(userId, companyId, name, description, isActive, id);
+        this.purchaseDate = purchaseDate;
+        this.expiryDate = expiryDate;
+    }
+}
+
+export class UpdateLicenseMasterModel {
+    id: number;
+    name: string;
+    description?: string;
+    isActive: boolean;
+    purchaseDate?: Date;
+    expiryDate?: Date;
+
+    constructor(id: number, name: string, description?: string, isActive = true, purchaseDate?: Date, expiryDate?: Date) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.isActive = isActive;
+        this.purchaseDate = purchaseDate;
+        this.expiryDate = expiryDate;
+    }
+}
+
+export class GetAllLicenseMastersResponseModel extends GlobalResponse {
+    licenses: License[];
+
+    constructor(status: boolean, code: number, message: string, licenses: License[]) {
+        super(status, code, message);
+        this.licenses = licenses;
+    }
+}
+
+export class CreateLicenseMasterResponseModel extends GlobalResponse {
+    license: License;
+
+    constructor(status: boolean, code: number, message: string, license: License) {
+        super(status, code, message);
+        this.license = license;
+    }
+}
+
+export class UpdateLicenseMasterResponseModel extends GlobalResponse {
+    license: License;
+
+    constructor(status: boolean, code: number, message: string, license: License) {
+        super(status, code, message);
+        this.license = license;
     }
 }
 

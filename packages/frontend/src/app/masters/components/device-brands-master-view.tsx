@@ -23,7 +23,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', website: '', rating: '', code: '' });
+    const [formData, setFormData] = useState({ name: '', description: '', website: '', rating: '' });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const lastFetchedCompanyId = useRef<number | null>(null);
@@ -54,7 +54,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
         if (!user) return;
         try {
             if (isEditMode && editingId) {
-                const model = new UpdateBrandModel(editingId, formData.name, formData.description, true, formData.website, formData.rating ? parseFloat(formData.rating) : undefined, formData.code);
+                const model = new UpdateBrandModel(editingId, formData.name, formData.description, true, formData.website, formData.rating ? parseFloat(formData.rating) : undefined);
                 const response = await brandService.updateBrand(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -64,7 +64,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateBrandModel(user.id, 0, formData.name, formData.description, true, formData.website, formData.rating ? parseFloat(formData.rating) : undefined, formData.code);
+                const model = new CreateBrandModel(user.id, 0, formData.name, formData.description, true, formData.website, formData.rating ? parseFloat(formData.rating) : undefined);
                 const response = await brandService.createBrand(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -87,7 +87,6 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
             description: item.description || '',
             website: item.website || '',
             rating: item.rating?.toString() || '',
-            code: item.code || ''
         });
         setIsModalOpen(true);
     };
@@ -117,7 +116,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', website: '', rating: '', code: '' });
+        setFormData({ name: '', description: '', website: '', rating: '' });
     };
 
     return (
@@ -142,7 +141,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                             <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                 <tr>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Brand Name</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Brand Code</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Website</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Rating</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
@@ -155,7 +154,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                                     brands?.map((item: DeviceBrand, index: number) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.code || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.description || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
                                                 {item.website ? (
                                                     <a href={item.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">
@@ -206,7 +205,7 @@ export const DeviceBrandsMasterView: React.FC<DeviceBrandsMasterViewProps> = ({ 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input label="Brand Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-14" required />
 
-                    <Input label="Brand Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="h-14" />
+                    <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="h-14" />
 
                     <Input label="Website" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} className="h-14" />
                     <div>

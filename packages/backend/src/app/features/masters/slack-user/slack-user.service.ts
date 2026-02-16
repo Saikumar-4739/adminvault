@@ -36,7 +36,7 @@ export class SlackUserService {
             const saveEntity = new SlackUsersMasterEntity();
             saveEntity.companyId = reqModel.companyId;
             saveEntity.employeeId = empInfo.id;
-            saveEntity.isActive = true;
+            saveEntity.isActive = reqModel.isActive ?? true;
             saveEntity.name = reqModel.name;
             saveEntity.email = reqModel.email;
             saveEntity.slackUserId = reqModel.slackUserId;
