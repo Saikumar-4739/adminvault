@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '@/lib/api/services';
+import { disconnectAllSockets } from '@/lib/socket';
 import { LoginUserModel, LoginResponseModel } from '@adminvault/shared-models';
 import { useToast } from './ToastContext';
 
@@ -100,6 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     if (response.refreshToken) {
                         localStorage.setItem("refresh_token", response.refreshToken);
                     }
+                    // Reset socket connections to ensure they pick up the new token
+                    disconnectAllSockets();
                 } catch (error: any) {
                     console.error('Storage Error:', error);
                 }
@@ -167,6 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.removeItem('auth_user');
             localStorage.removeItem('refresh_token');
             localStorage.removeItem('auth_menus');
+            disconnectAllSockets();
         }
     }, [user, token, toast]);
 

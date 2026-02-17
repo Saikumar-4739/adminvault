@@ -19,6 +19,7 @@ const SlackUsersMasterView = dynamic(() => import('./components/slack-users-mast
 const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Vendors...</p> });
 const InfrastructureMasterView = dynamic(() => import('./components/infrastructure-master-view').then(mod => mod.InfrastructureMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Infrastructure...</p> });
 const RemoteMasterView = dynamic(() => import('./components/remote-master-view').then(mod => mod.RemoteMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Remote Tools...</p> });
+const DocumentsMasterView = dynamic(() => import('./components/documents-master-view').then(mod => mod.DocumentsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Documents...</p> });
 
 
 interface MasterItem {
@@ -116,7 +117,7 @@ const MastersPage: React.FC = () => {
             description: 'Manage organizational documents and templates',
             icon: FileText,
             color: 'from-blue-600 to-indigo-700',
-            href: '/documents'
+            component: DocumentsMasterView
         },
     ];
 

@@ -238,7 +238,7 @@ const DocumentsPage: React.FC = () => {
                         </div>
 
                         <Button
-                            variant="primary"
+                            variant="success"
                             onClick={() => setIsUploadModalOpen(true)}
                             className="rounded-xl px-5 font-black uppercase tracking-widest text-[9px] h-9 shadow-md"
                             leftIcon={<Plus className="w-3.5 h-3.5" />}
@@ -449,11 +449,11 @@ const DocumentsPage: React.FC = () => {
                                 Cancel
                             </Button>
                             <Button
-                                variant="primary"
+                                variant="success"
                                 onClick={handleUpload}
                                 isLoading={isLoading}
                                 disabled={!selectedFile}
-                                className="shadow-lg shadow-indigo-500/20 px-8"
+                                className="shadow-lg shadow-emerald-500/20 px-8"
                             >
                                 Confirm Upload
                             </Button>

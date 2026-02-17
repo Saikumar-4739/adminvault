@@ -20,11 +20,22 @@ export function getSocket(namespace: string = '/ws'): any {
   if (!socketInstances[socketKey]) {
     console.log(`[Socket] Initializing connection to: ${socketKey}`);
 
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
     socketInstances[socketKey] = (io as any)(socketKey, {
       path: '/socket.io',
-      transports: ['websocket'],
-      withCredentials: true,
+      transports: ['polling', 'websocket'],
+      withCredentials: false,
       autoConnect: true,
+      auth: {
+        token
+      },
+      extraHeaders: token ? {
+        Authorization: `Bearer ${token}`
+      } : {},
+      query: {
+        token
+      }
     });
 
     socketInstances[socketKey].on('connect', () => {
@@ -36,7 +47,7 @@ export function getSocket(namespace: string = '/ws'): any {
     });
 
     socketInstances[socketKey].on('connect_error', (error: any) => {
-      console.error(`[Socket] Connection error on ${ns}:`, error.message);
+      // console.error(`[Socket] Connection error on ${ns}:`, error.message);
     });
   }
 
