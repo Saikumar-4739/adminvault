@@ -213,11 +213,11 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                     <div className="flex items-center gap-2">
                         <h3 className="font-bold text-slate-800 dark:text-slate-100">Document Vault</h3>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-full md:w-auto mt-3 md:mt-0">
                         <select
                             value={activeCategory}
                             onChange={(e) => setActiveCategory(e.target.value)}
-                            className="hidden md:block px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                            className="w-full md:w-auto px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                         >
                             {categories.map((cat) => (
                                 <option key={cat} value={cat}>
@@ -225,7 +225,7 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                                 </option>
                             ))}
                         </select>
-                        <div className="relative w-64 hidden md:block">
+                        <div className="relative w-full md:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
@@ -235,14 +235,16 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        {onBack && (
-                            <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
-                                Back to Masters
+                        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                            {onBack && (
+                                <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
+                                    Back
+                                </Button>
+                            )}
+                            <Button size="xs" variant="success" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsUploadModalOpen(true)}>
+                                Upload
                             </Button>
-                        )}
-                        <Button size="xs" variant="success" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsUploadModalOpen(true)}>
-                            Upload Document
-                        </Button>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-4">

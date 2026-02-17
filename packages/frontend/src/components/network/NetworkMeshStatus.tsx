@@ -14,6 +14,7 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { WebSocketEvent } from '@adminvault/shared-models';
+import { configVariables } from '@adminvault/shared-services';
 
 interface ConnectedUser {
     userId: number;
@@ -233,7 +234,7 @@ export const NetworkMeshStatus: React.FC = () => {
                     <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">Endpoint:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
-                            {process.env.NEXT_PUBLIC_WS_URL || 'localhost:3001'}/ws
+                            {configVariables.APP_AVS_SERVICE_URL.replace(/\/api$/, '')}/ws
                         </span>
                     </div>
                     <div className="flex justify-between">

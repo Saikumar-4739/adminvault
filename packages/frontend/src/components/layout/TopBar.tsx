@@ -75,15 +75,15 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                     </svg>
                 </button>
 
-                <div className="flex items-center gap-4 px-4 lg:px-6 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md min-w-[200px] lg:min-w-[280px]">
+                <div className="hidden md:flex items-center gap-4 px-4 lg:px-6 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md min-w-[200px] lg:min-w-[280px]">
                     <Globe className="h-4 w-4 text-blue-500 animate-pulse shrink-0" />
                     <div className="flex items-center gap-3 whitespace-nowrap">
                         {mounted ? (
                             <>
-                                <span className="hidden sm:inline text-[11px] font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
+                                <span className="hidden lg:inline text-[11px] font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
                                     {currentTime.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
                                 </span>
-                                <div className="hidden sm:block w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                                <div className="hidden lg:block w-px h-3 bg-slate-200 dark:bg-slate-800" />
                                 <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 tabular-nums tracking-widest uppercase">
                                     {currentTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                 </span>
@@ -170,7 +170,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                                 className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-xs text-rose-500 font-bold hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
                             >
                                 <LogOut className="h-4 w-4" />
-                                Terminate Session
+                                Logout
                             </button>
                         </div>
                     )}

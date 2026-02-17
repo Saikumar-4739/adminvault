@@ -125,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
 
     return (
         <aside className={`
-            fixed lg:static inset-y-0 left-0 z-50
+            fixed lg:static inset-y-0 left-0 z-[60]
             h-screen flex flex-col transition-all duration-300 ease-in-out 
             border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950
             ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
