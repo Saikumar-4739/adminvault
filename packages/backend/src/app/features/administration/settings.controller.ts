@@ -3,7 +3,7 @@ import { SettingsService } from './settings.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
-import { SettingType, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel, CompanyIdRequestModel, UserIdNumRequestModel } from '@adminvault/shared-models';
+import { SettingType, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel, IdRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Settings')
 @Controller('administration/settings')
@@ -12,8 +12,8 @@ export class SettingsController {
     constructor(private readonly settingsService: SettingsService) { }
 
     @Post('getUserSettings')
-    @ApiBody({ type: UserIdNumRequestModel })
-    async getUserSettings(@Body() reqModel: UserIdNumRequestModel): Promise<GetAllSettingsResponseModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getUserSettings(@Body() reqModel: IdRequestModel): Promise<GetAllSettingsResponseModel> {
         try {
             return await this.settingsService.getUserSettings(reqModel);
         } catch (error) {
@@ -22,8 +22,8 @@ export class SettingsController {
     }
 
     @Post('getCompanySettings')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getCompanySettings(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllSettingsResponseModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getCompanySettings(@Body() reqModel: IdRequestModel): Promise<GetAllSettingsResponseModel> {
         try {
             return await this.settingsService.getCompanySettings(reqModel);
         } catch (error) {

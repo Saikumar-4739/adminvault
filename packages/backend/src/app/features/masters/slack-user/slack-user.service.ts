@@ -23,18 +23,18 @@ export class SlackUserService {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
 
-            const companyInfo = await this.companyRepo.findOne({ where: { id: reqModel.companyId } });
+            const companyInfo = await this.companyRepo.findOne({ where: { id: reqModel.id } });
             if (!companyInfo)
                 throw new ErrorResponse(400, 'Invalid Company ID or Company does not exist');
 
-            const empInfo = await this.employeeRepo.findOne({ where: { id: reqModel.employeeId, companyId: reqModel.companyId } });
+            const empInfo = await this.employeeRepo.findOne({ where: { id: reqModel.employeeId, companyId: reqModel.id } });
             if (!empInfo) {
                 throw new ErrorResponse(400, 'Invalid Employee ID or Employee does not belong to the Company');
             }
 
             await transManager.startTransaction();
             const saveEntity = new SlackUsersMasterEntity();
-            saveEntity.companyId = reqModel.companyId;
+            saveEntity.companyId = reqModel.id;
             saveEntity.employeeId = empInfo.id;
             saveEntity.isActive = reqModel.isActive ?? true;
             saveEntity.name = reqModel.name;

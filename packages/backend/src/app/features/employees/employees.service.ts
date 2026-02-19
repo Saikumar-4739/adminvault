@@ -6,7 +6,7 @@ import { CompanyInfoEntity } from '../masters/company-info/entities/company-info
 import { DepartmentsMasterEntity } from '../masters/department/entities/department.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, CompanyIdRequestModel, CreateEmailInfoModel, EmailTypeEnum } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, IdRequestModel, CreateEmailInfoModel, EmailTypeEnum } from '@adminvault/shared-models';
 import { EmailInfoService } from '../administration/email-info.service';
 
 @Injectable()
@@ -163,10 +163,10 @@ export class EmployeesService {
         }
     }
 
-    async getAllEmployees(reqModel: CompanyIdRequestModel): Promise<GetAllEmployeesResponseModel> {
+    async getAllEmployees(reqModel: IdRequestModel): Promise<GetAllEmployeesResponseModel> {
         try {
             let employees: EmployeesEntity[];
-            const companyId = reqModel.companyId;
+            const companyId = reqModel.id;
 
             if (companyId) {
                 employees = await this.employeesRepo.find({ where: { companyId } });

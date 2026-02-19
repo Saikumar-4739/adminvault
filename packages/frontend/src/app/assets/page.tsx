@@ -442,6 +442,7 @@ const AssetsPage: React.FC = () => {
                     <BulkImportModal
                         isOpen={isBulkImportOpen}
                         companyId={selectedCompanyId}
+                        companies={companies}
                         onSuccess={() => { /* handled */ }}
                         onClose={() => setIsBulkImportOpen(false)}
                     />

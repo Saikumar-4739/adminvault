@@ -1,30 +1,36 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, FileUp, AlertCircle, CheckCircle, Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { useToast } from '@/contexts/ToastContext';
 import { services } from '@/lib/api/services';
 import * as XLSX from 'xlsx';
+import { Select } from '@/components/ui/Select';
 
 interface BulkImportModalProps {
     isOpen: boolean;
     onClose: () => void;
     companyId: number;
+    companies?: any[];
     onSuccess: () => void;
 }
 
-interface BulkImportModalProps {
-    children?: React.ReactNode;
-}
-
-export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClose, companyId, onSuccess }: BulkImportModalProps) => {
+export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClose, companyId, companies = [], onSuccess }: BulkImportModalProps) => {
     const [file, setFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [importResult, setImportResult] = useState<{ success: boolean; message: string; successCount: number; errorCount: number; errors: { row: number; error: string }[] } | null>(null);
+    const [selectedCompany, setSelectedCompany] = useState<string>(companyId ? String(companyId) : '');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { success, error: showError } = useToast();
+
+    useEffect(() => {
+        if (isOpen) {
+            setSelectedCompany(companyId ? String(companyId) : '');
+        }
+    }, [isOpen, companyId]);
+
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -55,14 +61,20 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
     };
 
     const handleUpload = async () => {
-        if (!file || !companyId) return;
+        if (!file) return;
+
+        const targetCompanyId = Number(selectedCompany);
+        if (!targetCompanyId) {
+            showError('Validation Error', 'Please select a company to import assets into.');
+            return;
+        }
 
         setIsLoading(true);
         try {
             const userData = localStorage.getItem('user');
             const userId = userData ? JSON.parse(userData).id : 1;
 
-            const response = await services.asset.bulkImport(file, companyId, userId);
+            const response = await services.asset.bulkImport(file, targetCompanyId, userId);
 
             if (response.status) {
                 setImportResult({
@@ -140,6 +152,21 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                     </div>
                 </div>
 
+                {(!companyId || companyId === 0) && (
+                    <div>
+                        <Select
+                            label="Select Target Company"
+                            options={[
+                                { value: '', label: 'Select Company' },
+                                ...companies.map(c => ({ value: c.id, label: c.companyName }))
+                            ]}
+                            value={String(selectedCompany)}
+                            onChange={(e) => setSelectedCompany(e.target.value)}
+                            required
+                        />
+                    </div>
+                )}
+
                 <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center transition-colors hover:border-indigo-500 dark:hover:border-indigo-400">
                     <input
                         type="file"
@@ -210,7 +237,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                     <Button
                         variant="primary"
                         onClick={handleUpload}
-                        disabled={!file || isLoading}
+                        disabled={!file || isLoading || (!selectedCompany && !companyId)}
                         isLoading={isLoading}
                     >
                         Import Assets

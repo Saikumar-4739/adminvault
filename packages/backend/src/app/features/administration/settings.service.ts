@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { SettingsEntity } from './entities/settings.entity';
 import { SettingsRepository } from './repositories/settings.repository';
-import { SettingType, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, SettingResponseModel, GlobalResponse, GetSettingsByCategoryRequestModel, DeleteSettingRequestModel, GetSettingRequestModel, GetSettingResponseModel, CompanyIdRequestModel, UserIdNumRequestModel } from '@adminvault/shared-models';
+import { SettingType, CreateSettingModel, BulkSetSettingsModel, GetAllSettingsResponseModel, SettingResponseModel, GlobalResponse, GetSettingsByCategoryRequestModel, DeleteSettingRequestModel, GetSettingRequestModel, GetSettingResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 
 interface ISettingRule {
@@ -43,7 +43,7 @@ export class SettingsService {
         return criteria;
     }
 
-    async getUserSettings(reqModel: UserIdNumRequestModel): Promise<GetAllSettingsResponseModel> {
+    async getUserSettings(reqModel: IdRequestModel): Promise<GetAllSettingsResponseModel> {
         try {
             const criteria = this.buildSearchCriteria(SettingType.USER, reqModel.id);
 
@@ -56,9 +56,9 @@ export class SettingsService {
         }
     }
 
-    async getCompanySettings(reqModel: CompanyIdRequestModel): Promise<GetAllSettingsResponseModel> {
+    async getCompanySettings(reqModel: IdRequestModel): Promise<GetAllSettingsResponseModel> {
         try {
-            const criteria = this.buildSearchCriteria(SettingType.COMPANY, reqModel.companyId);
+            const criteria = this.buildSearchCriteria(SettingType.COMPANY, reqModel.id);
             const settings = await this.settingsRepo.find({ where: criteria });
 
             const responses = settings.map(s => this.mapSettingToResponse(s));

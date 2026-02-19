@@ -1,430 +1,244 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ticketService } from '@/lib/api/services';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ticketService, authService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { Button } from '@/components/ui/Button';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum } from '@adminvault/shared-models';
+import { UserRoleEnum, CompanyIdRequestModel } from '@adminvault/shared-models';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/Input';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, CreateTicketModel } from '@adminvault/shared-models';
-import { Building2, CheckCircle, Ticket, Monitor, Cpu, Wifi, Mail, Lock, HelpCircle, Send, MessageSquare, List, Plus, Clock, ChevronRight, Hash } from 'lucide-react';
-import { getSocket } from '@/lib/socket';
+import { Ticket, Calendar } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
-
-const CategoryIcons: Record<string, any> = {
-    [TicketCategoryEnum.HARDWARE]: Monitor,
-    [TicketCategoryEnum.SOFTWARE]: Cpu,
-    [TicketCategoryEnum.NETWORK]: Wifi,
-    [TicketCategoryEnum.EMAIL]: Mail,
-    [TicketCategoryEnum.ACCESS]: Lock,
-    [TicketCategoryEnum.OTHER]: HelpCircle,
-};
-
-const CategoryStyles: Record<string, { bg: string, text: string, iconBg: string }> = {
-    [TicketCategoryEnum.HARDWARE]: { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-700 dark:text-blue-400', iconBg: 'bg-blue-500' },
-    [TicketCategoryEnum.SOFTWARE]: { bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-700 dark:text-purple-400', iconBg: 'bg-purple-500' },
-    [TicketCategoryEnum.NETWORK]: { bg: 'bg-cyan-50 dark:bg-cyan-900/20', text: 'text-cyan-700 dark:text-cyan-400', iconBg: 'bg-cyan-500' },
-    [TicketCategoryEnum.EMAIL]: { bg: 'bg-indigo-50 dark:bg-indigo-900/20', text: 'text-indigo-700 dark:text-indigo-400', iconBg: 'bg-indigo-500' },
-    [TicketCategoryEnum.ACCESS]: { bg: 'bg-rose-50 dark:bg-rose-900/20', text: 'text-rose-700 dark:text-rose-400', iconBg: 'bg-rose-500' },
-    [TicketCategoryEnum.OTHER]: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-400', iconBg: 'bg-slate-500' },
-};
-
-const PriorityConfig: Record<string, { bg: string, text: string, border: string, dot: string }> = {
-    [TicketPriorityEnum.LOW]: { bg: 'bg-slate-50 dark:bg-slate-800/50', text: 'text-slate-600 dark:text-slate-400', border: 'border-slate-200 dark:border-slate-700', dot: 'bg-slate-400' },
-    [TicketPriorityEnum.MEDIUM]: { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800/50', dot: 'bg-blue-500' },
-    [TicketPriorityEnum.HIGH]: { bg: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-800/50', dot: 'bg-orange-500' },
-    [TicketPriorityEnum.URGENT]: { bg: 'bg-rose-50 dark:bg-rose-900/20', text: 'text-rose-600 dark:text-rose-400', border: 'border-rose-200 dark:border-rose-800/50', dot: 'bg-rose-500' },
-};
-
-const StatusStyles: Record<string, { bg: string, text: string, animate: boolean }> = {
-    [TicketStatusEnum.OPEN]: { bg: 'bg-blue-50/50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800', text: 'Open', animate: true },
-    [TicketStatusEnum.IN_PROGRESS]: { bg: 'bg-amber-50/50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800', text: 'In Progress', animate: true },
-    [TicketStatusEnum.RESOLVED]: { bg: 'bg-emerald-50/50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800', text: 'Resolved', animate: false },
-    [TicketStatusEnum.CLOSED]: { bg: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700', text: 'Closed', animate: false },
-};
-
-interface TicketData {
-    id: number;
-    subject: string;
-    ticketCode: string;
-    priorityEnum: TicketPriorityEnum;
-    categoryEnum: TicketCategoryEnum;
-    ticketStatus: TicketStatusEnum;
-    createdAt?: string;
-}
+import { Select } from '@/components/ui/Select';
+import { TextArea } from '@/components/ui/TextArea';
 
 const CreateTicketPage: React.FC = () => {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const { isLoading: isAuthLoading } = useAuth(); // Use auth loading state
+    const { user } = useAuth();
 
-    const [tickets, setTickets] = useState<TicketData[]>([]);
+    useEffect(() => {
+        console.log('CreateTicketPage mounted');
+    }, []);
+
     const [isLoading, setIsLoading] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
-    const [activeTab, setActiveTab] = useState<'tickets' | 'create'>('tickets');
+    const [admins, setAdmins] = useState<any[]>([]);
     const [formData, setFormData] = useState({
         subject: '',
+        description: '',
         categoryEnum: TicketCategoryEnum.OTHER,
         priorityEnum: TicketPriorityEnum.MEDIUM,
-        ticketStatus: TicketStatusEnum.OPEN,
+        assignAdminId: '',
+        expectedCompletionDate: '',
         ticketCode: ''
     });
 
     useEffect(() => {
-        const tab = searchParams.get('tab');
-        if (tab === 'create' || tab === 'tickets') {
-            setActiveTab(tab as 'tickets' | 'create');
-        }
-    }, [searchParams]);
-
-    const fetchMyTickets = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const response = await ticketService.getMyTickets();
-            if (response.status) {
-                const ticketData = (response as any).tickets || response.data || [];
-                setTickets(ticketData);
-            } else {
-                AlertMessages.getErrorMessage(response.message);
+        const fetchAdmins = async () => {
+            if (!user?.companyId) return;
+            try {
+                const response = await authService.getAllUsers(new CompanyIdRequestModel(user.companyId));
+                if (response.status && response.data) {
+                    const adminUsers = response.data.filter((u: any) =>
+                        u.userRole === UserRoleEnum.ADMIN ||
+                        u.userRole === UserRoleEnum.SUPER_ADMIN ||
+                        u.userRole === UserRoleEnum.SUPPORT_ADMIN
+                    );
+                    setAdmins(adminUsers);
+                }
+            } catch (error) {
+                console.error('Failed to fetch admins', error);
             }
-        } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'Failed to fetch tickets');
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchMyTickets();
-    }, [fetchMyTickets]);
-
-    // WebSocket for real-time ticket updates (User status changes)
-    useEffect(() => {
-        const socket = getSocket('/tickets');
-
-        socket.on('ticketUpdated', (updatedTicket: any) => {
-            // Refresh to get latest data if one of our tickets was updated
-            fetchMyTickets();
-        });
-
-        return () => {
-            socket.off('ticketUpdated');
         };
-    }, [fetchMyTickets]);
+        fetchAdmins();
+    }, [user?.companyId]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+
         try {
-            const req = new CreateTicketModel(
-                '', // ticketCode - backend will generate
+            const model = new CreateTicketModel(
+                '', // ticketCode generated by backend
                 formData.categoryEnum,
                 formData.priorityEnum,
                 formData.subject,
-                TicketStatusEnum.OPEN
+                TicketStatusEnum.OPEN,
+                undefined, // employeeId - handled by backend
+                formData.assignAdminId ? Number(formData.assignAdminId) : undefined,
+                formData.expectedCompletionDate ? new Date(formData.expectedCompletionDate) : undefined,
+                undefined, // resolvedAt
+                undefined, // timeSpentMinutes
+                formData.description
             );
-            const response = await ticketService.createTicket(req);
 
+            const response = await ticketService.createTicket(model);
             if (response.status) {
-                setIsSuccess(true);
-                AlertMessages.getSuccessMessage(response.message || 'Ticket created successfully');
-                setFormData({
-                    subject: '',
-                    categoryEnum: TicketCategoryEnum.OTHER,
-                    priorityEnum: TicketPriorityEnum.MEDIUM,
-                    ticketStatus: TicketStatusEnum.OPEN,
-                    ticketCode: '',
-                });
-
-                setTimeout(() => {
-                    fetchMyTickets();
-                    setIsSuccess(false);
-                    setActiveTab('tickets');
-                    router.push('/create-ticket?tab=tickets');
-                }, 1500);
+                AlertMessages.getSuccessMessage('Ticket created successfully');
+                router.push('/tickets');
             } else {
-                AlertMessages.getErrorMessage(response.message || 'Failed to create ticket');
+                AlertMessages.getErrorMessage(response.message);
             }
         } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'An error occurred');
+            AlertMessages.getErrorMessage(error.message || 'Failed to create ticket');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const getTimeAgo = (dateString?: string) => {
-        if (!dateString) return 'Recently';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-        if (diffMins < 60) return `${diffMins}m ago`;
-        if (diffHours < 24) return `${diffHours}h ago`;
-        if (diffDays === 1) return 'Yesterday';
-        if (diffDays < 7) return `${diffDays}d ago`;
-        return date.toLocaleDateString();
-    };
-
-    if (isSuccess) {
-        return (
-            <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.USER, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER]}>
-                <div className="h-[80vh] flex flex-col items-center justify-center p-4">
-                    <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl p-8 text-center border border-slate-200 dark:border-slate-800 animate-in zoom-in duration-300">
-                        <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20">
-                            <CheckCircle className="h-10 w-10 text-white" strokeWidth={3} />
-                        </div>
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Submitted!</h2>
-                        <p className="text-slate-500 dark:text-slate-400 font-medium">Your request is being processed.</p>
-                    </div>
-                </div>
-            </RouteGuard>
-        );
-    }
-
     return (
-        <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.USER, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="w-full h-full bg-slate-50/50 dark:bg-slate-950/50 min-h-screen">
-                <div className="p-4 lg:p-8 space-y-6">
-                    <PageHeader
-                        icon={<Building2 />}
-                        title="Support Hub"
-                        description="Submit a support ticket"
-                        gradient="from-indigo-600 to-violet-600"
-                    >
-                        <div className="flex items-center p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
-                            <button
-                                onClick={() => setActiveTab('tickets')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'tickets'
-                                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm ring-1 ring-slate-200/50 dark:ring-slate-600/50'
-                                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
-                            >
-                                <List className="h-3.5 w-3.5" />
-                                My Tickets
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('create')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'create'
-                                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm ring-1 ring-slate-200/50 dark:ring-slate-600/50'
-                                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
-                            >
-                                <Plus className="h-3.5 w-3.5" />
-                                New Request
-                            </button>
-                        </div>
-                    </PageHeader>
+        <RouteGuard>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-12">
+                <PageHeader
+                    title="Create New Ticket"
+                    description="Submit a new support request"
+                    icon={Ticket}
+                />
 
-                    <div className="w-full animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        {activeTab === 'tickets' ? (
-                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                                <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
-                                    <div className="flex items-center gap-2">
-                                        <Hash className="h-4 w-4 text-slate-400" />
-                                        <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Recent Activity</span>
-                                    </div>
-                                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                                        Total: {tickets.length} Records
-                                    </div>
+                <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="p-6 md:p-8">
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                {/* Subject */}
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                        Subject <span className="text-red-500">*</span>
+                                    </label>
+                                    <Input
+                                        name="subject"
+                                        value={formData.subject}
+                                        onChange={handleChange}
+                                        placeholder="Brief summary of the issue"
+                                        required
+                                        className="w-full"
+                                    />
                                 </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-50 dark:bg-slate-800/30">
-                                                <th className="px-5 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Reference</th>
-                                                <th className="px-5 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Subject & Inquiry</th>
-                                                <th className="px-5 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Category</th>
-                                                <th className="px-5 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Priority</th>
-                                                <th className="px-5 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Status</th>
-                                                <th className="px-5 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Logged At</th>
-                                                <th className="px-5 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 text-right">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                                            {tickets.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan={7} className="px-5 py-20 text-center">
-                                                        <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                                                            <Ticket className="h-6 w-6 text-slate-300" />
-                                                        </div>
-                                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No Active Records Found</p>
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                tickets.map((ticket) => {
-                                                    const cat = CategoryStyles[ticket.categoryEnum] || CategoryStyles[TicketCategoryEnum.OTHER];
-                                                    const prio = PriorityConfig[ticket.priorityEnum] || PriorityConfig[TicketPriorityEnum.MEDIUM];
-                                                    const stat = StatusStyles[ticket.ticketStatus] || StatusStyles[TicketStatusEnum.OPEN];
-
-                                                    return (
-                                                        <tr key={ticket.id} className="hover:bg-slate-50/50 dark:hover:bg-blue-500/5 transition-colors">
-                                                            <td className="px-5 py-3 whitespace-nowrap">
-                                                                <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-slate-400 dark:text-slate-500">
-                                                                    <span className="text-indigo-500 opacity-50">#</span>
-                                                                    {ticket.ticketCode}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-5 py-3">
-                                                                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1 max-w-sm">
-                                                                    {ticket.subject}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-5 py-3 whitespace-nowrap">
-                                                                <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg ${cat.bg} border border-transparent`}>
-                                                                    <div className={`w-1.5 h-1.5 rounded-full ${cat.iconBg}`} />
-                                                                    <span className={`text-[10px] font-black uppercase tracking-tighter ${cat.text}`}>
-                                                                        {ticket.categoryEnum}
-                                                                    </span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-5 py-3 whitespace-nowrap">
-                                                                <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg ${prio.bg} border ${prio.border}`}>
-                                                                    <div className={`w-1.5 h-1.5 rounded-full ${prio.dot}`} />
-                                                                    <span className={`text-[10px] font-black uppercase tracking-tighter ${prio.text}`}>
-                                                                        {ticket.priorityEnum}
-                                                                    </span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-5 py-3 whitespace-nowrap">
-                                                                <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-tighter ${stat.bg}`}>
-                                                                    {stat.animate && <div className="w-1 h-1 rounded-full bg-current animate-pulse" />}
-                                                                    {stat.text}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-5 py-3 whitespace-nowrap">
-                                                                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                                                                    <Clock className="h-3 w-3 opacity-50" />
-                                                                    {getTimeAgo(ticket.createdAt)}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-5 py-3 text-right">
-                                                                <button
-                                                                    onClick={() => router.push(`/support?ticketId=${ticket.id}&ticketTitle=${encodeURIComponent(ticket.subject)}`)}
-                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 transition-all text-[10px] font-black uppercase tracking-wider shadow-sm border border-indigo-100 dark:border-indigo-800/50"
-                                                                >
-                                                                    <MessageSquare className="h-3 w-3" />
-                                                                    Open
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })
-                                            )}
-                                        </tbody>
-                                    </table>
+                                {/* Description */}
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                        Description
+                                    </label>
+                                    <TextArea
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        placeholder="Detailed description of the issue..."
+                                        rows={4}
+                                        className="w-full"
+                                    />
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="max-w-4xl mx-auto w-full">
-                                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-3">
-                                        <Plus className="h-5 w-5 text-indigo-600" />
-                                        <div>
-                                            <h3 className="text-base font-black text-slate-900 dark:text-white leading-none">New Ticket</h3>
-                                        </div>
-                                    </div>
 
-                                    <form onSubmit={handleSubmit} className="p-8 space-y-8">
-                                        <div className="space-y-3">
-                                            <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                                                <ChevronRight className="h-3 w-3 text-indigo-500" />
-                                                Subject
-                                            </label>
-                                            <Input
-                                                value={formData.subject}
-                                                onChange={(e: any) => setFormData({ ...formData, subject: e.target.value })}
-                                                placeholder="Clearly state the primary concern (e.g. Workstation Hardware Failure)"
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Category */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                            Category <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <Select
+                                                name="categoryEnum"
+                                                value={formData.categoryEnum}
+                                                onChange={handleChange}
+                                                options={Object.values(TicketCategoryEnum).map(cat => ({
+                                                    value: cat,
+                                                    label: cat.replace(/_/g, ' ')
+                                                }))}
                                                 required
-                                                className="h-14 bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 font-bold focus:ring-0 focus:border-indigo-500 transition-all rounded-2xl"
                                             />
                                         </div>
+                                    </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            <div className="space-y-4">
-                                                <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                                                    <ChevronRight className="h-3 w-3 text-indigo-500" />
-                                                    Category
-                                                </label>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    {Object.values(TicketCategoryEnum).map((cat) => {
-                                                        const Icon = CategoryIcons[cat];
-                                                        const isSelected = formData.categoryEnum === cat;
-                                                        return (
-                                                            <button
-                                                                key={cat}
-                                                                type="button"
-                                                                onClick={() => setFormData({ ...formData, categoryEnum: cat })}
-                                                                className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all group ${isSelected
-                                                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-600/20 scale-[1.02]'
-                                                                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900'
-                                                                    }`}
-                                                            >
-                                                                <div className={`p-2 rounded-lg ${isSelected ? 'bg-white/20' : 'bg-slate-50 dark:bg-slate-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/40'}`}>
-                                                                    <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-400 group-hover:text-indigo-600'}`} />
-                                                                </div>
-                                                                <span className="text-[11px] font-black uppercase tracking-tighter">{cat}</span>
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                                                    <ChevronRight className="h-3 w-3 text-indigo-500" />
-                                                    Priority
-                                                </label>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    {Object.values(TicketPriorityEnum).map((prio) => {
-                                                        const isSelected = formData.priorityEnum === prio;
-                                                        const config = PriorityConfig[prio];
-                                                        return (
-                                                            <button
-                                                                key={prio}
-                                                                type="button"
-                                                                onClick={() => setFormData({ ...formData, priorityEnum: prio })}
-                                                                className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${isSelected
-                                                                    ? `${config.bg} ${config.border} ${config.text} ring-2 ring-indigo-500/20 scale-[1.02]`
-                                                                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
-                                                                    }`}
-                                                            >
-                                                                <div className={`w-2.5 h-2.5 rounded-full ${config.dot}`} />
-                                                                <span className="text-[11px] font-black uppercase tracking-tighter">{prio}</span>
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                                            <Button
-                                                type="submit"
-                                                variant="primary"
-                                                className="w-full sm:w-auto px-12 h-11 rounded-xl text-[11px] font-black tracking-[0.2em] bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/25 border-0 active:scale-95 transition-all"
-                                                isLoading={isLoading}
-                                            >
-                                                <Send className="h-3.5 w-3.5 mr-2" />
-                                                SUBMIT NOW
-                                            </Button>
-                                        </div>
-                                    </form>
+                                    {/* Priority */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                            Priority <span className="text-red-500">*</span>
+                                        </label>
+                                        <Select
+                                            name="priorityEnum"
+                                            value={formData.priorityEnum}
+                                            onChange={handleChange}
+                                            options={Object.values(TicketPriorityEnum).map(p => ({
+                                                value: p,
+                                                label: p
+                                            }))}
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Assign Admin */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                            Assign Admin
+                                        </label>
+                                        <div className="relative">
+                                            <Select
+                                                name="assignAdminId"
+                                                value={formData.assignAdminId}
+                                                onChange={handleChange}
+                                                options={[
+                                                    { value: '', label: 'Select Admin (Optional)' },
+                                                    ...admins.map(admin => ({
+                                                        value: String(admin.id),
+                                                        label: `${admin.fullName} (${admin.userRole})`
+                                                    }))
+                                                ]}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Expected Completion Date */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                            Expected Completion Time
+                                        </label>
+                                        <div className="relative">
+                                            <Input
+                                                type="datetime-local"
+                                                name="expectedCompletionDate"
+                                                value={formData.expectedCompletionDate}
+                                                onChange={handleChange}
+                                                className="w-full pl-10"
+                                            />
+                                            <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 flex justify-end gap-3">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => router.push('/tickets')}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
+                                        isLoading={isLoading}
+                                        disabled={isLoading}
+                                        leftIcon={<Ticket className="h-4 w-4" />}
+                                    >
+                                        Create Ticket
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                </main>
             </div>
         </RouteGuard>
     );
 };
-
 
 export default CreateTicketPage;

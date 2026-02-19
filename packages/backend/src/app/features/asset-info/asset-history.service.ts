@@ -17,7 +17,7 @@ export class AssetHistoryService {
 
     async getAssetTimeline(reqModel: AssetTimelineRequestModel): Promise<AssetTimelineResponseModel> {
         try {
-            const assetId = Number(reqModel.id);
+            const assetId = Number(reqModel.companyId);
             const companyId = Number(reqModel.companyId);
             const asset = await this.assetRepo.findOne({ where: { id: assetId, companyId } });
             if (!asset) {

@@ -14,4 +14,5 @@ export * from './comment-by.enum';
 export * from './setting-type.enum';
 export * from './compliance-status.enum';
 export * from './encryption-status.enum';
+export * from './ticket-severity.enum';
 

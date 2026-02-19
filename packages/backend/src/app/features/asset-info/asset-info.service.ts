@@ -2,21 +2,25 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, GetExpiringWarrantyRequestModel } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum, IdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, GetExpiringWarrantyRequestModel } from '@adminvault/shared-models';
 import { AssetInfoEntity } from './entities/asset-info.entity';
 import { AssetAssignEntity } from './entities/asset-assign.entity';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
 import { AssetAssignRepository } from './repositories/asset-assign.repository';
 import { LessThan } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { GetAllAssetAssignsModel, GetAssetAssignByIdModel } from '@adminvault/shared-models';
+import { GetAllAssetAssignsModel, GetAssetAssignByIdModel, SendAssetAssignedEmailModel, UserRoleEnum } from '@adminvault/shared-models';
+import { EmailInfoService } from '../administration/email-info.service';
+import { EmployeesEntity } from '../employees/entities/employees.entity';
+import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 
 @Injectable()
 export class AssetInfoService {
     constructor(
         private dataSource: DataSource,
         private assetInfoRepo: AssetInfoRepository,
-        private assignRepo: AssetAssignRepository
+        private assignRepo: AssetAssignRepository,
+        private emailInfoService: EmailInfoService
     ) { }
 
     /**
@@ -82,11 +86,11 @@ export class AssetInfoService {
     async updateAsset(reqModel: UpdateAssetModel, userId?: number): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            if (!reqModel.id) {
+            if (!reqModel.companyId) {
                 throw new ErrorResponse(0, "Asset ID is required");
             }
 
-            const existing = await this.assetInfoRepo.findOne({ where: { id: reqModel.id } });
+            const existing = await this.assetInfoRepo.findOne({ where: { id: reqModel.companyId } });
             if (!existing) {
                 throw new ErrorResponse(0, "Asset not found");
             }
@@ -171,9 +175,9 @@ export class AssetInfoService {
      * @returns GetAllAssetsModel with list of assets
      * @throws Error if retrieval fails
      */
-    async getAllAssets(reqModel: CompanyIdRequestModel): Promise<GetAllAssetsModel> {
+    async getAllAssets(reqModel: IdRequestModel): Promise<GetAllAssetsModel> {
         try {
-            const companyId = reqModel.companyId;
+            const companyId = reqModel.id;
             const assets = companyId ? await this.assetInfoRepo.find({ where: { companyId } }) : await this.assetInfoRepo.find();
             const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.expressCode, a.boxNo, a.complianceStatus, a.lastSync, a.osVersion, a.macAddress, a.ipAddress, a.encryptionStatus, a.batteryLevel, a.storageTotal, a.storageAvailable));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
@@ -221,9 +225,9 @@ export class AssetInfoService {
      * @returns AssetStatisticsResponseModel with status counts
      * @throws ErrorResponse if company ID not provided
      */
-    async getAssetStatistics(reqModel: CompanyIdRequestModel): Promise<AssetStatisticsResponseModel> {
+    async getAssetStatistics(reqModel: IdRequestModel): Promise<AssetStatisticsResponseModel> {
         try {
-            const companyId = reqModel.companyId;
+            const companyId = reqModel.id;
             // Allow 0 for all companies
             if (companyId === undefined || companyId === null) {
                 throw new ErrorResponse(0, "Company ID is required");
@@ -276,9 +280,9 @@ export class AssetInfoService {
      * @returns GetAssetsWithAssignmentsResponseModel with assets and assignment details
      * @throws ErrorResponse if company ID not provided
      */
-    async getAssetsWithAssignments(reqModel: CompanyIdRequestModel): Promise<GetAssetsWithAssignmentsResponseModel> {
+    async getAssetsWithAssignments(reqModel: IdRequestModel): Promise<GetAssetsWithAssignmentsResponseModel> {
         try {
-            const companyId = reqModel.companyId;
+            const companyId = reqModel.id;
             // Allow 0 for all companies
             if (companyId === undefined || companyId === null) {
                 throw new ErrorResponse(0, "Company ID is required");
@@ -312,7 +316,7 @@ export class AssetInfoService {
         return new GetAssetAssignByIdModel(true, 200, "Assignment retrieved successfully", assignment as any);
     }
 
-    async getAllAssignments(reqModel: CompanyIdRequestModel): Promise<GetAllAssetAssignsModel> {
+    async getAllAssignments(reqModel: IdRequestModel): Promise<GetAllAssetAssignsModel> {
         const assignments = await this.assignRepo.getAllAssignments(reqModel);
         return new GetAllAssetAssignsModel(true, 200, "Assignments retrieved successfully", assignments as any);
     }
@@ -328,7 +332,7 @@ export class AssetInfoService {
             const asset = await assetRepo.findOne({ where: { id: assetId } });
             if (!asset) throw new NotFoundException('Asset not found');
 
-            const isReassignment = asset.assetStatusEnum === AssetStatusEnum.IN_USE && asset.assignedToEmployeeId;
+            const isReassignment = asset.assetStatusEnum === AssetStatusEnum.IN_USE && !!asset.assignedToEmployeeId;
 
             if (isReassignment) {
                 await assignRepo.update(
@@ -359,6 +363,71 @@ export class AssetInfoService {
             await assignRepo.save(assignment);
 
             await transManager.completeTransaction();
+
+            // Send Emails (Independent of transaction success/failure after commit)
+            try {
+                // Fetch details for email
+                const employee = await this.dataSource.getRepository(EmployeesEntity).findOne({ where: { id: employeeId } });
+                const assigner = await this.dataSource.getRepository(AuthUsersEntity).findOne({ where: { id: userId } });
+
+                if (employee && assigner) {
+                    const assignedDate = new Date();
+                    const assetName = `${asset.model} (SN: ${asset.serialNumber})`; // Basic asset name construction
+                    const assignedByName = assigner.fullName;
+
+                    // 1. Send to Assignee (User)
+                    await this.emailInfoService.sendAssetAssignedEmail(new SendAssetAssignedEmailModel(
+                        employee.email,
+                        employee.firstName,
+                        assetName,
+                        assignedByName,
+                        assignedDate,
+                        isReassignment,
+                        remarks
+                    ));
+
+                    // 2. Send to Manager (if exists)
+                    if (employee.managerId) {
+                        const manager = await this.dataSource.getRepository(EmployeesEntity).findOne({ where: { id: employee.managerId } });
+                        if (manager && manager.email) {
+                            await this.emailInfoService.sendAssetAssignedEmail(new SendAssetAssignedEmailModel(
+                                manager.email,
+                                manager.firstName,
+                                assetName,
+                                assignedByName,
+                                assignedDate,
+                                isReassignment,
+                                remarks
+                            ));
+                        }
+                    }
+
+                    // 3. Send to Admins
+                    const admins = await this.dataSource.getRepository(AuthUsersEntity).find({
+                        where: { companyId: employee.companyId, userRole: UserRoleEnum.ADMIN }
+                    });
+
+                    for (const admin of admins) {
+                        // Avoid sending to self if admin is the assigner (optional, but good practice)
+                        // Also avoid sending to assignee if they are an admin (covered above)
+                        if (admin.email !== employee.email) {
+                            await this.emailInfoService.sendAssetAssignedEmail(new SendAssetAssignedEmailModel(
+                                admin.email,
+                                admin.fullName,
+                                assetName,
+                                assignedByName,
+                                assignedDate,
+                                isReassignment,
+                                remarks
+                            ));
+                        }
+                    }
+                }
+            } catch (emailError) {
+                // Log but don't fail the request since transaction is already committed
+                console.error("Failed to send asset assignment emails", emailError);
+            }
+
             return new GlobalResponse(true, 200, isReassignment ? 'Asset reassigned successfully' : 'Asset assigned successfully');
         } catch (error) {
             await transManager.releaseTransaction();

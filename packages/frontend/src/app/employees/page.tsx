@@ -62,9 +62,9 @@ const EmployeesPage: React.FC = () => {
 
 
     const fetchEmployees = useCallback(async () => {
-        if (!selectedOrg) return;
         try {
-            const req = new CompanyIdRequestModel(Number(selectedOrg));
+            // If selectedOrg is empty or 0, it fetches all employees
+            const req = new CompanyIdRequestModel(Number(selectedOrg) || 0);
             const response = await employeeService.getAllEmployees(req);
             if (response.status) {
                 const data = response.data || [];
@@ -121,19 +121,13 @@ const EmployeesPage: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (user?.companyId && !selectedOrg) {
-            setSelectedOrg(String(user.companyId));
-        }
-    }, [user?.companyId, selectedOrg]);
-
-    useEffect(() => {
         fetchEmployees();
-    }, [fetchEmployees]);
+    }, [selectedOrg, fetchEmployees]);
 
     useEffect(() => {
         fetchCompanies();
         fetchDepartments();
-    }, [fetchCompanies, fetchDepartments]);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { LicensesService } from './licenses.service';
-import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GetLicenseStatisticsResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GetLicenseStatisticsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
 
 @ApiTags('Licenses')
@@ -16,8 +16,8 @@ export class LicensesController {
      * @returns GetAllLicensesResponseModel with license data
      */
     @Post('getAllLicenses')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllLicenses(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllLicensesResponseModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getAllLicenses(@Body() reqModel: IdRequestModel): Promise<GetAllLicensesResponseModel> {
         try {
             return await this.licensesService.getAllLicenses(reqModel);
         } catch (error) {
@@ -31,8 +31,8 @@ export class LicensesController {
      * @returns GetLicenseStatisticsResponseModel with license statistics
      */
     @Post('getLicenseStatistics')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getLicenseStatistics(@Body() reqModel: CompanyIdRequestModel): Promise<GetLicenseStatisticsResponseModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getLicenseStatistics(@Body() reqModel: IdRequestModel): Promise<GetLicenseStatisticsResponseModel> {
         try {
             return await this.licensesService.getLicenseStatistics(reqModel);
         } catch (error) {

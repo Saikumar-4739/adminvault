@@ -13,7 +13,8 @@ export class AssetBulkService {
 
     async processBulkImport(reqModel: BulkImportRequestModel): Promise<BulkImportResponseModel> {
         try {
-            const workbook = XLSX.read(reqModel.fileBuffer, { type: 'buffer' });
+            // cellDates: true ensures dates are parsed as JS Date objects
+            const workbook = XLSX.read(reqModel.fileBuffer, { type: 'buffer', cellDates: true });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
@@ -33,6 +34,11 @@ export class AssetBulkService {
 
                 if (!row || row.length === 0) continue;
 
+                // Check if row is empty (sometimes excel has empty rows at the end)
+                if (row.every((cell: any) => cell === undefined || cell === null || cell === '')) {
+                    continue;
+                }
+
                 const transManager = new GenericTransactionManager(this.dataSource);
                 try {
                     const assetTypeId = Number(row[0]);
@@ -40,7 +46,7 @@ export class AssetBulkService {
                     const model = row[2]?.toString();
                     const serialNumber = row[3]?.toString();
                     const configuration = row[4]?.toString();
-                    const purchaseDateStr = row[5];
+                    const purchaseDateRaw = row[5];
                     const statusStr = row[6]?.toString()?.toLowerCase();
 
                     if (!assetTypeId || !brandId || !serialNumber) {
@@ -61,9 +67,13 @@ export class AssetBulkService {
                     else if (statusStr === 'retired') status = AssetStatusEnum.RETIRED;
 
                     let purchaseDate: Date | null = null;
-                    if (purchaseDateStr) {
-                        const date = new Date(purchaseDateStr);
-                        if (!isNaN(date.getTime())) purchaseDate = date;
+                    if (purchaseDateRaw) {
+                        if (purchaseDateRaw instanceof Date) {
+                            purchaseDate = purchaseDateRaw;
+                        } else {
+                            const date = new Date(purchaseDateRaw);
+                            if (!isNaN(date.getTime())) purchaseDate = date;
+                        }
                     }
 
                     const newAsset = new AssetInfoEntity();
@@ -82,12 +92,16 @@ export class AssetBulkService {
                     successCount++;
                 } catch (err: any) {
                     await transManager.releaseTransaction();
-                    errors.push({ row: rowNumber, error: err.message || 'Unknown error' });
+                    let errorMessage = err.message || 'Unknown error';
+                    if (errorMessage.includes('foreign key constraint')) {
+                        errorMessage = 'Invalid Asset Type ID or Brand ID (Foreign Key Violation)';
+                    }
+                    errors.push({ row: rowNumber, error: errorMessage });
                 }
             }
 
             const totalProcessed = dataRows.length;
-            const message = `Bulk import completed. Total: ${totalProcessed}, Success: ${successCount}, Failed: ${errors.length}`;
+            const message = `Bulk import completed. Total processed: ${totalProcessed}. Success: ${successCount}, Failed: ${errors.length}`;
             return new BulkImportResponseModel(errors.length === 0, 200, message, successCount, errors.length, errors);
         } catch (error) {
             throw error;

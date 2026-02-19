@@ -17,14 +17,16 @@ export * from './license/license-models';
 export * from './dashboard/dashboard-models';
 export * from './administration';
 export * from './types/geolocation.types';
+export * from './common';
 
 // Export commonly used types
 export { GlobalResponse } from './common/global-response';
-export * from './common/common-models';
 export * from './workflow/approval-models';
 export * from './ai';
-export * from './knowledge-base/knowledge-base.models';
 export * from './procurement/procurement.models';
 export * from './advanced/advanced-modules.models';
 export * from './websocket/websocket-events.model';
 export * from './network/network-stats.model';
+
+
+export * from './knowledge-base';

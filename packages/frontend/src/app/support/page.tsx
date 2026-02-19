@@ -140,7 +140,7 @@ const SupportChatPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
+        <div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800">
             {/* Header */}
             <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3">
                 <div className="flex items-center justify-between">
@@ -149,19 +149,19 @@ const SupportChatPage: React.FC = () => {
                             <MessageSquare className="h-4 w-4 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-sm font-black text-slate-900 dark:text-white leading-tight">Support Architecture</h1>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Live Diagnostic Stream</p>
+                            <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">Support Architecture</h1>
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-0.5">Live Diagnostic Stream</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
-                            <Ticket className="h-3 w-3 text-slate-400" />
-                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+                    <div className="flex items-center gap-3">
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+                            <Ticket className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-tight">
                                 ID: #{ticketId?.slice(0, 8) || ticketId}
                             </span>
                         </div>
                         {ticket?.ticketStatus && (
-                            <span className={`px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-md border ${getStatusColor(ticket.ticketStatus)}`}>
+                            <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border ${getStatusColor(ticket.ticketStatus)}`}>
                                 {ticket.ticketStatus.replace('_', ' ')}
                             </span>
                         )}
@@ -177,7 +177,7 @@ const SupportChatPage: React.FC = () => {
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-2">
                         <Bot className="h-12 w-12 opacity-20" />
-                        <p className="text-xs font-bold uppercase tracking-widest">No messages yet</p>
+                        <p className="text-sm font-medium uppercase tracking-wide">No messages yet</p>
                     </div>
                 ) : (
                     messages.map((message) => {
@@ -216,7 +216,7 @@ const SupportChatPage: React.FC = () => {
                                     >
                                         <p className="text-sm leading-relaxed">{message.message}</p>
                                     </div>
-                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1.5 px-2 uppercase tracking-tighter">
+                                    <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1.5 px-2">
                                         {new Date(message.createdAt).toLocaleTimeString([], {
                                             hour: '2-digit',
                                             minute: '2-digit',
@@ -232,36 +232,36 @@ const SupportChatPage: React.FC = () => {
             {/* Input Area / Status Indicator */}
             <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-3">
                 {isClosed ? (
-                    <div className="flex flex-col items-center justify-center py-4 space-y-3 max-w-5xl mx-auto text-center">
-                        <div className="bg-rose-50 dark:bg-rose-900/20 px-4 py-2 rounded-xl border border-rose-100 dark:border-rose-800/50">
-                            <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">
+                    <div className="flex flex-col items-center justify-center py-6 space-y-4 max-w-5xl mx-auto text-center">
+                        <div className="bg-rose-50 dark:bg-rose-900/20 px-4 py-2 rounded-lg border border-rose-100 dark:border-rose-800/50">
+                            <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wide">
                                 SESSION TERMINATED: ARCHIVE ONLY
                             </p>
                         </div>
                         <button
                             onClick={() => router.push('/create-ticket')}
-                            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
+                            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
                         >
-                            <PlusCircle className="h-3.5 w-3.5" />
+                            <PlusCircle className="h-4 w-4" />
                             Initialize New Protocol
                         </button>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 max-w-5xl mx-auto">
+                    <div className="flex items-center gap-2 max-w-5xl mx-auto w-full">
                         <input
                             type="text"
                             value={inputMessage}
                             onChange={(e) => setInputMessage(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                             placeholder="Type command or query..."
-                            className="flex-1 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all font-bold text-xs"
+                            className="flex-1 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all text-sm"
                         />
                         <button
                             onClick={handleSendMessage}
                             disabled={!inputMessage.trim()}
-                            className="bg-indigo-600 text-white w-10 h-10 flex items-center justify-center rounded-xl hover:bg-indigo-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-600/20 flex-shrink-0"
+                            className="bg-indigo-600 text-white w-11 h-11 flex items-center justify-center rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-600/20 flex-shrink-0"
                         >
-                            <Send className="h-4 w-4" />
+                            <Send className="h-5 w-5" />
                         </button>
                     </div>
                 )}

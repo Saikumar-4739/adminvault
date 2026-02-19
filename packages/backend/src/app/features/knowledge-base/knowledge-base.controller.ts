@@ -1,11 +1,9 @@
 import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { KnowledgeBaseService } from './knowledge-base.service';
-import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, GetKnowledgeArticleResponseModel, GetAllKnowledgeArticlesResponseModel, GetKnowledgeBaseStatsResponseModel } from '@adminvault/shared-models';
-import { CompanyIdDto, IdDto } from '../../common/dto/common.dto';
+import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, GetKnowledgeArticleResponseModel, GetAllKnowledgeArticlesResponseModel, GetKnowledgeBaseStatsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { returnException } from '@adminvault/backend-utils';
-import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
 
 @ApiTags('Knowledge Base')
 @Controller('knowledge-base')
@@ -15,10 +13,8 @@ export class KnowledgeBaseController {
 
     @Post('createArticle')
     @ApiBody({ type: CreateArticleRequestModel })
-    async createArticle(@Body() reqModel: CreateArticleRequestModel, @Request() req: IAuthenticatedRequest): Promise<GlobalResponse> {
+    async createArticle(@Body() reqModel: CreateArticleRequestModel): Promise<GlobalResponse> {
         try {
-            reqModel.authorId = req.user.userId;
-            reqModel.companyId = req.user.companyId;
             return await this.service.createArticle(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
@@ -36,8 +32,8 @@ export class KnowledgeBaseController {
     }
 
     @Post('deleteArticle')
-    @ApiBody({ type: IdDto })
-    async deleteArticle(@Body() reqModel: IdDto): Promise<GlobalResponse> {
+    @ApiBody({ type: IdRequestModel })
+    async deleteArticle(@Body() reqModel: IdRequestModel): Promise<GlobalResponse> {
         try {
             return await this.service.deleteArticle(reqModel);
         } catch (error) {
@@ -46,8 +42,8 @@ export class KnowledgeBaseController {
     }
 
     @Post('getArticle')
-    @ApiBody({ type: IdDto })
-    async getArticle(@Body() reqModel: IdDto): Promise<GetKnowledgeArticleResponseModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getArticle(@Body() reqModel: IdRequestModel): Promise<GetKnowledgeArticleResponseModel> {
         try {
             return await this.service.getArticle(reqModel);
         } catch (error) {
@@ -66,8 +62,8 @@ export class KnowledgeBaseController {
     }
 
     @Post('getStats')
-    @ApiBody({ type: CompanyIdDto })
-    async getStats(@Body() reqModel: CompanyIdDto): Promise<GetKnowledgeBaseStatsResponseModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getStats(@Body() reqModel: IdRequestModel): Promise<GetKnowledgeBaseStatsResponseModel> {
         try {
             return await this.service.getStats(reqModel);
         } catch (error) {

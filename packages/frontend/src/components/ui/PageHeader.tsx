@@ -14,7 +14,7 @@ interface Action {
 interface PageHeaderProps {
     title: string;
     description?: string;
-    icon?: React.ReactNode;
+    icon?: React.ReactNode | React.ElementType;
     gradient?: string;
     actions?: Action[] | React.ReactNode;
     children?: React.ReactNode;

@@ -5,7 +5,7 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { TicketsEntity } from './entities/tickets.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum, UserRoleEnum, SendTicketCreatedEmailModel, GetTicketStatisticsRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel } from '@adminvault/shared-models';
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum, UserRoleEnum, SendTicketCreatedEmailModel, GetTicketStatisticsRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel, SendTicketStatusUpdateEmailModel } from '@adminvault/shared-models';
 import { TicketsGateway } from './tickets.gateway';
 import { EmailInfoService } from '../administration/email-info.service';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
@@ -73,7 +73,9 @@ export class TicketsService {
                 employeeId: employee.id, // Use the resolved employee ID
                 userId: userId,
                 companyId: employee.companyId,
-                slaDeadline: slaDeadline
+                slaDeadline: slaDeadline,
+                assignAdminId: reqModel.assignAdminId,
+                expectedCompletionDate: reqModel.expectedCompletionDate
             });
 
             const savedTicket = await transManager.getRepository(TicketsEntity).save(entity);
@@ -99,17 +101,25 @@ export class TicketsService {
             await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, userEmail, 'User'));
 
             // 2. To Admins & Managers
+
+
+            // 2. To Specific Manager (if exists)
+            if (employee.managerId) {
+                const manager = await this.employeesRepo.findOne({ where: { id: employee.managerId } });
+                if (manager && manager.email && manager.email !== userEmail) {
+                    await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, manager.email, 'Manager'));
+                }
+            }
+
+            // 3. To IT Admins (UserRoleEnum.ADMIN)
             const authRepo = this.dataSource.getRepository(AuthUsersEntity);
-            const recipients = await authRepo.find({
-                where: [
-                    { companyId: employee.companyId, userRole: UserRoleEnum.ADMIN },
-                    { companyId: employee.companyId, userRole: UserRoleEnum.MANAGER }
-                ]
+            const admins = await authRepo.find({
+                where: { companyId: employee.companyId, userRole: UserRoleEnum.ADMIN }
             });
 
-            for (const recipient of recipients) {
-                if (recipient.email !== userEmail) { // Avoid sending duplicate if user is also admin/manager
-                    await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, recipient.email, recipient.userRole));
+            for (const admin of admins) {
+                if (admin.email !== userEmail) {
+                    await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, admin.email, admin.userRole));
                 }
             }
 
@@ -155,6 +165,8 @@ export class TicketsService {
                 throw new ErrorResponse(404, 'Ticket not found');
             }
 
+            const oldStatus = existing.ticketStatus;
+
             await transManager.startTransaction();
             await transManager.getRepository(TicketsEntity).update(reqModel.id, reqModel);
 
@@ -176,6 +188,12 @@ export class TicketsService {
             const updated = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
             this.gateway.emitTicketUpdated(updated);
 
+            // Send Email Notification if status logic is handled here (usually updateStatus is preferred, but updateTicket might change it too)
+            // Determine new status from reqModel or updated entity
+            if (updated.ticketStatus !== oldStatus) {
+                await this.sendStatusChangeEmails(updated, oldStatus, updated.ticketStatus);
+            }
+
             return new GlobalResponse(true, 200, 'Ticket updated successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -194,7 +212,7 @@ export class TicketsService {
             }
 
             const response = new TicketResponseModel(
-                ticket.id, ticket.ticketCode, ticket.employeeId, ticket.categoryEnum, ticket.priorityEnum, ticket.subject, ticket.ticketStatus, ticket.assignAdminId, ticket.resolvedAt,
+                ticket.id, ticket.ticketCode, ticket.employeeId, ticket.categoryEnum, ticket.priorityEnum, ticket.subject, ticket.ticketStatus, ticket.assignAdminId, ticket.expectedCompletionDate, ticket.resolvedAt,
                 undefined, undefined,
                 ticket.createdAt, ticket.updatedAt, ticket.slaDeadline,
                 ticket.timeSpentMinutes
@@ -227,6 +245,7 @@ export class TicketsService {
                 t.subject,
                 t.ticketStatus,
                 t.assignAdminId,
+                t.expectedCompletionDate,
                 t.resolvedAt,
                 t.employee ? `${t.employee.firstName} ${t.employee.lastName}` : `User ID: ${t.employeeId}`,
                 t.employee ? t.employee.email : `User ID: ${t.employeeId}`,
@@ -291,6 +310,7 @@ export class TicketsService {
                 t.subject,
                 t.ticketStatus,
                 t.assignAdminId,
+                t.expectedCompletionDate,
                 t.resolvedAt,
                 t.employee ? `${t.employee.firstName} ${t.employee.lastName}` : `User ID: ${t.employeeId}`,
                 t.employee ? t.employee.email : `User ID: ${t.employeeId}`,
@@ -343,12 +363,18 @@ export class TicketsService {
         const ticket = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
         if (!ticket) throw new ErrorResponse(404, 'Ticket not found');
 
+        const oldStatus = ticket.ticketStatus;
         ticket.assignAdminId = reqModel.assignAdminId;
         ticket.ticketStatus = TicketStatusEnum.IN_PROGRESS;
         const saved = await this.ticketsRepo.save(ticket);
 
         // Notify via WebSocket
         this.gateway.emitTicketUpdated(saved);
+
+        // Send Email Notification
+        if (oldStatus !== TicketStatusEnum.IN_PROGRESS) {
+            await this.sendStatusChangeEmails(saved, oldStatus, TicketStatusEnum.IN_PROGRESS);
+        }
 
         return new GlobalResponse(true, 200, 'Ticket assigned successfully');
     }
@@ -370,6 +396,7 @@ export class TicketsService {
         const ticket = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
         if (!ticket) throw new ErrorResponse(404, 'Ticket not found');
 
+        const oldStatus = ticket.ticketStatus;
         ticket.ticketStatus = reqModel.status;
         if (reqModel.status === TicketStatusEnum.RESOLVED || reqModel.status === TicketStatusEnum.CLOSED) {
             ticket.resolvedAt = new Date();
@@ -379,6 +406,65 @@ export class TicketsService {
         // Notify via WebSocket
         this.gateway.emitTicketUpdated(saved);
 
+        // Send Email Notification
+        if (oldStatus !== reqModel.status) {
+            await this.sendStatusChangeEmails(saved, oldStatus, reqModel.status);
+        }
+
         return new GlobalResponse(true, 200, 'Status updated successfully');
+    }
+
+    private async sendStatusChangeEmails(ticket: TicketsEntity, oldStatus: TicketStatusEnum, newStatus: TicketStatusEnum) {
+        try {
+            // Ensure we have employee details
+            let employee = (ticket as any).employee;
+            if (!employee) {
+                employee = await this.employeesRepo.findOne({ where: { id: ticket.employeeId } });
+            }
+
+            if (!employee) {
+                console.warn(`Ticket ${ticket.id} has no associated employee, skipping status emails.`);
+                return;
+            }
+
+            const recipients: { email: string; role: string }[] = [];
+
+            // 1. Ticket Creator (User)
+            if (employee.email) {
+                recipients.push({ email: employee.email, role: 'User' });
+            }
+
+            // 2. Manager
+            if (employee.managerId) {
+                const manager = await this.employeesRepo.findOne({ where: { id: employee.managerId } });
+                if (manager && manager.email) {
+                    recipients.push({ email: manager.email, role: 'Manager' });
+                }
+            }
+
+            // 3. IT Admins
+            const authRepo = this.dataSource.getRepository(AuthUsersEntity);
+            const admins = await authRepo.find({
+                where: { companyId: employee.companyId, userRole: UserRoleEnum.ADMIN }
+            });
+            for (const admin of admins) {
+                if (admin.email) {
+                    recipients.push({ email: admin.email, role: 'Admin' });
+                }
+            }
+
+            // Deduplicate by email
+            const uniqueRecipients = new Map<string, string>();
+            recipients.forEach(r => uniqueRecipients.set(r.email, r.role));
+
+            for (const [email, role] of uniqueRecipients.entries()) {
+                await this.emailInfoService.sendTicketStatusUpdateEmail(
+                    new SendTicketStatusUpdateEmailModel(ticket, email, role, oldStatus, newStatus)
+                );
+            }
+
+        } catch (error) {
+            console.error('Failed to send status change emails', error);
+        }
     }
 }

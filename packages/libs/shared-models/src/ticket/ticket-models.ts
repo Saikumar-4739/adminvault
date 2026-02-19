@@ -1,5 +1,5 @@
 import { GlobalResponse } from '../common/global-response';
-import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum } from '../enums';
+import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, TicketSeverityEnum } from '../enums';
 
 // ============================================
 // REQUEST MODELS - CREATE
@@ -9,12 +9,33 @@ export class CreateTicketModel {
     ticketCode: string;
     employeeId?: number;
     assignAdminId?: number;
+    expectedCompletionDate?: Date;
     categoryEnum: TicketCategoryEnum;
     priorityEnum: TicketPriorityEnum;
     subject: string;
     ticketStatus: TicketStatusEnum;
     resolvedAt?: Date;
     timeSpentMinutes?: number;
+    description?: string;
+    subCategory?: string;
+    severityEnum?: TicketSeverityEnum;
+    department?: string;
+    contactNumber?: string;
+    location?: string;
+    contactEmail?: string;
+    assignedGroup?: string;
+    slaType?: string;
+    responseDueTime?: Date;
+    escalationLevel?: number;
+    adminComments?: string;
+    userComments?: string;
+    internalNotes?: string;
+    rootCause?: string;
+    resolutionSummary?: string;
+    resolvedBy?: number;
+    closureRemarks?: string;
+    userRating?: number;
+    userFeedback?: string;
 
     constructor(
         ticketCode: string,
@@ -24,8 +45,29 @@ export class CreateTicketModel {
         ticketStatus: TicketStatusEnum = TicketStatusEnum.OPEN,
         employeeId?: number,
         assignAdminId?: number,
+        expectedCompletionDate?: Date,
         resolvedAt?: Date,
-        timeSpentMinutes?: number
+        timeSpentMinutes?: number,
+        description?: string,
+        subCategory?: string,
+        severityEnum?: TicketSeverityEnum,
+        department?: string,
+        contactNumber?: string,
+        location?: string,
+        contactEmail?: string,
+        assignedGroup?: string,
+        slaType?: string,
+        responseDueTime?: Date,
+        escalationLevel?: number,
+        adminComments?: string,
+        userComments?: string,
+        internalNotes?: string,
+        rootCause?: string,
+        resolutionSummary?: string,
+        resolvedBy?: number,
+        closureRemarks?: string,
+        userRating?: number,
+        userFeedback?: string
     ) {
         this.ticketCode = ticketCode;
         this.employeeId = employeeId;
@@ -34,8 +76,29 @@ export class CreateTicketModel {
         this.subject = subject;
         this.ticketStatus = ticketStatus;
         this.assignAdminId = assignAdminId;
+        this.expectedCompletionDate = expectedCompletionDate;
         this.resolvedAt = resolvedAt;
         this.timeSpentMinutes = timeSpentMinutes;
+        this.description = description;
+        this.subCategory = subCategory;
+        this.severityEnum = severityEnum;
+        this.department = department;
+        this.contactNumber = contactNumber;
+        this.location = location;
+        this.contactEmail = contactEmail;
+        this.assignedGroup = assignedGroup;
+        this.slaType = slaType;
+        this.responseDueTime = responseDueTime;
+        this.escalationLevel = escalationLevel;
+        this.adminComments = adminComments;
+        this.userComments = userComments;
+        this.internalNotes = internalNotes;
+        this.rootCause = rootCause;
+        this.resolutionSummary = resolutionSummary;
+        this.resolvedBy = resolvedBy;
+        this.closureRemarks = closureRemarks;
+        this.userRating = userRating;
+        this.userFeedback = userFeedback;
     }
 }
 
@@ -55,10 +118,31 @@ export class UpdateTicketModel extends CreateTicketModel {
         ticketStatus: TicketStatusEnum = TicketStatusEnum.OPEN,
         employeeId?: number,
         assignAdminId?: number,
+        expectedCompletionDate?: Date,
         resolvedAt?: Date,
-        timeSpentMinutes?: number
+        timeSpentMinutes?: number,
+        description?: string,
+        subCategory?: string,
+        severityEnum?: TicketSeverityEnum,
+        department?: string,
+        contactNumber?: string,
+        location?: string,
+        contactEmail?: string,
+        assignedGroup?: string,
+        slaType?: string,
+        responseDueTime?: Date,
+        escalationLevel?: number,
+        adminComments?: string,
+        userComments?: string,
+        internalNotes?: string,
+        rootCause?: string,
+        resolutionSummary?: string,
+        resolvedBy?: number,
+        closureRemarks?: string,
+        userRating?: number,
+        userFeedback?: string
     ) {
-        super(ticketCode, categoryEnum, priorityEnum, subject, ticketStatus, employeeId, assignAdminId, resolvedAt, timeSpentMinutes);
+        super(ticketCode, categoryEnum, priorityEnum, subject, ticketStatus, employeeId, assignAdminId, expectedCompletionDate, resolvedAt, timeSpentMinutes, description, subCategory, severityEnum, department, contactNumber, location, contactEmail, assignedGroup, slaType, responseDueTime, escalationLevel, adminComments, userComments, internalNotes, rootCause, resolutionSummary, resolvedBy, closureRemarks, userRating, userFeedback);
         this.id = id;
     }
 }
@@ -134,6 +218,7 @@ export class TicketResponseModel {
     employeeName?: string;
     employeeEmail?: string;
     assignAdminId?: number;
+    expectedCompletionDate?: Date;
     categoryEnum: TicketCategoryEnum;
     priorityEnum: TicketPriorityEnum;
     subject: string;
@@ -143,6 +228,26 @@ export class TicketResponseModel {
     timeSpentMinutes?: number;
     createdAt?: Date;
     updatedAt?: Date;
+    description?: string;
+    subCategory?: string;
+    severityEnum?: TicketSeverityEnum;
+    department?: string;
+    contactNumber?: string;
+    location?: string;
+    contactEmail?: string;
+    assignedGroup?: string;
+    slaType?: string;
+    responseDueTime?: Date;
+    escalationLevel?: number;
+    adminComments?: string;
+    userComments?: string;
+    internalNotes?: string;
+    rootCause?: string;
+    resolutionSummary?: string;
+    resolvedBy?: number;
+    closureRemarks?: string;
+    userRating?: number;
+    userFeedback?: string;
 
     constructor(
         id: number,
@@ -153,13 +258,34 @@ export class TicketResponseModel {
         subject: string,
         ticketStatus: TicketStatusEnum,
         assignAdminId?: number,
+        expectedCompletionDate?: Date,
         resolvedAt?: Date,
         employeeName?: string,
         employeeEmail?: string,
         createdAt?: Date,
         updatedAt?: Date,
         slaDeadline?: Date,
-        timeSpentMinutes?: number
+        timeSpentMinutes?: number,
+        description?: string,
+        subCategory?: string,
+        severityEnum?: TicketSeverityEnum,
+        department?: string,
+        contactNumber?: string,
+        location?: string,
+        contactEmail?: string,
+        assignedGroup?: string,
+        slaType?: string,
+        responseDueTime?: Date,
+        escalationLevel?: number,
+        adminComments?: string,
+        userComments?: string,
+        internalNotes?: string,
+        rootCause?: string,
+        resolutionSummary?: string,
+        resolvedBy?: number,
+        closureRemarks?: string,
+        userRating?: number,
+        userFeedback?: string
     ) {
         this.id = id;
         this.ticketCode = ticketCode;
@@ -171,11 +297,32 @@ export class TicketResponseModel {
         this.subject = subject;
         this.ticketStatus = ticketStatus;
         this.assignAdminId = assignAdminId;
+        this.expectedCompletionDate = expectedCompletionDate;
         this.resolvedAt = resolvedAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.slaDeadline = slaDeadline;
         this.timeSpentMinutes = timeSpentMinutes;
+        this.description = description;
+        this.subCategory = subCategory;
+        this.severityEnum = severityEnum;
+        this.department = department;
+        this.contactNumber = contactNumber;
+        this.location = location;
+        this.contactEmail = contactEmail;
+        this.assignedGroup = assignedGroup;
+        this.slaType = slaType;
+        this.responseDueTime = responseDueTime;
+        this.escalationLevel = escalationLevel;
+        this.adminComments = adminComments;
+        this.userComments = userComments;
+        this.internalNotes = internalNotes;
+        this.rootCause = rootCause;
+        this.resolutionSummary = resolutionSummary;
+        this.resolvedBy = resolvedBy;
+        this.closureRemarks = closureRemarks;
+        this.userRating = userRating;
+        this.userFeedback = userFeedback;
     }
 }
 

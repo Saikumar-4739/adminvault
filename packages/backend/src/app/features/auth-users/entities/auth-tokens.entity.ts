@@ -3,7 +3,6 @@ import { AuthUsersEntity } from './auth-users.entity';
 
 @Entity('auth_tokens')
 @Index('idx_token_user', ['userId'])
-@Index('idx_token_string', ['token'])
 export class AuthTokensEntity {
     @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for auth tokens' })
     id: number;

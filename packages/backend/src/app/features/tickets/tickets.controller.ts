@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { TicketsService } from './tickets.service';
-import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, CompanyIdRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel, GetTicketStatisticsRequestModel } from '@adminvault/shared-models';
+import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, IdRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel, GetTicketStatisticsRequestModel } from '@adminvault/shared-models';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
 @ApiTags('Tickets')
@@ -51,10 +51,10 @@ export class TicketsController {
     }
 
     @Post('getAllTickets')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllTickets(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllTicketsModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getAllTickets(@Body() reqModel: IdRequestModel): Promise<GetAllTicketsModel> {
         try {
-            return await this.service.getAllTickets(reqModel.companyId);
+            return await this.service.getAllTickets(reqModel.id);
         } catch (error) {
             return returnException(GetAllTicketsModel, error);
         }

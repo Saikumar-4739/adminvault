@@ -4,5 +4,6 @@ export enum TicketCategoryEnum {
   NETWORK = 'network',
   EMAIL = 'email',
   ACCESS = 'access',
+  REAL_ESTATE = 'real_estate',
   OTHER = 'other',
 }

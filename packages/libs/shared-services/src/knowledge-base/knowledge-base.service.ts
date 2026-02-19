@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, GetKnowledgeBaseStatsResponseModel, GetKnowledgeArticleResponseModel, IdRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, GetKnowledgeBaseStatsResponseModel, GetKnowledgeArticleResponseModel, IdRequestModel } from '@adminvault/shared-models';
 
 export class KnowledgeBaseService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -27,7 +27,7 @@ export class KnowledgeBaseService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('searchArticles'), reqObj, config);
     }
 
-    async getStats(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetKnowledgeBaseStatsResponseModel> {
+    async getStats(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GetKnowledgeBaseStatsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getStats'), reqObj, config);
     }
 }

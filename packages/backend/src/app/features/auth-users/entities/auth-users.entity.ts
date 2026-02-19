@@ -23,7 +23,6 @@ export class AuthUsersEntity {
   @Column('varchar', { name: 'ph_number', length: 20, nullable: true, comment: 'Phone number' })
   phNumber: string;
 
-
   @Column('text', { name: 'password_hash', nullable: true, comment: 'Hashed password' })
   passwordHash: string;
 

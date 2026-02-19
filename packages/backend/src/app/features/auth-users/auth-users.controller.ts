@@ -4,12 +4,9 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
-import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel } from '@adminvault/shared-models';
-import { CompanyIdDto } from '../../common/dto/common.dto';
-import { LoginUserDto, RegisterUserDto, ForgotPasswordDto, ResetPasswordDto, UpdateUserDto, RequestAccessDto } from './dto/auth.dto';
+import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel, RefreshTokenModel, IdRequestModel } from '@adminvault/shared-models';
 import { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
-import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
 
 @ApiTags('Auth Users')
 @Controller('auth-users')
@@ -20,11 +17,10 @@ export class AuthUsersController {
 
     @Post('registerUser')
     @Public()
-    @ApiBody({ type: RegisterUserDto })
-    async registerUser(@Body() reqModel: RegisterUserDto, @Req() req: Request): Promise<GlobalResponse> {
+    @ApiBody({ type: RegisterUserModel })
+    async registerUser(@Body() reqModel: RegisterUserModel): Promise<GlobalResponse> {
         try {
-            const ipAddress = this.extractIp(req);
-            return await this.service.registerUser(reqModel, ipAddress);
+            return await this.service.registerUser(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -32,10 +28,10 @@ export class AuthUsersController {
 
     @Post('loginUser')
     @Public()
-    @ApiBody({ type: LoginUserDto })
-    async loginUser(@Body() reqModel: LoginUserDto, @Req() req: Request): Promise<LoginResponseModel> {
+    @ApiBody({ type: LoginUserModel })
+    async loginUser(@Body() reqModel: LoginUserModel): Promise<LoginResponseModel> {
         try {
-            return await this.service.loginUser(reqModel, req);
+            return await this.service.loginUser(reqModel);
         } catch (error) {
             return returnException(LoginResponseModel, error);
         }
@@ -44,10 +40,9 @@ export class AuthUsersController {
     @Post('refresh-token')
     @Public()
     @ApiOperation({ summary: 'Refresh access token' })
-    @ApiBody({ schema: { type: 'object', properties: { refreshToken: { type: 'string' } } } })
-    async refreshToken(@Body() body: { refreshToken: string }): Promise<LoginResponseModel> {
+    async refreshToken(@Body() reqModel: RefreshTokenModel): Promise<LoginResponseModel> {
         try {
-            return await this.service.refreshToken(body.refreshToken);
+            return await this.service.refreshToken(reqModel);
         } catch (error) {
             return returnException(LoginResponseModel, error);
         }
@@ -55,22 +50,19 @@ export class AuthUsersController {
 
     @Post('logOutUser')
     @ApiBody({ type: LogoutUserModel })
-    async logOutUser(@Body() reqModel: LogoutUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
+    async logOutUser(@Body() reqModel: LogoutUserModel): Promise<GlobalResponse> {
         try {
-            const ipAddress = this.extractIp(req);
-            return await this.service.logOutUser(reqModel, ipAddress);
+            return await this.service.logOutUser(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
     @Post('updateUser')
-    @ApiBody({ type: UpdateUserDto })
-    async updateUser(@Body() reqModel: UpdateUserDto, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
+    @ApiBody({ type: UpdateUserModel })
+    async updateUser(@Body() reqModel: UpdateUserModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user.userId;
-            const ipAddress = this.extractIp(req);
-            return await this.service.updateUser(reqModel, userId, ipAddress);
+            return await this.service.updateUser(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -78,19 +70,17 @@ export class AuthUsersController {
 
     @Post('deleteUser')
     @ApiBody({ type: DeleteUserModel })
-    async deleteUser(@Body() reqModel: DeleteUserModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
+    async deleteUser(@Body() reqModel: DeleteUserModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user.userId;
-            const ipAddress = this.extractIp(req);
-            return await this.service.deleteUser(reqModel, userId, ipAddress);
+            return await this.service.deleteUser(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
     @Post('getAllUsers')
-    @ApiBody({ type: CompanyIdDto })
-    async getAllUsers(@Body() reqModel: CompanyIdDto): Promise<GetAllUsersModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getAllUsers(@Body() reqModel: IdRequestModel): Promise<GetAllUsersModel> {
         try {
             return await this.service.getAllUsers(reqModel);
         } catch (error) {
@@ -100,8 +90,8 @@ export class AuthUsersController {
 
     @Post('requestAccess')
     @Public()
-    @ApiBody({ type: RequestAccessDto })
-    async requestAccess(@Body() reqModel: RequestAccessDto): Promise<GlobalResponse> {
+    @ApiBody({ type: RequestAccessModel })
+    async requestAccess(@Body() reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {
             return await this.service.requestAccess(reqModel);
         } catch (error) {
@@ -111,8 +101,8 @@ export class AuthUsersController {
 
     @Post('forgot-password')
     @Public()
-    @ApiBody({ type: ForgotPasswordDto })
-    async forgotPassword(@Body() reqModel: ForgotPasswordDto): Promise<GlobalResponse> {
+    @ApiBody({ type: ForgotPasswordModel })
+    async forgotPassword(@Body() reqModel: ForgotPasswordModel): Promise<GlobalResponse> {
         try {
             return await this.service.forgotPassword(reqModel);
         } catch (error) {
@@ -122,10 +112,10 @@ export class AuthUsersController {
 
     @Post('reset-password')
     @Public()
-    @ApiBody({ type: ResetPasswordDto })
-    async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<GlobalResponse> {
+    @ApiBody({ type: ResetPasswordModel })
+    async resetPassword(@Body() reqModel: ResetPasswordModel): Promise<GlobalResponse> {
         try {
-            return await this.service.resetPassword(resetPasswordDto);
+            return await this.service.resetPassword(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -134,8 +124,6 @@ export class AuthUsersController {
 
     @UseGuards(JwtAuthGuard)
     @Post('verify-password')
-    @ApiOperation({ summary: 'Verify user password' })
-    @ApiBody({ schema: { type: 'object', properties: { password: { type: 'string' } } } })
     async verifyPassword(@Req() req: any, @Body() body: { password: string }): Promise<GlobalResponse> {
         try {
             const isValid = await this.service.verifyPassword(req.user.userId, body.password);
@@ -150,7 +138,6 @@ export class AuthUsersController {
     }
 
     @Get('getMe')
-    @ApiOperation({ summary: 'Get current user profile' })
     async getMe(@Req() req: any): Promise<LoginResponseModel> {
         try {
             return await this.service.getMe(req.user.userId);
@@ -163,7 +150,6 @@ export class AuthUsersController {
     @Public()
     @UseGuards(AuthGuard('google'))
     async googleAuth(@Req() req: Request) {
-        // Initiates Google OAuth2 flow
     }
 
     @Get('google/callback')
@@ -173,43 +159,11 @@ export class AuthUsersController {
         try {
             const googleProfile = req.user;
             const user = await this.service.validateGoogleUser(googleProfile);
-
-            // Generate tokens (similar to loginUser logic but for OAuth)
-            const payload = {
-                username: user.email,
-                email: user.email,
-                sub: user.id,
-                companyId: user.companyId,
-                role: user.userRole
-            };
-
             const response = await this.service.loginUserFromOAuth(user);
-
-            // Redirect to frontend with tokens (or handle as needed)
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
             res.redirect(`${frontendUrl}/auth/callback?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`);
         } catch (error) {
             res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
         }
-    }
-
-
-    private extractIp(req: Request): string {
-        let ip: any = req.headers['x-forwarded-for'] || req.ip || (req as any).connection?.remoteAddress || '127.0.0.1';
-
-        // If x-forwarded-for is an array, take the first one
-        if (Array.isArray(ip)) {
-            ip = ip[0];
-        }
-
-        if (typeof ip === 'string' && ip.includes(',')) {
-            ip = ip.split(',')[0].trim();
-        }
-
-        if (typeof ip === 'string' && ip.startsWith('::ffff:')) {
-            ip = ip.replace('::ffff:', '');
-        }
-
-        return ip as string;
     }
 }

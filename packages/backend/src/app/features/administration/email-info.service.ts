@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as nodemailer from 'nodemailer';
 import { EmailInfoEntity } from './entities/email-info.entity';
-import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel, GetAllEmailInfoModel, EmailStatsResponseModel, EmailStatusEnum, RequestAccessModel, GlobalResponse, CompanyIdRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, SendAssetApprovalEmailModel } from '@adminvault/shared-models';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel, GetAllEmailInfoModel, EmailStatsResponseModel, EmailStatusEnum, RequestAccessModel, GlobalResponse, IdRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, SendAssetApprovalEmailModel, SendAssetAssignedEmailModel, SendTicketStatusUpdateEmailModel } from '@adminvault/shared-models';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse } from '@adminvault/backend-utils';
 import { ConfigService } from '@nestjs/config';
@@ -12,430 +12,750 @@ import { AccessRequestEntity } from './entities/access-request.entity';
 
 @Injectable()
 export class EmailInfoService {
-    private transporter: nodemailer.Transporter;
-    private readonly logger = new Logger(EmailInfoService.name);
-    constructor(
-        private readonly emailInfoRepo: EmailInfoRepository,
-        private readonly accessRequestRepo: AccessRequestRepository,
-        private readonly dataSource: DataSource,
-        private readonly configService: ConfigService
-    ) {
-        const emailUser = this.configService.get<string>('EMAIL_USER');
-        const emailPass = this.configService.get<string>('EMAIL_PASS');
+  private transporter: nodemailer.Transporter;
+  private readonly logger = new Logger(EmailInfoService.name);
+  constructor(
+    private readonly emailInfoRepo: EmailInfoRepository,
+    private readonly accessRequestRepo: AccessRequestRepository,
+    private readonly dataSource: DataSource,
+    private readonly configService: ConfigService
+  ) {
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+    const emailPass = this.configService.get<string>('EMAIL_PASS');
 
-        if (!emailUser || !emailPass) {
-            this.logger.warn('EMAIL_USER or EMAIL_PASS is missing in environment variables. Email sending will not work.');
-        }
-
-        this.transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: emailUser,
-                pass: emailPass,
-            },
-        });
+    if (!emailUser || !emailPass) {
+      this.logger.warn('EMAIL_USER or EMAIL_PASS is missing in environment variables. Email sending will not work.');
     }
 
-    async createEmailInfo(reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            if (!reqModel.email) throw new ErrorResponse(400, "Email is required");
-            const existingEmail = await this.emailInfoRepo.findOne({ where: { email: reqModel.email } });
-            if (existingEmail) throw new ErrorResponse(400, "Email already exists");
-            await transManager.startTransaction();
-            const newEmailInfo = new EmailInfoEntity();
-            newEmailInfo.companyId = reqModel.companyId;
-            newEmailInfo.emailType = reqModel.emailType;
-            newEmailInfo.department = reqModel.department;
-            newEmailInfo.email = reqModel.email;
-            newEmailInfo.employeeId = reqModel.employeeId;
-            newEmailInfo.status = EmailStatusEnum.ACTIVE;
-            await transManager.getRepository(EmailInfoEntity).save(newEmailInfo);
-            await transManager.completeTransaction();
-            return new GlobalResponse(true, 201, "Email info created successfully");
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw error;
-        }
+    this.transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
+    });
+  }
+
+  async createEmailInfo(reqModel: CreateEmailInfoModel): Promise<GlobalResponse> {
+    const transManager = new GenericTransactionManager(this.dataSource);
+    try {
+      if (!reqModel.email) throw new ErrorResponse(400, "Email is required");
+      const existingEmail = await this.emailInfoRepo.findOne({ where: { email: reqModel.email } });
+      if (existingEmail) throw new ErrorResponse(400, "Email already exists");
+      await transManager.startTransaction();
+      const newEmailInfo = new EmailInfoEntity();
+      newEmailInfo.companyId = reqModel.companyId;
+      newEmailInfo.emailType = reqModel.emailType;
+      newEmailInfo.department = reqModel.department;
+      newEmailInfo.email = reqModel.email;
+      newEmailInfo.employeeId = reqModel.employeeId;
+      newEmailInfo.status = EmailStatusEnum.ACTIVE;
+      await transManager.getRepository(EmailInfoEntity).save(newEmailInfo);
+      await transManager.completeTransaction();
+      return new GlobalResponse(true, 201, "Email info created successfully");
+    } catch (error) {
+      await transManager.releaseTransaction();
+      throw error;
     }
+  }
 
-    async updateEmailInfo(reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            const existingEmailInfo = await this.emailInfoRepo.findOne({ where: { id: reqModel.id } });
-            if (!existingEmailInfo) throw new ErrorResponse(404, "Email info not found");
-            await transManager.startTransaction();
-            const updateData: Partial<EmailInfoEntity> = {
-                companyId: reqModel.companyId,
-                emailType: reqModel.emailType,
-                department: reqModel.department,
-                email: reqModel.email,
-                employeeId: reqModel.employeeId
-            };
-            await transManager.getRepository(EmailInfoEntity).update(reqModel.id, updateData);
-            await transManager.completeTransaction();
-            return new GlobalResponse(true, 200, "Email info updated successfully");
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw error;
-        }
+  async updateEmailInfo(reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
+    const transManager = new GenericTransactionManager(this.dataSource);
+    try {
+      const existingEmailInfo = await this.emailInfoRepo.findOne({ where: { id: reqModel.companyId } });
+      if (!existingEmailInfo) throw new ErrorResponse(404, "Email info not found");
+      await transManager.startTransaction();
+      const updateData: Partial<EmailInfoEntity> = {
+        companyId: reqModel.companyId,
+        emailType: reqModel.emailType,
+        department: reqModel.department,
+        email: reqModel.email,
+        employeeId: reqModel.employeeId
+      };
+      await transManager.getRepository(EmailInfoEntity).update(reqModel.companyId, updateData);
+      await transManager.completeTransaction();
+      return new GlobalResponse(true, 200, "Email info updated successfully");
+    } catch (error) {
+      await transManager.releaseTransaction();
+      throw error;
     }
+  }
 
-    async getEmailInfo(reqModel: GetEmailInfoModel): Promise<GetEmailInfoByIdModel> {
-        const emailInfo = await this.emailInfoRepo.findOne({ where: { id: reqModel.id } });
-        if (!emailInfo) throw new ErrorResponse(404, "Email info not found");
-        const response = new EmailInfoResponseModel(emailInfo.id, emailInfo.companyId, emailInfo.emailType, emailInfo.department, emailInfo.email, emailInfo.employeeId);
-        return new GetEmailInfoByIdModel(true, 200, "Email info retrieved successfully", response);
+  async getEmailInfo(reqModel: GetEmailInfoModel): Promise<GetEmailInfoByIdModel> {
+    const emailInfo = await this.emailInfoRepo.findOne({ where: { id: reqModel.id } });
+    if (!emailInfo) throw new ErrorResponse(404, "Email info not found");
+    const response = new EmailInfoResponseModel(emailInfo.id, emailInfo.companyId, emailInfo.emailType, emailInfo.department, emailInfo.email, emailInfo.employeeId);
+    return new GetEmailInfoByIdModel(true, 200, "Email info retrieved successfully", response);
+  }
+
+  async getAllEmailInfo(reqModel: IdRequestModel): Promise<GetAllEmailInfoModel> {
+    const data = await this.emailInfoRepo.getEmailsWithEmployee(reqModel.id);
+    const responses = data.map(info => new EmailInfoResponseModel(info.id, info.company_id, info.email_type, info.department, info.email, info.employee_id, info.employee_name));
+    return new GetAllEmailInfoModel(true, 200, "Email info retrieved successfully", responses);
+  }
+
+  async getEmailStats(reqModel: IdRequestModel): Promise<EmailStatsResponseModel> {
+    const stats = await this.emailInfoRepo.getEmailStatsByCompany(reqModel.id);
+    return new EmailStatsResponseModel(true, 200, "Email stats retrieved successfully", stats);
+  }
+
+  async deleteEmailInfo(reqModel: DeleteEmailInfoModel): Promise<GlobalResponse> {
+    const transManager = new GenericTransactionManager(this.dataSource);
+    try {
+      const existingEmailInfo = await this.emailInfoRepo.findOne({ where: { id: reqModel.id } });
+      if (!existingEmailInfo) throw new ErrorResponse(404, "Email info not found");
+      await transManager.startTransaction();
+      await transManager.getRepository(EmailInfoEntity).delete(reqModel.id);
+      await transManager.completeTransaction();
+      return new GlobalResponse(true, 200, "Email info deleted successfully");
+    } catch (error) {
+      await transManager.releaseTransaction();
+      throw error;
     }
+  }
 
-    async getAllEmailInfo(reqModel: CompanyIdRequestModel): Promise<GetAllEmailInfoModel> {
-        const data = await this.emailInfoRepo.getEmailsWithEmployee(reqModel.companyId);
-        const responses = data.map(info => new EmailInfoResponseModel(info.id, info.company_id, info.email_type, info.department, info.email, info.employee_id, info.employee_name));
-        return new GetAllEmailInfoModel(true, 200, "Email info retrieved successfully", responses);
-    }
+  async sendAccessRequestEmail(request: RequestAccessModel): Promise<boolean> {
+    const adminEmail = 'inolyse@gmail.com';
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
 
-    async getEmailStats(reqModel: CompanyIdRequestModel): Promise<EmailStatsResponseModel> {
-        const stats = await this.emailInfoRepo.getEmailStatsByCompany(reqModel.companyId);
-        return new EmailStatsResponseModel(true, 200, "Email stats retrieved successfully", stats);
-    }
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+    const mailOptions = {
+      from: `"AdminVault System" <${emailUser}>`,
+      to: adminEmail,
+      subject: `[Priority: Action Required] New Access Request from ${request.name}`,
+      html: `
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
+  <tr>
+    <td align="center" style="padding:20px;">
+      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
+        
+        <!-- Header -->
+        <tr>
+          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
+          </td>
+        </tr>
 
-    async deleteEmailInfo(reqModel: DeleteEmailInfoModel): Promise<GlobalResponse> {
-        const transManager = new GenericTransactionManager(this.dataSource);
-        try {
-            const existingEmailInfo = await this.emailInfoRepo.findOne({ where: { id: reqModel.id } });
-            if (!existingEmailInfo) throw new ErrorResponse(404, "Email info not found");
-            await transManager.startTransaction();
-            await transManager.getRepository(EmailInfoEntity).delete(reqModel.id);
-            await transManager.completeTransaction();
-            return new GlobalResponse(true, 200, "Email info deleted successfully");
-        } catch (error) {
-            await transManager.releaseTransaction();
-            throw error;
-        }
-    }
+        <!-- Message -->
+        <tr>
+          <td style="padding:16px 20px;font-size:14px;color:#111827;">
+            Hello <strong>Admin</strong>,<br><br>
+            A new access request has been submitted by <strong>${request.name}</strong>.
+          </td>
+        </tr>
 
-    async sendAccessRequestEmail(request: RequestAccessModel): Promise<boolean> {
-        const adminEmail = 'inolyse@gmail.com';
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+        <!-- Horizontal Info Row -->
+        <tr>
+          <td style="padding:12px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                
+                <td width="40%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Applicant Name</div>
+                  <strong style="font-size:13px;">${request.name}</strong>
+                </td>
 
-        const emailUser = this.configService.get<string>('EMAIL_USER');
-        const mailOptions = {
-            from: `"AdminVault System" <${emailUser}>`,
-            to: adminEmail,
-            subject: `[Priority: Action Required] New Access Request from ${request.name}`,
-            html: `
-                <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; padding: 40px 20px; color: #1e293b;">
-                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
-                        <!-- Header -->
-                        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.025em; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-                                Admin<span style="color: #3b82f6;">Vault</span>
-                            </h1>
-                            <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">Access Management Protocol</p>
-                        </div>
+                <td width="60%" style="padding:8px;">
+                  <div style="font-size:11px;color:#6b7280;">Work Email</div>
+                  <strong style="font-size:13px;color:#3b82f6;">${request.email}</strong>
+                </td>
 
-                        <!-- Body -->
-                        <div style="padding: 40px 32px;">
-                            <div style="margin-bottom: 32px;">
-                                <h2 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 12px 0;">New Account Request</h2>
-                                <p style="font-size: 16px; line-height: 1.6; color: #475569; margin: 0;">
-                                    A new user has submitted an access request for the AdminVault platform. Please review the applicant's details below to proceed with approval.
-                                </p>
-                            </div>
+              </tr>
+            </table>
+          </td>
+        </tr>
 
-                            <div style="background-color: #f1f5f9; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                    <tr>
-                                        <td style="padding: 10px 0; color: #64748b; font-size: 13px; font-weight: 700; text-transform: uppercase; width: 35%;">Applicant Name</td>
-                                        <td style="padding: 10px 0; color: #1e293b; font-size: 15px; font-weight: 600;">${request.name}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 10px 0; color: #64748b; font-size: 13px; font-weight: 700; text-transform: uppercase;">Work Email</td>
-                                        <td style="padding: 10px 0; color: #3b82f6; font-size: 15px; font-weight: 600; text-decoration: none;">${request.email}</td>
-                                    </tr>
-                                </table>
-                            </div>
+        <!-- Button -->
+        <tr>
+          <td align="center" style="padding:20px;">
+            <a href="${frontendUrl}/approvals"
+               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
+                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
+              Review Request
+            </a>
+          </td>
+        </tr>
 
-                            <!-- CTA Section -->
-                            <div style="text-align: center;">
-                                <a href="${frontendUrl}/approvals" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 16px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
-                                    Review & Approve Request
-                                </a>
-                                <p style="font-size: 13px; color: #94a3b8; margin-top: 20px;">
-                                    This link will direct you to the Admin Approval dashboard.
-                                </p>
-                            </div>
-                        </div>
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
+                     font-size:11px;color:#6b7280;">
+            Automated notification • Do not reply
+          </td>
+        </tr>
 
-                        <!-- Footer -->
-                        <div style="padding: 32px; border-top: 1px solid #e2e8f0; text-align: center; background-color: #fafafa;">
-                            <p style="font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5;">
-                                This is an automated security notification from your AdminVault core. 
-                                <br/> 
-                                If you are not authorized to manage access, please report this to your IT Security Lead.
-                            </p>
-                            <p style="font-size: 11px; color: #cbd5e1; margin-top: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
-                                © 2026 AdminVault Enterprise • Security First Infrastructure
-                            </p>
-                        </div>
-                    </div>
-                </div>
+      </table>
+    </td>
+  </tr>
+</table>
             `,
-        };
+    };
 
-        try {
-            // Store request in database first
-            const newRequest = new AccessRequestEntity();
-            newRequest.name = request.name;
-            newRequest.email = request.email;
-            newRequest.description = request.description;
+    try {
+      // Store request in database first
+      const newRequest = new AccessRequestEntity();
+      newRequest.name = request.name;
+      newRequest.email = request.email;
+      newRequest.description = request.description;
 
-            try {
-                await this.accessRequestRepo.save(newRequest);
-                this.logger.log(`Access request saved to DB for ${request.email}`);
-            } catch (dbError) {
-                this.logger.error('Failed to save access request to database', dbError);
-                // We might still want to try sending the email even if DB save fails, 
-                // but usually, if DB fails, it's a sign of a larger issue.
-                // For now, let's continue to email part but log it.
-            }
+      try {
+        await this.accessRequestRepo.save(newRequest);
+        this.logger.log(`Access request saved to DB for ${request.email}`);
+      } catch (dbError) {
+        this.logger.error('Failed to save access request to database', dbError);
+        // We might still want to try sending the email even if DB save fails, 
+        // but usually, if DB fails, it's a sign of a larger issue.
+        // For now, let's continue to email part but log it.
+      }
 
-            const info = await this.transporter.sendMail(mailOptions);
-            this.logger.log(`Access request email sent: ${info.messageId}`);
-            return true;
-        } catch (error) {
-            this.logger.error('Failed to send access request email', error);
-            return false;
-        }
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Access request email sent: ${info.messageId}`);
+      return true;
+    } catch (error) {
+      this.logger.error('Failed to send access request email', error);
+      return false;
     }
+  }
 
-    async sendTicketCreatedEmail(reqModel: SendTicketCreatedEmailModel): Promise<boolean> {
-        const { ticket, recipientEmail, roleName } = reqModel;
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+  async sendTicketCreatedEmail(
+    reqModel: SendTicketCreatedEmailModel
+  ): Promise<boolean> {
+    const { ticket, recipientEmail, roleName } = reqModel;
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
 
-        const priorityColor = ticket.priorityEnum === 'HIGH' ? '#ef4444' : ticket.priorityEnum === 'MEDIUM' ? '#f59e0b' : '#10b981';
+    const priorityColor =
+      ticket.priorityEnum === 'HIGH'
+        ? '#ef4444'
+        : ticket.priorityEnum === 'MEDIUM'
+          ? '#f59e0b'
+          : '#10b981';
 
-        const emailUser = this.configService.get<string>('EMAIL_USER');
-        const mailOptions = {
-            from: `"AdminVault Support" <${emailUser}>`,
-            to: recipientEmail,
-            subject: `[Ticket Received] ${ticket.ticketCode} - ${ticket.subject}`,
-            html: `
-                <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; padding: 40px 20px; color: #1e293b;">
-                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
-                        <!-- Header -->
-                        <div style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); padding: 32px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">AdminVault <span style="font-weight: 300; opacity: 0.8;">Support</span></h1>
-                        </div>
+    const emailUser = this.configService.get<string>('EMAIL_USER');
 
-                        <!-- Body -->
-                        <div style="padding: 40px 32px;">
-                            <h2 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">Support Ticket Logged</h2>
-                            <p style="font-size: 16px; line-height: 1.6; color: #475569; margin-bottom: 32px;">
-                                Hello ${roleName}, your support request has been successfully recorded. Our team will review the details and provide an update shortly.
-                            </p>
+    const mailOptions = {
+      from: `"AdminVault Support" <${emailUser}>`,
+      to: recipientEmail,
+      subject: `[Ticket Received] ${ticket.ticketCode} - ${ticket.subject}`,
+      html: `
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb"
+       style="font-family:Arial,sans-serif;">
+  <tr>
+    <td align="center" style="padding:20px;">
 
-                            <div style="background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #64748b; font-size: 13px; font-weight: 700; text-transform: uppercase;">Reference</td>
-                                        <td style="padding: 8px 0; color: #1e293b; font-size: 15px; font-weight: 700;">${ticket.ticketCode}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #64748b; font-size: 13px; font-weight: 700; text-transform: uppercase;">Subject</td>
-                                        <td style="padding: 8px 0; color: #1e293b; font-size: 15px;">${ticket.subject}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #64748b; font-size: 13px; font-weight: 700; text-transform: uppercase;">Priority</td>
-                                        <td style="padding: 8px 0;">
-                                            <span style="background-color: ${priorityColor}10; color: ${priorityColor}; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;">${ticket.priorityEnum}</span>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
+      <table width="700" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border:1px solid #e5e7eb;">
+        
+        <!-- Header -->
+        <tr>
+          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
+          </td>
+        </tr>
 
-                            <div style="text-align: center;">
-                                <a href="${frontendUrl}/tickets/${ticket.id}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">
-                                    View Ticket Progress
-                                </a>
-                            </div>
-                        </div>
+        <!-- Message -->
+        <tr>
+          <td style="padding:16px 20px;font-size:14px;color:#111827;">
+            Hello <strong>${roleName}</strong>,<br><br>
+            Your ticket <strong>${ticket.ticketCode}</strong> has been created successfully.
+          </td>
+        </tr>
 
-                        <!-- Footer -->
-                        <div style="padding: 24px 32px; background-color: #f9fafb; border-top: 1px solid #f1f5f9; text-align: center;">
-                            <p style="font-size: 12px; color: #94a3b8; margin: 0;">This is an automated notification. You can track your ticket status anytime through the support portal.</p>
-                        </div>
-                    </div>
-                </div>
+        <!-- Horizontal Row -->
+        <tr>
+          <td style="padding:12px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+
+                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Ticket</div>
+                  <strong style="font-size:13px;">${ticket.ticketCode}</strong>
+                </td>
+
+                <td width="20%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Status</div>
+                  <strong style="font-size:13px;color:#3b82f6;">OPEN</strong>
+                </td>
+
+                <td width="20%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Priority</div>
+                  <strong style="font-size:13px;color:${priorityColor};">
+                    ${ticket.priorityEnum}
+                  </strong>
+                </td>
+
+                <td width="35%" style="padding:8px;">
+                  <div style="font-size:11px;color:#6b7280;">Subject</div>
+                  <span style="font-size:13px;">
+                    ${ticket.subject}
+                  </span>
+                </td>
+
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Button -->
+        <tr>
+          <td align="center" style="padding:20px;">
+            <a href="${frontendUrl}/support?ticketId=${encodeURIComponent(
+        ticket.id
+      )}"
+               style="background:#4f46e5;color:#ffffff;
+                      padding:10px 18px;text-decoration:none;
+                      border-radius:4px;font-size:14px;font-weight:bold;
+                      display:inline-block;">
+              View Ticket
+            </a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center"
+              style="padding:12px 20px;border-top:1px solid #e5e7eb;
+                     font-size:11px;color:#6b7280;">
+            Automated notification • Do not reply
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+`,
+
+    };
+
+    try {
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(
+        `Ticket creation email sent to ${recipientEmail}: ${info.messageId}`
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Error sending ticket creation email to ${recipientEmail}`,
+        error
+      );
+      return false;
+    }
+  }
+
+
+  async sendTicketStatusUpdateEmail(reqModel: SendTicketStatusUpdateEmailModel): Promise<boolean> {
+    const { ticket, recipientEmail, roleName, oldStatus, newStatus } = reqModel;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+
+    const priorityColor = ticket.priorityEnum === 'HIGH' ? '#ef4444' : ticket.priorityEnum === 'MEDIUM' ? '#f59e0b' : '#10b981';
+
+    // Status colors
+    const statusColors: any = {
+      'OPEN': '#3b82f6',
+      'IN_PROGRESS': '#f59e0b',
+      'RESOLVED': '#10b981',
+      'CLOSED': '#64748b'
+    };
+    const newStatusColor = statusColors[newStatus] || '#3b82f6';
+
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+    const mailOptions = {
+      from: `"AdminVault Support" < ${emailUser}> `,
+      to: recipientEmail,
+      subject: `[Ticket Update] ${ticket.ticketCode} - Status Changed to ${newStatus} `,
+      html: `
+<table width="100%" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;">
+  <tr>
+    <td align="center" style="padding:20px;">
+      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
+        
+        <!-- Header -->
+        <tr>
+          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
+          </td>
+        </tr>
+
+        <!-- Message -->
+        <tr>
+          <td style="padding:16px 20px;font-size:14px;color:#111827;">
+            Hello <strong>${roleName}</strong>,<br><br>
+            The status of ticket <strong>${ticket.ticketCode}</strong> has been updated.
+          </td>
+        </tr>
+
+        <!-- Horizontal Info Row -->
+        <tr>
+          <td style="padding:12px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                
+                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Ticket</div>
+                  <strong style="font-size:13px;">${ticket.ticketCode}</strong>
+                </td>
+
+                <td width="20%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Status</div>
+                  <span style="font-size:13px;color:#6b7280;">${oldStatus}</span>
+                  <span style="margin:0 4px;">→</span>
+                  <strong style="font-size:13px;color:${newStatusColor};">${newStatus}</strong>
+                </td>
+
+                <td width="20%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Priority</div>
+                  <strong style="font-size:13px;color:${priorityColor};">${ticket.priorityEnum}</strong>
+                </td>
+
+                <td width="35%" style="padding:8px;">
+                  <div style="font-size:11px;color:#6b7280;">Subject</div>
+                  <span style="font-size:13px;">${ticket.subject}</span>
+                </td>
+
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Button -->
+        <tr>
+          <td align="center" style="padding:20px;">
+            <a href="${frontendUrl}/support?ticketId=${encodeURIComponent(ticket.id)}"
+               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
+                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
+              Open Ticket
+            </a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
+                     font-size:11px;color:#6b7280;">
+            Automated notification • Do not reply
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
             `,
-        };
 
-        try {
-            const info = await this.transporter.sendMail(mailOptions);
-            this.logger.log(`Ticket email sent to ${recipientEmail}: ${info.messageId}`);
-            return true;
-        } catch (error) {
-            this.logger.error(`Error sending ticket email to ${recipientEmail}`, error);
-            return false;
-        }
+    };
+
+    try {
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Ticket status update email sent to ${recipientEmail}: ${info.messageId} `);
+      return true;
+    } catch (error) {
+      this.logger.error(`Error sending ticket status update email to ${recipientEmail} `, error);
+      return false;
     }
+  }
 
-    async sendPasswordResetEmail(reqModel: SendPasswordResetEmailModel): Promise<boolean> {
-        const { email, token } = reqModel;
-        const resetLink = `${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'}/reset-password?token=${token}`;
+  async sendPasswordResetEmail(reqModel: SendPasswordResetEmailModel): Promise<boolean> {
+    const { email, token } = reqModel;
+    const resetLink = `${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'}/reset-password?token=${token}`;
 
-        const emailUser = this.configService.get<string>('EMAIL_USER');
-        const mailOptions = {
-            from: `"AdminVault Security" <${emailUser}>`,
-            to: email,
-            subject: `[Security] Password Reset Request`,
-            html: `
-                <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; padding: 40px 20px; color: #1e293b;">
-                    <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
-                        <!-- Header -->
-                        <div style="background-color: #1e293b; padding: 32px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.025em;">Admin<span style="color: #3b82f6;">Vault</span></h1>
-                        </div>
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+    const mailOptions = {
+      from: `"AdminVault Security" <${emailUser}>`,
+      to: email,
+      subject: `[Security] Password Reset Request`,
+      html: `
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
+  <tr>
+    <td align="center" style="padding:20px;">
+      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
+        
+        <!-- Header -->
+        <tr>
+          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
+          </td>
+        </tr>
 
-                        <!-- Body -->
-                        <div style="padding: 40px 32px; text-align: center;">
-                            <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">Reset Your Password</h2>
-                            <p style="font-size: 15px; line-height: 1.6; color: #475569; margin-bottom: 32px;">
-                                We received a request to reset your AdminVault password. Click the button below to choose a new one. This link expires in 60 minutes.
-                            </p>
+        <!-- Message -->
+        <tr>
+          <td style="padding:16px 20px;font-size:14px;color:#111827;">
+            Hello,<br><br>
+            We received a request to reset your AdminVault password. Click the button below to choose a new one.
+          </td>
+        </tr>
 
-                            <a href="${resetLink}" style="display: inline-block; background-color: #3b82f6; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; margin-bottom: 32px;">
-                                Reset Password
-                            </a>
-
-                            <div style="border-top: 1px solid #f1f5f9; padding-top: 24px;">
-                                <p style="font-size: 13px; color: #94a3b8; line-height: 1.6; margin: 0;">
-                                    Didn't request this? You can safely ignore this email. Your password will remain unchanged.
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Footer -->
-                        <div style="padding: 24px 32px; background-color: #f9fafb; border-top: 1px solid #f1f5f9; text-align: center;">
-                            <p style="font-size: 11px; color: #cbd5e1; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">AdminVault Security Center</p>
-                        </div>
-                    </div>
+        <!-- Horizontal Info Row (Optional/Simplified) -->
+        <tr>
+            <td style="padding:12px 20px;">
+                <div style="background:#f9fafb;padding:12px;border-radius:4px;font-size:13px;color:#6b7280;">
+                    Note: This link expires in <strong>60 minutes</strong>. If you didn't request this, you can safely ignore this email.
                 </div>
+            </td>
+        </tr>
+
+        <!-- Button -->
+        <tr>
+          <td align="center" style="padding:20px;">
+            <a href="${resetLink}"
+               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
+                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
+              Reset Password
+            </a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
+                     font-size:11px;color:#6b7280;">
+            Automated notification • Do not reply
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
             `,
-        };
+    };
 
-        try {
-            const emailUser = this.configService.get<string>('EMAIL_USER');
-            const emailPass = this.configService.get<string>('EMAIL_PASS');
+    try {
+      const emailUser = this.configService.get<string>('EMAIL_USER');
+      const emailPass = this.configService.get<string>('EMAIL_PASS');
 
-            if (!emailUser || !emailPass) {
-                this.logger.error('Cannot send password reset email: EMAIL_USER or EMAIL_PASS environment variables are missing.');
-                return false;
-            }
+      if (!emailUser || !emailPass) {
+        this.logger.error('Cannot send password reset email: EMAIL_USER or EMAIL_PASS environment variables are missing.');
+        return false;
+      }
 
-            const info = await this.transporter.sendMail(mailOptions);
-            this.logger.log(`Reset email sent to ${email}: ${info.messageId}`);
-            return true;
-        } catch (error) {
-            this.logger.error(`Error sending reset email to ${email}`, error);
-            return false;
-        }
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Reset email sent to ${email}: ${info.messageId}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`Error sending reset email to ${email}`, error);
+      return false;
+    }
+  }
+
+  async getAllAccessRequests(): Promise<AccessRequestEntity[]> {
+    return await this.accessRequestRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  async sendAssetApprovalEmail(reqModel: SendAssetApprovalEmailModel): Promise<boolean> {
+    const { approverEmail, requesterName, message, assetStats } = reqModel;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+    const emailPass = this.configService.get<string>('EMAIL_PASS');
+
+    this.logger.log(`Attempting to send email. User: ${emailUser ? 'Set' : 'Missing'}, Pass: ${emailPass ? 'Set' : 'Missing'}`);
+    if (!emailUser || !emailPass) {
+      this.logger.error('Email credentials missing');
+      return false;
     }
 
-    async getAllAccessRequests(): Promise<AccessRequestEntity[]> {
-        return await this.accessRequestRepo.find({ order: { createdAt: 'DESC' } });
-    }
+    const mailOptions = {
+      from: `"AdminVault Assets" <${emailUser}>`,
+      to: approverEmail,
+      subject: `[Approval Request] Asset Inventory Review - ${requesterName}`,
+      html: `
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
+  <tr>
+    <td align="center" style="padding:20px;">
+      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
+        
+        <!-- Header -->
+        <tr>
+          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
+          </td>
+        </tr>
 
-    async sendAssetApprovalEmail(reqModel: SendAssetApprovalEmailModel): Promise<boolean> {
-        const { approverEmail, requesterName, message, assetStats } = reqModel;
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
-        const emailUser = this.configService.get<string>('EMAIL_USER');
-        const emailPass = this.configService.get<string>('EMAIL_PASS');
+        <!-- Message -->
+        <tr>
+          <td style="padding:16px 20px;font-size:14px;color:#111827;">
+            Hello,<br><br>
+            <strong>${requesterName}</strong> has requested your approval for the current asset inventory state.
+            ${message ? `<br><br><em>"${message}"</em>` : ''}
+          </td>
+        </tr>
 
-        this.logger.log(`Attempting to send email. User: ${emailUser ? 'Set' : 'Missing'}, Pass: ${emailPass ? 'Set' : 'Missing'}`);
-        if (!emailUser || !emailPass) {
-            this.logger.error('Email credentials missing');
-            return false;
-        }
+        ${assetStats ? `
+        <!-- Horizontal Info Row -->
+        <tr>
+          <td style="padding:12px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                
+                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Total Assets</div>
+                  <strong style="font-size:13px;">${assetStats.total}</strong>
+                </td>
 
-        const statsHtml = assetStats ? `
-            <div style="background-color: #f1f5f9; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-                <h3 style="margin-top: 0; color: #475569; font-size: 14px; text-transform: uppercase;">Inventory Overview</h3>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                    <div style="padding: 12px; background: white; border-radius: 8px;">
-                        <div style="font-size: 20px; font-weight: bold; color: #0f172a;">${assetStats.total}</div>
-                        <div style="font-size: 12px; color: #64748b;">Total Assets</div>
-                    </div>
-                    <div style="padding: 12px; background: white; border-radius: 8px;">
-                        <div style="font-size: 20px; font-weight: bold; color: #10b981;">${assetStats.inUse}</div>
-                        <div style="font-size: 12px; color: #64748b;">Active / In Use</div>
-                    </div>
-                    <div style="padding: 12px; background: white; border-radius: 8px;">
-                        <div style="font-size: 20px; font-weight: bold; color: #3b82f6;">${assetStats.available}</div>
-                        <div style="font-size: 12px; color: #64748b;">Available</div>
-                    </div>
-                    <div style="padding: 12px; background: white; border-radius: 8px;">
-                        <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">${assetStats.maintenance}</div>
-                        <div style="font-size: 12px; color: #64748b;">Maintenance</div>
-                    </div>
-                </div>
-            </div>
-        ` : '';
+                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Active</div>
+                  <strong style="font-size:13px;color:#10b981;">${assetStats.inUse}</strong>
+                </td>
 
-        const mailOptions = {
-            from: `"AdminVault Assets" <${emailUser}>`,
-            to: approverEmail,
-            subject: `[Approval Request] Asset Inventory Review - ${requesterName}`,
-            html: `
-                <div style="font-family: 'Inter', sans-serif; background-color: #f8fafc; padding: 40px 20px; color: #1e293b;">
-                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                        
-                        <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 32px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800;">Asset Approval Request</h1>
-                            <p style="color: #a7f3d0; margin-top: 8px;">AdminVault Inventory Control</p>
-                        </div>
+                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Available</div>
+                  <strong style="font-size:13px;color:#3b82f6;">${assetStats.available}</strong>
+                </td>
 
-                        <div style="padding: 32px;">
-                            <p style="font-size: 16px; line-height: 1.6; color: #334155; margin-bottom: 24px;">
-                                Hello, <strong>${requesterName}</strong> has requested your approval for the current asset inventory state.
-                            </p>
+                <td width="25%" style="padding:8px;">
+                  <div style="font-size:11px;color:#6b7280;">Maintenance</div>
+                  <strong style="font-size:13px;color:#f59e0b;">${assetStats.maintenance}</strong>
+                </td>
 
-                            ${message ? `
-                                <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 16px; margin-bottom: 24px; color: #166534; font-style: italic;">
-                                    "${message}"
-                                </div>
-                            ` : ''}
+              </tr>
+            </table>
+          </td>
+        </tr>
+        ` : ''}
 
-                            ${statsHtml}
+        <!-- Button -->
+        <tr>
+          <td align="center" style="padding:20px;">
+            <a href="${frontendUrl}/assets"
+               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
+                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
+              Review Inventory
+            </a>
+          </td>
+        </tr>
 
-                            <div style="text-align: center; margin-top: 32px;">
-                                <a href="${frontendUrl}/assets" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
-                                    Review Inventory
-                                </a>
-                            </div>
-                        </div>
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
+                     font-size:11px;color:#6b7280;">
+            Automated notification • Do not reply
+          </td>
+        </tr>
 
-                        <div style="padding: 24px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0;">
-                            <p style="font-size: 12px; color: #94a3b8; margin: 0;">
-                                This is an automated notification. Verify specific asset details in the dashboard.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+      </table>
+    </td>
+  </tr>
+</table>
             `,
-        };
+    };
 
-        try {
-            this.logger.log(`Sending email to: ${approverEmail} from: ${emailUser}`);
-            const info = await this.transporter.sendMail(mailOptions);
-            this.logger.log(`Asset approval email sent to ${approverEmail}: ${info.messageId}`);
-            return true;
-        } catch (error) {
-            this.logger.error(`Error sending asset approval email to ${approverEmail}`, error);
-            if (error instanceof Error) {
-                this.logger.error(`Error stack: ${error.stack}`);
-            }
-            return false;
-        }
+    try {
+      this.logger.log(`Sending email to: ${approverEmail} from: ${emailUser}`);
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Asset approval email sent to ${approverEmail}: ${info.messageId}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`Error sending asset approval email to ${approverEmail}`, error);
+      if (error instanceof Error) {
+        this.logger.error(`Error stack: ${error.stack}`);
+      }
+      return false;
     }
+  }
+
+  async sendAssetAssignedEmail(reqModel: SendAssetAssignedEmailModel): Promise<boolean> {
+    const { recipientEmail, recipientName, assetName, assignedBy, assignedDate, isReassignment, remarks } = reqModel;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+    const emailPass = this.configService.get<string>('EMAIL_PASS');
+
+    if (!emailUser || !emailPass) {
+      this.logger.error('Email credentials missing for asset assignment');
+      return false;
+    }
+
+    const actionText = isReassignment ? 'Reassigned' : 'Assigned';
+    const subjectPrefix = isReassignment ? '[Asset Reassignment]' : '[Asset Assignment]';
+
+    const mailOptions = {
+      from: `"AdminVault Assets" <${emailUser}>`,
+      to: recipientEmail,
+      subject: `${subjectPrefix} ${assetName} has been ${actionText.toLowerCase()} to you`,
+      html: `
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
+  <tr>
+    <td align="center" style="padding:20px;">
+      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
+        
+        <!-- Header -->
+        <tr>
+          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
+          </td>
+        </tr>
+
+        <!-- Message -->
+        <tr>
+          <td style="padding:16px 20px;font-size:14px;color:#111827;">
+            Hello <strong>${recipientName}</strong>,<br><br>
+            The following asset has been <strong>${actionText.toLowerCase()}</strong> to you.
+            ${remarks ? `<br><br><em>Notes: "${remarks}"</em>` : ''}
+          </td>
+        </tr>
+
+        <!-- Horizontal Info Row -->
+        <tr>
+          <td style="padding:12px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                
+                <td width="40%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Asset</div>
+                  <strong style="font-size:13px;">${assetName}</strong>
+                </td>
+
+                <td width="30%" style="padding:8px;border-right:1px solid #e5e7eb;">
+                  <div style="font-size:11px;color:#6b7280;">Assigned By</div>
+                  <strong style="font-size:13px;">${assignedBy}</strong>
+                </td>
+
+                <td width="30%" style="padding:8px;">
+                  <div style="font-size:11px;color:#6b7280;">Date</div>
+                  <strong style="font-size:13px;">${new Date(assignedDate).toLocaleDateString()}</strong>
+                </td>
+
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Button -->
+        <tr>
+          <td align="center" style="padding:20px;">
+            <a href="${frontendUrl}/assets/my-assets"
+               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
+                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
+              View My Assets
+            </a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
+                     font-size:11px;color:#6b7280;">
+            Automated notification • Do not reply
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+            `,
+    };
+
+    try {
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Asset assignment email sent to ${recipientEmail}: ${info.messageId}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`Error sending asset assignment email to ${recipientEmail}`, error);
+      if (error instanceof Error) {
+        this.logger.error(`Error stack: ${error.stack}`);
+      }
+      return false;
+    }
+  }
 }

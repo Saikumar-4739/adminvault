@@ -161,7 +161,51 @@ export class SendAssetApprovalEmailModel {
         this.approverEmail = approverEmail;
         this.companyId = companyId;
         this.requesterName = requesterName;
-        this.message = message;
         this.assetStats = assetStats;
     }
 }
+
+export class SendAssetAssignedEmailModel {
+    recipientEmail: string;
+    recipientName: string;
+    assetName: string; // e.g., "MacBook Pro (SN: 12345)"
+    assignedBy: string;
+    assignedDate: Date;
+    isReassignment: boolean;
+    remarks?: string;
+
+    constructor(
+        recipientEmail: string,
+        recipientName: string,
+        assetName: string,
+        assignedBy: string,
+        assignedDate: Date,
+        isReassignment: boolean = false,
+        remarks?: string
+    ) {
+        this.recipientEmail = recipientEmail;
+        this.recipientName = recipientName;
+        this.assetName = assetName;
+        this.assignedBy = assignedBy;
+        this.assignedDate = assignedDate;
+        this.isReassignment = isReassignment;
+        this.remarks = remarks;
+    }
+}
+
+export class SendTicketStatusUpdateEmailModel {
+    ticket: any;
+    recipientEmail: string;
+    roleName: string;
+    oldStatus: string;
+    newStatus: string;
+
+    constructor(ticket: any, recipientEmail: string, roleName: string, oldStatus: string, newStatus: string) {
+        this.ticket = ticket;
+        this.recipientEmail = recipientEmail;
+        this.roleName = roleName;
+        this.oldStatus = oldStatus;
+        this.newStatus = newStatus;
+    }
+}
+

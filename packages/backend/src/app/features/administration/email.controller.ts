@@ -3,7 +3,7 @@ import { EmailInfoService } from './email-info.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { returnException, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetAllEmailInfoModel, EmailStatsResponseModel, CompanyIdRequestModel, GetEmailInfoModel, GetEmailInfoByIdModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel, SendAssetApprovalEmailModel } from '@adminvault/shared-models';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetAllEmailInfoModel, EmailStatsResponseModel, IdRequestModel, GetEmailInfoModel, GetEmailInfoByIdModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel, SendAssetApprovalEmailModel } from '@adminvault/shared-models';
 
 @ApiTags('Email Settings')
 @Controller('administration/email')
@@ -12,8 +12,8 @@ export class EmailController {
     constructor(private readonly emailService: EmailInfoService) { }
 
     @Post('getAllEmailInfo')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllEmailInfo(@Body() req: CompanyIdRequestModel): Promise<GetAllEmailInfoModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getAllEmailInfo(@Body() req: IdRequestModel): Promise<GetAllEmailInfoModel> {
         try {
             return await this.emailService.getAllEmailInfo(req);
         } catch (error) {
@@ -62,8 +62,8 @@ export class EmailController {
     }
 
     @Post('getEmailStats')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getEmailStats(@Body() req: CompanyIdRequestModel): Promise<EmailStatsResponseModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getEmailStats(@Body() req: IdRequestModel): Promise<EmailStatsResponseModel> {
         try {
             return await this.emailService.getEmailStats(req);
         } catch (error) {

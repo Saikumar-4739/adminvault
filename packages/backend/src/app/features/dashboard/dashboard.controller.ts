@@ -3,8 +3,7 @@ import { ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { returnException } from '@adminvault/backend-utils';
-import { DashboardStatsResponseModel } from '@adminvault/shared-models';
-import { CompanyIdDto } from '../../common/dto/common.dto';
+import { DashboardStatsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Dashboard')
 @Controller('dashboard')
@@ -13,9 +12,9 @@ export class DashboardController {
     constructor(private readonly dashboardService: DashboardService) { }
 
     @Post('getDashboardStats')
-    @ApiBody({ type: CompanyIdDto })
+    @ApiBody({ type: IdRequestModel })
     @ApiResponse({ type: DashboardStatsResponseModel })
-    async getDashboardStats(@Body() reqModel: CompanyIdDto): Promise<DashboardStatsResponseModel> {
+    async getDashboardStats(@Body() reqModel: IdRequestModel): Promise<DashboardStatsResponseModel> {
         try {
             return await this.dashboardService.getDashboardStats(reqModel);
         } catch (error) {

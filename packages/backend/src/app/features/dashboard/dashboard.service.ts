@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DashboardRepository } from './repositories/dashboard.repository';
-import { AssetStatusEnum, TicketStatusEnum, DashboardStatsResponseModel, DashboardStats, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { AssetStatusEnum, TicketStatusEnum, DashboardStatsResponseModel, DashboardStats, IdRequestModel } from '@adminvault/shared-models';
 
 @Injectable()
 export class DashboardService {
@@ -11,9 +11,9 @@ export class DashboardService {
      * Aggregates data from assets, tickets, employees, and licenses
      * Filtered by company ID
      */
-    async getDashboardStats(reqModel: CompanyIdRequestModel): Promise<DashboardStatsResponseModel> {
+    async getDashboardStats(reqModel: IdRequestModel): Promise<DashboardStatsResponseModel> {
         try {
-            const companyId = reqModel.companyId;
+            const companyId = reqModel.id;
             const [assetStats, ticketStats, employeeStats, licenseStats, securityStats] = await Promise.all([
                 this.repository.getAssetStats(companyId),
                 this.repository.getTicketStats(companyId),

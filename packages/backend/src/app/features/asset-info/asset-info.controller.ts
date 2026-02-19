@@ -7,7 +7,7 @@ import { AssetTabsService } from './asset-tabs.service';
 import { AssetBulkService } from './asset-bulk.service';
 import { AssetHistoryService } from './asset-history.service';
 import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel, AssetTimelineRequestModel, CompanyIdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, BulkImportRequestModel, AssetTimelineResponseModel, AssetTimelineRequestModel, IdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel } from '@adminvault/shared-models';
 
 
 @ApiTags('Asset Info')
@@ -77,8 +77,8 @@ export class AssetInfoController {
     }
 
     @Post('getAllAssets')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllAssets(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllAssetsModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getAllAssets(@Body() reqModel: IdRequestModel): Promise<GetAllAssetsModel> {
         try {
             return await this.service.getAllAssets(reqModel);
         } catch (error) {
@@ -98,8 +98,8 @@ export class AssetInfoController {
     }
 
     @Post('statistics')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getStatistics(@Body() reqModel: CompanyIdRequestModel): Promise<AssetStatisticsResponseModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getStatistics(@Body() reqModel: IdRequestModel): Promise<AssetStatisticsResponseModel> {
         try {
             return await this.service.getAssetStatistics(reqModel);
         } catch (error) {
@@ -118,8 +118,8 @@ export class AssetInfoController {
     }
 
     @Post('with-assignments')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAssetsWithAssignments(@Body() reqModel: CompanyIdRequestModel): Promise<GetAssetsWithAssignmentsResponseModel> {
+    @ApiBody({ type: IdRequestModel })
+    async getAssetsWithAssignments(@Body() reqModel: IdRequestModel): Promise<GetAssetsWithAssignmentsResponseModel> {
         try {
             return await this.service.getAssetsWithAssignments(reqModel);
         } catch (error) {
@@ -222,8 +222,8 @@ export class AssetInfoController {
     }
 
     @Post('getAllAssignments')
-    @ApiBody({ type: CompanyIdRequestModel })
-    async getAllAssignments(@Body() reqModel: CompanyIdRequestModel): Promise<GetAllAssetAssignsModel | GlobalResponse> {
+    @ApiBody({ type: IdRequestModel })
+    async getAllAssignments(@Body() reqModel: IdRequestModel): Promise<GetAllAssetAssignsModel | GlobalResponse> {
         try {
             return await this.service.getAllAssignments(reqModel);
         } catch (error) {

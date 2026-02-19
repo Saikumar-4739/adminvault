@@ -19,10 +19,12 @@ import { WorkflowModule } from '../workflow/workflow.module';
 import { SoftwareMasterEntity } from './entities/software-master.entity';
 import { AssetSoftwareEntity } from './entities/asset-software.entity';
 import { SoftwareService } from './software.service';
+import { AdministrationModule } from '../administration/administration.module';
 @Module({
     imports: [
         TypeOrmModule.forFeature([AssetInfoEntity, AssetReturnHistoryEntity, AssetNextAssignmentEntity, AssetAssignEntity, EmployeesEntity, SoftwareMasterEntity, AssetSoftwareEntity]),
-        forwardRef(() => WorkflowModule)
+        forwardRef(() => WorkflowModule),
+        AdministrationModule
     ],
     controllers: [AssetInfoController],
     providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository, AssetAssignRepository, EmployeesRepository, SoftwareService],

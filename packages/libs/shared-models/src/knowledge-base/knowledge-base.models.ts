@@ -11,61 +11,91 @@ export enum KnowledgeCategoryEnum {
 }
 
 export class KnowledgeArticleModel {
-    id!: number;
-    title!: string;
-    content!: string;
-    category!: KnowledgeCategoryEnum;
+    id: number;
+    title: string;
+    content: string;
+    category: KnowledgeCategoryEnum;
+    authorId: number;
+    companyId: number;
+    isPublished: boolean;
+    viewCount: number;
     tags?: string[];
-    authorId!: number;
-    companyId!: number;
-    isPublished!: boolean;
-    viewCount!: number;
     createdAt?: Date;
     updatedAt?: Date;
-
-    constructor(partial?: Partial<KnowledgeArticleModel>) {
-        if (partial) {
-            Object.assign(this, partial);
-        }
+    constructor(id: number, title: string, content: string, category: KnowledgeCategoryEnum, authorId: number, companyId: number, isPublished: boolean, viewCount: number, tags: string[], createdAt: Date, updatedAt: Date) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.category = category;
+        this.authorId = authorId;
+        this.companyId = companyId;
+        this.isPublished = isPublished;
+        this.viewCount = viewCount;
+        this.tags = tags;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 }
 
 export class CreateArticleRequestModel {
-    title!: string;
-    content!: string;
-    category!: KnowledgeCategoryEnum;
+    title: string;
+    content: string;
+    category: KnowledgeCategoryEnum;
+    authorId: number;
+    companyId: number;
     tags?: string[];
     isPublished?: boolean;
-    authorId!: number;
-    companyId!: number;
+    constructor(title: string, content: string, category: KnowledgeCategoryEnum, authorId: number, companyId: number, tags: string[], isPublished: boolean,) {
+        this.title = title;
+        this.content = content;
+        this.category = category;
+        this.authorId = authorId;
+        this.companyId = companyId;
+        this.tags = tags;
+        this.isPublished = isPublished;
+    }
 }
 
 export class UpdateArticleRequestModel {
-    id!: number;
+    id: number;
     title?: string;
     content?: string;
     category?: KnowledgeCategoryEnum;
     tags?: string[];
     isPublished?: boolean;
+    editorId: number;
+    constructor(id: number, title: string, content: string, category: KnowledgeCategoryEnum, tags: string[], isPublished: boolean, editorId: number) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.category = category;
+        this.tags = tags;
+        this.isPublished = isPublished;
+        this.editorId = editorId;
+    }
 }
 
 export class SearchArticleRequestModel {
-    companyId!: number;
+    companyId: number;
     query?: string;
     category?: KnowledgeCategoryEnum;
+    constructor(companyId: number, query: string, category?: KnowledgeCategoryEnum) {
+        this.companyId = companyId;
+        this.query = query;
+        this.category = category;
+    }
 }
 
 export class KnowledgeBaseStatsModel {
-    total!: number;
-    byCategory!: Record<string, number>;
-
+    total: number;
+    byCategory: Record<string, number>;
     constructor(total: number, byCategory: Record<string, number>) {
         this.total = total;
         this.byCategory = byCategory;
     }
 }
 
-export class GlobalKnowledgeArticleResponseModel extends GlobalResponse<KnowledgeArticleModel> {
+export class GetKnowledgeArticleResponseModel extends GlobalResponse {
     article!: KnowledgeArticleModel;
     constructor(status: boolean, code: number, message: string, data: KnowledgeArticleModel) {
         super(status, code, message, data);
@@ -73,9 +103,7 @@ export class GlobalKnowledgeArticleResponseModel extends GlobalResponse<Knowledg
     }
 }
 
-export class GetKnowledgeArticleResponseModel extends GlobalKnowledgeArticleResponseModel { }
-
-export class GetAllKnowledgeArticlesResponseModel extends GlobalResponse<KnowledgeArticleModel[]> {
+export class GetAllKnowledgeArticlesResponseModel extends GlobalResponse {
     articles!: KnowledgeArticleModel[];
     constructor(status: boolean, code: number, message: string, data: KnowledgeArticleModel[]) {
         super(status, code, message, data);
@@ -83,7 +111,7 @@ export class GetAllKnowledgeArticlesResponseModel extends GlobalResponse<Knowled
     }
 }
 
-export class GetKnowledgeBaseStatsResponseModel extends GlobalResponse<KnowledgeBaseStatsModel> {
+export class GetKnowledgeBaseStatsResponseModel extends GlobalResponse {
     statistics!: KnowledgeBaseStatsModel;
     constructor(status: boolean, code: number, message: string, data: KnowledgeBaseStatsModel) {
         super(status, code, message, data);

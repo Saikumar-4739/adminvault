@@ -143,15 +143,14 @@ export class LoginResponseModel extends GlobalResponse {
 }
 
 export class GetAllUsersModel extends GlobalResponse {
-    users: IAMUser[]
-    constructor(status: boolean, code: number, message: string, users: IAMUser[]) {
+    users: UsersResponseModel[]
+    constructor(status: boolean, code: number, message: string, users: UsersResponseModel[]) {
         super(status, code, message);
         this.users = users;
     }
 }
 
-// --- Interfaces for UI ---
-export interface IAMUser {
+export class UsersResponseModel {
     id: number;
     fullName: string;
     email: string;
@@ -160,7 +159,32 @@ export interface IAMUser {
     userRole: string;
     status: boolean;
     lastLogin?: Date;
-    roles?: any[];
+    roles?: UserRoleEnum;
     createdAt: Date;
     updatedAt: Date;
+    constructor(id: number, fullName: string, email: string, phNumber: string, companyId: number, userRole: string, status: boolean, lastLogin: Date, roles: UserRoleEnum, createdAt: Date, updatedAt: Date) {
+        this.id = id;
+        this.fullName = fullName;
+        this.email = email;
+        this.phNumber = phNumber;
+        this.companyId = companyId;
+        this.userRole = userRole;
+        this.status = status;
+        this.lastLogin = lastLogin;
+        this.roles = roles;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+}
+
+export class RequestAccessModel {
+    name: string;
+    email: string;
+    description?: string;
+
+    constructor(name: string, email: string, description?: string) {
+        this.name = name;
+        this.email = email;
+        this.description = description;
+    }
 }

@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { LicenseRepository } from './repositories/license.repository';
 import { In } from 'typeorm';
 import { GlobalResponse } from '@adminvault/backend-utils';
-import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GetLicenseStatisticsResponseModel, LicenseStatsModel, LicenseResponseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GetLicenseStatisticsResponseModel, LicenseStatsModel, LicenseResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { CompanyLicenseEntity } from './entities/company-license.entity';
 import { CompanyInfoEntity } from '../masters/company-info/entities/company-info.entity';
 import { LicensesMasterEntity } from '../masters/license/entities/license.entity';
@@ -22,8 +22,8 @@ export class LicensesService {
      * @param reqModel - Request containing optional company ID to filter licenses
      * @returns GetAllLicensesResponseModel with array of license data including relations
      */
-    async getAllLicenses(reqModel: CompanyIdRequestModel): Promise<GetAllLicensesResponseModel> {
-        const companyId = reqModel.companyId;
+    async getAllLicenses(reqModel: IdRequestModel): Promise<GetAllLicensesResponseModel> {
+        const companyId = reqModel.id;
         const query = this.repo.createQueryBuilder('license')
             .orderBy('license.createdAt', 'DESC');
 
@@ -90,8 +90,8 @@ export class LicensesService {
      * @param reqModel - Request containing optional company ID to filter statistics
      * @returns GetLicenseStatisticsResponseModel with license statistics
      */
-    async getLicenseStatistics(reqModel: CompanyIdRequestModel): Promise<GetLicenseStatisticsResponseModel> {
-        const companyId = reqModel.companyId;
+    async getLicenseStatistics(reqModel: IdRequestModel): Promise<GetLicenseStatisticsResponseModel> {
+        const companyId = reqModel.id;
         const query = this.repo.createQueryBuilder('license');
 
         if (companyId) {

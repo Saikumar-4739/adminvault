@@ -1,7 +1,7 @@
 import { DataSource, Repository } from "typeorm";
 import { Injectable } from "@nestjs/common";
 import { AssetInfoEntity } from "../entities/asset-info.entity";
-import { AssetStatusEnum, CompanyIdRequestModel } from "@adminvault/shared-models";
+import { AssetStatusEnum, IdRequestModel } from "@adminvault/shared-models";
 
 @Injectable()
 export class AssetInfoRepository extends Repository<AssetInfoEntity> {
@@ -12,8 +12,8 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
     /**
      * Get all assets that are available/in storage (not assigned)
      */
-    async getStoreAssets(reqModel: CompanyIdRequestModel) {
-        const companyId = reqModel.companyId;
+    async getStoreAssets(reqModel: IdRequestModel) {
+        const companyId = reqModel.id;
         return await this.createQueryBuilder('asset')
             .leftJoin('asset_types', 'device', 'asset.device_id = device.id')
             .leftJoin('device_brands', 'brand', 'asset.brand_id = brand.id')
@@ -44,8 +44,8 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
      * Get assets with their assignment information using TypeORM Query Builder
      * This method joins with device_info, asset_assign, and employees tables
      */
-    async getAssetsWithAssignments(reqModel: CompanyIdRequestModel) {
-        const companyId = reqModel.companyId;
+    async getAssetsWithAssignments(reqModel: IdRequestModel) {
+        const companyId = reqModel.id;
         const query = this.createQueryBuilder('asset')
             .leftJoin('asset_types', 'device', 'asset.device_id = device.id')
             .leftJoin('asset_assign', 'assignment', 'asset.id = assignment.asset_id AND assignment.return_date IS NULL')
@@ -85,8 +85,8 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
     /**
      * Get asset statistics by status for a company
      */
-    async getAssetStatistics(reqModel: CompanyIdRequestModel) {
-        const companyId = reqModel.companyId;
+    async getAssetStatistics(reqModel: IdRequestModel) {
+        const companyId = reqModel.id;
         const query = this.createQueryBuilder('asset')
             .select('asset.asset_status_enum', 'status')
             .addSelect('COUNT(*)', 'count');

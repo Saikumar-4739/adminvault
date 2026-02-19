@@ -2,35 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { kbService } from '@/lib/api/services';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Book, Search, Plus, Tag, BookOpen, ChevronRight, FileText, Globe, Lock } from 'lucide-react';
-import { KnowledgeCategoryEnum, CreateArticleRequestModel, SearchArticleRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { KnowledgeCategoryEnum, CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, IdRequestModel } from '@adminvault/shared-models';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { KnowledgeBaseService } from '@adminvault/shared-services';
 
 const KnowledgeBasePage: React.FC = () => {
     const { user } = useAuth();
-
     const [articles, setArticles] = useState<any[]>([]);
     const [stats, setStats] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('');
-
-    // Create Modal State
+    const [selectedArticle, setSelectedArticle] = useState<any>(null);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [newArticle, setNewArticle] = useState<any>({
-        title: '',
-        category: KnowledgeCategoryEnum.OTHER,
-        content: '',
-        tags: '',
-        isPublished: true
-    });
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editArticleId, setEditArticleId] = useState<number | null>(null);
+    const [newArticle, setNewArticle] = useState<any>({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true });
+    const kbService = new KnowledgeBaseService();
 
     useEffect(() => {
         if (user?.companyId) {
@@ -41,7 +36,7 @@ const KnowledgeBasePage: React.FC = () => {
 
     const fetchStats = async () => {
         try {
-            const req = new CompanyIdRequestModel(user!.companyId);
+            const req = new IdRequestModel(user!.id);
             const res: any = await kbService.getStats(req);
             if (res && res.byCategory) {
                 setStats(res);
@@ -53,17 +48,14 @@ const KnowledgeBasePage: React.FC = () => {
                 setStats(null);
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'Failed to fetch statistics');
+            AlertMessages.getErrorMessage(err.message);
         }
     };
 
     const searchArticles = async () => {
-        // setIsLoading(true);
         try {
-            const req = new SearchArticleRequestModel();
-            req.companyId = user!.companyId;
-            req.query = searchQuery;
-            req.category = selectedCategory ? selectedCategory as KnowledgeCategoryEnum : undefined;
+            const req = new SearchArticleRequestModel(user!.companyId, searchQuery
+            );
             const res: any = await kbService.searchArticles(req);
             if (Array.isArray(res)) {
                 setArticles(res);
@@ -75,38 +67,56 @@ const KnowledgeBasePage: React.FC = () => {
                 setArticles([]);
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'Failed to search articles');
-        } finally {
-            // No local loading needed
+            AlertMessages.getErrorMessage(err.message);
         }
     };
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleCreateOrUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const tagsArray = newArticle.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t);
-            const req = new CreateArticleRequestModel();
-            req.title = newArticle.title;
-            req.content = newArticle.content;
-            req.category = newArticle.category;
-            req.tags = tagsArray;
-            req.isPublished = newArticle.isPublished;
-            req.authorId = user!.id;
-            req.companyId = user!.companyId;
 
-            const res = await kbService.createArticle(req);
-            if (res.status) {
-                AlertMessages.getSuccessMessage('Article created successfully');
-                setIsCreateOpen(false);
-                setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true });
-                searchArticles();
-                fetchStats();
+            if (isEditMode && editArticleId) {
+                const req = new UpdateArticleRequestModel(editArticleId, newArticle.title, newArticle.content, newArticle.category, tagsArray, newArticle.isPublished, user!.id);
+                const res = await kbService.updateArticle(req);
+                if (res.status) {
+                    AlertMessages.getSuccessMessage(res.message);
+                    setIsCreateOpen(false);
+                    setIsEditMode(false);
+                    setEditArticleId(null);
+                    setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true });
+                    searchArticles();
+                    fetchStats();
+                    if (selectedArticle && selectedArticle.id === editArticleId) {
+                        setSelectedArticle(null);
+                    }
+                } else {
+                    AlertMessages.getErrorMessage(res.message);
+                }
             } else {
-                AlertMessages.getErrorMessage(res.message);
+                const req = new CreateArticleRequestModel(newArticle.title, newArticle.content, newArticle.category, user!.id, user!.companyId, tagsArray, newArticle.isPublished);
+                const res = await kbService.createArticle(req);
+                if (res.status) {
+                    AlertMessages.getSuccessMessage(res.message);
+                    setIsCreateOpen(false);
+                    setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true });
+                    searchArticles();
+                    fetchStats();
+                } else {
+                    AlertMessages.getErrorMessage(res.message);
+                }
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'Failed to create article');
+            AlertMessages.getErrorMessage(err.message);
         }
+    };
+
+    const openEditModal = (article: any) => {
+        setNewArticle({ title: article.title, category: article.category, content: article.content, tags: article.tags ? article.tags.join(', ') : '', isPublished: article.isPublished });
+        setEditArticleId(article.id);
+        setIsEditMode(true);
+        setIsCreateOpen(true);
+        setSelectedArticle(null);
     };
 
     const categoryIcons: Record<string, any> = {
@@ -131,7 +141,7 @@ const KnowledgeBasePage: React.FC = () => {
                         {
                             label: 'Write Article',
                             icon: <Plus className="w-4 h-4" />,
-                            onClick: () => setIsCreateOpen(true),
+                            onClick: () => { setIsEditMode(false); setEditArticleId(null); setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true }); setIsCreateOpen(true); },
                             variant: 'primary'
                         }
                     ]}
@@ -163,20 +173,6 @@ const KnowledgeBasePage: React.FC = () => {
                         </div>
                     </div>
 
-                    {stats && (
-                        <div className="flex justify-center gap-8 mt-8 text-slate-300 relative z-10">
-                            <div className="text-center">
-                                <div className="text-2xl font-black text-white">{stats.total}</div>
-                                <div className="text-xs font-bold uppercase tracking-wider">Articles</div>
-                            </div>
-                            {Object.entries(stats.byCategory).slice(0, 3).map(([cat, count]: any) => (
-                                <div key={cat} className="text-center">
-                                    <div className="text-2xl font-black text-white">{count}</div>
-                                    <div className="text-xs font-bold uppercase tracking-wider">{cat}</div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 {/* Categories & Results */}
@@ -202,8 +198,7 @@ const KnowledgeBasePage: React.FC = () => {
                                     <button
                                         key={cat}
                                         onClick={() => { setSelectedCategory(cat); searchArticles(); }}
-                                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${selectedCategory === cat ? 'bg-white dark:bg-slate-900 shadow-md text-cyan-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                            }`}
+                                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${selectedCategory === cat ? 'bg-white dark:bg-slate-900 shadow-md text-cyan-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                     >
                                         <span className="flex items-center gap-3">
                                             <Icon className="w-4 h-4" />
@@ -227,7 +222,11 @@ const KnowledgeBasePage: React.FC = () => {
                         ) : (
                             <div className="grid gap-4">
                                 {articles.map((article) => (
-                                    <Card key={article.id} className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-cyan-500">
+                                    <Card
+                                        key={article.id}
+                                        className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-cyan-500 cursor-pointer"
+                                        onClick={() => setSelectedArticle(article)}
+                                    >
                                         <CardContent className="p-6">
                                             <div className="flex justify-between items-start">
                                                 <div className="space-y-2">
@@ -271,16 +270,15 @@ const KnowledgeBasePage: React.FC = () => {
                 <Modal
                     isOpen={isCreateOpen}
                     onClose={() => setIsCreateOpen(false)}
-                    title="Create New Knowledge Article"
+                    title={isEditMode ? "Edit Knowledge Article" : "Create New Knowledge Article"}
                     size="lg"
                 >
-                    <form onSubmit={handleCreate} className="space-y-6 p-6">
+                    <form onSubmit={handleCreateOrUpdate} className="space-y-6 p-6">
                         <Input
                             label="Article Title"
                             value={newArticle.title}
                             onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
                             required
-                            placeholder="e.g. How to install VPN Certificate"
                         />
 
                         <Select
@@ -301,7 +299,6 @@ const KnowledgeBasePage: React.FC = () => {
                                 value={newArticle.content}
                                 onChange={(e) => setNewArticle({ ...newArticle, content: e.target.value })}
                                 required
-                                placeholder="Write your article content here..."
                             />
                         </div>
 
@@ -309,14 +306,62 @@ const KnowledgeBasePage: React.FC = () => {
                             label="Tags (comma separated)"
                             value={newArticle.tags}
                             onChange={(e) => setNewArticle({ ...newArticle, tags: e.target.value })}
-                            placeholder="wifi, network, vpn"
                         />
 
                         <div className="flex justify-end gap-3 pt-4">
                             <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-                            <Button type="submit" variant="primary">Publish Knowledge</Button>
+                            <Button type="submit" variant="primary">{isEditMode ? 'Update Article' : 'Publish Knowledge'}</Button>
                         </div>
                     </form>
+                </Modal>
+
+                {/* View Article Modal */}
+                <Modal
+                    isOpen={!!selectedArticle}
+                    onClose={() => setSelectedArticle(null)}
+                    title={selectedArticle?.title || 'Article Details'}
+                    size="lg"
+                >
+                    {selectedArticle && (
+                        <div className="p-6 space-y-6">
+                            <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                                <span className="px-2.5 py-1 rounded-md bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300 text-xs font-bold uppercase tracking-wider">
+                                    {selectedArticle.category}
+                                </span>
+                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                    Last updated: {new Date(selectedArticle.createdAt).toLocaleDateString()}
+                                </span>
+                            </div>
+
+                            <div className="prose prose-slate dark:prose-invert max-w-none">
+                                <p className="whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-300">
+                                    {selectedArticle.content}
+                                </p>
+                            </div>
+
+                            {selectedArticle.tags && selectedArticle.tags.length > 0 && (
+                                <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Related Tags</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedArticle.tags.map((tag: string, i: number) => (
+                                            <span key={i} className="text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+                                                #{tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex justify-end gap-3 pt-4">
+                                {(Number(selectedArticle.authorId) === Number(user?.id) || Number(selectedArticle.userId) === Number(user?.id)) && (
+                                    <Button variant="outline" onClick={() => openEditModal(selectedArticle)}>
+                                        Edit Article
+                                    </Button>
+                                )}
+                                <Button variant="primary" onClick={() => setSelectedArticle(null)}>Close Article</Button>
+                            </div>
+                        </div>
+                    )}
                 </Modal>
             </div>
         </RouteGuard>

@@ -21,7 +21,6 @@ export const documentsService = new DocumentsService();
 export const companyService = new CompanyService();
 export const emailService = administrationService;
 export const workflowService = new WorkflowService();
-export const kbService = new KnowledgeBaseService();
 export const procurementService = new ProcurementService();
 export const networkService = new NetworkService();
 
@@ -38,14 +37,12 @@ export const services = {
     application: applicationService,
     licenseMaster: licenseMasterService,
     slackUser: slackUserService,
-
     licenses: licensesService,
     reports: reportsService,
     documents: documentsService,
     company: companyService,
     email: emailService,
     workflow: workflowService,
-    kb: kbService,
     procurement: procurementService,
     network: networkService,
 };
