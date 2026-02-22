@@ -8,7 +8,7 @@ import {
     GetTicketByIdModel,
     GetAllTicketsModel,
     GlobalResponse,
-    CompanyIdRequestModel,
+    IdRequestModel,
     GetTicketStatisticsRequestModel,
     UpdateTicketStatusRequestModel,
     AssignTicketRequestModel,
@@ -32,7 +32,7 @@ export class TicketsService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getTicket'), reqObj, config);
     }
 
-    async getAllTickets(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllTicketsModel> {
+    async getAllTickets(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GetAllTicketsModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllTickets'), reqObj, config);
     }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreateSlackUserModel, UpdateSlackUserModel, SlackUserModel, IdRequestModel, CompanyIdRequestModel, CompanyDropdownModel } from '@adminvault/shared-models';
+import { CreateSlackUserModel, UpdateSlackUserModel, SlackUserModel, IdRequestModel, CompanyDropdownModel } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -74,7 +74,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
 
     const fetchDependencies = async (): Promise<void> => {
         try {
-            const req = new CompanyIdRequestModel(user?.companyId || 0);
+            const req = new IdRequestModel(user?.companyId || 0);
             const [empRes, deptRes, compRes] = await Promise.all([
                 employeeService.getAllEmployees(req),
                 departmentService.getAllDepartments(),

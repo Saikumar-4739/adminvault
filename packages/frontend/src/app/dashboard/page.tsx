@@ -18,7 +18,7 @@ import {
 import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { UserRoleEnum, TicketStatusEnum, TicketPriorityEnum, IdRequestModel } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -98,7 +98,7 @@ const DashboardPage: React.FC = () => {
                 AlertMessages.getErrorMessage('No company selected');
                 return;
             }
-            const req = new CompanyIdRequestModel(id);
+            const req = new IdRequestModel(id);
             const response = await dashboardService.getDashboardStats(req);
             if (response && response.status && response.data) {
                 setStats(response.data as any);

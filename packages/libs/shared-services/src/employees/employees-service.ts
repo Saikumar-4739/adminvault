@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetEmployeeResponseModel, GetAllEmployeesResponseModel, GlobalResponse, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetEmployeeResponseModel, GetAllEmployeesResponseModel, GlobalResponse, IdRequestModel } from '@adminvault/shared-models';
 
 export class EmployeesService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -19,7 +19,7 @@ export class EmployeesService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getEmployee'), reqObj, config);
     }
 
-    async getAllEmployees(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllEmployeesResponseModel> {
+    async getAllEmployees(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GetAllEmployeesResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllEmployees'), reqObj, config);
     }
 

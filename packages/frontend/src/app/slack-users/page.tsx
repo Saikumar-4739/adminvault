@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Search, Plus, MessageSquare, Pencil, Trash2, User, Users } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, CompanyIdRequestModel, IdRequestModel } from '@adminvault/shared-models';
+import { UserRoleEnum, IdRequestModel } from '@adminvault/shared-models';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
@@ -46,7 +46,7 @@ const SlackUsersPage: React.FC = () => {
     const fetchInitialData = async () => {
         if (!user?.companyId) return;
         try {
-            const req = new CompanyIdRequestModel(user.companyId);
+            const req = new IdRequestModel(user.companyId);
             const [empRes, deptRes] = await Promise.all([
                 employeeService.getAllEmployees(req as any),
                 departmentService.getAllDepartments()

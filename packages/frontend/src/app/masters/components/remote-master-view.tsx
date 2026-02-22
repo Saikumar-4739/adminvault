@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreateRemoteMasterModel, UpdateRemoteMasterModel, RemoteMaster, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateRemoteMasterModel, UpdateRemoteMasterModel, RemoteMaster, IdRequestModel } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
@@ -38,7 +38,7 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
     const getAllRemoteTools = async (): Promise<void> => {
         if (!user?.companyId) return;
         try {
-            const req = new CompanyIdRequestModel(user.companyId);
+            const req = new IdRequestModel(user.companyId);
             const response = await remoteService.getAllRemote(req);
             if (response.status) {
                 setRemoteTools(response.data || []);

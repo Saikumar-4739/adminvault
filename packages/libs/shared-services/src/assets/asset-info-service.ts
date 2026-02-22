@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAssetByIdModel, GetAllAssetsModel, GlobalResponse, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, AssetTimelineResponseModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel, CompanyIdRequestModel, AssetTimelineRequestModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAssetByIdModel, GetAllAssetsModel, GlobalResponse, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, GetStoreAssetsRequestModel, GetStoreAssetsResponseModel, GetReturnAssetsRequestModel, GetReturnAssetsResponseModel, ProcessReturnRequestModel, ProcessReturnResponseModel, GetNextAssignmentsRequestModel, GetNextAssignmentsResponseModel, CreateNextAssignmentRequestModel, CreateNextAssignmentResponseModel, AssignFromQueueRequestModel, AssignFromQueueResponseModel, BulkImportResponseModel, AssetTimelineResponseModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, GetAllAssetAssignsModel, GetAssetAssignByIdModel, IdRequestModel, AssetTimelineRequestModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel } from '@adminvault/shared-models';
 
 export class AssetInfoService extends CommonAxiosService {
     private readonly BASE_PATH = '/asset-info';
@@ -35,7 +35,7 @@ export class AssetInfoService extends CommonAxiosService {
         return await this.axiosPostCall(`${this.BASE_PATH}/getAsset`, reqObj, config);
     }
 
-    async getAllAssets(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetsModel> {
+    async getAllAssets(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetsModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/getAllAssets`, reqObj, config);
     }
 
@@ -44,7 +44,7 @@ export class AssetInfoService extends CommonAxiosService {
     }
 
     // --- STATISTICS & SEARCH ---
-    async getAssetStatistics(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<AssetStatisticsResponseModel> {
+    async getAssetStatistics(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<AssetStatisticsResponseModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/statistics`, reqObj, config);
     }
 
@@ -52,7 +52,7 @@ export class AssetInfoService extends CommonAxiosService {
         return await this.axiosPostCall(`${this.BASE_PATH}/search`, reqObj, config);
     }
 
-    async getAssetsWithAssignments(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAssetsWithAssignmentsResponseModel> {
+    async getAssetsWithAssignments(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GetAssetsWithAssignmentsResponseModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/with-assignments`, reqObj, config);
     }
 
@@ -92,7 +92,7 @@ export class AssetInfoService extends CommonAxiosService {
         return await this.axiosPostCall(`${this.BASE_PATH}/getAssignment`, reqObj, config);
     }
 
-    async getAllAssignments(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetAssignsModel> {
+    async getAllAssignments(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GetAllAssetAssignsModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/getAllAssignments`, reqObj, config);
     }
 

@@ -1,1 +1,2 @@
-export * from './common-id-request-model';
+export * from './common-models';
+export * from './global-response';

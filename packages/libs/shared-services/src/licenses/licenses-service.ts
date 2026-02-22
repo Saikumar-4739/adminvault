@@ -1,19 +1,19 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { CreateLicenseMasterModel, UpdateLicenseMasterModel, DeleteLicenseModel, GetAllLicenseMastersResponseModel, GlobalResponse, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GlobalResponse, IdRequestModel } from '@adminvault/shared-models';
 
 export class LicensesService extends CommonAxiosService {
-    private baseUrl = 'license';
+    private baseUrl = '/licenses';
 
-    async getAllLicenses(req: CompanyIdRequestModel): Promise<GetAllLicenseMastersResponseModel> {
+    async getAllLicenses(req: IdRequestModel): Promise<GetAllLicensesResponseModel> {
         return this.axiosPostCall(`${this.baseUrl}/getAllLicenses`, req);
     }
 
-    async createLicense(model: CreateLicenseMasterModel): Promise<GlobalResponse> {
+    async createLicense(model: CreateLicenseModel): Promise<GlobalResponse> {
         return this.axiosPostCall(`${this.baseUrl}/createLicense`, model);
     }
 
-    async updateLicense(model: UpdateLicenseMasterModel): Promise<GlobalResponse> {
+    async updateLicense(model: UpdateLicenseModel): Promise<GlobalResponse> {
         return this.axiosPostCall(`${this.baseUrl}/updateLicense`, model);
     }
 

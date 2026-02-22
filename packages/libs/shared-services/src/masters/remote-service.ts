@@ -1,13 +1,13 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { CreateRemoteMasterModel, UpdateRemoteMasterModel, DeleteRemoteMasterModel, GetAllRemoteMasterResponseModel, GlobalResponse, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateRemoteMasterModel, UpdateRemoteMasterModel, DeleteRemoteMasterModel, GetAllRemoteMasterResponseModel, GlobalResponse, IdRequestModel } from '@adminvault/shared-models';
 
 export class RemoteService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
         return '/remote/' + childUrl;
     }
 
-    async getAllRemote(reqObj: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllRemoteMasterResponseModel> {
+    async getAllRemote(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GetAllRemoteMasterResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllRemotes'), reqObj, config);
     }
 

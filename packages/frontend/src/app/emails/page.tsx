@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { companyService, emailService, departmentService } from '@/lib/api/services';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, DepartmentEnum, EmailTypeEnum, EmailInfoResponseModel, CreateEmailInfoModel, DeleteEmailInfoModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { UserRoleEnum, DepartmentEnum, EmailTypeEnum, EmailInfoResponseModel, CreateEmailInfoModel, DeleteEmailInfoModel, IdRequestModel } from '@adminvault/shared-models';
 import {
     Mail, Building2, Plus, Trash2, Search,
     Headphones, ShieldCheck, Landmark, Settings,
@@ -90,7 +90,7 @@ const InfoEmailsPage: React.FC = () => {
     const fetchEmailInfo = useCallback(async () => {
         if (!selectedOrg) return;
         try {
-            const req = new CompanyIdRequestModel(Number(selectedOrg));
+            const req = new IdRequestModel(Number(selectedOrg));
             const response = await emailService.getAllEmailInfo(req);
             if (response.status) {
                 setEmailInfoList(response.data || []);

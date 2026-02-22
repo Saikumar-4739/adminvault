@@ -48,6 +48,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (storedMenus) {
                     setAllowedMenus(JSON.parse(storedMenus));
                 }
+
+                // Fetch latest profile and menus to ensure we're not showing stale data
+                authService.getMe().then(response => {
+                    if (response.status && response.menus) {
+                        setAllowedMenus(response.menus);
+                        localStorage.setItem('auth_menus', JSON.stringify(response.menus));
+                    }
+                }).catch(err => {
+                    console.error('Failed to refresh menus:', err);
+                });
             } else if (storedUser && !storedToken) {
                 localStorage.removeItem('auth_user');
                 localStorage.removeItem('auth_token');

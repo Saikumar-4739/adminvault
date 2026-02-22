@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { BulkSetSettingsModel, CompanyIdRequestModel, CreateEmailInfoModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, GetAllEmailInfoModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UserIdNumRequestModel, GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel, SendAssetApprovalEmailModel } from '@adminvault/shared-models';
+import { BulkSetSettingsModel, IdRequestModel, CreateEmailInfoModel, CreateSettingModel, DeleteEmailInfoModel, EmailStatsResponseModel, GetAllEmailInfoModel, GetAllSettingsResponseModel, GetEmailInfoByIdModel, GetEmailInfoModel, GlobalResponse, UpdateEmailInfoModel, UserIdNumRequestModel, GetSettingRequestModel, GetSettingResponseModel, DeleteSettingRequestModel, GetSettingsByCategoryRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, RequestAccessModel, SendAssetApprovalEmailModel } from '@adminvault/shared-models';
 
 export class AdministrationService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -13,7 +13,7 @@ export class AdministrationService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/getUserSettings'), reqModel, config);
     }
 
-    async getCompanySettings(reqModel: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
+    async getCompanySettings(reqModel: IdRequestModel, config?: AxiosRequestConfig): Promise<GetAllSettingsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('settings/getCompanySettings'), reqModel, config);
     }
 
@@ -43,7 +43,7 @@ export class AdministrationService extends CommonAxiosService {
 
     // --- EMAIL ---
 
-    async getAllEmailInfo(reqModel: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<GetAllEmailInfoModel> {
+    async getAllEmailInfo(reqModel: IdRequestModel, config?: AxiosRequestConfig): Promise<GetAllEmailInfoModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('email/getAllEmailInfo'), reqModel, config);
     }
 
@@ -63,7 +63,7 @@ export class AdministrationService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('email/deleteEmailInfo'), reqModel, config);
     }
 
-    async getEmailStats(reqModel: CompanyIdRequestModel, config?: AxiosRequestConfig): Promise<EmailStatsResponseModel> {
+    async getEmailStats(reqModel: IdRequestModel, config?: AxiosRequestConfig): Promise<EmailStatsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('email/getEmailStats'), reqModel, config);
     }
 

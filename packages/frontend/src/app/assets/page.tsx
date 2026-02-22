@@ -28,7 +28,7 @@ import { UserRoleEnum } from '@adminvault/shared-models';
 import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
 import { assetService, companyService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
-import { AssetSearchRequestModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { AssetSearchRequestModel, IdRequestModel } from '@adminvault/shared-models';
 
 interface Asset {
     id: number;
@@ -97,7 +97,7 @@ const AssetsPage: React.FC = () => {
         // if (!selectedCompanyId) return; // Allow 0
         setIsLoading(true);
         try {
-            const req = new CompanyIdRequestModel(selectedCompanyId);
+            const req = new IdRequestModel(selectedCompanyId);
             const response = await assetService.getAssetsWithAssignments(req);
             if (response.status) {
                 const data = (response as any).assets || [];
@@ -137,7 +137,7 @@ const AssetsPage: React.FC = () => {
     const fetchStatistics = React.useCallback(async () => {
         // if (!selectedCompanyId) return; // Allow 0
         try {
-            const req = new CompanyIdRequestModel(selectedCompanyId);
+            const req = new IdRequestModel(selectedCompanyId);
             const response = await assetService.getAssetStatistics(req);
             if (response.status) {
                 setStatistics(response.statistics);

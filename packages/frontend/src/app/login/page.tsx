@@ -390,19 +390,19 @@ const LoginPage: React.FC = () => {
                                         )}
                                     </Button>
 
-                                    <div className="relative py-4">
+                                    {/* <div className="relative py-4">
                                         <div className="absolute inset-0 flex items-center">
                                             <div className={`w-full border-t ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}></div>
                                         </div>
                                         <div className="relative flex justify-center text-xs uppercase">
                                             <span className={`px-2 px-4 backdrop-blur-xl ${isDarkMode ? 'bg-slate-900/50 text-gray-500' : 'bg-white text-gray-400'}`}>Or continue with</span>
                                         </div>
-                                    </div>
+                                    </div> */}
 
 
 
                                     {/* Google Login Button */}
-                                    <Button
+                                    {/* <Button
                                         type="button"
                                         onClick={() => window.location.href = `${configVariables.APP_AVS_SERVICE_URL}/auth-users/google`}
                                         className={`w-full py-4 flex items-center justify-center gap-3 rounded-xl border font-bold transition-all duration-300 ${isDarkMode
@@ -429,7 +429,7 @@ const LoginPage: React.FC = () => {
                                             />
                                         </svg>
                                         Sign in with Google
-                                    </Button>
+                                    </Button> */}
 
                                     {/* Additional Links */}
                                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">

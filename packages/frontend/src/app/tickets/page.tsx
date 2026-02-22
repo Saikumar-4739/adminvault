@@ -2,20 +2,18 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ticketService } from '@/lib/api/services';
+import { ticketService, authService } from '@/lib/api/services';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
 import { Modal } from '@/components/ui/Modal';
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
-    Tag, Search, Edit, Trash2, Ticket, Clock, MessageSquare,
+    Search, Edit, Trash2, Ticket, Clock, MessageSquare,
     Monitor, Cpu, Wifi, Mail, Lock, HelpCircle,
-    AlertTriangle, CheckCircle, User, Users, Filter, Building2,
-    Send, List, Plus, ChevronRight, Hash, MapPin, Phone, Briefcase, FileText, Shield, Activity, Calendar, TrendingUp, Star
+    AlertTriangle, CheckCircle, User, Users, Filter, Building2
 } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, CompanyIdRequestModel, CreateTicketModel, UpdateTicketModel, DeleteTicketModel, UserRoleEnum, TicketSeverityEnum } from '@adminvault/shared-models';
+import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, IdRequestModel, CreateTicketModel, UpdateTicketModel, DeleteTicketModel, UserRoleEnum, TicketSeverityEnum } from '@adminvault/shared-models';
 import { Input } from '@/components/ui/Input';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,6 +94,7 @@ const TicketsPage: React.FC = () => {
         user.role === UserRoleEnum.SUPPORT_ADMIN ||
         user.role === UserRoleEnum.MANAGER
     );
+    const isSuperAdmin = user?.role === UserRoleEnum.SUPER_ADMIN;
 
     const [tickets, setTickets] = useState<TicketData[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -103,6 +102,7 @@ const TicketsPage: React.FC = () => {
     const [editingTicket, setEditingTicket] = useState<any>(null);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [ticketToDelete, setTicketToDelete] = useState<any>(null);
+    const [admins, setAdmins] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -110,16 +110,15 @@ const TicketsPage: React.FC = () => {
     // Default to 'my' for non-admins
     const [viewMode, setViewMode] = useState<'all' | 'my'>('my');
     const [showFilters, setShowFilters] = useState(false);
-    const [activeTab, setActiveTab] = useState('info');
 
     // Update viewMode when user role is known
     useEffect(() => {
-        if (isAdmin) {
+        if (isSuperAdmin) {
             setViewMode('all');
         } else {
             setViewMode('my');
         }
-    }, [isAdmin]);
+    }, [isSuperAdmin]);
 
     const [formData, setFormData] = useState({
         // Basic Info
@@ -140,7 +139,8 @@ const TicketsPage: React.FC = () => {
 
         // Admin / Assignment
         assignedGroup: '',
-        assignedTo: '', // Display only for now or map to assignAdminId if user list available
+        assignedTo: '',
+        assignAdminId: '',
 
         // SLA & Tracking
         slaType: '',
@@ -169,19 +169,31 @@ const TicketsPage: React.FC = () => {
         return user?.companyId || 1;
     }, []);
 
+    const fetchAdmins = useCallback(async () => {
+        if (!user?.companyId) return;
+        try {
+            const response = await authService.getAllUsers(new IdRequestModel(user.companyId));
+            if (response.status && response.users) {
+                setAdmins(response.users);
+            }
+        } catch (error) {
+            console.error('Failed to fetch admins:', error);
+        }
+    }, [user?.companyId]);
+
     const fetchTickets = useCallback(async () => {
         // setIsLoading(true);
         try {
             let response: any;
-            // Force 'my' view for non-admins, regardless of state (double safety)
-            const effectiveViewMode = isAdmin ? viewMode : 'my';
+            // Force 'my' view for non-super-admins, regardless of state (double safety)
+            const effectiveViewMode = isSuperAdmin ? viewMode : 'my';
 
             if (effectiveViewMode === 'my') {
                 console.log('Fetching MY tickets...');
                 response = await ticketService.getMyTickets();
             } else {
                 console.log('Fetching ALL tickets...');
-                const req = new CompanyIdRequestModel(getCompanyId());
+                const req = new IdRequestModel(getCompanyId());
                 response = await ticketService.getAllTickets(req);
             }
 
@@ -207,7 +219,8 @@ const TicketsPage: React.FC = () => {
 
     useEffect(() => {
         fetchTickets();
-    }, [fetchTickets]);
+        fetchAdmins();
+    }, [fetchTickets, fetchAdmins]);
 
     // WebSocket for real-time ticket updates (Admins only)
     useEffect(() => {
@@ -249,7 +262,7 @@ const TicketsPage: React.FC = () => {
                     formData.subject,
                     formData.ticketStatus,
                     undefined, // employeeId
-                    undefined, // assignAdminId
+                    formData.assignAdminId ? Number(formData.assignAdminId) : undefined,
                     formData.responseDueTime ? new Date(formData.responseDueTime) : undefined, // expectedCompletionDate
                     undefined, // resolvedAt
                     formData.timeSpentMinutes, // timeSpentMinutes
@@ -291,7 +304,7 @@ const TicketsPage: React.FC = () => {
                     formData.subject,
                     TicketStatusEnum.PENDING,
                     undefined, // employeeId
-                    undefined, // assignAdminId
+                    formData.assignAdminId ? Number(formData.assignAdminId) : undefined,
                     formData.responseDueTime ? new Date(formData.responseDueTime) : undefined, // expectedCompletionDate
                     undefined, // resolvedAt
                     formData.timeSpentMinutes, // timeSpentMinutes
@@ -352,6 +365,7 @@ const TicketsPage: React.FC = () => {
 
             assignedGroup: ticket.assignedGroup || '',
             assignedTo: ticket.assignAdminId ? String(ticket.assignAdminId) : '',
+            assignAdminId: ticket.assignAdminId ? String(ticket.assignAdminId) : '',
 
             slaType: ticket.slaType || '',
             responseDueTime: ticket.responseDueTime ? new Date(ticket.responseDueTime).toISOString().slice(0, 16) : '',
@@ -369,7 +383,6 @@ const TicketsPage: React.FC = () => {
             userComments: ticket.userComments || '',
             internalNotes: ticket.internalNotes || ''
         });
-        setActiveTab('info');
         setIsModalOpen(true);
     };
 
@@ -402,7 +415,6 @@ const TicketsPage: React.FC = () => {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingTicket(null);
-        setActiveTab('info');
         setFormData({
             subject: '',
             description: '',
@@ -429,7 +441,8 @@ const TicketsPage: React.FC = () => {
             userFeedback: '',
             adminComments: '',
             userComments: '',
-            internalNotes: ''
+            internalNotes: '',
+            assignAdminId: ''
         });
     };
 
@@ -486,27 +499,27 @@ const TicketsPage: React.FC = () => {
                             <input
                                 type="text"
                                 placeholder="Search by subject or code..."
-                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-inner"
+                                className="w-full pl-10 pr-4 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-inner"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
 
-                        {/* Create Ticket Button - Visible to everyone */}
-                        <Button
+                        {/* Create Ticket button hidden as per request */}
+                        {/* <Button
                             variant="primary"
                             onClick={() => router.push('/create-ticket')}
                             leftIcon={<Plus className="h-4 w-4" />}
                             className="whitespace-nowrap shadow-lg shadow-indigo-500/20"
                         >
                             Create Ticket
-                        </Button>
+                        </Button> */}
 
-                        {isAdmin && (
+                        {isSuperAdmin && (
                             <div className="flex gap-1 bg-white dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                                 <button
                                     onClick={() => setViewMode('all')}
-                                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-bold text-xs transition-all ${viewMode === 'all'
+                                    className={`flex items-center gap-1.5 px-4 py-1 rounded-lg font-bold text-xs transition-all ${viewMode === 'all'
                                         ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
                                         : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                                         }`}
@@ -516,7 +529,7 @@ const TicketsPage: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setViewMode('my')}
-                                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-bold text-xs transition-all ${viewMode === 'my'
+                                    className={`flex items-center gap-1.5 px-4 py-1 rounded-lg font-bold text-xs transition-all ${viewMode === 'my'
                                         ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
                                         : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                                         }`}
@@ -529,7 +542,7 @@ const TicketsPage: React.FC = () => {
 
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border ${showFilters
+                            className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-xl text-sm font-bold transition-all shadow-sm border ${showFilters
                                 ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20'
                                 : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                                 }`}
@@ -646,17 +659,17 @@ const TicketsPage: React.FC = () => {
 
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-center border-collapse border border-slate-200 dark:border-slate-700">
                             <thead>
                                 <tr className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Ticket Code</th>
-                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Subject</th>
-                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Category</th>
-                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
-                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Priority</th>
-                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Requester</th>
-                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Date</th>
-                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">Actions</th>
+                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-center">Ticket Code</th>
+                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-center">Subject</th>
+                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-center">Category</th>
+                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-center">Status</th>
+                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-center">Priority</th>
+                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-center">Requester</th>
+                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-center">Date</th>
+                                    <th className="py-4 px-6 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -677,35 +690,22 @@ const TicketsPage: React.FC = () => {
 
                                         return (
                                             <tr key={ticket.id} className="group hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                                <td className="py-4 px-6">
-                                                    <div className="flex items-center gap-2">
+                                                <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
                                                         <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
                                                             {ticket.ticketCode || 'TKT-000'}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-6">
-                                                    <div className="max-w-[300px]">
+                                                <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className="max-w-[300px] mx-auto">
                                                         <div className="font-bold text-slate-900 dark:text-white truncate mb-0.5" title={ticket.subject}>
                                                             {ticket.subject}
                                                         </div>
-                                                        {ticket.slaDeadline && (
-                                                            (() => {
-                                                                const sla = getSLAStatus(ticket.slaDeadline, ticket.ticketStatus);
-                                                                if (sla) {
-                                                                    return (
-                                                                        <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${sla.color}`}>
-                                                                            {sla.label}
-                                                                        </span>
-                                                                    );
-                                                                }
-                                                                return null;
-                                                            })()
-                                                        )}
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-6">
-                                                    <div className="flex items-center gap-2">
+                                                <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
                                                         <div className={`p-1.5 rounded-lg bg-gradient-to-br ${Config.gradient} text-white shadow-sm`}>
                                                             <CategoryIcon className="h-3.5 w-3.5" />
                                                         </div>
@@ -714,7 +714,7 @@ const TicketsPage: React.FC = () => {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-6">
+                                                <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
                                                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wide border ${ticket.ticketStatus === TicketStatusEnum.OPEN ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800' :
                                                         ticket.ticketStatus === TicketStatusEnum.IN_PROGRESS ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800' :
                                                             ticket.ticketStatus === TicketStatusEnum.RESOLVED ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800' :
@@ -723,8 +723,8 @@ const TicketsPage: React.FC = () => {
                                                         {ticket.ticketStatus.replace('_', ' ')}
                                                     </span>
                                                 </td>
-                                                <td className="py-4 px-6">
-                                                    <div className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${ticket.priorityEnum === TicketPriorityEnum.URGENT ? 'text-rose-600 dark:text-rose-400' :
+                                                <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className={`inline-flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wider ${ticket.priorityEnum === TicketPriorityEnum.URGENT ? 'text-rose-600 dark:text-rose-400' :
                                                         ticket.priorityEnum === TicketPriorityEnum.HIGH ? 'text-orange-600 dark:text-orange-400' :
                                                             'text-slate-500 dark:text-slate-400'
                                                         }`}>
@@ -734,29 +734,29 @@ const TicketsPage: React.FC = () => {
                                                         {ticket.priorityEnum}
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-6">
+                                                <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
                                                     {ticket.employeeName ? (
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center justify-center gap-2">
                                                             <div className={`w-6 h-6 rounded bg-gradient-to-br ${Config.gradient} flex items-center justify-center text-white text-[10px] font-black`}>
                                                                 {ticket.employeeName.charAt(0).toUpperCase()}
                                                             </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{ticket.employeeName}</span>
-                                                                <span className="text-[10px] text-slate-400">{ticket.employeeEmail}</span>
+                                                            <div className="flex flex-col text-left">
+                                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-tight">{ticket.employeeName}</span>
+                                                                <span className="text-[10px] text-slate-400 leading-tight">{ticket.employeeEmail}</span>
                                                             </div>
                                                         </div>
                                                     ) : (
                                                         <span className="text-xs text-slate-400">-</span>
                                                     )}
                                                 </td>
-                                                <td className="py-4 px-6">
-                                                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                                                         <Clock className="h-3.5 w-3.5" />
                                                         {getTimeAgo(ticket.createdAt)}
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-6 text-right">
-                                                    <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className="flex items-center justify-center gap-1 opacity-100 transition-opacity">
                                                         <button
                                                             onClick={() => router.push(`/support?ticketId=${ticket.id}&ticketTitle=${encodeURIComponent(ticket.subject)}`)}
                                                             className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
@@ -811,305 +811,118 @@ const TicketsPage: React.FC = () => {
                     }
                 >
                     <div className="flex flex-col h-full max-h-[70vh]">
-                        {/* Tabs Header */}
-                        <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto">
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('info')}
-                                className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === 'info'
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <FileText className="h-4 w-4" />
-                                    Ticket Info
-                                </div>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('user')}
-                                className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === 'user'
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <User className="h-4 w-4" />
-                                    User Details
-                                </div>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('admin')}
-                                className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === 'admin'
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Shield className="h-4 w-4" />
-                                    Admin & SLA
-                                </div>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('resolution')}
-                                className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === 'resolution'
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle className="h-4 w-4" />
-                                    Resolution
-                                </div>
-                            </button>
-                        </div>
 
                         {/* Tabs Content */}
                         <form onSubmit={handleSubmit} className="space-y-6 overflow-y-auto pr-2 custom-scrollbar">
 
-                            {/* Tab 1: Ticket Info */}
-                            {activeTab === 'info' && (
-                                <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="md:col-span-2">
-                                            <Input
-                                                label="Subject"
-                                                value={formData.subject}
-                                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                                                placeholder="Ticket subject"
-                                                required
-                                                className="font-bold text-lg"
-                                            />
-                                        </div>
-
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">
-                                                Description
-                                            </label>
-                                            <textarea
-                                                value={formData.description}
-                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                                placeholder="Detailed description..."
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm min-h-[120px] resize-y"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Category</label>
-                                            <select
-                                                value={formData.categoryEnum}
-                                                onChange={(e) => setFormData({ ...formData, categoryEnum: e.target.value as TicketCategoryEnum })}
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
-                                            >
-                                                {Object.values(TicketCategoryEnum).map((cat) => (
-                                                    <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
+                            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="md:col-span-2">
                                         <Input
-                                            label="Sub-Category"
-                                            value={formData.subCategory}
-                                            onChange={(e) => setFormData({ ...formData, subCategory: e.target.value })}
-                                            placeholder="e.g. Printer, Monitor"
+                                            label="Subject"
+                                            value={formData.subject}
+                                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                            placeholder="Ticket subject"
+                                            required
+                                            className="font-bold text-lg"
+                                            disabled={!!editingTicket}
                                         />
-
-                                        <div>
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Priority</label>
-                                            <select
-                                                value={formData.priorityEnum}
-                                                onChange={(e) => setFormData({ ...formData, priorityEnum: e.target.value as TicketPriorityEnum })}
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
-                                            >
-                                                {Object.values(TicketPriorityEnum).map((prio) => (
-                                                    <option key={prio} value={prio}>{prio.toUpperCase()}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Severity</label>
-                                            <select
-                                                value={formData.severityEnum}
-                                                onChange={(e) => setFormData({ ...formData, severityEnum: e.target.value as TicketSeverityEnum })}
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
-                                            >
-                                                {Object.values(TicketSeverityEnum).map((sev) => (
-                                                    <option key={sev} value={sev}>{sev.toUpperCase()}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Status</label>
-                                            <select
-                                                value={formData.ticketStatus}
-                                                onChange={(e) => setFormData({ ...formData, ticketStatus: e.target.value as TicketStatusEnum })}
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
-                                            >
-                                                {Object.values(TicketStatusEnum).map((status) => (
-                                                    <option key={status} value={status}>{status.replace('_', ' ')}</option>
-                                                ))}
-                                            </select>
-                                        </div>
                                     </div>
-                                </div>
-                            )}
 
-                            {/* Tab 2: User Details */}
-                            {activeTab === 'user' && (
-                                <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <Input
-                                            label="Department"
-                                            value={formData.department}
-                                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                                            placeholder="e.g. IT, HR"
-                                            leftIcon={<Building2 className="h-4 w-4" />}
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">
+                                            Description
+                                        </label>
+                                        <textarea
+                                            value={formData.description}
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            placeholder="Detailed description..."
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm min-h-[120px] resize-y disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:text-slate-500"
+                                            disabled={!!editingTicket}
                                         />
-                                        <Input
-                                            label="Location"
-                                            value={formData.location}
-                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                            placeholder="e.g. Floor 2, Building A"
-                                            leftIcon={<MapPin className="h-4 w-4" />}
-                                        />
-                                        <Input
-                                            label="Contact Number"
-                                            value={formData.contactNumber}
-                                            onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-                                            placeholder="+1 234 567 890"
-                                            leftIcon={<Phone className="h-4 w-4" />}
-                                        />
-                                        <Input
-                                            label="Contact Email"
-                                            value={formData.contactEmail}
-                                            onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                                            placeholder="user@example.com"
-                                            leftIcon={<Mail className="h-4 w-4" />}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Category</label>
+                                        <select
+                                            value={formData.categoryEnum}
+                                            onChange={(e) => setFormData({ ...formData, categoryEnum: e.target.value as TicketCategoryEnum })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:text-slate-500"
+                                            disabled={!!editingTicket}
+                                        >
+                                            {Object.values(TicketCategoryEnum).map((cat) => (
+                                                <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Priority</label>
+                                        <select
+                                            value={formData.priorityEnum}
+                                            onChange={(e) => setFormData({ ...formData, priorityEnum: e.target.value as TicketPriorityEnum })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:text-slate-500"
+                                            disabled={!!editingTicket}
+                                        >
+                                            {Object.values(TicketPriorityEnum).map((prio) => (
+                                                <option key={prio} value={prio}>{prio.toUpperCase()}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Severity</label>
+                                        <select
+                                            value={formData.severityEnum}
+                                            onChange={(e) => setFormData({ ...formData, severityEnum: e.target.value as TicketSeverityEnum })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:text-slate-500"
+                                            disabled={!!editingTicket}
+                                        >
+                                            {Object.values(TicketSeverityEnum).map((sev) => (
+                                                <option key={sev} value={sev}>{sev.toUpperCase()}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Status</label>
+                                        <select
+                                            value={formData.ticketStatus}
+                                            onChange={(e) => setFormData({ ...formData, ticketStatus: e.target.value as TicketStatusEnum })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
+                                        >
+                                            {Object.values(TicketStatusEnum).map((status) => (
+                                                <option key={status} value={status}>{status.replace('_', ' ')}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Assign To</label>
+                                        <select
+                                            value={formData.assignAdminId}
+                                            onChange={(e) => setFormData({ ...formData, assignAdminId: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
+                                        >
+                                            <option value="">Select Admin</option>
+                                            {admins.map((admin) => (
+                                                <option key={admin.id} value={admin.id}>{admin.fullName}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Remarks</label>
+                                        <textarea
+                                            value={formData.adminComments}
+                                            onChange={(e) => setFormData({ ...formData, adminComments: e.target.value })}
+                                            placeholder="Add remarks or internal notes..."
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm min-h-[100px] resize-y"
                                         />
                                     </div>
                                 </div>
-                            )}
+                            </div>
 
-                            {/* Tab 3: Admin & SLA */}
-                            {activeTab === 'admin' && (
-                                <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <Input
-                                            label="Assigned Group"
-                                            value={formData.assignedGroup}
-                                            onChange={(e) => setFormData({ ...formData, assignedGroup: e.target.value })}
-                                            placeholder="e.g. Network Team"
-                                            leftIcon={<Users className="h-4 w-4" />}
-                                        />
-                                        <Input
-                                            label="SLA Type"
-                                            value={formData.slaType}
-                                            onChange={(e) => setFormData({ ...formData, slaType: e.target.value })}
-                                            placeholder="e.g. Gold, Silver"
-                                            leftIcon={<Activity className="h-4 w-4" />}
-                                        />
-
-                                        <div>
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Response Due Time</label>
-                                            <input
-                                                type="datetime-local"
-                                                value={formData.responseDueTime}
-                                                onChange={(e) => setFormData({ ...formData, responseDueTime: e.target.value })}
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm"
-                                            />
-                                        </div>
-
-                                        <Input
-                                            label="Escalation Level"
-                                            type="number"
-                                            value={formData.escalationLevel}
-                                            onChange={(e) => setFormData({ ...formData, escalationLevel: parseInt(e.target.value) || 0 })}
-                                            placeholder="0"
-                                            leftIcon={<TrendingUp className="h-4 w-4" />}
-                                        />
-
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">
-                                                Internal Notes (Admin Only)
-                                            </label>
-                                            <textarea
-                                                value={formData.internalNotes}
-                                                onChange={(e) => setFormData({ ...formData, internalNotes: e.target.value })}
-                                                placeholder="Private notes for admins..."
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium shadow-sm min-h-[100px] resize-y"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Tab 4: Resolution & Feedback */}
-                            {activeTab === 'resolution' && (
-                                <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">
-                                                Root Cause
-                                            </label>
-                                            <textarea
-                                                value={formData.rootCause}
-                                                onChange={(e) => setFormData({ ...formData, rootCause: e.target.value })}
-                                                placeholder="Analysis of the root cause..."
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm min-h-[80px] resize-y"
-                                            />
-                                        </div>
-
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">
-                                                Resolution Summary
-                                            </label>
-                                            <textarea
-                                                value={formData.resolutionSummary}
-                                                onChange={(e) => setFormData({ ...formData, resolutionSummary: e.target.value })}
-                                                placeholder="Steps taken to resolve..."
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm min-h-[80px] resize-y"
-                                            />
-                                        </div>
-
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">
-                                                Closure Remarks
-                                            </label>
-                                            <textarea
-                                                value={formData.closureRemarks}
-                                                onChange={(e) => setFormData({ ...formData, closureRemarks: e.target.value })}
-                                                placeholder="Final remarks..."
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm min-h-[80px] resize-y"
-                                            />
-                                        </div>
-
-                                        <Input
-                                            label="User Rating (1-5)"
-                                            type="number"
-                                            min={0}
-                                            max={5}
-                                            value={formData.userRating}
-                                            onChange={(e) => setFormData({ ...formData, userRating: parseInt(e.target.value) || 0 })}
-                                            placeholder="0"
-                                            leftIcon={<Star className="h-4 w-4" />}
-                                        />
-
-                                        <Input
-                                            label="Time Spent (Minutes)"
-                                            type="number"
-                                            value={formData.timeSpentMinutes}
-                                            onChange={(e) => setFormData({ ...formData, timeSpentMinutes: parseInt(e.target.value) || 0 })}
-                                            placeholder="0"
-                                            leftIcon={<Clock className="h-4 w-4" />}
-                                        />
-                                    </div>
-                                </div>
-                            )}
                         </form>
                     </div>
                 </Modal>

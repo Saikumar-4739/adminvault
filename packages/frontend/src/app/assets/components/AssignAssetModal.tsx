@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { assetService, employeeService, workflowService } from '@/lib/api/services';
-import { ApprovalTypeEnum, CreateApprovalRequestModel, CompanyIdRequestModel, AssignAssetOpRequestModel } from '@adminvault/shared-models';
+import { ApprovalTypeEnum, CreateApprovalRequestModel, IdRequestModel, AssignAssetOpRequestModel } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -34,7 +34,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
     const fetchEmployees = useCallback(async () => {
         if (!user?.companyId) return;
         try {
-            const req = new CompanyIdRequestModel(user.companyId);
+            const req = new IdRequestModel(user.companyId);
             const response = await employeeService.getAllEmployees(req as any);
             if (response.status) {
                 setEmployees(response.data || []);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { companyService, employeeService, applicationService, licensesService } from '@/lib/api/services';
-import { UserRoleEnum, CreateLicenseModel, DeleteLicenseModel, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { UserRoleEnum, CreateLicenseModel, DeleteLicenseModel, IdRequestModel } from '@adminvault/shared-models';
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
     Plus, Key, Trash2, Shield, Pencil, Clock, Search,
@@ -91,7 +91,7 @@ const LicensesPage: React.FC = () => {
     const fetchLicenses = useCallback(async () => {
         if (!selectedCompanyId) return;
         try {
-            const req = new CompanyIdRequestModel(Number(selectedCompanyId));
+            const req = new IdRequestModel(Number(selectedCompanyId));
             const response: any = await licensesService.getAllLicenses(req);
             if (response.status) {
                 const data = response.data || [];
@@ -107,7 +107,7 @@ const LicensesPage: React.FC = () => {
     const fetchEmployees = useCallback(async () => {
         if (!user?.companyId) return;
         try {
-            const req = new CompanyIdRequestModel(user.companyId);
+            const req = new IdRequestModel(user.companyId);
             const response = await employeeService.getAllEmployees(req as any);
             if (response.status) {
                 setAllEmployees(response.data || []);

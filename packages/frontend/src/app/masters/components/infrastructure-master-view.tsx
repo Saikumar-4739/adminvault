@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreateInfrastructureMasterModel, UpdateInfrastructureMasterModel, InfrastructureMaster, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateInfrastructureMasterModel, UpdateInfrastructureMasterModel, InfrastructureMaster, IdRequestModel } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
@@ -38,7 +38,7 @@ export const InfrastructureMasterView: React.FC<InfrastructureMasterViewProps> =
     const getAllInfrastructure = async (): Promise<void> => {
         if (!user?.companyId) return;
         try {
-            const req = new CompanyIdRequestModel(user.companyId);
+            const req = new IdRequestModel(user.companyId);
             const response = await infrastructureService.getAllInfrastructure(req);
             if (response.status) {
                 setInfrastructure(response.data || []);

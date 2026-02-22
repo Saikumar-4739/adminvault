@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { dashboardService } from '@/lib/api/services';
-import { CompanyIdRequestModel, DashboardStatsResponseModel } from '@adminvault/shared-models';
+import { IdRequestModel, DashboardStatsResponseModel } from '@adminvault/shared-models';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface DashboardStats {
@@ -52,7 +52,7 @@ export function useDashboardStats() {
 
             try {
                 setIsLoading(true);
-                const req = new CompanyIdRequestModel(user.companyId);
+                const req = new IdRequestModel(user.companyId);
                 const response = await dashboardService.getDashboardStats(req);
 
                 if (response && response.status && response.data) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreateLicenseMasterModel, UpdateLicenseMasterModel, License, CompanyIdRequestModel } from '@adminvault/shared-models';
+import { CreateLicenseMasterModel, UpdateLicenseMasterModel, License, IdRequestModel } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
@@ -38,7 +38,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
     const getAllLicenses = async (): Promise<void> => {
         try {
             if (!user?.companyId) return;
-            const req = new CompanyIdRequestModel(user.companyId);
+            const req = new IdRequestModel(user.companyId);
             const response = await licenseService.getAllLicenses(req);
             if (response.status) {
                 setLicenses(response.licenses || []);

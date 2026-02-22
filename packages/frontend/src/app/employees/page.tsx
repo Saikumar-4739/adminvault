@@ -10,7 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Plus, Users, Edit, Trash2, Mail, Phone, LayoutGrid, List, Search, Upload } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, CompanyIdRequestModel, CreateEmployeeModel, UpdateEmployeeModel, EmployeeStatusEnum } from '@adminvault/shared-models';
+import { UserRoleEnum, IdRequestModel, CreateEmployeeModel, UpdateEmployeeModel, EmployeeStatusEnum } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -64,7 +64,7 @@ const EmployeesPage: React.FC = () => {
     const fetchEmployees = useCallback(async () => {
         try {
             // If selectedOrg is empty or 0, it fetches all employees
-            const req = new CompanyIdRequestModel(Number(selectedOrg) || 0);
+            const req = new IdRequestModel(Number(selectedOrg) || 0);
             const response = await employeeService.getAllEmployees(req);
             if (response.status) {
                 const data = response.data || [];
