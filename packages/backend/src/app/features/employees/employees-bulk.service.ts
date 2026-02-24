@@ -18,24 +18,35 @@ export class EmployeesBulkService {
     async processBulkImport(reqModel: BulkImportRequestModel): Promise<BulkImportResponseModel> {
         try {
             const { fileBuffer, companyId, userId } = reqModel;
+
+            // ── Departments ───────────────────────────────────────────────
             const departments = await this.departmentRepo.find();
             const deptIdSet = new Set<number>(departments.map(d => d.id));
             const deptNameMap = new Map<string, number>();
+            departments.forEach(d => deptNameMap.set(d.name.toLowerCase().trim(), d.id));
 
-            departments.forEach(d => {
-                const normalizedName = d.name.toLowerCase().trim();
-                deptNameMap.set(normalizedName, d.id);
-            });
-
-            const companyExists = await this.dataSource.getRepository(CompanyInfoEntity).findOne({ where: { id: companyId } });
-            if (!companyExists) {
-                return new BulkImportResponseModel(false, 400, "Invalid Company ID", 0, 0, []);
+            // ── Company validation ─────────────────────────────────────────
+            const companyRepo = this.dataSource.getRepository(CompanyInfoEntity);
+            const company = await companyRepo.findOne({ where: { id: companyId } });
+            if (!company) {
+                return new BulkImportResponseModel(false, 400, 'Invalid Company ID', 0, 0, []);
             }
+            const expectedCompanyName = company.companyName.toLowerCase().trim();
+
+            // ── Existing employees (for email dedup & manager resolution) ──
             const existingEmployees = await this.employeesRepo.find({ where: { companyId } });
             const existingEmailSet = new Set(existingEmployees.map(e => e.email.toLowerCase()));
             const emailToIdMap = new Map<string, number>();
-            existingEmployees.forEach(e => emailToIdMap.set(e.email.toLowerCase(), e.id));
-            const idSet = new Set(existingEmployees.map(e => e.id));
+            const nameToIdMap = new Map<string, number>(); // "firstname lastname" → id
+            const idSet = new Set<number>(existingEmployees.map(e => e.id));
+
+            existingEmployees.forEach(e => {
+                emailToIdMap.set(e.email.toLowerCase(), e.id);
+                const fullName = `${e.firstName} ${e.lastName}`.toLowerCase().trim();
+                nameToIdMap.set(fullName, e.id);
+            });
+
+            // ── Parse workbook ─────────────────────────────────────────────
             const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
@@ -53,6 +64,7 @@ export class EmployeesBulkService {
                 if (!row || row.length === 0) continue;
 
                 try {
+                    // Col 0-8 (same as before), Col 9 = optional company name
                     const firstName = row[0]?.toString().trim();
                     const lastName = row[1]?.toString().trim();
                     const email = row[2]?.toString().trim();
@@ -62,56 +74,69 @@ export class EmployeesBulkService {
                     const billingAmount = Number(row[6]);
                     const remarks = row[7]?.toString().trim();
                     const managerInput = row[8]?.toString().trim();
+                    const rowCompanyName = row[9]?.toString().trim(); // optional
+
+                    // ── Required fields ───────────────────────────────────
                     if (!firstName) throw new Error('First Name is required');
                     if (!lastName) throw new Error('Last Name is required');
                     if (!email) throw new Error('Email is required');
 
+                    // ── Company name validation (optional column) ─────────
+                    if (rowCompanyName) {
+                        if (rowCompanyName.toLowerCase() !== expectedCompanyName) {
+                            throw new Error(
+                                `Company name '${rowCompanyName}' does not match the selected company '${company.companyName}'.`
+                            );
+                        }
+                    }
+
+                    // ── Department resolution ─────────────────────────────
                     let resolvedDepartmentId: number | undefined;
-
                     if (depInput) {
-                        if (!isNaN(Number(depInput))) {
-                            const idToCheck = Number(depInput);
-                            if (deptIdSet.has(idToCheck)) {
-                                resolvedDepartmentId = idToCheck;
-                            }
+                        if (!isNaN(Number(depInput)) && deptIdSet.has(Number(depInput))) {
+                            resolvedDepartmentId = Number(depInput);
                         }
-
                         if (!resolvedDepartmentId) {
-                            const nameToCheck = depInput.toString().toLowerCase().trim();
-                            if (deptNameMap.has(nameToCheck)) {
-                                resolvedDepartmentId = deptNameMap.get(nameToCheck);
-                            }
+                            resolvedDepartmentId = deptNameMap.get(depInput.toString().toLowerCase().trim());
                         }
                     }
-
                     if (!resolvedDepartmentId) {
-                        throw new Error(`Department '${depInput}' not found. Please provide a valid Department Name or ID.`);
+                        throw new Error(`Department '${depInput}' not found. Use a valid Department Name or ID.`);
                     }
 
+                    // ── Email duplicate check ──────────────────────────────
                     if (existingEmailSet.has(email.toLowerCase())) {
-                        throw new Error(`Email ${email} already exists`);
+                        throw new Error(`Email '${email}' already exists`);
                     }
 
+                    // ── Manager resolution: ID → Email → Full Name ─────────
                     let resolvedManagerId: number | undefined;
                     if (managerInput) {
+                        // 1. Try numeric ID
                         if (!isNaN(Number(managerInput))) {
-                            const idToCheck = Number(managerInput);
-                            if (idSet.has(idToCheck)) {
-                                resolvedManagerId = idToCheck;
-                            }
+                            const numId = Number(managerInput);
+                            if (idSet.has(numId)) resolvedManagerId = numId;
                         }
-
+                        // 2. Try email
                         if (!resolvedManagerId) {
-                            const emailToCheck = managerInput.toLowerCase();
-                            if (emailToIdMap.has(emailToCheck)) {
-                                resolvedManagerId = emailToIdMap.get(emailToCheck);
-                            }
+                            resolvedManagerId = emailToIdMap.get(managerInput.toLowerCase());
+                        }
+                        // 3. Try full name "First Last"
+                        if (!resolvedManagerId) {
+                            resolvedManagerId = nameToIdMap.get(managerInput.toLowerCase());
+                        }
+                        // 4. Not found → error
+                        if (!resolvedManagerId) {
+                            throw new Error(
+                                `Manager '${managerInput}' not found. Provide a valid Employee ID, Email, or Full Name (First Last).`
+                            );
                         }
                     }
 
-                    let status = EmployeeStatusEnum.ACTIVE;
-                    if (statusStr === 'inactive') status = EmployeeStatusEnum.INACTIVE;
+                    // ── Status ────────────────────────────────────────────
+                    const status = statusStr === 'inactive' ? EmployeeStatusEnum.INACTIVE : EmployeeStatusEnum.ACTIVE;
 
+                    // ── Save ──────────────────────────────────────────────
                     const newEmployee = new EmployeesEntity();
                     newEmployee.companyId = companyId;
                     newEmployee.userId = userId;
@@ -125,15 +150,26 @@ export class EmployeesBulkService {
                     newEmployee.remarks = remarks;
                     newEmployee.managerId = resolvedManagerId;
                     newEmployee.createdAt = new Date();
+
                     await this.employeesRepo.save(newEmployee);
+
+                    // Update in-memory maps so later rows can reference this new employee as manager
                     existingEmailSet.add(email.toLowerCase());
+                    emailToIdMap.set(email.toLowerCase(), newEmployee.id);
+                    nameToIdMap.set(`${firstName} ${lastName}`.toLowerCase(), newEmployee.id);
+                    idSet.add(newEmployee.id);
+
                     successCount++;
                 } catch (err: any) {
                     errors.push({ row: i + 1, error: err.message });
                 }
             }
 
-            return new BulkImportResponseModel(true, 200, `Processed ${rows.length - 1} rows. Success: ${successCount}, Failed: ${errors.length}`, successCount, errors.length, errors);
+            return new BulkImportResponseModel(
+                true, 200,
+                `Processed ${rows.length - 1} rows. Success: ${successCount}, Failed: ${errors.length}`,
+                successCount, errors.length, errors
+            );
         } catch (error: any) {
             throw error;
         }

@@ -1,12 +1,11 @@
-import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
-import { TicketsEntity } from './tickets.entity';
 
 @Entity('ticket_messages')
 @Index('idx_msg_ticket', ['ticketId'])
 @Index('idx_msg_sender', ['senderId'])
 export class TicketMessageEntity extends CommonBaseEntity {
-    @Column('bigint', { name: 'ticket_id', nullable: false })
+    @Column('bigint', { name: 'ticket_id', nullable: true })
     ticketId: number;
 
     @Column('bigint', { name: 'sender_id', nullable: false })
@@ -17,8 +16,4 @@ export class TicketMessageEntity extends CommonBaseEntity {
 
     @Column('text', { name: 'message', nullable: false })
     message: string;
-
-    @ManyToOne(() => TicketsEntity)
-    @JoinColumn({ name: 'ticket_id' })
-    ticket: TicketsEntity;
 }

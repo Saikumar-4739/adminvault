@@ -188,57 +188,45 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                             </Button>
                         </div>
 
-                        <div className="grid gap-4 md:grid-cols-2">
-                            {/* Brands Summary */}
-                            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
-                                <h4 className="font-bold text-sm mb-3">Brands</h4>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Success</span>
-                                        <span className="font-bold text-green-600">{result.brands?.success || 0}</span>
+                        <div className="grid gap-3 md:grid-cols-2">
+                            {[
+                                { key: 'brands', label: 'Brands' },
+                                { key: 'departments', label: 'Departments' },
+                                { key: 'companies', label: 'Companies' },
+                                { key: 'assetTypes', label: 'Asset Types' },
+                                { key: 'licenses', label: 'Licenses' },
+                                { key: 'vendors', label: 'Vendors' },
+                            ].map(({ key, label }) => {
+                                const cat = result[key];
+                                if (!cat) return null;
+                                return (
+                                    <div key={key} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+                                        <h4 className="font-bold text-sm mb-3">{label}</h4>
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-500">Success</span>
+                                                <span className="font-bold text-green-600">{cat.success || 0}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-500">Failed</span>
+                                                <span className="font-bold text-red-600">{cat.failed || 0}</span>
+                                            </div>
+                                        </div>
+                                        {cat.errors?.length > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                                                <p className="text-xs font-bold text-red-500 mb-1">Errors:</p>
+                                                <ul className="text-xs text-red-500/80 space-y-1 max-h-24 overflow-y-auto">
+                                                    {cat.errors.map((err: string, i: number) => (
+                                                        <li key={i}>• {err}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Failed</span>
-                                        <span className="font-bold text-red-600">{result.brands?.failed || 0}</span>
-                                    </div>
-                                </div>
-                                {result.brands?.errors?.length > 0 && (
-                                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
-                                        <p className="text-xs font-bold text-red-500 mb-2">Errors:</p>
-                                        <ul className="text-xs text-red-500/80 space-y-1 max-h-32 overflow-y-auto">
-                                            {result.brands.errors.map((err: string, i: number) => (
-                                                <li key={i}>• {err}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Departments Summary */}
-                            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
-                                <h4 className="font-bold text-sm mb-3">Departments</h4>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Success</span>
-                                        <span className="font-bold text-green-600">{result.departments?.success || 0}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Failed</span>
-                                        <span className="font-bold text-red-600">{result.departments?.failed || 0}</span>
-                                    </div>
-                                </div>
-                                {result.departments?.errors?.length > 0 && (
-                                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
-                                        <p className="text-xs font-bold text-red-500 mb-2">Errors:</p>
-                                        <ul className="text-xs text-red-500/80 space-y-1 max-h-32 overflow-y-auto">
-                                            {result.departments.errors.map((err: string, i: number) => (
-                                                <li key={i}>• {err}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
+                                );
+                            })}
                         </div>
+
                         {result.others?.length > 0 && (
                             <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30">
                                 <h4 className="font-bold text-sm text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-2">

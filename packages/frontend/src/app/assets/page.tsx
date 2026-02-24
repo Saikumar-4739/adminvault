@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import {
     Package, Warehouse, History, Plus, FileUp, Filter,
-    Activity, CheckCircle2, User, RefreshCw
+    Activity, CheckCircle2, User, RefreshCw, Clock, AlertCircle, Check
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
+import { Button } from '@/components/ui/Button';
 
 import { ModernTabs } from './components/ModernTabs';
 import { AllAssetsTab } from './components/AllAssetsTab';
@@ -26,9 +27,11 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { UserRoleEnum } from '@adminvault/shared-models';
 
 import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
-import { assetService, companyService } from '@/lib/api/services';
+import { assetService, companyService, workflowService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
-import { AssetSearchRequestModel, IdRequestModel } from '@adminvault/shared-models';
+import { AssetSearchRequestModel, IdRequestModel, GetPendingApprovalsRequestModel, WebSocketEvent } from '@adminvault/shared-models';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWebSocketEvent } from '@/hooks/useWebSocket';
 
 interface Asset {
     id: number;
@@ -62,10 +65,12 @@ interface AssetStatistics {
 }
 
 const AssetsPage: React.FC = () => {
-    // const { user } = useAuth(); // user is not used anymore
+    const { user } = useAuth();
     const [selectedCompanyId, setSelectedCompanyId] = useState<number>(0);
     const [companies, setCompanies] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState('store');
+    const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+    const [approvalsLoading, setApprovalsLoading] = useState(false);
 
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
@@ -147,10 +152,45 @@ const AssetsPage: React.FC = () => {
         }
     }, [selectedCompanyId]);
 
+    const fetchPendingApprovals = React.useCallback(async () => {
+        if (!user?.companyId) return;
+        try {
+            setApprovalsLoading(true);
+            const req = new GetPendingApprovalsRequestModel(user.companyId);
+            const res = await workflowService.getPendingApprovals(req);
+            if (res.status) {
+                setPendingApprovals((res as any).approvals || []);
+            }
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to fetch pending approvals');
+        } finally {
+            setApprovalsLoading(false);
+        }
+    }, [user?.companyId]);
+
+    const handleDeapprove = async (approvalId: number) => {
+        try {
+            const res = await workflowService.rejectRequest({
+                requestId: approvalId,
+                actionByUserId: user!.id,
+                remarks: 'Request Cancelled'
+            });
+            if (res.status) {
+                AlertMessages.getSuccessMessage('Approval request cancelled. Asset moved back to Store.');
+                refresh();
+            } else {
+                AlertMessages.getErrorMessage(res.message);
+            }
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to cancel approval request');
+        }
+    };
+
     const refresh = React.useCallback(() => {
         fetchAssets();
         fetchStatistics();
-    }, [fetchAssets, fetchStatistics]);
+        fetchPendingApprovals();
+    }, [fetchAssets, fetchStatistics, fetchPendingApprovals]);
 
     React.useEffect(() => {
         refresh();
@@ -166,6 +206,22 @@ const AssetsPage: React.FC = () => {
             setFetchError(null);
         }
     }, [fetchError]);
+
+    // WebSocket listeners for real-time updates
+    useWebSocketEvent(WebSocketEvent.APPROVAL_PENDING, () => {
+        console.log('[WS] Approval pending - refreshing...');
+        refresh();
+    });
+
+    useWebSocketEvent(WebSocketEvent.APPROVAL_APPROVED, () => {
+        console.log('[WS] Approval approved - refreshing...');
+        refresh();
+    });
+
+    useWebSocketEvent(WebSocketEvent.APPROVAL_REJECTED, () => {
+        console.log('[WS] Approval rejected - refreshing...');
+        refresh();
+    });
 
     const searchAssets = React.useCallback(async (filters: any) => {
         // if (!selectedCompanyId) return; // Allow 0
@@ -217,8 +273,15 @@ const AssetsPage: React.FC = () => {
         }
     }, [selectedCompanyId]);
 
+
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        if (tab === 'pending_approvals') fetchPendingApprovals();
+    };
+
     const tabs = [
         { id: 'store', label: 'Store Assets', icon: Warehouse, gradient: 'from-emerald-500 to-teal-500' },
+        { id: 'pending_approvals', label: 'Pending Approvals', icon: Clock, gradient: 'from-indigo-500 to-purple-500' },
         { id: 'assigned', label: 'Assigned Assets', icon: User, gradient: 'from-blue-500 to-indigo-500' },
         { id: 'maintenance', label: 'Maintenance Assets', icon: RefreshCw, gradient: 'from-orange-500 to-amber-500' },
         { id: 'not_used', label: 'Not Used Assets', icon: History, gradient: 'from-slate-500 to-gray-500' }
@@ -369,11 +432,11 @@ const AssetsPage: React.FC = () => {
                     />
                 </div>
 
-                <ModernTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
+                <ModernTabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange}>
                     <div className="mt-6">
                         {activeTab === 'store' && (
                             <AllAssetsTab
-                                assets={assets}
+                                assets={assets.filter(a => !pendingApprovals.some(p => p.referenceId === a.id))}
                                 isLoading={isLoading}
                                 status="available"
                                 onEdit={handleEdit}
@@ -382,6 +445,85 @@ const AssetsPage: React.FC = () => {
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
                             />
+                        )}
+                        {activeTab === 'pending_approvals' && (
+                            approvalsLoading ? (
+                                <div className="flex items-center justify-center py-20">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent" />
+                                </div>
+                            ) : pendingApprovals.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+                                    <div className="w-16 h-16 bg-gradient-to-tr from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-full flex items-center justify-center mb-4">
+                                        <Check className="w-8 h-8 text-indigo-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Pending Approvals</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">All asset requests have been reviewed.</p>
+                                </div>
+                            ) : (
+                                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                                    {pendingApprovals.map((approval) => {
+                                        const asset = assets.find(a => a.id === approval.referenceId);
+                                        return (
+                                            <div key={approval.id} className="flex flex-col bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900/50 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                                                <div className="h-1.5 w-full bg-gradient-to-r from-indigo-400 to-purple-500" />
+                                                <div className="p-5 flex flex-col gap-3">
+                                                    {/* Header row */}
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/30">
+                                                                <Package className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                                                                    {asset?.assetName || `Asset #${approval.referenceId}`}
+                                                                </p>
+                                                                {asset?.serialNumber && (
+                                                                    <p className="text-[10px] text-slate-400 font-medium">SN: {asset.serialNumber}</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-200 dark:border-amber-800 whitespace-nowrap">
+                                                            <Clock className="w-2.5 h-2.5" />
+                                                            Pending
+                                                        </span>
+                                                    </div>
+                                                    {/* Details */}
+                                                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                                                        {asset?.assetType && (
+                                                            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-lg px-3 py-2">
+                                                                <p className="text-slate-400 font-semibold mb-0.5">Type</p>
+                                                                <p className="text-slate-700 dark:text-slate-200 font-bold">{asset.assetType}</p>
+                                                            </div>
+                                                        )}
+                                                        <div className="bg-slate-50 dark:bg-slate-800/60 rounded-lg px-3 py-2">
+                                                            <p className="text-slate-400 font-semibold mb-0.5">Submitted</p>
+                                                            <p className="text-slate-700 dark:text-slate-200 font-bold">{new Date(approval.createdAt).toLocaleDateString()}</p>
+                                                        </div>
+                                                    </div>
+                                                    {/* Remarks */}
+                                                    {approval.description && (
+                                                        <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg px-3 py-2 border border-indigo-100 dark:border-indigo-800/40">
+                                                            <p className="text-[10px] text-indigo-400 font-semibold uppercase tracking-wider mb-0.5">Remarks</p>
+                                                            <p className="text-xs text-indigo-700 dark:text-indigo-300 line-clamp-2">{approval.description}</p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* De-approve / Cancel button */}
+                                                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                                        <Button
+                                                            variant="outline"
+                                                            className="w-full h-9 text-xs font-bold uppercase tracking-wide text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/20"
+                                                            onClick={() => handleDeapprove(approval.id)}
+                                                        >
+                                                            ✕ Cancel Request
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )
                         )}
                         {activeTab === 'assigned' && (
                             <AllAssetsTab

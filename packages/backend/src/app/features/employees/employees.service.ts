@@ -62,13 +62,7 @@ export class EmployeesService {
             const savedEmployee = await transManager.getRepository(EmployeesEntity).save(newEmployee);
 
             // Automatically create Individual Identity (Email Info)
-            const emailReq = new CreateEmailInfoModel(
-                reqModel.companyId,
-                EmailTypeEnum.USER,
-                deptExists.name,
-                reqModel.email,
-                savedEmployee.id
-            );
+            const emailReq = new CreateEmailInfoModel(reqModel.companyId, EmailTypeEnum.USER, deptExists.name, reqModel.email, savedEmployee.id);
             await this.emailInfoService.createEmailInfo(emailReq);
 
             await transManager.completeTransaction();
@@ -138,25 +132,7 @@ export class EmployeesService {
                 }
             }
 
-            const employeeResponse = new EmployeeResponseModel(
-                employee.id,
-                employee.companyId,
-                employee.firstName,
-                employee.lastName,
-                employee.email,
-                employee.departmentId,
-                employee.empStatus,
-                employee.phNumber,
-                employee.billingAmount,
-                employee.remarks,
-                deptName,
-                employee.slackUserId,
-                employee.slackDisplayName,
-                employee.slackAvatar,
-                employee.isSlackActive,
-                employee.managerId,
-                managerName
-            );
+            const employeeResponse = new EmployeeResponseModel(employee.id, employee.companyId, employee.firstName, employee.lastName, employee.email, employee.departmentId, employee.empStatus, employee.phNumber, employee.billingAmount, employee.remarks, deptName, employee.slackUserId, employee.slackDisplayName, employee.slackAvatar, employee.isSlackActive, employee.managerId, managerName);
             return new GetEmployeeResponseModel(true, 0, "Employee retrieved successfully", employeeResponse);
         } catch (error) {
             throw error;
@@ -175,22 +151,11 @@ export class EmployeesService {
             }
 
             const deptIds = [...new Set(employees.map(e => Number(e.departmentId)))];
-            console.log('DEBUG: deptIds (casted to number):', deptIds);
-
             const deptMap = new Map<number, string>();
 
             if (deptIds.length > 0) {
-                const departments = await this.dataSource.getRepository(DepartmentsMasterEntity).find({
-                    where: { id: In(deptIds) }
-                });
-                console.log('DEBUG: Departments found:', departments.length);
-                if (departments.length > 0) {
-                    console.log('DEBUG: First Department:', departments[0]);
-                    console.log('DEBUG: Department ID type:', typeof departments[0].id);
-                }
-
+                const departments = await this.dataSource.getRepository(DepartmentsMasterEntity).find({ where: { id: In(deptIds) } });
                 departments.forEach(d => {
-                    // console.log(`DEBUG: Mapping Dept ID ${d.id} (${typeof d.id}) -> ${d.name}`);
                     deptMap.set(Number(d.id), d.name);
                 });
             }
@@ -198,31 +163,11 @@ export class EmployeesService {
             const managerIds = [...new Set(employees.filter(e => e.managerId).map(e => Number(e.managerId)))];
             const managerMap = new Map<number, string>();
             if (managerIds.length > 0) {
-                const managers = await this.employeesRepo.find({
-                    where: { id: In(managerIds) }
-                });
+                const managers = await this.employeesRepo.find({ where: { id: In(managerIds) } });
                 managers.forEach(m => managerMap.set(Number(m.id), `${m.firstName} ${m.lastName}`));
             }
 
-            const employeeResponses = employees.map(emp => new EmployeeResponseModel(
-                emp.id,
-                emp.companyId,
-                emp.firstName,
-                emp.lastName,
-                emp.email,
-                emp.departmentId,
-                emp.empStatus,
-                emp.phNumber,
-                emp.billingAmount,
-                emp.remarks,
-                deptMap.get(Number(emp.departmentId)) || `Dept ID: ${emp.departmentId}`,
-                emp.slackUserId,
-                emp.slackDisplayName,
-                emp.slackAvatar,
-                emp.isSlackActive,
-                emp.managerId,
-                managerMap.get(Number(emp.managerId)) || ''
-            ));
+            const employeeResponses = employees.map(emp => new EmployeeResponseModel(emp.id, emp.companyId, emp.firstName, emp.lastName, emp.email, emp.departmentId, emp.empStatus, emp.phNumber, emp.billingAmount, emp.remarks, deptMap.get(Number(emp.departmentId)), emp.slackUserId, emp.slackDisplayName, emp.slackAvatar, emp.isSlackActive, emp.managerId, managerMap.get(Number(emp.managerId)) || ''));
             return new GetAllEmployeesResponseModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {
             throw error;

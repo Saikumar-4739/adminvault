@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { SoftwareMasterEntity } from './entities/software-master.entity';
 import { AssetSoftwareEntity } from './entities/asset-software.entity';
 import { SoftwareModel, AssetSoftwareModel, GlobalResponse, GetAssetSoftwareRequestModel, InstallSoftwareRequestModel } from '@adminvault/shared-models';
@@ -39,13 +39,20 @@ export class SoftwareService {
     async getAssetSoftware(reqModel: GetAssetSoftwareRequestModel): Promise<AssetSoftwareModel[]> {
         try {
             const assetId = reqModel.assetId;
-            const installed = await this.assetSoftwareRepo.find({
-                where: { assetId },
-                relations: ['software']
-            });
+            const installed = await this.assetSoftwareRepo.find({ where: { assetId } });
+
+            // Fetch software info separately
+            const softwareIds = [...new Set(installed.map(i => Number(i.softwareId)).filter(Boolean))];
+            const softwareList = softwareIds.length > 0
+                ? await this.softwareRepo.find({ where: { id: In(softwareIds) } })
+                : [];
+            const softwareMap = new Map<number, string>();
+            softwareList.forEach(s => softwareMap.set(Number(s.id), s.name));
 
             return installed.map(i => new AssetSoftwareModel(
-                Number(i.assetId), Number(i.softwareId), i.installedAt, i.status, i.software?.name, i.lastPatchedAt
+                Number(i.assetId), Number(i.softwareId), i.installedAt, i.status,
+                softwareMap.get(Number(i.softwareId)),
+                i.lastPatchedAt
             ));
         } catch (error) {
             throw error;

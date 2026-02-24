@@ -558,7 +558,7 @@ export class EmailInfoService {
     const mailOptions = {
       from: `"AdminVault Assets" <${emailUser}>`,
       to: approverEmail,
-      subject: `[Approval Request] Asset Inventory Review - ${requesterName}`,
+      subject: `[Action Required] Asset Assignment Approval Request from ${requesterName}`,
       html: `
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
   <tr>
@@ -576,8 +576,9 @@ export class EmailInfoService {
         <tr>
           <td style="padding:16px 20px;font-size:14px;color:#111827;">
             Hello,<br><br>
-            <strong>${requesterName}</strong> has requested your approval for the current asset inventory state.
-            ${message ? `<br><br><em>"${message}"</em>` : ''}
+            <strong>${requesterName}</strong> has submitted an <strong>asset assignment request</strong> that requires your approval as their manager.
+            ${message ? `<br><br><strong>Remarks:</strong> <em>"${message}"</em>` : ''}
+            <br><br>Please log in to AdminVault and review the pending approval request.
           </td>
         </tr>
 
@@ -617,10 +618,10 @@ export class EmailInfoService {
         <!-- Button -->
         <tr>
           <td align="center" style="padding:20px;">
-            <a href="${frontendUrl}/assets"
+            <a href="${frontendUrl}/approvals"
                style="background:#4f46e5;color:#ffffff;padding:10px 18px;
                       text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
-              Review Inventory
+              Review Approval Request
             </a>
           </td>
         </tr>

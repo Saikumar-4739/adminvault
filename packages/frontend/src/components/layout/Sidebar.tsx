@@ -87,8 +87,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                         {hasChildren ? (
                             <button
                                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all group ${isExpanded
-                                    ? 'text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-900/50'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
+                                    ? 'text-white bg-slate-900/50'
+                                    : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
@@ -101,11 +101,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                             <Link
                                 href={`/${item.key === 'dashboard' ? 'dashboard' : item.key}`}
                                 className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${isActive
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
+                                    ? 'bg-blue-900/20 text-blue-400'
+                                    : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                                     }`}
                             >
-                                <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                                <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-600'}`} />
                                 <span className="text-sm font-semibold tracking-tight truncate">{item.label}</span>
                             </Link>
                         )}
@@ -113,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                 </div>
 
                 {hasChildren && isExpanded && (
-                    <div className="ml-4 pl-4 border-l border-slate-100 dark:border-slate-800 mt-0.5 space-y-0.5 pr-3">
+                    <div className="ml-4 pl-4 border-l border-slate-800 mt-0.5 space-y-0.5 pr-3">
                         {children.map((child: any) => renderMenuItem(child, depth + 1))}
                     </div>
                 )}
@@ -127,19 +127,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         <aside className={`
             fixed lg:static inset-y-0 left-0 z-[60]
             h-screen flex flex-col transition-all duration-300 ease-in-out 
-            border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950
+            border-r border-slate-800 bg-slate-950
             ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
             lg:w-72 w-72
         `}>
-            <div className={`h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-900`}>
+            <div className={`h-16 flex items-center px-6 border-b border-slate-900`}>
                 <div className="flex items-center gap-3 w-full">
                     <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
                         <Cpu className="h-5 w-5" />
                     </div>
-                    <h1 className="text-lg font-black text-slate-900 dark:text-white tracking-tight flex-1">
+                    <h1 className="text-lg font-black text-white tracking-tight flex-1">
                         AdminVault
                     </h1>
-                    <button onClick={onClose} className="lg:hidden p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                    <button onClick={onClose} className="lg:hidden p-1 rounded-md hover:bg-slate-800 text-slate-400">
                         <ChevronLeft className="h-5 w-5" />
                     </button>
                 </div>

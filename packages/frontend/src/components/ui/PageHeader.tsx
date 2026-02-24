@@ -74,7 +74,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                                 size="sm"
                                 onClick={action.onClick}
                                 leftIcon={action.icon}
-                                className="font-bold rounded-lg shadow-sm h-8"
+                                className="font-semibold rounded-lg shadow-sm h-7 text-xs px-2.5"
                             >
                                 {action.label}
                             </Button>

@@ -1,5 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { AuthUsersEntity } from './auth-users.entity';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Index } from 'typeorm';
 
 @Entity('auth_tokens')
 @Index('idx_token_user', ['userId'])
@@ -9,10 +8,6 @@ export class AuthTokensEntity {
 
     @Column('bigint', { name: 'user_id', nullable: false, comment: 'Reference to auth_users table' })
     userId: number;
-
-    @ManyToOne(() => AuthUsersEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'user_id' })
-    user: AuthUsersEntity;
 
     @Column('varchar', { name: 'token', length: 512, nullable: false, comment: 'Hashed or plain refresh token' })
     token: string;

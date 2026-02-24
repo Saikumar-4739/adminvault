@@ -1,9 +1,6 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, Index } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { POStatusEnum } from '@adminvault/shared-models';
-import { VendorsMasterEntity } from '../../masters/vendor/entities/vendor.entity';
-import { EmployeesEntity } from '../../employees/entities/employees.entity';
-import { PurchaseOrderItemEntity } from './purchase-order-item.entity';
 
 @Entity('purchase_orders')
 @Index('idx_po_number', ['poNumber'])
@@ -12,19 +9,11 @@ export class PurchaseOrderEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'po_number', length: 50, unique: true })
     poNumber: string;
 
-    @Column('int', { name: 'vendor_id' })
+    @Column('int', { name: 'vendor_id', nullable: true })
     vendorId: number;
-
-    @ManyToOne(() => VendorsMasterEntity)
-    @JoinColumn({ name: 'vendor_id' })
-    vendor: VendorsMasterEntity;
 
     @Column('int', { name: 'requester_id', nullable: true })
     requesterId: number;
-
-    @ManyToOne(() => EmployeesEntity)
-    @JoinColumn({ name: 'requester_id' })
-    requester: EmployeesEntity;
 
     @Column('date', { name: 'order_date' })
     orderDate: Date;
@@ -43,7 +32,4 @@ export class PurchaseOrderEntity extends CommonBaseEntity {
 
     @Column('int', { name: 'time_spent_minutes', default: 0 })
     timeSpentMinutes: number;
-
-    @OneToMany(() => PurchaseOrderItemEntity, (item) => item.purchaseOrder, { cascade: true })
-    items: PurchaseOrderItemEntity[];
 }

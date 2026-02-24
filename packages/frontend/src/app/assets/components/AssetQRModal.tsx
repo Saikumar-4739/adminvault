@@ -68,7 +68,6 @@ export const AssetQRModal: React.FC<AssetQRModalProps> = ({ isOpen, onClose, ass
                         className="flex-1"
                         leftIcon={<Printer className="h-4 w-4" />}
                         onClick={onPrint}
-                        disabled={!onPrint}
                     >
                         Print QR
                     </Button>

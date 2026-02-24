@@ -161,6 +161,7 @@ export class SendAssetApprovalEmailModel {
         this.approverEmail = approverEmail;
         this.companyId = companyId;
         this.requesterName = requesterName;
+        this.message = message;
         this.assetStats = assetStats;
     }
 }

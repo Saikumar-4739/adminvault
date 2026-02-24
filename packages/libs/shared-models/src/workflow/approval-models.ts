@@ -28,19 +28,29 @@ export class CreateApprovalRequestModel {
     requesterId: number;
     companyId: number;
     description?: string;
+    managerEmail?: string;
+    requesterName?: string;
+    /** employees table ID of the user being assigned (used to resolve their manager) */
+    assignedToEmployeeId?: number;
 
     constructor(
         referenceType: ApprovalTypeEnum,
         referenceId: number,
         requesterId: number,
         companyId: number,
-        description?: string
+        description?: string,
+        managerEmail?: string,
+        requesterName?: string,
+        assignedToEmployeeId?: number
     ) {
         this.referenceType = referenceType;
         this.referenceId = referenceId;
         this.requesterId = requesterId;
         this.companyId = companyId;
         this.description = description;
+        this.managerEmail = managerEmail;
+        this.requesterName = requesterName;
+        this.assignedToEmployeeId = assignedToEmployeeId;
     }
 }
 

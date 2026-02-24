@@ -1,23 +1,13 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
-import { TicketsEntity } from './tickets.entity';
-import { EmployeesEntity } from '../../employees/entities/employees.entity';
 
 @Entity('ticket_work_logs')
 export class TicketWorkLogEntity extends CommonBaseEntity {
-    @Column('bigint', { name: 'ticket_id' })
+    @Column('bigint', { name: 'ticket_id', nullable: true })
     ticketId: number;
 
-    @ManyToOne(() => TicketsEntity)
-    @JoinColumn({ name: 'ticket_id' })
-    ticket: TicketsEntity;
-
-    @Column('bigint', { name: 'technician_id' })
+    @Column('bigint', { name: 'technician_id', nullable: true })
     technicianId: number;
-
-    @ManyToOne(() => EmployeesEntity)
-    @JoinColumn({ name: 'technician_id' })
-    technician: EmployeesEntity;
 
     @Column('timestamp', { name: 'start_time' })
     startTime: Date;

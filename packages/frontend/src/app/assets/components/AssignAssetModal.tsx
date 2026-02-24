@@ -78,13 +78,18 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
 
         try {
             if (formData.requireApproval) {
-                // Workflow Flow
+                // Workflow Flow: admin submits approval request for the selected employee
+                // requesterId = admin user (who is initiating)
+                // assignedToEmployeeId = selected employee (whose manager gets the email)
                 const approvalReq = new CreateApprovalRequestModel(
                     ApprovalTypeEnum.ASSET_ALLOCATION,
                     asset.id,
-                    Number(formData.employeeId),
+                    user.id,                          // admin's auth user ID
                     Number(user.companyId),
-                    formData.remarks || 'Asset Allocation Request'
+                    formData.remarks || 'Asset Allocation Request',
+                    undefined,                        // no manual email needed
+                    user.fullName || 'Admin',         // requester name for email
+                    Number(formData.employeeId)       // selected employee's ID → used to find their manager
                 );
 
                 const response = await workflowService.initiateApproval(approvalReq);
@@ -95,6 +100,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
                 } else {
                     AlertMessages.getErrorMessage(response.message || 'Failed to submit approval');
                 }
+
 
             } else {
                 // Direct Assignment Flow

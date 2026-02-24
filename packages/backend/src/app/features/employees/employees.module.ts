@@ -10,10 +10,7 @@ import { DepartmentRepository } from '../masters/department/repositories/departm
 import { AdministrationModule } from '../administration/administration.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([EmployeesEntity]),
-        AdministrationModule
-    ],
+    imports: [TypeOrmModule.forFeature([EmployeesEntity]), AdministrationModule],
     controllers: [EmployeesController],
     providers: [EmployeesService, EmployeesRepository, EmployeesBulkService, DepartmentRepository],
     exports: [EmployeesService, EmployeesRepository],

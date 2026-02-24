@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
-import { Plus, Users, Edit, Trash2, Mail, Phone, LayoutGrid, List, Search, Upload } from 'lucide-react';
+import { Plus, Users, Edit, Mail, Phone, LayoutGrid, List, Search, Upload } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, IdRequestModel, CreateEmployeeModel, UpdateEmployeeModel, EmployeeStatusEnum } from '@adminvault/shared-models';
@@ -214,27 +214,7 @@ const EmployeesPage: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (employee: any) => {
-        setEditingEmployee(employee);
-        setIsDeleteModalOpen(true);
-    };
 
-    const confirmDelete = async () => {
-        if (!editingEmployee) return;
-        try {
-            const response = await employeeService.deleteEmployee({ id: editingEmployee.id });
-            if (response.status) {
-                AlertMessages.getSuccessMessage(response.message);
-                fetchEmployees();
-                setIsDeleteModalOpen(false);
-                setEditingEmployee(null);
-            } else {
-                AlertMessages.getErrorMessage(response.message);
-            }
-        } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message);
-        }
-    };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
@@ -319,8 +299,9 @@ const EmployeesPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]} >
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 lg:p-8 space-y-6">
-                {/* Standardized Header */}
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 lg:p-6 space-y-4">
+
+                {/* Header */}
                 <PageHeader
                     title="Employee Directory"
                     description="Manage organization members and roles"
@@ -330,340 +311,333 @@ const EmployeesPage: React.FC = () => {
                         {
                             label: 'Import',
                             onClick: () => setIsImportModalOpen(true),
-                            icon: <Upload className="h-4 w-4" />,
+                            icon: <Upload className="h-3.5 w-3.5" />,
                             variant: 'outline'
                         },
                         {
                             label: 'Add Employee',
                             onClick: () => setIsModalOpen(true),
-                            icon: <Plus className="h-4 w-4" />,
+                            icon: <Plus className="h-3.5 w-3.5" />,
                             variant: 'primary'
                         }
                     ]}
                 >
-                    <div className="flex justify-end w-full">
-                        <div className="hidden md:flex items-center px-3 py-1 bg-slate-100 dark:bg-slate-700/50 rounded-md border border-slate-200 dark:border-slate-600">
-                            <span className="text-xs font-semibold text-slate-500 mr-2">Total:</span>
-                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{stats.total}</span>
-                            <span className="mx-2 text-slate-300">|</span>
-                            <span className="text-xs font-semibold text-emerald-600 mr-2">Active:</span>
-                            <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{stats.active}</span>
-                            <span className="mx-2 text-slate-300">|</span>
-                            <span className="text-xs font-semibold text-rose-600 mr-2">Inactive:</span>
-                            <span className="text-sm font-bold text-rose-700 dark:text-rose-400">{stats.inactive}</span>
-                        </div>
+                    {/* Stats Pills */}
+                    <div className="hidden md:flex items-center gap-1.5">
+                        {[
+                            { label: 'Total', value: stats.total, color: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' },
+                            { label: 'Active', value: stats.active, color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
+                            { label: 'Inactive', value: stats.inactive, color: 'bg-rose-50 dark:bg-rose-900/30 text-roseald-700 dark:text-rose-400' },
+                            { label: 'New', value: stats.newThisMonth, color: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' },
+                        ].map(s => (
+                            <span key={s.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${s.color}`}>
+                                <span className="text-[10px] font-medium opacity-70">{s.label}</span> {s.value}
+                            </span>
+                        ))}
                     </div>
                 </PageHeader>
 
-                {/* Toolbar */}
-                <div className="space-y-4">
-                    <div className="flex flex-col md:flex-row gap-3">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Search employees..."
-                                className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="flex gap-3">
-                            <select
-                                value={selectedOrg}
-                                onChange={(e) => setSelectedOrg(e.target.value)}
-                                className="pl-3 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-w-[180px]"
+                {/* Slim Toolbar */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by name, email, department..."
+                            className="w-full pl-8 pr-3 h-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                        <select
+                            value={selectedOrg}
+                            onChange={(e) => setSelectedOrg(e.target.value)}
+                            className="h-8 pl-2.5 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-w-[140px]"
+                        >
+                            <option value="">All Orgs</option>
+                            {companies.map((c) => (
+                                <option key={c.id} value={c.id}>{c.companyName}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="h-8 pl-2.5 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                             >
-                                <option value="">Select Organization</option>
-                                {companies.map((company) => (
-                                    <option key={company.id} value={company.id}>{company.companyName}</option>
-                                ))}
-                            </select>
-
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="pl-3 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                <LayoutGrid className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                             >
-                                <option value="all">Status: All</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-
-                            <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1 border border-slate-200 dark:border-slate-600">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                >
-                                    <LayoutGrid className="h-4 w-4" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                >
-                                    <List className="h-4 w-4" />
-                                </button>
-                            </div>
+                                <List className="h-3.5 w-3.5" />
+                            </button>
                         </div>
                     </div>
+                </div>
 
-                    {/* Content */}
-                    <AnimatePresence mode="wait">
-                        {filteredEmployees.length === 0 ? (
-                            <motion.div
-                                key="empty"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-lg border border-dashed border-slate-300 dark:border-slate-700"
-                            >
-                                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-full mb-4">
-                                    <Users className="h-8 w-8 text-slate-400" />
-                                </div>
-                                <h3 className="text-base font-semibold text-slate-900 dark:text-white">No employees found</h3>
-                                <p className="text-slate-500 text-sm mt-1">
-                                    Adjust search or filters to see results.
-                                </p>
-                            </motion.div>
-                        ) : viewMode === 'grid' ? (
-                            <motion.div
-                                key="grid"
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
-                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-                            >
-                                {filteredEmployees.map((emp) => (
+                {/* Results count */}
+                <div className="flex items-center justify-between -mt-1">
+                    <p className="text-[11px] text-slate-400 font-medium">
+                        Showing <span className="font-bold text-slate-600 dark:text-slate-300">{filteredEmployees.length}</span> of <span className="font-bold text-slate-600 dark:text-slate-300">{employees.length}</span> employees
+                    </p>
+                </div>
+
+                {/* Content */}
+                <AnimatePresence mode="wait">
+                    {filteredEmployees.length === 0 ? (
+                        <motion.div
+                            key="empty"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-200 dark:border-slate-700"
+                        >
+                            <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-full mb-3">
+                                <Users className="h-6 w-6 text-slate-300" />
+                            </div>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-white">No employees found</p>
+                            <p className="text-xs text-slate-400 mt-1">Try adjusting your search or filters</p>
+                        </motion.div>
+                    ) : viewMode === 'grid' ? (
+                        <motion.div
+                            key="grid"
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3"
+                        >
+                            {filteredEmployees.map((emp) => {
+                                const isInactive = emp.empStatus?.toLowerCase() !== 'active';
+                                return (
                                     <motion.div
                                         key={emp.id}
-                                        className="group relative bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700/50 hover:shadow-md transition-all duration-200"
+                                        className={`group relative rounded-xl border transition-all duration-200 overflow-hidden hover:shadow-md ${isInactive
+                                            ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-80 hover:opacity-100 hover:border-rose-200 dark:hover:border-rose-900/50'
+                                            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700/60'
+                                            }`}
                                     >
-                                        <div className="p-4 flex items-start gap-4">
-                                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-sm bg-gradient-to-br ${getDepartmentBg(emp)}`}>
-                                                {getInitials(emp.firstName, emp.lastName)}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-start">
-                                                    <h3 className="font-semibold text-slate-900 dark:text-white text-sm truncate pr-2">
-                                                        {emp.firstName} {emp.lastName}
-                                                    </h3>
-                                                    <span className={`inline-block w-2 h-2 rounded-full ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                                        {/* Top accent */}
+                                        <div className={`h-1 w-full bg-gradient-to-r ${getDepartmentBg(emp)}`} />
+
+                                        <div className="p-3">
+                                            <div className="flex items-start gap-2.5 mb-2.5">
+                                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0 bg-gradient-to-br ${getDepartmentBg(emp)}`}>
+                                                    {getInitials(emp.firstName, emp.lastName)}
                                                 </div>
-                                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate font-medium">
-                                                    {getDepartmentName(emp)}
-                                                </div>
-                                                <div className="mt-2 text-xs text-slate-500 space-y-0.5">
-                                                    <div className="flex items-center gap-1.5 truncate">
-                                                        <Mail className="h-3 w-3 opacity-70" /> {emp.email}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-1">
+                                                        <h3 className="font-semibold text-slate-900 dark:text-white text-xs leading-tight truncate">
+                                                            {emp.firstName} {emp.lastName}
+                                                        </h3>
+                                                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                                                     </div>
-                                                    <div className="flex items-center gap-1.5 truncate">
-                                                        <Phone className="h-3 w-3 opacity-70" /> {emp.phNumber || '-'}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 truncate text-indigo-600 dark:text-indigo-400 font-medium">
-                                                        <Users className="h-3 w-3 opacity-70" /> Mgr: {emp.managerName || '-'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2 bg-slate-50/50 dark:bg-slate-800/50 rounded-b-lg">
-                                            <button onClick={() => handleEdit(emp)} className="p-1.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md text-slate-400 hover:text-indigo-600 transition-colors" title="Edit">
-                                                <Edit className="h-4 w-4" />
-                                            </button>
-                                            <button onClick={() => handleDeleteClick(emp)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md text-slate-400 hover:text-rose-600 transition-colors" title="Delete">
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="list"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm"
-                            >
-                                <table className="w-full text-left border-collapse compact-table">
-                                    <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
-                                        <tr>
-                                            <th className="px-2 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[280px]">Employee</th>
-                                            <th className="px-2 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[200px]">Contact</th>
-                                            <th className="px-2 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Department</th>
-                                            <th className="px-2 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[150px]">Manager</th>
-                                            <th className="px-2 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[120px]">Status</th>
-                                            <th className="px-2 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Billing</th>
-                                            <th className="px-2 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {filteredEmployees.map((emp) => (
-                                            <tr key={emp.id} className="group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                                                <td className="px-2 py-1.5">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-8 h-8 rounded flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br ${getDepartmentBg(emp)}`}>
-                                                            {getInitials(emp.firstName, emp.lastName)}
-                                                        </div>
-                                                        <div>
-                                                            <div className="font-semibold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</div>
-                                                            <div className="text-xs text-slate-500">ID: {emp.id}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-2 py-1.5">
-                                                    <div className="flex flex-col text-xs space-y-0.5">
-                                                        <div className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                                            <Mail className="h-3 w-3 text-slate-400" />
-                                                            {emp.email}
-                                                        </div>
-                                                        <div className="text-slate-500 flex items-center gap-1.5">
-                                                            <Phone className="h-3 w-3 text-slate-400" />
-                                                            {emp.phNumber || '-'}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-2 py-1.5">
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                                    <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate block mt-0.5">
                                                         {getDepartmentName(emp)}
                                                     </span>
-                                                </td>
-                                                <td className="px-2 py-1.5">
-                                                    <div className="text-sm text-slate-700 dark:text-slate-300 font-medium">{emp.managerName || '-'}</div>
-                                                </td>
-                                                <td className="px-2 py-1.5">
-                                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium border ${emp.empStatus?.toLowerCase() === 'active'
-                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                                                        }`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
-                                                        {emp.empStatus}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-2.5 text-right font-medium text-slate-700 dark:text-slate-300">
-                                                    ₹{Number(emp.billingAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                                </td>
-                                                <td className="px-4 py-2.5 text-right">
-                                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => handleEdit(emp)} className="p-1.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded text-slate-400 hover:text-indigo-600 transition-colors">
-                                                            <Edit className="h-3.5 w-3.5" />
-                                                        </button>
-                                                        <button onClick={() => handleDeleteClick(emp)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded text-slate-400 hover:text-rose-600 transition-colors">
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1 text-[10px] text-slate-500 dark:text-slate-400">
+                                                <div className="flex items-center gap-1.5 truncate">
+                                                    <Mail className="h-2.5 w-2.5 shrink-0 opacity-60" />
+                                                    <span className="truncate">{emp.email}</span>
+                                                </div>
+                                                {emp.phNumber && (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Phone className="h-2.5 w-2.5 shrink-0 opacity-60" />
+                                                        <span>{emp.phNumber}</span>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
+                                                )}
+                                                {emp.managerName && (
+                                                    <div className="flex items-center gap-1.5 text-indigo-500 dark:text-indigo-400">
+                                                        <Users className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                                                        <span className="truncate">{emp.managerName}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="px-3 py-1.5 border-t border-slate-50 dark:border-slate-700/70 flex items-center justify-between bg-slate-50/60 dark:bg-slate-800/60">
+                                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${emp.empStatus?.toLowerCase() === 'active' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400' : 'text-slate-500 bg-slate-100 dark:bg-slate-700'}`}>
+                                                {emp.empStatus}
+                                            </span>
+                                            <div className="flex gap-1">
+                                                <button onClick={() => handleEdit(emp)} className="p-1 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded text-slate-400 hover:text-indigo-600 transition-colors">
+                                                    <Edit className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="list"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden"
+                        >
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-700">
+                                    <tr>
+                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Employee</th>
+                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Contact</th>
+                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Department</th>
+                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden xl:table-cell">Manager</th>
+                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right hidden lg:table-cell">Billing</th>
+                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                                    {filteredEmployees.map((emp) => (
+                                        <tr key={emp.id} className="group hover:bg-slate-50/70 dark:hover:bg-slate-700/20 transition-colors">
+                                            <td className="px-3 py-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-7 h-7 rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0 bg-gradient-to-br ${getDepartmentBg(emp)}`}>
+                                                        {getInitials(emp.firstName, emp.lastName)}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-slate-800 dark:text-white text-xs leading-tight">{emp.firstName} {emp.lastName}</div>
+                                                        <div className="text-[10px] text-slate-400">#{emp.id}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-2 hidden md:table-cell">
+                                                <div className="text-[10px] text-slate-500 space-y-0.5">
+                                                    <div className="flex items-center gap-1"><Mail className="h-2.5 w-2.5" />{emp.email}</div>
+                                                    <div className="flex items-center gap-1"><Phone className="h-2.5 w-2.5" />{emp.phNumber || '-'}</div>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-2 hidden lg:table-cell">
+                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                                    {getDepartmentName(emp)}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-2 hidden xl:table-cell">
+                                                <span className="text-xs text-slate-600 dark:text-slate-300">{emp.managerName || '—'}</span>
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${emp.empStatus?.toLowerCase() === 'active'
+                                                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
+                                                    : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                                                    }`}>
+                                                    <span className={`w-1 h-1 rounded-full ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                                    {emp.empStatus}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-2 text-right hidden lg:table-cell">
+                                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                                    ₹{Number(emp.billingAmount || 0).toLocaleString('en-IN')}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <button onClick={() => handleEdit(emp)} className="p-1 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded text-slate-400 hover:text-indigo-600 transition-colors">
+                                                        <Edit className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Modals */}
                 <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingEmployee ? 'Edit Employee Profile' : 'Add New Employee'} size="lg">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-2 gap-5">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
                             <Input label="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required />
                             <Input label="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required />
                         </div>
                         <Input label="Email Address" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
-
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-2 gap-4">
                             <Select
                                 label="Organization"
                                 value={formData.companyId}
                                 onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                                options={[
-                                    { value: '', label: 'Select Organization' },
-                                    ...companies.map(c => ({ value: c.id, label: c.companyName }))
-                                ]}
+                                options={[{ value: '', label: 'Select Organization' }, ...companies.map(c => ({ value: c.id, label: c.companyName }))]}
                                 required
                                 disabled={!!editingEmployee}
                             />
-                            <Input label="Phone Number" type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                            <Input
+                                label="Phone Number"
+                                type="tel"
+                                inputMode="tel"
+                                pattern="[0-9+\-\s]*"
+                                value={formData.phone}
+                                onKeyDown={(e) => {
+                                    if (!/[0-9+\-\s]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(e.key)) {
+                                        e.preventDefault();
+                                    }
+                                }}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9+\-\s]/g, '') })}
+                            />
                         </div>
-
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-2 gap-4">
                             <Select
                                 label="Department"
                                 value={formData.departmentId}
                                 onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                                options={[
-                                    { value: '', label: 'Select Department' },
-                                    ...(departments?.filter(d => d.isActive).map(d => ({ value: d.id, label: d.name })) || [])
-                                ]}
+                                options={[{ value: '', label: 'Select Department' }, ...(departments?.filter(d => d.isActive).map(d => ({ value: d.id, label: d.name })) || [])]}
                                 required
                             />
-
                             <Select
                                 label="Reporting Manager"
                                 value={formData.managerId}
                                 onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
-                                options={[
-                                    { value: '', label: 'No Manager' },
-                                    ...filteredEmployees
-                                        .filter(emp => !editingEmployee || emp.id !== editingEmployee.id)
-                                        .map(emp => ({ value: emp.id, label: `${emp.firstName} ${emp.lastName}` }))
-                                ]}
+                                options={[{ value: '', label: 'No Manager' }, ...filteredEmployees.filter(emp => !editingEmployee || emp.id !== editingEmployee.id).map(emp => ({ value: emp.id, label: `${emp.firstName} ${emp.lastName}` }))]}
                             />
                         </div>
-
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-2 gap-4">
                             <Select
                                 label="Account Status"
                                 value={formData.accountStatus}
                                 onChange={(e) => setFormData({ ...formData, accountStatus: e.target.value })}
-                                options={[
-                                    { value: EmployeeStatusEnum.ACTIVE, label: 'Active' },
-                                    { value: EmployeeStatusEnum.INACTIVE, label: 'Inactive' }
-                                ]}
+                                options={[{ value: EmployeeStatusEnum.ACTIVE, label: 'Active' }, { value: EmployeeStatusEnum.INACTIVE, label: 'Inactive' }]}
                             />
-                            <Input
-                                label="Billing Amount"
-                                type="number"
-                                step="0.01"
-                                value={formData.billingAmount}
-                                onChange={(e) => setFormData({ ...formData, billingAmount: e.target.value })}
-                            />
+                            <Input label="Billing Amount" type="number" step="0.01" value={formData.billingAmount} onChange={(e) => setFormData({ ...formData, billingAmount: e.target.value })} />
                         </div>
-
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Additional Remarks</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Additional Remarks</label>
                             <textarea
                                 value={formData.remarks}
                                 onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                                placeholder="Any additional notes or comments..."
-                                rows={3}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none font-medium resize-none"
+                                placeholder="Any additional notes..."
+                                rows={2}
+                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none text-sm resize-none"
                             />
                         </div>
-
-                        <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-700">
-                            <Button variant="outline" onClick={handleCloseModal} type="button" className="rounded-xl">Cancel</Button>
-                            <Button variant="primary" type="submit" className="rounded-xl px-6">{editingEmployee ? 'Save Changes' : 'Add Employee'}</Button>
+                        <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+                            <Button variant="outline" onClick={handleCloseModal} type="button">Cancel</Button>
+                            <Button variant="primary" type="submit">{editingEmployee ? 'Save Changes' : 'Add Employee'}</Button>
                         </div>
                     </form>
                 </Modal>
+
                 <EmployeeBulkImportModal
                     isOpen={isImportModalOpen}
                     onClose={() => setIsImportModalOpen(false)}
-                    companyId={Number(selectedOrg)}
-
+                    companyId={Number(selectedOrg) || user?.companyId || 0}
                     onSuccess={() => fetchEmployees()}
                 />
-                <DeleteConfirmationModal
-                    isOpen={isDeleteModalOpen}
-                    onClose={() => {
-                        setIsDeleteModalOpen(false);
-                        setEditingEmployee(null);
-                    }}
-                    onConfirm={confirmDelete}
-                    title="Delete Employee"
-                    itemName={editingEmployee ? `${editingEmployee.firstName} ${editingEmployee.lastName}` : undefined}
-                />
+
             </div>
-        </RouteGuard >
+        </RouteGuard>
     );
 };
 

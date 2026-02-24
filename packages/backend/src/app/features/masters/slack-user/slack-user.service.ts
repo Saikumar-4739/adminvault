@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { SlackUsersRepository } from './repositories/slack-user.repository';
 import { EmployeesRepository } from '../../employees/repositories/employees.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
@@ -8,6 +8,7 @@ import { SlackUsersMasterEntity } from './entities/slack-user.entity';
 import { EmployeesEntity } from '../../employees/entities/employees.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 import { CompanyInfoRepository } from '../company-info/repositories/company-info.repository';
+import { CompanyInfoEntity } from '../company-info/entities/company-info.entity';
 
 @Injectable()
 export class SlackUserService {
@@ -67,12 +68,19 @@ export class SlackUserService {
 
     async getAllSlackUsers(): Promise<GetAllSlackUsersResponseModel> {
         try {
-            const users = await this.slackUserRepo.find({
-                relations: ['companyInfo']
-            });
+            const users = await this.slackUserRepo.find();
+
+            // Fetch company names separately
+            const companyIds = [...new Set(users.map(u => Number(u.companyId)).filter(Boolean))];
+            const companies = companyIds.length > 0
+                ? await this.dataSource.getRepository(CompanyInfoEntity).find({ where: { id: In(companyIds) } })
+                : [];
+            const companyMap = new Map<number, string>();
+            companies.forEach(c => companyMap.set(Number(c.id), c.companyName));
+
             const mappedUsers = users.map(u => ({
                 ...u,
-                companyName: u.companyInfo?.companyName
+                companyName: companyMap.get(Number(u.companyId)) || null
             }));
             return new GetAllSlackUsersResponseModel(true, 200, 'Slack Users retrieved successfully', mappedUsers as any);
         } catch (error) {

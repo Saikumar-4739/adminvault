@@ -471,11 +471,9 @@ export class AssetInfoService {
         dateLimit.setMonth(dateLimit.getMonth() + (months || 3));
 
         const assets = await this.assetInfoRepo.find({
-            where: { companyId, warrantyExpiry: LessThan(dateLimit) },
-            relations: ['assignedToEmployee']
+            where: { companyId, warrantyExpiry: LessThan(dateLimit) }
         });
         const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.expressCode, a.boxNo, a.complianceStatus, a.lastSync, a.osVersion, a.macAddress, a.ipAddress, a.encryptionStatus, a.batteryLevel, a.storageTotal, a.storageAvailable));
         return new GetAllAssetsModel(true, 200, 'Expiring assets retrieved', responses);
     }
 }
-
