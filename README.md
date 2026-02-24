@@ -7,19 +7,10 @@
 - MySQL
 - Git
 
-### 1. Install Dependencies
+### Install Dependencies
 ```bash
 npm install --legacy-peer-deps
 ```
-### 2. Run Application
-Start both Backend and Frontend concurrently:
-```bash
-npm run dev
-```
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:3001`
-- Swagger API: `http://localhost:3001/docs`
----
 
 ## 🛠 Available Scripts
 
