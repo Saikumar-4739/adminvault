@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import { Building, Shield, User, Calendar, MessageSquare, Plus, Key } from 'lucide-react';
+import { Building, Shield, User, Calendar, MessageSquare, Plus, DollarSign, Users, RefreshCw } from 'lucide-react';
 
 interface AddLicenseModalProps {
     isOpen: boolean;
@@ -23,7 +23,10 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
         expiryDate: '',
         assignedDate: '',
         remarks: '',
-        assignedEmployeeId: ''
+        assignedEmployeeId: '',
+        seats: '1',
+        costPerSeat: '0',
+        billingCycle: 'MONTHLY'
     });
 
     useEffect(() => {
@@ -34,12 +37,16 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                 expiryDate: initialLicense.expiryDate ? new Date(initialLicense.expiryDate).toISOString().split('T')[0] : '',
                 assignedDate: initialLicense.assignedDate ? new Date(initialLicense.assignedDate).toISOString().split('T')[0] : '',
                 remarks: initialLicense.remarks || '',
-                assignedEmployeeId: initialLicense.assignedEmployeeId?.toString() || ''
+                assignedEmployeeId: initialLicense.assignedEmployeeId?.toString() || '',
+                seats: initialLicense.totalSeats?.toString() || '1',
+                costPerSeat: initialLicense.costPerSeat?.toString() || '0',
+                billingCycle: initialLicense.billingCycle || 'MONTHLY'
             });
         } else if (!isOpen) {
             setFormData({
                 applicationId: '', companyId: '',
-                expiryDate: '', assignedDate: '', remarks: '', assignedEmployeeId: ''
+                expiryDate: '', assignedDate: '', remarks: '', assignedEmployeeId: '',
+                seats: '1', costPerSeat: '0', billingCycle: 'MONTHLY'
             });
         }
     }, [isOpen, initialLicense]);
@@ -53,13 +60,17 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
             assignedDate: formData.assignedDate || null,
             expiryDate: formData.expiryDate || null,
             remarks: formData.remarks || null,
-            assignedEmployeeId: formData.assignedEmployeeId ? Number(formData.assignedEmployeeId) : null
+            assignedEmployeeId: formData.assignedEmployeeId ? Number(formData.assignedEmployeeId) : null,
+            seats: Number(formData.seats),
+            costPerSeat: Number(formData.costPerSeat),
+            billingCycle: formData.billingCycle
         });
 
         if (success) {
             setFormData({
                 applicationId: '', companyId: '',
-                expiryDate: '', assignedDate: '', remarks: '', assignedEmployeeId: ''
+                expiryDate: '', assignedDate: '', remarks: '', assignedEmployeeId: '',
+                seats: '1', costPerSeat: '0', billingCycle: 'MONTHLY'
             });
             onClose();
         }
@@ -185,6 +196,62 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                             value={formData.expiryDate}
                             onChange={e => setFormData({ ...formData, expiryDate: e.target.value })}
                         />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Seats */}
+                    <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
+                            <Users className="w-3.5 h-3.5" />
+                            Total Seats
+                        </label>
+                        <input
+                            type="number"
+                            min="1"
+                            placeholder="1"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
+                            value={formData.seats}
+                            onChange={e => setFormData({ ...formData, seats: e.target.value })}
+                            required
+                        />
+                    </div>
+
+                    {/* Cost per Seat */}
+                    <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
+                            <DollarSign className="w-3.5 h-3.5" />
+                            Cost per Seat
+                        </label>
+                        <div className="relative group">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                                className="w-full pl-7 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
+                                value={formData.costPerSeat}
+                                onChange={e => setFormData({ ...formData, costPerSeat: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Billing Cycle */}
+                    <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Billing Cycle
+                        </label>
+                        <select
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer font-bold"
+                            value={formData.billingCycle}
+                            onChange={e => setFormData({ ...formData, billingCycle: e.target.value })}
+                        >
+                            <option value="MONTHLY">Monthly</option>
+                            <option value="YEARLY">Yearly</option>
+                            <option value="ONE_TIME">One-time</option>
+                        </select>
                     </div>
                 </div>
 

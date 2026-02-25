@@ -60,6 +60,21 @@ export class AssetInfoEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'storage_available', length: 20, nullable: true, comment: 'Available storage capacity' })
     storageAvailable: string;
 
+    @Column('decimal', { name: 'purchase_cost', precision: 12, scale: 2, nullable: true, default: 0 })
+    purchaseCost: number;
+
+    @Column('decimal', { name: 'current_value', precision: 12, scale: 2, nullable: true, default: 0 })
+    currentValue: number;
+
+    @Column('varchar', { name: 'depreciation_method', nullable: true, default: 'STRAIGHT_LINE' })
+    depreciationMethod: string; // STRAIGHT_LINE or DECLINING
+
+    @Column('int', { name: 'useful_life_years', nullable: true, default: 5 })
+    usefulLifeYears: number;
+
+    @Column('decimal', { name: 'salvage_value', precision: 12, scale: 2, nullable: true, default: 0 })
+    salvageValue: number;
+
     @DeleteDateColumn({ name: 'deleted_at', nullable: true })
     deletedAt: Date;
 }

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, Check } from 'lucide-react';
 import { useWebSocketEvent } from '@/hooks/useWebSocket';
 import { WebSocketEvent, NotificationPayload, NotificationType } from '@adminvault/shared-models';
+import { notificationsService } from '@/lib/api/services';
 
 interface NotificationBadgeProps {
     className?: string;
@@ -14,21 +15,54 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ className 
     const [isOpen, setIsOpen] = useState(false);
     const unreadCount = notifications.filter(n => !n.read).length;
 
+    // Fetch notifications on mount
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const response = await notificationsService.getNotifications();
+                if (response.status && Array.isArray(response.data)) {
+                    setNotifications(response.data);
+                }
+            } catch (error) {
+                console.error('[NotificationBadge] Failed to fetch notifications:', error);
+            }
+        };
+        fetchNotifications();
+    }, []);
+
     // Subscribe to notification events
-    useWebSocketEvent(WebSocketEvent.NOTIFICATION, (notification: NotificationPayload) => {
+    useWebSocketEvent(WebSocketEvent.NOTIFICATION, (notification: any) => {
         console.log('[NotificationBadge] Received notification:', notification);
-        setNotifications(prev => [notification, ...prev].slice(0, 10)); // Keep last 10
+        const payload: NotificationPayload = {
+            ...notification,
+            timestamp: new Date(notification.timestamp || Date.now()),
+            read: notification.read || false
+        };
+        setNotifications(prev => [payload, ...prev].slice(0, 50)); // Keep more in list
     });
 
-    const markAsRead = (id: string) => {
-        setNotifications(prev =>
-            prev.map(n => (n.id === id ? { ...n, read: true } : n))
-        );
+    const markAsRead = async (id: string) => {
+        try {
+            const resp = await notificationsService.markAsRead(id);
+            if (resp.status) {
+                setNotifications(prev =>
+                    prev.map(n => (n.id === id ? { ...n, read: true } : n))
+                );
+            }
+        } catch (error) {
+            console.error('Failed to mark notification as read:', error);
+        }
     };
 
-    const clearAll = () => {
-        setNotifications([]);
-        setIsOpen(false);
+    const clearAll = async () => {
+        try {
+            const resp = await notificationsService.markAllAsRead();
+            if (resp.status) {
+                setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            }
+        } catch (error) {
+            console.error('Failed to clear notifications:', error);
+        }
     };
 
     const getNotificationColor = (type: NotificationType) => {
@@ -79,9 +113,10 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ className 
                             {notifications.length > 0 && (
                                 <button
                                     onClick={clearAll}
-                                    className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                    className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
                                 >
-                                    Clear all
+                                    <Check className="h-4 w-4" />
+                                    Mark all as read
                                 </button>
                             )}
                         </div>

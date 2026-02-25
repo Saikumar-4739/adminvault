@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppWebSocketGateway } from './websocket.gateway';
+import { WebSocketService } from './websocket.service';
 import { NetworkModule } from '../network/network.module';
 import { NetworkService } from '../network/network.service';
 
@@ -17,8 +18,8 @@ import { NetworkService } from '../network/network.service';
         }),
         NetworkModule,
     ],
-    providers: [AppWebSocketGateway],
-    exports: [AppWebSocketGateway],
+    providers: [AppWebSocketGateway, WebSocketService],
+    exports: [AppWebSocketGateway, WebSocketService],
 })
 export class WebSocketModule {
     constructor(

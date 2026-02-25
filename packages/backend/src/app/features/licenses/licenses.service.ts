@@ -9,10 +9,14 @@ import { CompanyInfoEntity } from '../masters/company-info/entities/company-info
 import { LicensesMasterEntity } from '../masters/license/entities/license.entity';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '@adminvault/shared-models';
+
 @Injectable()
 export class LicensesService {
     constructor(
-        private repo: LicenseRepository
+        private repo: LicenseRepository,
+        private notificationsService: NotificationsService
     ) { }
 
     /**
@@ -73,6 +77,9 @@ export class LicensesService {
                 l.assignedDate,
                 l.expiryDate,
                 undefined, // seats
+                l.totalSeats,
+                Number(l.costPerSeat),
+                l.billingCycle,
                 l.remarks,
                 company ? { id: company.id, companyName: company.companyName } : undefined,
                 app ? { id: app.id, name: app.name, logo: '' } : undefined,
@@ -100,9 +107,18 @@ export class LicensesService {
 
         const licenses = await query.getMany();
 
-        const total = licenses.length;
-        const used = total;
-        const totalCost = 0;
+        let total = 0;
+        let used = 0;
+        let totalCost = 0;
+
+        licenses.forEach(l => {
+            total += (l.totalSeats || 1);
+            // In this simplified model, each license record is an assignment
+            // If totalSeats > 1, it might represent a pool. 
+            // For now, let's assume each record is a specific assignment of one or more seats.
+            used += 1;
+            totalCost += Number(l.costPerSeat || 0) * (l.totalSeats || 1);
+        });
 
         // Expiring in 30 days
         const thirtyDaysFromNow = new Date();
@@ -114,6 +130,60 @@ export class LicensesService {
 
         const stats = new LicenseStatsModel(total, used, totalCost, expiringSoon);
         return new GetLicenseStatisticsResponseModel(true, 200, 'License statistics retrieved successfully', stats);
+    }
+
+    async getUtilization(reqModel: IdRequestModel): Promise<any> {
+        const stats = await this.getLicenseStatistics(reqModel);
+        if (!stats.status) return stats;
+
+        return {
+            status: true,
+            data: {
+                totalPurchased: stats.statistics.totalLicenses,
+                totalAssigned: stats.statistics.usedLicenses,
+                utilizationRate: stats.statistics.totalLicenses > 0 ? (stats.statistics.usedLicenses / stats.statistics.totalLicenses) * 100 : 0
+            }
+        };
+    }
+
+    async getComplianceReport(reqModel: IdRequestModel): Promise<any> {
+        const companyId = reqModel.id;
+        const licenses = await this.repo.find({ where: companyId ? { companyId } : {} });
+
+        // Group by application
+        const report = licenses.reduce((acc, l) => {
+            const appId = l.applicationId;
+            if (!acc[appId]) {
+                acc[appId] = { appId, purchased: 0, assigned: 0 };
+            }
+            acc[appId].purchased += (l.totalSeats || 1);
+            acc[appId].assigned += 1;
+            return acc;
+        }, {} as any);
+
+        return {
+            status: true,
+            data: Object.values(report).map((item: any) => ({
+                ...item,
+                status: item.assigned > item.purchased ? 'OVER_LICENSED' : 'COMPLIANT'
+            }))
+        };
+    }
+
+    async getCostOptimization(reqModel: IdRequestModel): Promise<any> {
+        const companyId = reqModel.id;
+        const licenses = await this.repo.find({ where: companyId ? { companyId } : {} });
+
+        const unusedLicenses = licenses.filter(l => !l.assignedEmployeeId);
+        const potentialSavings = unusedLicenses.reduce((sum, l) => sum + (Number(l.costPerSeat || 0) * (l.totalSeats || 1)), 0);
+
+        return {
+            status: true,
+            data: {
+                unusedCount: unusedLicenses.length,
+                potentialSavings
+            }
+        };
     }
 
     /**
@@ -130,12 +200,32 @@ export class LicensesService {
             assignedEmployeeId: reqModel.assignedEmployeeId,
             assignedDate: reqModel.assignedDate || null,
             expiryDate: reqModel.expiryDate || null,
-            remarks: reqModel.remarks || null
+            remarks: reqModel.remarks || null,
+            totalSeats: reqModel.seats || 1,
+            costPerSeat: (reqModel as any).costPerSeat || 0,
+            billingCycle: (reqModel as any).billingCycle || 'MONTHLY'
         };
 
         const license = this.repo.create(licenseData);
-        await this.repo.save(license);
+        const saved = await this.repo.save(license);
+        // ... existing notification logic
 
+        // Persistent notification for employee
+        try {
+            if (reqModel.assignedEmployeeId) {
+                const employee = await this.repo.manager.getRepository(EmployeesEntity).findOne({ where: { id: reqModel.assignedEmployeeId } });
+                if (employee && employee.userId) {
+                    const app = await this.repo.manager.getRepository(LicensesMasterEntity).findOne({ where: { id: reqModel.applicationId } });
+                    await this.notificationsService.createNotification(employee.userId, {
+                        title: 'License Assigned',
+                        message: `A new license for ${app ? app.name : 'software'} has been assigned to you.`,
+                        type: NotificationType.SUCCESS,
+                        category: 'license',
+                        metadata: { licenseId: saved.id }
+                    });
+                }
+            }
+        } catch (e) { console.error("License notification failed", e); }
 
         return new GlobalResponse(true, 201, 'License assigned successfully');
     }

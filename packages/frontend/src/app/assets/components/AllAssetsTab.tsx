@@ -13,11 +13,16 @@ interface AllAssetsTabProps {
     onPrint: (asset: any) => void;
     onHistory: (asset: any) => void;
     onAssign: (asset: any) => void;
+    selectedIds?: Set<number>;
+    onToggleSelect?: (id: number) => void;
 }
 
 
 
-export const AllAssetsTab: React.FC<AllAssetsTabProps> = ({ assets, isLoading, status, onEdit, onDelete, onPrint, onHistory, onAssign }: AllAssetsTabProps) => {
+export const AllAssetsTab: React.FC<AllAssetsTabProps> = ({
+    assets, isLoading, status, onEdit, onDelete, onPrint, onHistory, onAssign,
+    selectedIds, onToggleSelect
+}: AllAssetsTabProps) => {
 
     console.log(`AllAssetsTab[${status}] received ${assets?.length} assets`);
 
@@ -69,6 +74,8 @@ export const AllAssetsTab: React.FC<AllAssetsTabProps> = ({ assets, isLoading, s
                     onQRCode={onPrint}
                     onHistory={onHistory}
                     onAssign={onAssign}
+                    isSelected={selectedIds?.has(asset.id)}
+                    onToggleSelect={onToggleSelect}
                 />
             ))}
         </div>

@@ -14,6 +14,7 @@ import { CreateApprovalRequestModel, ApprovalTypeEnum } from '@adminvault/shared
 import { TicketWorkLogEntity } from './entities/ticket-work-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AuditLogService } from '../audit-log/audit-log.service';
 
 @Injectable()
 export class TicketsService {
@@ -25,7 +26,8 @@ export class TicketsService {
         private workLogRepo: Repository<TicketWorkLogEntity>,
         private gateway: TicketsGateway,
         private emailInfoService: EmailInfoService,
-        private workflowService: WorkflowService
+        private workflowService: WorkflowService,
+        private auditLogService: AuditLogService
     ) { }
 
     async createTicket(reqModel: CreateTicketModel, userEmail: string, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
@@ -80,6 +82,20 @@ export class TicketsService {
 
             const savedTicket = await transManager.getRepository(TicketsEntity).save(entity);
             await transManager.completeTransaction();
+
+            // Log activity
+            await this.auditLogService.logAction(
+                'CREATE',
+                'TICKET',
+                Number(savedTicket.id),
+                savedTicket.ticketCode,
+                userId,
+                employee.firstName + ' ' + employee.lastName,
+                userEmail,
+                { subject: savedTicket.subject, priority: savedTicket.priorityEnum },
+                ipAddress,
+                'Support'
+            );
 
             // Notify admins via WebSocket
             this.gateway.emitTicketCreated(savedTicket);
@@ -188,6 +204,20 @@ export class TicketsService {
             const updated = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
             this.gateway.emitTicketUpdated(updated);
 
+            // Log activity
+            await this.auditLogService.logAction(
+                'UPDATE',
+                'TICKET',
+                Number(updated.id),
+                updated.ticketCode,
+                userId,
+                '',
+                '',
+                { changes: reqModel, oldStatus, newStatus: updated.ticketStatus },
+                ipAddress,
+                'Support'
+            );
+
             // Send Email Notification if status logic is handled here (usually updateStatus is preferred, but updateTicket might change it too)
             // Determine new status from reqModel or updated entity
             if (updated.ticketStatus !== oldStatus) {
@@ -291,7 +321,7 @@ export class TicketsService {
 
             const employee = await this.employeesRepo.findOne({ where: { email: userEmail } });
             if (!employee) {
-                throw new ErrorResponse(404, `No Employee profile found for ${userEmail}`);
+                return new GetAllTicketsModel(true, 200, 'No employee record found, zero tickets retrieved', []);
             }
 
             const tickets: any[] = await this.ticketsRepo
@@ -405,6 +435,20 @@ export class TicketsService {
 
         // Notify via WebSocket
         this.gateway.emitTicketUpdated(saved);
+
+        // Log activity
+        await this.auditLogService.logAction(
+            'UPDATE_STATUS',
+            'TICKET',
+            Number(saved.id),
+            saved.ticketCode,
+            undefined,
+            '',
+            '',
+            { oldStatus, newStatus: saved.ticketStatus },
+            undefined,
+            'Support'
+        );
 
         // Send Email Notification
         if (oldStatus !== reqModel.status) {

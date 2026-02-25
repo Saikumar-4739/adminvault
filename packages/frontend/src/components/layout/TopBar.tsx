@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChevronDown, LogOut, Moon, Sun, Bell, Globe, Terminal } from 'lucide-react';
+import { ChevronDown, LogOut, Moon, Sun, Bell, Globe, Terminal, Monitor } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getSocket } from '@/lib/socket';
 
@@ -16,7 +16,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const { user, logout } = useAuth();
-    const { isDarkMode, toggleDarkMode } = useTheme();
+    const { theme, setTheme } = useTheme();
     const [currentTime, setCurrentTime] = useState(new Date());
     const [mounted, setMounted] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -139,10 +139,25 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 
                 {/* Theme Toggle */}
                 <button
-                    onClick={toggleDarkMode}
-                    className="p-2 rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
+                    onClick={() => {
+                        const modes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system'];
+                        const nextIndex = (modes.indexOf(theme) + 1) % modes.length;
+                        setTheme(modes[nextIndex]);
+                    }}
+                    className="p-2 rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center gap-2 group relative"
+                    title={`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}
                 >
-                    {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                    {theme === 'light' && <Sun className="h-4 w-4 text-amber-500" />}
+                    {theme === 'dark' && <Moon className="h-4 w-4 text-indigo-400" />}
+                    {theme === 'system' && (
+                        <div className="relative">
+                            <Monitor className="h-4 w-4 text-slate-400" />
+                            <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full border border-white dark:border-slate-950 bg-blue-500" />
+                        </div>
+                    )}
+                    <span className="hidden lg:block text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors">
+                        {theme}
+                    </span>
                 </button>
 
                 <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-2" />

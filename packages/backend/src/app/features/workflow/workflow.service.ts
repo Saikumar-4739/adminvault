@@ -8,8 +8,8 @@ import { EmailInfoService } from '../administration/email-info.service';
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
 import { AuthUsersRepository } from '../auth-users/repositories/auth-users.repository';
 import { ErrorResponse } from '@adminvault/backend-utils';
-import { AppWebSocketGateway } from '../websocket/websocket.gateway';
-import { WebSocketEvent, WebSocketRoomHelper } from '@adminvault/shared-models';
+import { NotificationsService } from '../notifications/notifications.service';
+import { WebSocketEvent, WebSocketRoomHelper, NotificationType } from '@adminvault/shared-models';
 
 @Injectable()
 export class WorkflowService {
@@ -27,7 +27,7 @@ export class WorkflowService {
         private emailService: EmailInfoService,
         private employeesRepo: EmployeesRepository,
         private authUsersRepo: AuthUsersRepository,
-        private wsGateway: AppWebSocketGateway
+        private notificationsService: NotificationsService
     ) { }
 
     /**
@@ -91,7 +91,8 @@ export class WorkflowService {
                 requesterId: req.requesterId,
                 companyId: req.companyId,
                 description: req.description,
-                status: ApprovalStatusEnum.PENDING
+                status: ApprovalStatusEnum.PENDING,
+                assignedToEmployeeId: req.assignedToEmployeeId
             });
             await this.approvalRepo.save(newRequest);
             this.logger.log(`[Approval] Request saved. requesterId=${req.requesterId}, assignedToEmployeeId=${req.assignedToEmployeeId}, refId=${req.referenceId}`);
@@ -99,16 +100,34 @@ export class WorkflowService {
             // Await so errors appear in logs immediately
             await this.sendManagerNotification(req);
 
-            // Emit WebSocket event for real-time update
-            this.wsGateway.server
-                .to(WebSocketRoomHelper.getCompanyRoom(req.companyId))
-                .emit(WebSocketEvent.APPROVAL_PENDING, {
-                    approvalId: newRequest.id,
-                    referenceType: req.referenceType,
-                    referenceId: req.referenceId,
-                    companyId: req.companyId,
-                    timestamp: new Date()
+            // Persistent notification for manager
+            let managerUserId: number | null = null;
+            let targetEmail = req.managerEmail;
+
+            if (!targetEmail) {
+                const resolved = await this.resolveManagerEmail(req.requesterId, req.assignedToEmployeeId);
+                if (resolved) targetEmail = resolved.email;
+            }
+
+            if (targetEmail) {
+                const managerUser = await this.authUsersRepo.findOne({ where: { email: targetEmail } });
+                if (managerUser) managerUserId = managerUser.id;
+            }
+
+            if (managerUserId) {
+                await this.notificationsService.createNotification(managerUserId, {
+                    title: 'Approval Required',
+                    message: req.description || `New ${req.referenceType} approval request from ${req.requesterName}`,
+                    type: NotificationType.WARNING,
+                    category: 'approval',
+                    link: '/approval-center',
+                    metadata: {
+                        approvalId: newRequest.id,
+                        referenceType: req.referenceType,
+                        referenceId: req.referenceId
+                    }
                 });
+            }
 
             return new InitiateApprovalResponseModel(true, 201, 'Approval request initiated');
         } catch (error) {
@@ -183,16 +202,12 @@ export class WorkflowService {
                     break;
 
                 case ApprovalTypeEnum.ASSET_ALLOCATION:
-                    const asset = await this.assetService.getAsset({ id: request.referenceId });
-                    if (asset && asset.data) {
-                        await this.assetService.updateAsset({
-                            id: request.referenceId,
-                            companyId: request.companyId,
-                            assetStatusEnum: AssetStatusEnum.IN_USE,
-                            assignedToEmployeeId: request.requesterId,
-                            userAssignedDate: new Date()
-                        } as any);
-                    }
+                    await this.assetService.assignAssetOp({
+                        assetId: request.referenceId,
+                        employeeId: request.assignedToEmployeeId || request.requesterId,
+                        userId: model.actionByUserId,
+                        remarks: model.remarks || 'Approved via workflow'
+                    });
                     break;
 
                 case ApprovalTypeEnum.LICENSE_ALLOCATION:
@@ -203,16 +218,14 @@ export class WorkflowService {
                     break;
             }
 
-            // Emit WebSocket event for real-time update
-            this.wsGateway.server
-                .to(WebSocketRoomHelper.getCompanyRoom(request.companyId))
-                .emit(WebSocketEvent.APPROVAL_APPROVED, {
-                    approvalId: request.id,
-                    referenceType: request.referenceType,
-                    referenceId: request.referenceId,
-                    companyId: request.companyId,
-                    timestamp: new Date()
-                });
+            // Notify requester persistently
+            await this.notificationsService.createNotification(request.requesterId, {
+                title: 'Request Approved',
+                message: `Your ${request.referenceType} request (#${request.referenceId}) has been approved.`,
+                type: NotificationType.SUCCESS,
+                category: 'approval',
+                link: request.referenceType === ApprovalTypeEnum.TICKET ? '/create-ticket?tab=tickets' : undefined
+            });
 
             return new ApproveRequestResponseModel(true, 200, 'Request approved');
         } catch (error) {
@@ -244,16 +257,14 @@ export class WorkflowService {
                 await this.procurementService.updatePOStatus(new UpdatePOStatusRequestModel(request.referenceId, POStatusEnum.REJECTED));
             }
 
-            // Emit WebSocket event for real-time update
-            this.wsGateway.server
-                .to(WebSocketRoomHelper.getCompanyRoom(request.companyId))
-                .emit(WebSocketEvent.APPROVAL_REJECTED, {
-                    approvalId: request.id,
-                    referenceType: request.referenceType,
-                    referenceId: request.referenceId,
-                    companyId: request.companyId,
-                    timestamp: new Date()
-                });
+            // Notify requester persistently
+            await this.notificationsService.createNotification(request.requesterId, {
+                title: 'Request Rejected',
+                message: `Your ${request.referenceType} request (#${request.referenceId}) has been rejected.`,
+                type: NotificationType.ERROR,
+                category: 'approval',
+                remarks: model.remarks
+            } as any);
 
             return new RejectRequestResponseModel(true, 200, 'Request rejected');
         } catch (error) {

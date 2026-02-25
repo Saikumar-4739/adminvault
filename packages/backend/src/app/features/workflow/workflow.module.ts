@@ -10,6 +10,7 @@ import { ProcurementModule } from '../procurement/procurement.module';
 import { AdministrationModule } from '../administration/administration.module';
 import { EmployeesModule } from '../employees/employees.module';
 import { WebSocketModule } from '../websocket/websocket.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { AuthUsersRepository } from '../auth-users/repositories/auth-users.repository';
 
@@ -21,7 +22,8 @@ import { AuthUsersRepository } from '../auth-users/repositories/auth-users.repos
         forwardRef(() => ProcurementModule),
         forwardRef(() => AdministrationModule),
         forwardRef(() => EmployeesModule),
-        WebSocketModule
+        WebSocketModule,
+        NotificationsModule
     ],
     controllers: [WorkflowController],
     providers: [WorkflowService, ApprovalRequestRepository, AuthUsersRepository],

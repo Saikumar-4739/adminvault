@@ -7,7 +7,13 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
-import { Plus, Users, Edit, Mail, Phone, LayoutGrid, List, Search, Upload, Building2 } from 'lucide-react';
+import {
+    Plus, Trash2, Search,
+    Building2, Check, Users, Download, Upload,
+    LayoutGrid, List, Mail, Phone, Edit
+} from 'lucide-react';
+import { BulkActionBar } from '@/components/common/BulkActionBar';
+import { exportToCSV } from '@/lib/csv-utils';
 import dynamic from 'next/dynamic';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, IdRequestModel, CreateEmployeeModel, UpdateEmployeeModel, EmployeeStatusEnum } from '@adminvault/shared-models';
@@ -57,10 +63,13 @@ const EmployeesPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<any>(null);
     const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', companyId: '', departmentId: '', accountStatus: EmployeeStatusEnum.ACTIVE as string, billingAmount: '', remarks: '', managerId: '' });
+    const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(new Set());
+    const [isLoading, setIsLoading] = useState(false);
 
 
     const fetchEmployees = useCallback(async () => {
         try {
+            setIsLoading(true);
             // If selectedOrg is empty or 0, it fetches all employees
             const req = new IdRequestModel(Number(selectedOrg) || 0);
             const response = await employeeService.getAllEmployees(req);
@@ -86,8 +95,10 @@ const EmployeesPage: React.FC = () => {
             } else {
                 AlertMessages.getErrorMessage(response.message);
             }
-        } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message);
+        } catch (error) {
+            console.error('Failed to fetch employees:', error);
+        } finally {
+            setIsLoading(false);
         }
     }, [selectedOrg]);
 
@@ -212,6 +223,48 @@ const EmployeesPage: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    const handleToggleEmployee = (id: number) => {
+        const next = new Set(selectedEmployeeIds);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setSelectedEmployeeIds(next);
+    };
+
+    const handleBulkDeleteEmployees = async () => {
+        if (!window.confirm(`Are you sure you want to delete ${selectedEmployeeIds.size} employees?`)) return;
+        try {
+            setIsLoading(true);
+            const ids = Array.from(selectedEmployeeIds);
+            for (const id of ids) {
+                await employeeService.deleteEmployee({ id });
+            }
+            AlertMessages.getSuccessMessage(`Successfully deleted ${selectedEmployeeIds.size} employees`);
+            setSelectedEmployeeIds(new Set());
+            fetchEmployees();
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to perform bulk delete');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleBulkStatusUpdate = async (status: EmployeeStatusEnum) => {
+        try {
+            setIsLoading(true);
+            const ids = Array.from(selectedEmployeeIds);
+            for (const id of ids) {
+                // Assuming updateEmployee handles this
+                await employeeService.updateEmployee({ id, empStatus: status } as any);
+            }
+            AlertMessages.getSuccessMessage(`Successfully updated ${selectedEmployeeIds.size} employees to ${status}`);
+            setSelectedEmployeeIds(new Set());
+            fetchEmployees();
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to perform bulk status update');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
 
     const handleCloseModal = () => {
@@ -301,6 +354,12 @@ const EmployeesPage: React.FC = () => {
                     icon={<Users />}
                     gradient="from-indigo-600 to-indigo-700"
                     actions={[
+                        {
+                            label: 'Export CSV',
+                            onClick: () => exportToCSV(employees, 'employee_directory'),
+                            icon: <Download className="h-3.5 w-3.5" />,
+                            variant: 'outline'
+                        },
                         {
                             label: 'Import',
                             onClick: () => setIsImportModalOpen(true),
@@ -417,6 +476,17 @@ const EmployeesPage: React.FC = () => {
                                             : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700/60'
                                             }`}
                                     >
+                                        {/* Checkbox Overlay */}
+                                        <div
+                                            onClick={(e) => { e.stopPropagation(); handleToggleEmployee(emp.id); }}
+                                            className={`absolute top-4 left-4 z-20 w-5 h-5 rounded-md border-2 cursor-pointer flex items-center justify-center transition-all ${selectedEmployeeIds.has(emp.id)
+                                                ? 'bg-indigo-500 border-indigo-500 text-white'
+                                                : 'bg-white/50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 group-hover:border-indigo-400'
+                                                }`}
+                                        >
+                                            {selectedEmployeeIds.has(emp.id) && <Check className="h-3.5 w-3.5" />}
+                                        </div>
+
                                         {/* Top accent */}
                                         {/* <div className={`h-1 w-full bg-gradient-to-r ${getDepartmentBg(emp)}`} /> */}
 
@@ -477,8 +547,25 @@ const EmployeesPage: React.FC = () => {
                         >
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-700">
-                                    <tr>
-                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Employee</th>
+                                    <tr className="bg-slate-50/50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5">
+                                        <th className="p-4 w-10">
+                                            <div
+                                                onClick={() => {
+                                                    if (selectedEmployeeIds.size === filteredEmployees.length) {
+                                                        setSelectedEmployeeIds(new Set());
+                                                    } else {
+                                                        setSelectedEmployeeIds(new Set(filteredEmployees.map(e => e.id)));
+                                                    }
+                                                }}
+                                                className={`w-4 h-4 rounded border cursor-pointer flex items-center justify-center transition-all ${filteredEmployees.length > 0 && selectedEmployeeIds.size === filteredEmployees.length
+                                                    ? 'bg-indigo-500 border-indigo-500 text-white'
+                                                    : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
+                                                    }`}
+                                            >
+                                                {filteredEmployees.length > 0 && selectedEmployeeIds.size === filteredEmployees.length && <Check className="h-3 w-3" />}
+                                            </div>
+                                        </th>
+                                        <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Employee</th>
                                         <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Contact</th>
                                         <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Department</th>
                                         <th className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden xl:table-cell">Manager</th>
@@ -489,8 +576,19 @@ const EmployeesPage: React.FC = () => {
                                 </thead>
                                 <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
                                     {filteredEmployees.map((emp) => (
-                                        <tr key={emp.id} className="group hover:bg-slate-50/70 dark:hover:bg-slate-700/20 transition-colors">
-                                            <td className="px-3 py-2">
+                                        <tr key={emp.id} className={`border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors ${selectedEmployeeIds.has(emp.id) ? 'bg-indigo-500/[0.03]' : ''}`}>
+                                            <td className="p-4">
+                                                <div
+                                                    onClick={() => handleToggleEmployee(emp.id)}
+                                                    className={`w-4 h-4 rounded border cursor-pointer flex items-center justify-center transition-all ${selectedEmployeeIds.has(emp.id)
+                                                        ? 'bg-indigo-500 border-indigo-500 text-white'
+                                                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
+                                                        }`}
+                                                >
+                                                    {selectedEmployeeIds.has(emp.id) && <Check className="h-3 w-3" />}
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
                                                 <div className="flex items-center gap-2">
                                                     <div className={`w-7 h-7 rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0 bg-gradient-to-br ${getDepartmentBg(emp)}`}>
                                                         {getInitials(emp.firstName, emp.lastName)}
@@ -622,6 +720,23 @@ const EmployeesPage: React.FC = () => {
                     onSuccess={() => fetchEmployees()}
                 />
 
+                <BulkActionBar
+                    selectedCount={selectedEmployeeIds.size}
+                    onClear={() => setSelectedEmployeeIds(new Set())}
+                    actions={[
+                        {
+                            label: isLoading ? 'Working...' : 'Mark Active',
+                            icon: <Check className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />,
+                            onClick: () => handleBulkStatusUpdate(EmployeeStatusEnum.ACTIVE)
+                        },
+                        {
+                            label: isLoading ? 'Deleting...' : 'Delete Selected',
+                            icon: <Trash2 className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />,
+                            onClick: handleBulkDeleteEmployees,
+                            variant: 'danger'
+                        }
+                    ]}
+                />
             </div>
         </RouteGuard>
     );

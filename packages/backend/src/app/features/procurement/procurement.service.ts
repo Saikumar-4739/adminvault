@@ -12,6 +12,8 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { VendorsMasterEntity } from '../masters/vendor/entities/vendor.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '@adminvault/shared-models';
 @Injectable()
 export class ProcurementService {
     constructor(
@@ -20,7 +22,8 @@ export class ProcurementService {
         private poItemRepo: PurchaseOrderItemRepository,
         private employeeRepo: EmployeesRepository,
         @Inject(forwardRef(() => WorkflowService))
-        private workflowService: WorkflowService
+        private workflowService: WorkflowService,
+        private notificationsService: NotificationsService
     ) { }
 
     async createPO(data: CreatePOModel, userId?: number, userEmail?: string, ipAddress?: string): Promise<GlobalResponse> {
@@ -86,6 +89,17 @@ export class ProcurementService {
                 savedPO.approverId || undefined
             );
             await this.workflowService.initiateApproval(approvalReq);
+
+            // Persistent notification for requester
+            if (userId) {
+                await this.notificationsService.createNotification(userId, {
+                    title: 'Purchase Order Submitted',
+                    message: `Your PO #${savedPO.poNumber} has been submitted for approval.`,
+                    type: NotificationType.INFO,
+                    category: 'procurement',
+                    link: '/purchase-order'
+                });
+            }
 
             return new GlobalResponse(true, 201, 'Purchase Order created and submitted for approval');
         } catch (error) {

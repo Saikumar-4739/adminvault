@@ -2,9 +2,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+export type Theme = 'light' | 'dark' | 'system';
+
 interface ThemeContextType {
-    isDarkMode: boolean;
-    toggleDarkMode: () => void;
+    theme: Theme;
+    setTheme: (theme: Theme) => void;
+    isDarkMode: boolean; // Computed value based on theme and system preference
+    toggleDarkMode: () => void; // Legacy support
     fontFamily: string;
     setFontFamily: (font: string) => void;
 }
@@ -12,21 +16,17 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+    const [theme, setThemeState] = useState<Theme>('dark');
     const [isDarkMode, setIsDarkMode] = useState(true);
     const [fontFamily, setFontFamilyState] = useState('var(--font-outfit)');
 
     // Load theme from localStorage on mount
     useEffect(() => {
-        const storedTheme = localStorage.getItem('theme');
+        const storedTheme = localStorage.getItem('theme') as Theme | null;
         const storedFont = localStorage.getItem('font-family');
 
-        if (storedTheme === 'light') {
-            setIsDarkMode(false);
-            document.documentElement.classList.toggle('dark', false);
-        } else {
-            // Default to dark if 'dark' is stored OR no theme is stored
-            setIsDarkMode(true);
-            document.documentElement.classList.toggle('dark', true);
+        if (storedTheme) {
+            setThemeState(storedTheme);
         }
 
         if (storedFont) {
@@ -35,37 +35,46 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         } else {
             document.documentElement.style.setProperty('--app-font', 'var(--font-outfit)');
         }
+    }, []);
 
-        // Listen for system theme changes
+    // Handle theme changes and system preference sync
+    useEffect(() => {
+        const root = window.document.documentElement;
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = (e: MediaQueryListEvent) => {
-            if (!localStorage.getItem('theme')) {
-                if (e.matches) {
-                    setIsDarkMode(true);
-                    document.documentElement.classList.add('dark');
-                } else {
-                    setIsDarkMode(false);
-                    document.documentElement.classList.remove('dark');
-                }
+
+        const applyTheme = (currentTheme: Theme) => {
+            let resolved: boolean;
+
+            if (currentTheme === 'system') {
+                resolved = mediaQuery.matches;
+            } else {
+                resolved = currentTheme === 'dark';
+            }
+
+            setIsDarkMode(resolved);
+            root.classList.toggle('dark', resolved);
+        };
+
+        applyTheme(theme);
+
+        const handleChange = () => {
+            if (theme === 'system') {
+                applyTheme('system');
             }
         };
 
         mediaQuery.addEventListener('change', handleChange);
         return () => mediaQuery.removeEventListener('change', handleChange);
-    }, []);
+    }, [theme]);
+
+    const setTheme = (newTheme: Theme) => {
+        setThemeState(newTheme);
+        localStorage.setItem('theme', newTheme);
+    };
 
     const toggleDarkMode = () => {
-        setIsDarkMode((prev) => {
-            const newValue = !prev;
-            if (newValue) {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            }
-            return newValue;
-        });
+        const nextTheme = isDarkMode ? 'light' : 'dark';
+        setTheme(nextTheme);
     };
 
     const setFontFamily = (font: string) => {
@@ -79,7 +88,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // and then hydrate with the stored theme on the client.
 
     return (
-        <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode, fontFamily, setFontFamily }}>
+        <ThemeContext.Provider value={{ theme, setTheme, isDarkMode, toggleDarkMode, fontFamily, setFontFamily }}>
             {children}
         </ThemeContext.Provider>
     );

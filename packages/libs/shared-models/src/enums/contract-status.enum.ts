@@ -1,0 +1,7 @@
+export enum ContractStatusEnum {
+    ACTIVE = 'ACTIVE',
+    EXPIRED = 'EXPIRED',
+    TERMINATED = 'TERMINATED',
+    RENEWED = 'RENEWED',
+    PENDING_RENEWAL = 'PENDING_RENEWAL'
+}
