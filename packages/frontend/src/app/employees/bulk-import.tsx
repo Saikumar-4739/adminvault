@@ -40,14 +40,8 @@ export const EmployeeBulkImportModal: React.FC<EmployeeBulkImportModalProps> = (
             'Reporting Manager (ID, Email, or Full Name)',
             'Company Name (optional - for validation)'
         ];
-        const exampleRow = [
-            'John', 'Doe', 'john.doe@company.com', '9876543210',
-            'Engineering', 'active', '5000', 'Senior Developer',
-            'Jane Smith',           // manager by full name
-            'Acme Corp'             // optional — must match selected company
-        ];
         const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
+        const ws = XLSX.utils.aoa_to_sheet([headers]);
         XLSX.utils.book_append_sheet(wb, ws, 'Template');
         XLSX.writeFile(wb, 'Employee_Import_Template.xlsx');
     };
@@ -77,6 +71,9 @@ export const EmployeeBulkImportModal: React.FC<EmployeeBulkImportModalProps> = (
                     }, 2000);
                 } else {
                     AlertMessages.getErrorMessage(response.message);
+                    if (response.successCount > 0) {
+                        onSuccess();
+                    }
                 }
             } else {
                 AlertMessages.getErrorMessage(response.message);
@@ -104,10 +101,6 @@ export const EmployeeBulkImportModal: React.FC<EmployeeBulkImportModalProps> = (
                     <h4 className="text-sm font-semibold mb-2 text-slate-800 dark:text-slate-200">Instructions:</h4>
                     <ul className="list-disc list-inside text-sm text-slate-600 dark:text-slate-400 space-y-1">
                         <li>Download the template and fill in employee details.</li>
-                        <li>Department matches by <strong>ID or Name</strong> (case-insensitive).</li>
-                        <li>Reporting Manager accepts <strong>Employee ID</strong>, <strong>Email</strong>, or <strong>Full Name</strong> (e.g. <em>Jane Smith</em>).</li>
-                        <li><strong>Company Name</strong> column is optional — if filled, it must match the selected organization exactly.</li>
-                        <li>Email must be unique. Status: <code>active</code> or <code>inactive</code>.</li>
                     </ul>
                     <div className="mt-4">
                         <Button

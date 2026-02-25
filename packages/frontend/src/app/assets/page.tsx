@@ -1,17 +1,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-    Package, Warehouse, History, Plus, FileUp, Filter,
-    Activity, CheckCircle2, User, RefreshCw, Clock, AlertCircle, Check
-} from 'lucide-react';
+import { Package, Warehouse, History, Plus, FileUp, Filter, Activity, CheckCircle2, User, RefreshCw, Clock, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-
 import { ModernTabs } from './components/ModernTabs';
 import { AllAssetsTab } from './components/AllAssetsTab';
 import dynamic from 'next/dynamic';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { RouteGuard } from '@/components/auth/RouteGuard';
+import { UserRoleEnum } from '@adminvault/shared-models';
+import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
+import { assetService, companyService, workflowService } from '@/lib/api/services';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
+import { AssetSearchRequestModel, IdRequestModel, GetPendingApprovalsRequestModel, WebSocketEvent } from '@adminvault/shared-models';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWebSocketEvent } from '@/hooks/useWebSocket';
 
 const AssetQRModal = dynamic(() => import('./components/AssetQRModal').then(mod => mod.AssetQRModal), { ssr: false });
 const AssetTimelineModal = dynamic(() => import('./components/AssetTimelineModal').then(mod => mod.AssetTimelineModal), { ssr: false });
@@ -21,17 +26,6 @@ const AssetFormModal = dynamic(() => import('./components/AssetFormModal').then(
 const AssignAssetModal = dynamic(() => import('./components/AssignAssetModal').then(mod => mod.AssignAssetModal), { ssr: false });
 const RequestApprovalModal = dynamic(() => import('./components/RequestApprovalModal').then(mod => mod.RequestApprovalModal), { ssr: false });
 
-import { PageHeader } from '@/components/ui/PageHeader';
-import { RouteGuard } from '@/components/auth/RouteGuard';
-import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { UserRoleEnum } from '@adminvault/shared-models';
-
-import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
-import { assetService, companyService, workflowService } from '@/lib/api/services';
-import { AlertMessages } from '@/lib/utils/AlertMessages';
-import { AssetSearchRequestModel, IdRequestModel, GetPendingApprovalsRequestModel, WebSocketEvent } from '@adminvault/shared-models';
-import { useAuth } from '@/contexts/AuthContext';
-import { useWebSocketEvent } from '@/hooks/useWebSocket';
 
 interface Asset {
     id: number;
@@ -54,6 +48,7 @@ interface Asset {
     assignedToEmployeeId?: number;
     previousUserEmployeeId?: number;
     previousUser?: string;
+    managerName?: string;
 }
 
 interface AssetStatistics {
@@ -120,13 +115,14 @@ const AssetsPage: React.FC = () => {
                     purchaseDate: item.purchaseDate,
                     warrantyExpiry: item.warrantyExpiry,
                     createdAt: item.createdAt || item.created_at,
-                    assignedTo: item.assignedTo,
+                    assignedTo: item.assignedTo?.trim() || undefined,
                     assignedDate: item.assignedDate,
                     userAssignedDate: item.userAssignedDate,
                     lastReturnDate: item.lastReturnDate,
                     assignedToEmployeeId: item.assignedToEmployeeId,
                     previousUserEmployeeId: item.previousUserEmployeeId,
-                    previousUser: item.previousUser
+                    previousUser: item.previousUser,
+                    managerName: item.managerName?.trim() || undefined
                 }));
                 setAssets(mappedAssets);
             } else {
@@ -254,13 +250,14 @@ const AssetsPage: React.FC = () => {
                     purchaseDate: item.purchaseDate,
                     warrantyExpiry: item.warrantyExpiry,
                     createdAt: item.createdAt || item.created_at,
-                    assignedTo: item.assignedTo,
+                    assignedTo: item.assignedTo?.trim() || undefined,
                     assignedDate: item.assignedDate,
                     userAssignedDate: item.userAssignedDate,
                     lastReturnDate: item.lastReturnDate,
                     assignedToEmployeeId: item.assignedToEmployeeId,
                     previousUserEmployeeId: item.previousUserEmployeeId,
-                    previousUser: item.previousUser
+                    previousUser: item.previousUser,
+                    managerName: item.managerName?.trim() || undefined
                 }));
                 setAssets(mappedAssets);
             } else {
@@ -405,7 +402,7 @@ const AssetsPage: React.FC = () => {
                 </PageHeader>
 
                 {/* Statistics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     <StatCard
                         label="Total Inventory"
                         value={statistics?.total}
@@ -413,7 +410,7 @@ const AssetsPage: React.FC = () => {
                         gradient="from-indigo-500 to-blue-600"
                     />
                     <StatCard
-                        label="Active Units"
+                        label="Assigned Assets"
                         value={statistics?.inUse}
                         icon={<Activity className="h-6 w-6" />}
                         gradient="from-emerald-500 to-teal-600"
@@ -429,6 +426,12 @@ const AssetsPage: React.FC = () => {
                         value={statistics?.maintenance}
                         icon={<RefreshCw className="h-6 w-6" />}
                         gradient="from-orange-500 to-amber-600"
+                    />
+                    <StatCard
+                        label="Pending Approvals"
+                        value={pendingApprovals?.length || 0}
+                        icon={<Clock className="h-6 w-6" />}
+                        gradient="from-purple-500 to-pink-600"
                     />
                 </div>
 
@@ -452,7 +455,7 @@ const AssetsPage: React.FC = () => {
                                     <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent" />
                                 </div>
                             ) : pendingApprovals.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+                                <div className="flex flex-col items-center justify-center py-20">
                                     <div className="w-16 h-16 bg-gradient-to-tr from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-full flex items-center justify-center mb-4">
                                         <Check className="w-8 h-8 text-indigo-500" />
                                     </div>
@@ -460,13 +463,13 @@ const AssetsPage: React.FC = () => {
                                     <p className="text-sm text-slate-500 dark:text-slate-400">All asset requests have been reviewed.</p>
                                 </div>
                             ) : (
-                                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                     {pendingApprovals.map((approval) => {
                                         const asset = assets.find(a => a.id === approval.referenceId);
                                         return (
-                                            <div key={approval.id} className="flex flex-col bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900/50 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                                                <div className="h-1.5 w-full bg-gradient-to-r from-indigo-400 to-purple-500" />
-                                                <div className="p-5 flex flex-col gap-3">
+                                            <div key={approval.id} className="flex flex-col bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900/50 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                                                <div className="h-1 w-full bg-gradient-to-r from-indigo-400 to-purple-500" />
+                                                <div className="p-4 flex flex-col gap-3">
                                                     {/* Header row */}
                                                     <div className="flex justify-between items-start">
                                                         <div className="flex items-center gap-2">
@@ -489,13 +492,13 @@ const AssetsPage: React.FC = () => {
                                                     </div>
                                                     {/* Details */}
                                                     <div className="grid grid-cols-2 gap-2 text-[11px]">
-                                                        {asset?.assetType && (
-                                                            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-lg px-3 py-2">
-                                                                <p className="text-slate-400 font-semibold mb-0.5">Type</p>
-                                                                <p className="text-slate-700 dark:text-slate-200 font-bold">{asset.assetType}</p>
-                                                            </div>
-                                                        )}
-                                                        <div className="bg-slate-50 dark:bg-slate-800/60 rounded-lg px-3 py-2">
+                                                        <div className="bg-slate-50 dark:bg-slate-800/60 rounded-lg px-3 py-2 col-span-2">
+                                                            <p className="text-slate-400 font-semibold mb-0.5">Requester / Type</p>
+                                                            <p className="text-slate-700 dark:text-slate-200 font-bold">
+                                                                {approval.requesterName?.trim() ? `${approval.requesterName.trim()} ${approval.managerName?.trim() ? `(Mgr: ${approval.managerName.trim()})` : ''}` : (asset?.assetType && asset.assetType !== 'Unknown' ? asset.assetType : 'N/A')}
+                                                            </p>
+                                                        </div>
+                                                        <div className="bg-slate-50 dark:bg-slate-800/60 rounded-lg px-3 py-2 col-span-2">
                                                             <p className="text-slate-400 font-semibold mb-0.5">Submitted</p>
                                                             <p className="text-slate-700 dark:text-slate-200 font-bold">{new Date(approval.createdAt).toLocaleDateString()}</p>
                                                         </div>

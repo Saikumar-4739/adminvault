@@ -23,7 +23,7 @@ export class AssetTabsService {
     async getStoreAssets(reqModel: GetStoreAssetsRequestModel): Promise<GetStoreAssetsResponseModel> {
         try {
             const results = await this.assetInfoRepo.getStoreAssets({ id: reqModel.companyId });
-            const assets: StoreAssetModel[] = results.map(r => ({ id: r.id, deviceName: r.deviceName, configuration: r.configuration, serialNumber: r.serialNumber, expressCode: r.expressCode, boxNo: r.boxNo, pastUserName: r.pastUserName, presentUserName: r.presentUserName, assetStatusEnum: r.assetStatusEnum, brandName: r.brandName, model: r.model, warrantyExpiry: r.warrantyExpiry }));
+            const assets: StoreAssetModel[] = results.map(r => ({ id: r.id, deviceName: r.deviceName, configuration: r.configuration, serialNumber: r.serialNumber, boxNo: r.boxNo, pastUserName: r.pastUserName, presentUserName: r.presentUserName, assetStatusEnum: r.assetStatusEnum, brandName: r.brandName, model: r.model, warrantyExpiry: r.warrantyExpiry }));
             return new GetStoreAssetsResponseModel(true, 200, 'Store assets retrieved successfully', assets);
         } catch (error) {
             throw error;

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { EmailInfoService } from './email-info.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
@@ -110,6 +110,16 @@ export class EmailController {
         try {
             const result = await this.emailService.sendAssetApprovalEmail(req);
             return new GlobalResponse(result, result ? 200 : 500, result ? 'Email sent successfully' : 'Failed to send email');
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Get('getAllAccessRequests')
+    async getAllAccessRequests(): Promise<GlobalResponse> {
+        try {
+            const requests = await this.emailService.getAllAccessRequests();
+            return new GlobalResponse(true, 200, "Access requests fetched successfully", requests as any);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

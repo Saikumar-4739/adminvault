@@ -18,9 +18,6 @@ export class AssetInfoEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'serial_number', length: 255, nullable: false, unique: true, comment: 'Asset serial number / Service Tag' })
     serialNumber: string;
 
-    @Column('varchar', { name: 'express_code', length: 255, nullable: true, comment: 'Dell Express Service Code' })
-    expressCode: string;
-
     @Column('varchar', { name: 'box_no', length: 100, nullable: true, comment: 'Physical box/storage location number' })
     boxNo: string;
 
@@ -54,23 +51,11 @@ export class AssetInfoEntity extends CommonBaseEntity {
     @Column('timestamp', { name: 'last_sync', nullable: true, comment: 'Last device sync time' })
     lastSync: Date | null;
 
-    @Column('varchar', { name: 'os_version', length: 50, nullable: true, comment: 'Operating System Version' })
-    osVersion: string;
-
-    @Column('varchar', { name: 'mac_address', length: 50, nullable: true, comment: 'MAC Address' })
-    macAddress: string;
-
-    @Column('varchar', { name: 'ip_address', length: 50, nullable: true, comment: 'IP Address' })
-    ipAddress: string;
-
     @Column('enum', { name: 'encryption_status', enum: EncryptionStatusEnum, default: EncryptionStatusEnum.UNKNOWN, nullable: true, comment: 'Disk encryption status' })
     encryptionStatus: EncryptionStatusEnum;
 
     @Column('int', { name: 'battery_level', nullable: true, comment: 'Battery level percentage' })
     batteryLevel: number | null;
-
-    @Column('varchar', { name: 'storage_total', length: 20, nullable: true, comment: 'Total storage capacity' })
-    storageTotal: string;
 
     @Column('varchar', { name: 'storage_available', length: 20, nullable: true, comment: 'Available storage capacity' })
     storageAvailable: string;

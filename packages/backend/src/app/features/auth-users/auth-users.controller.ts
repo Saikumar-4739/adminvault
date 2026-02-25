@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
-import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel, RefreshTokenModel, IdRequestModel } from '@adminvault/shared-models';
+import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel, RefreshTokenModel, IdRequestModel, AccessRequestsListModel } from '@adminvault/shared-models';
 import { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
 
@@ -121,6 +121,26 @@ export class AuthUsersController {
         }
     }
 
+
+    @UseGuards(JwtAuthGuard)
+    @Get('getAccessRequests')
+    async getAccessRequests(): Promise<AccessRequestsListModel> {
+        try {
+            return await this.service.getAccessRequests();
+        } catch (error) {
+            return returnException(AccessRequestsListModel, error);
+        }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('closeAccessRequest')
+    async closeAccessRequest(@Body() body: { id: number }): Promise<GlobalResponse> {
+        try {
+            return await this.service.closeAccessRequest(Number(body.id));
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
 
     @UseGuards(JwtAuthGuard)
     @Post('verify-password')

@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { DeleteUserModel, GetAllUsersModel, GlobalResponse, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, RequestAccessModel, UpdateUserModel, ForgotPasswordModel, ResetPasswordModel, IdRequestModel } from '@adminvault/shared-models';
+import { DeleteUserModel, GetAllUsersModel, GlobalResponse, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, RequestAccessModel, UpdateUserModel, ForgotPasswordModel, ResetPasswordModel, IdRequestModel, AccessRequestsListModel } from '@adminvault/shared-models';
 
 export class AuthUsersService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -49,6 +49,14 @@ export class AuthUsersService extends CommonAxiosService {
 
     async getMe(config?: AxiosRequestConfig): Promise<LoginResponseModel> {
         return await this.axiosGetCall(this.getURLwithMainEndPoint('getMe'), config);
+    }
+
+    async getAccessRequests(config?: AxiosRequestConfig): Promise<AccessRequestsListModel> {
+        return await this.axiosGetCall(this.getURLwithMainEndPoint('getAccessRequests'), config);
+    }
+
+    async closeAccessRequest(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('closeAccessRequest'), { id }, config);
     }
 
     getGoogleAuthUrl() {

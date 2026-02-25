@@ -174,6 +174,8 @@ export class SendAssetAssignedEmailModel {
     assignedDate: Date;
     isReassignment: boolean;
     remarks?: string;
+    assignedToName?: string;
+    recipientRole?: 'ASSIGNEE' | 'MANAGER' | 'ADMIN';
 
     constructor(
         recipientEmail: string,
@@ -182,7 +184,9 @@ export class SendAssetAssignedEmailModel {
         assignedBy: string,
         assignedDate: Date,
         isReassignment: boolean = false,
-        remarks?: string
+        remarks?: string,
+        assignedToName?: string,
+        recipientRole: 'ASSIGNEE' | 'MANAGER' | 'ADMIN' = 'ASSIGNEE'
     ) {
         this.recipientEmail = recipientEmail;
         this.recipientName = recipientName;
@@ -191,6 +195,8 @@ export class SendAssetAssignedEmailModel {
         this.assignedDate = assignedDate;
         this.isReassignment = isReassignment;
         this.remarks = remarks;
+        this.assignedToName = assignedToName;
+        this.recipientRole = recipientRole;
     }
 }
 
@@ -207,6 +213,14 @@ export class SendTicketStatusUpdateEmailModel {
         this.roleName = roleName;
         this.oldStatus = oldStatus;
         this.newStatus = newStatus;
+    }
+}
+
+export class GetAllAccessRequestsModel extends GlobalResponse {
+    override data: any[];
+    constructor(status: boolean, code: number, message: string, data: any[]) {
+        super(status, code, message);
+        this.data = data;
     }
 }
 

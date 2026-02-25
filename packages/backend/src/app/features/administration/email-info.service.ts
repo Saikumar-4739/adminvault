@@ -115,7 +115,7 @@ export class EmailInfoService {
   }
 
   async sendAccessRequestEmail(request: RequestAccessModel): Promise<boolean> {
-    const adminEmail = 'inolyse@gmail.com';
+    const adminEmail = this.configService.get<string>('ADMIN_EMAIL') || this.configService.get<string>('EMAIL_USER');
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
 
     const emailUser = this.configService.get<string>('EMAIL_USER');
@@ -656,7 +656,7 @@ export class EmailInfoService {
   }
 
   async sendAssetAssignedEmail(reqModel: SendAssetAssignedEmailModel): Promise<boolean> {
-    const { recipientEmail, recipientName, assetName, assignedBy, assignedDate, isReassignment, remarks } = reqModel;
+    const { recipientEmail, recipientName, assetName, assignedBy, assignedDate, isReassignment, remarks, assignedToName, recipientRole } = reqModel;
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
     const emailUser = this.configService.get<string>('EMAIL_USER');
     const emailPass = this.configService.get<string>('EMAIL_PASS');
@@ -669,10 +669,24 @@ export class EmailInfoService {
     const actionText = isReassignment ? 'Reassigned' : 'Assigned';
     const subjectPrefix = isReassignment ? '[Asset Reassignment]' : '[Asset Assignment]';
 
+    let subjectLine = '';
+    let messageLine = '';
+
+    if (recipientRole === 'MANAGER') {
+      subjectLine = `${subjectPrefix} ${assetName} has been ${actionText.toLowerCase()} to your team member, ${assignedToName}`;
+      messageLine = `The following asset has been <strong>${actionText.toLowerCase()}</strong> to your team member, <strong>${assignedToName}</strong>.`;
+    } else if (recipientRole === 'ADMIN') {
+      subjectLine = `${subjectPrefix} ${assetName} has been ${actionText.toLowerCase()} to ${assignedToName}`;
+      messageLine = `The following asset has been <strong>${actionText.toLowerCase()}</strong> to <strong>${assignedToName}</strong>.`;
+    } else {
+      subjectLine = `${subjectPrefix} ${assetName} has been ${actionText.toLowerCase()} to you`;
+      messageLine = `The following asset has been <strong>${actionText.toLowerCase()}</strong> to you.`;
+    }
+
     const mailOptions = {
       from: `"AdminVault Assets" <${emailUser}>`,
       to: recipientEmail,
-      subject: `${subjectPrefix} ${assetName} has been ${actionText.toLowerCase()} to you`,
+      subject: subjectLine,
       html: `
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
   <tr>
@@ -690,7 +704,7 @@ export class EmailInfoService {
         <tr>
           <td style="padding:16px 20px;font-size:14px;color:#111827;">
             Hello <strong>${recipientName}</strong>,<br><br>
-            The following asset has been <strong>${actionText.toLowerCase()}</strong> to you.
+            ${messageLine}
             ${remarks ? `<br><br><em>Notes: "${remarks}"</em>` : ''}
           </td>
         </tr>

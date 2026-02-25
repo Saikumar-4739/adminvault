@@ -11,14 +11,13 @@ interface AssetQRModalProps {
     isOpen: boolean;
     onClose: () => void;
     asset: any;
-    onPrint?: () => void;
 }
 
 interface AssetQRModalProps {
     children?: React.ReactNode;
 }
 
-export const AssetQRModal: React.FC<AssetQRModalProps> = ({ isOpen, onClose, asset, onPrint }: AssetQRModalProps) => {
+export const AssetQRModal: React.FC<AssetQRModalProps> = ({ isOpen, onClose, asset }: AssetQRModalProps) => {
     const componentRef = useRef<HTMLDivElement>(null);
 
     if (!asset) return null;
@@ -28,6 +27,70 @@ export const AssetQRModal: React.FC<AssetQRModalProps> = ({ isOpen, onClose, ass
         sn: asset.serialNumber,
         model: asset.model
     });
+
+    const handlePrint = () => {
+        if (!componentRef.current) return;
+
+        const printContent = componentRef.current.innerHTML;
+        const printWindow = window.open('', '', 'width=600,height=600');
+
+        if (printWindow) {
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Print Asset QR Code - ${asset.serialNumber}</title>
+                        <style>
+                            body {
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                height: 100vh;
+                                margin: 0;
+                                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                            }
+                            .qr-container {
+                                text-align: center;
+                                padding: 20px;
+                                border: 2px solid #000;
+                                border-radius: 8px;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                            }
+                            .serial {
+                                font-size: 1.25rem;
+                                font-weight: bold;
+                                margin-top: 12px;
+                                color: #000;
+                            }
+                            .model {
+                                font-size: 0.875rem;
+                                font-weight: 500;
+                                color: #4b5563; /* Tailwind slate-600 */
+                            }
+                            img, svg {
+                                max-width: 100%;
+                                height: auto;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="qr-container">
+                            ${printContent}
+                        </div>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+
+            // Wait for SVG/images to render before printing
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
+    };
 
     return (
         <Modal
@@ -67,7 +130,7 @@ export const AssetQRModal: React.FC<AssetQRModalProps> = ({ isOpen, onClose, ass
                         variant="primary"
                         className="flex-1"
                         leftIcon={<Printer className="h-4 w-4" />}
-                        onClick={onPrint}
+                        onClick={handlePrint}
                     >
                         Print QR
                     </Button>

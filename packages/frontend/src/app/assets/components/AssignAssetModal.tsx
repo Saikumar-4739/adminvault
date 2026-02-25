@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { assetService, employeeService, workflowService } from '@/lib/api/services';
-import { ApprovalTypeEnum, CreateApprovalRequestModel, IdRequestModel, AssignAssetOpRequestModel } from '@adminvault/shared-models';
+import { ApprovalTypeEnum, CreateApprovalRequestModel, IdRequestModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, AssetStatusEnum } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -24,6 +24,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
     const [isLoading, setIsLoading] = useState(false);
     const [employees, setEmployees] = useState<any[]>([]);
 
+    const [actionType, setActionType] = useState<'reassign' | 'return' | 'maintenance' | 'retired'>('reassign');
     const [formData, setFormData] = useState({
         employeeId: '',
         assignedDate: new Date().toISOString().split('T')[0],
@@ -32,9 +33,10 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
     });
 
     const fetchEmployees = useCallback(async () => {
-        if (!user?.companyId) return;
+        const targetCompanyId = asset?.companyId ?? user?.companyId;
+        if (targetCompanyId === undefined) return;
         try {
-            const req = new IdRequestModel(user.companyId);
+            const req = new IdRequestModel(targetCompanyId);
             const response = await employeeService.getAllEmployees(req as any);
             if (response.status) {
                 setEmployees(response.data || []);
@@ -42,11 +44,12 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message || 'Failed to fetch employees');
         }
-    }, [user?.companyId]);
+    }, [user?.companyId, asset?.companyId]);
 
     useEffect(() => {
         if (isOpen) {
             fetchEmployees();
+            setActionType('reassign');
             setFormData({
                 employeeId: '',
                 assignedDate: new Date().toISOString().split('T')[0],
@@ -77,47 +80,64 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
         }
 
         try {
-            if (formData.requireApproval) {
-                // Workflow Flow: admin submits approval request for the selected employee
-                // requesterId = admin user (who is initiating)
-                // assignedToEmployeeId = selected employee (whose manager gets the email)
-                const approvalReq = new CreateApprovalRequestModel(
-                    ApprovalTypeEnum.ASSET_ALLOCATION,
-                    asset.id,
-                    user.id,                          // admin's auth user ID
-                    Number(user.companyId),
-                    formData.remarks || 'Asset Allocation Request',
-                    undefined,                        // no manual email needed
-                    user.fullName || 'Admin',         // requester name for email
-                    Number(formData.employeeId)       // selected employee's ID → used to find their manager
-                );
+            if (actionType === 'reassign') {
+                if (formData.requireApproval) {
+                    const approvalReq = new CreateApprovalRequestModel(
+                        ApprovalTypeEnum.ASSET_ALLOCATION,
+                        asset.id,
+                        user.id,
+                        Number(user.companyId),
+                        formData.remarks || 'Asset Allocation Request',
+                        undefined,
+                        user.fullName || 'Admin',
+                        Number(formData.employeeId)
+                    );
 
-                const response = await workflowService.initiateApproval(approvalReq);
-                if (response.status) {
-                    AlertMessages.getSuccessMessage('Approval request submitted');
-                    onSuccess();
-                    onClose();
+                    const response = await workflowService.initiateApproval(approvalReq);
+                    if (response.status) {
+                        AlertMessages.getSuccessMessage('Approval request submitted');
+                        onSuccess();
+                        onClose();
+                    } else {
+                        AlertMessages.getErrorMessage(response.message || 'Failed to submit approval');
+                    }
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to submit approval');
+                    const req = new AssignAssetOpRequestModel(
+                        asset.id,
+                        Number(formData.employeeId),
+                        user.id,
+                        formData.remarks
+                    );
+                    const response = await assetService.assignAssetOp(req);
+
+                    if (response.status) {
+                        AlertMessages.getSuccessMessage('Asset assigned successfully');
+                        onSuccess();
+                        onClose();
+                    } else {
+                        AlertMessages.getErrorMessage(response.message || 'Failed to assign asset');
+                    }
                 }
-
-
             } else {
-                // Direct Assignment Flow
-                const req = new AssignAssetOpRequestModel(
-                    asset.id,
-                    Number(formData.employeeId),
-                    user.id,
-                    formData.remarks
-                );
-                const response = await assetService.assignAssetOp(req);
+                // Handling Return, Maintenance, Retired
+                let targetStatus = AssetStatusEnum.AVAILABLE;
+                if (actionType === 'maintenance') targetStatus = AssetStatusEnum.MAINTENANCE;
+                if (actionType === 'retired') targetStatus = AssetStatusEnum.RETIRED;
 
+                const req = new ReturnAssetOpRequestModel(
+                    asset.id,
+                    user.id,
+                    formData.remarks,
+                    targetStatus
+                );
+
+                const response = await assetService.returnAssetOp(req as any);
                 if (response.status) {
-                    AlertMessages.getSuccessMessage('Asset assigned successfully');
+                    AlertMessages.getSuccessMessage('Asset status updated successfully');
                     onSuccess();
                     onClose();
                 } else {
-                    AlertMessages.getErrorMessage(response.message || 'Failed to assign asset');
+                    AlertMessages.getErrorMessage(response.message || 'Failed to update asset');
                 }
             }
         } catch (error: any) {
@@ -135,50 +155,73 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
             size="md"
         >
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                {/* Employee Selection */}
-                <div>
-                    <Select
-                        label="Assign To Employee"
-                        name="employeeId"
-                        value={formData.employeeId}
-                        onChange={handleChange}
-                        options={[
-                            { value: '', label: 'Select Employee' },
-                            ...employees.map(e => ({
-                                value: e.id,
-                                label: `${e.firstName} ${e.lastName}${e.managerName ? ` (Mgr: ${e.managerName})` : ''}`
-                            }))
-                        ]}
-                        required
-                    />
-                </div>
+                {/* Action Type Selection (Only for already assigned functionality) */}
+                {(asset?.assignedToEmployeeId || asset?.assetStatusEnum === AssetStatusEnum.IN_USE) && (
+                    <div>
+                        <Select
+                            label="Action"
+                            name="actionType"
+                            value={actionType}
+                            onChange={(e) => setActionType(e.target.value as any)}
+                            options={[
+                                { value: 'reassign', label: 'Reassign to Employee' },
+                                { value: 'return', label: 'Return to Store' },
+                                { value: 'maintenance', label: 'Move to Maintenance' },
+                                { value: 'retired', label: 'Mark as Retired' }
+                            ]}
+                            required
+                        />
+                    </div>
+                )}
 
-                {/* Assignment Date */}
-                <div>
-                    <Input
-                        label="Assignment Date"
-                        name="assignedDate"
-                        type="date"
-                        value={formData.assignedDate}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
+                {actionType === 'reassign' && (
+                    <>
+                        {/* Employee Selection */}
+                        <div>
+                            <Select
+                                label="Assign To Employee"
+                                name="employeeId"
+                                value={formData.employeeId}
+                                onChange={handleChange}
+                                options={[
+                                    { value: '', label: 'Select Employee' },
+                                    ...employees.map(e => ({
+                                        value: e.id,
+                                        label: `${e.firstName} ${e.lastName}${e.managerName ? ` (Mgr: ${e.managerName})` : ''}`
+                                    }))
+                                ]}
+                                required={actionType === 'reassign'}
+                            />
+                        </div>
 
-                {/* Approval Checkbox */}
-                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <input
-                        type="checkbox"
-                        id="requireApproval"
-                        name="requireApproval"
-                        checked={formData.requireApproval}
-                        onChange={handleChange}
-                        className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                    />
-                    <label htmlFor="requireApproval" className="text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
-                        Require Manager Approval
-                    </label>
-                </div>
+                        {/* Assignment Date */}
+                        <div>
+                            <Input
+                                label="Assignment Date"
+                                name="assignedDate"
+                                type="date"
+                                value={formData.assignedDate}
+                                onChange={handleChange}
+                                required={actionType === 'reassign'}
+                            />
+                        </div>
+
+                        {/* Approval Checkbox */}
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <input
+                                type="checkbox"
+                                id="requireApproval"
+                                name="requireApproval"
+                                checked={formData.requireApproval}
+                                onChange={handleChange}
+                                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                            />
+                            <label htmlFor="requireApproval" className="text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
+                                Require Manager Approval
+                            </label>
+                        </div>
+                    </>
+                )}
 
                 {/* Remarks */}
                 <div>

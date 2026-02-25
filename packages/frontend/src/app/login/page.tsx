@@ -91,8 +91,8 @@ const LoginPage: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="relative z-10 w-full max-w-7xl mx-auto px-6 py-8">
-                <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-8">
+                <div className="grid lg:grid-cols-2 gap-10 items-center">
                     {/* Left Side - Enhanced Branding */}
                     <div className={`space-y-6 hidden lg:block transition-colors duration-700 ${isDarkMode ? 'text-white' : 'text-slate-900'
                         }`}>
@@ -432,17 +432,23 @@ const LoginPage: React.FC = () => {
                                     </Button> */}
 
                                     {/* Additional Links */}
-                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
                                         <Link
                                             href="/request-access"
-                                            className={`text-sm font-bold transition-all duration-300 flex items-center gap-2 group/link ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+                                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border font-bold text-sm transition-all duration-300 group/link ${isDarkMode
+                                                ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:border-blue-400/60 hover:text-blue-300'
+                                                : 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100 hover:border-blue-400 hover:text-blue-700'
+                                                }`}
                                         >
                                             <Users className="h-4 w-4 transition-transform group-hover/link:scale-110" />
                                             <span>Request Access</span>
                                         </Link>
                                         <Link
                                             href="/forgot-password"
-                                            className={`text-sm font-bold transition-all duration-300 flex items-center gap-2 group/link ${isDarkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-700'}`}
+                                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border font-bold text-sm transition-all duration-300 group/link ${isDarkMode
+                                                    ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-400/60 hover:text-indigo-300'
+                                                    : 'bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100 hover:border-indigo-400 hover:text-indigo-700'
+                                                }`}
                                         >
                                             <Lock className="h-4 w-4 transition-transform group-hover/link:scale-110" />
                                             <span>Password Reset</span>

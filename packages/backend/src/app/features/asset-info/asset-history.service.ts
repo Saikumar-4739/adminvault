@@ -17,12 +17,18 @@ export class AssetHistoryService {
 
     async getAssetTimeline(reqModel: AssetTimelineRequestModel): Promise<AssetTimelineResponseModel> {
         try {
-            const assetId = Number(reqModel.companyId);
-            const companyId = Number(reqModel.companyId);
-            const asset = await this.assetRepo.findOne({ where: { id: assetId, companyId } });
+            const assetId = Number(reqModel.id);
+            let companyId = Number(reqModel.companyId);
+
+            const findCriteria: any = { id: assetId };
+            if (companyId) findCriteria.companyId = companyId;
+
+            const asset = await this.assetRepo.findOne({ where: findCriteria });
             if (!asset) {
                 return new AssetTimelineResponseModel(false, 404, 'Asset not found', []);
             }
+
+            companyId = asset.companyId;
 
             const events: AssetTimelineEvent[] = [];
             // 1. Creation Event

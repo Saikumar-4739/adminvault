@@ -96,6 +96,7 @@ export class ApprovalRequestResponseModel {
     referenceId: number;
     status: ApprovalStatusEnum;
     requesterName: string;
+    managerName?: string;
     requestedAt: Date;
     description?: string;
 
@@ -106,7 +107,8 @@ export class ApprovalRequestResponseModel {
         status: ApprovalStatusEnum,
         requesterName: string,
         requestedAt: Date,
-        description?: string
+        description?: string,
+        managerName?: string
     ) {
         this.id = id;
         this.referenceType = referenceType;
@@ -115,6 +117,7 @@ export class ApprovalRequestResponseModel {
         this.requesterName = requesterName;
         this.requestedAt = requestedAt;
         this.description = description;
+        this.managerName = managerName;
     }
 }
 

@@ -197,7 +197,6 @@ export class ReportsService {
             SELECT 
                 a.id AS assetId,
                 a.serial_number AS serialNumber,
-                a.express_code AS expressCode,
                 a.model,
                 a.configuration,
                 a.box_no AS boxNo,
@@ -226,7 +225,6 @@ export class ReportsService {
         const formattedAssets = rawResults.map((asset: any) => ({
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
-            'Express Code': asset.expressCode || 'N/A',
             'Device Type': asset.deviceName || 'N/A',
             'Brand': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',
@@ -253,7 +251,6 @@ export class ReportsService {
             SELECT 
                 a.id AS assetId,
                 a.serial_number AS serialNumber,
-                a.express_code AS expressCode,
                 a.model,
                 a.configuration,
                 a.box_no AS boxNo,
@@ -286,7 +283,6 @@ export class ReportsService {
         const formattedAssets = rawResults.map((asset: any) => ({
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
-            'Express Code': asset.expressCode || 'N/A',
             'Device Type': asset.deviceName || 'N/A',
             'Brand': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',
@@ -396,7 +392,6 @@ export class ReportsService {
             SELECT 
                 a.id AS assetId,
                 a.serial_number AS serialNumber,
-                a.express_code AS expressCode,
                 a.model,
                 a.warranty_expiry AS warrantyExpiry,
                 a.purchase_date AS purchaseDate,
@@ -418,7 +413,6 @@ export class ReportsService {
         return rawResults.map((asset: any) => ({
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
-            'Express Code': asset.expressCode || 'N/A',
             'Device Type': asset.deviceName || 'N/A',
             'Brand': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',
@@ -493,7 +487,6 @@ export class ReportsService {
             SELECT 
                 a.id AS assetId,
                 a.serial_number AS serialNumber,
-                a.express_code AS expressCode,
                 a.model,
                 a.configuration,
                 a.asset_status_enum AS status,
@@ -512,7 +505,6 @@ export class ReportsService {
         return rawResults.map((asset: any) => ({
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
-            'Express Code': asset.expressCode || 'N/A',
             'Device Type': asset.deviceName || 'N/A',
             'Brand': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',

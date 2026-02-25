@@ -1,13 +1,15 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import * as crypto from 'crypto';
+import { InjectRepository } from '@nestjs/typeorm';
 import { AuthUsersRepository } from './repositories/auth-users.repository';
 import { AuthTokensRepository } from './repositories/auth-tokens.repository';
 import { AuthUsersEntity } from './entities/auth-users.entity';
 import { AuthTokensEntity } from './entities/auth-tokens.entity';
+import { AccessRequestEntity } from './entities/access-request.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { IdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RefreshTokenModel, RegisterUserModel, UpdateUserModel, UserResponseModel, UsersResponseModel } from '@adminvault/shared-models';
+import { IdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RefreshTokenModel, RegisterUserModel, UpdateUserModel, UserResponseModel, UsersResponseModel, UserAccessRequestModel, AccessRequestsListModel } from '@adminvault/shared-models';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
@@ -23,10 +25,11 @@ const DEFAULT_MENUS = [
         icon: 'LayoutGrid',
         roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN],
         children: [
-            { key: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
+            { key: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'masters', label: 'Configuration', icon: 'Settings2', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
-            { key: 'reports', label: 'Reports', icon: 'BarChart3', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
-            { key: 'knowledge-base', label: 'Help', icon: 'BookOpen', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
+            { key: 'reports', label: 'Reports Hub', icon: 'BarChart3', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
+            { key: 'knowledge-base', label: 'Knowledge', icon: 'BookOpen', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
+            { key: 'users-management', label: 'Manage Users', icon: 'Users', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
         ]
     },
     {
@@ -36,7 +39,7 @@ const DEFAULT_MENUS = [
         roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN],
         children: [
             { key: 'employees', label: 'Employees', icon: 'Users', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
-            { key: 'assets', label: 'Assets', icon: 'Laptop', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.SITE_ADMIN] },
+            { key: 'assets', label: 'Assets', icon: 'Laptop', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'procurement', label: 'Procurement', icon: 'ShoppingCart', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'licenses', label: 'Licenses', icon: 'Key', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'emails', label: 'Emails', icon: 'Mail', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
@@ -58,10 +61,10 @@ const DEFAULT_MENUS = [
         icon: 'HelpCircle',
         roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN],
         children: [
-            { key: 'tickets', label: 'Support Tickets', icon: 'Ticket', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
+            { key: 'tickets', label: 'Support Tickets', icon: 'Ticket', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'create-ticket', label: 'Create Ticket', icon: 'PlusCircle', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
         ]
-    },
+    }
 ];
 
 const REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY || (() => {
@@ -81,6 +84,8 @@ export class AuthUsersService {
         @Inject(forwardRef(() => EmailInfoService))
         private emailService: EmailInfoService,
         private jwtService: JwtService,
+        @InjectRepository(AccessRequestEntity)
+        private accessRequestRepo: Repository<AccessRequestEntity>,
     ) { }
 
     async registerUser(reqModel: RegisterUserModel): Promise<GlobalResponse> {
@@ -95,6 +100,16 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "Invalid company ID")
             }
 
+            // Look up the employees table to find a matching employee by email
+            let employeeId = "";
+            const empRecord = await this.dataSource.query(
+                `SELECT id FROM employees WHERE email = $1 AND company_id = $2 AND deleted_at IS NULL LIMIT 1`,
+                [reqModel.email, reqModel.companyId]
+            );
+            if (empRecord && empRecord.length > 0) {
+                employeeId = String(empRecord[0].id);
+            }
+
             await transManager.startTransaction()
             const passwordHash = await bcrypt.hash(reqModel.password, 10)
             const newUser = new AuthUsersEntity()
@@ -105,8 +120,9 @@ export class AuthUsersService {
             newUser.passwordHash = passwordHash
             newUser.userRole = reqModel.role
             newUser.status = true
-            newUser.employeeId = ""
+            newUser.employeeId = employeeId
             await transManager.getRepository(AuthUsersEntity).save(newUser)
+            await transManager.getRepository(AccessRequestEntity).update({ email: reqModel.email }, { status: 'Completed' })
             await transManager.completeTransaction()
             return new GlobalResponse(true, 0, "User Created Successfully")
         } catch (err) {
@@ -198,11 +214,40 @@ export class AuthUsersService {
 
     async requestAccess(reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {
-            const success = await this.emailService.sendAccessRequestEmail(reqModel);
-            if (!success) {
-                throw new ErrorResponse(0, "Failed to send access request email. Please try again later.");
-            }
+            const entity = new AccessRequestEntity();
+            entity.name = reqModel.name;
+            entity.email = reqModel.email;
+            entity.description = reqModel.description || '';
+            entity.status = '';
+            await this.accessRequestRepo.save(entity);
+            await this.emailService.sendAccessRequestEmail(reqModel);
             return new GlobalResponse(true, 0, "Access request sent successfully");
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getAccessRequests(): Promise<AccessRequestsListModel> {
+        try {
+            const requests = await this.accessRequestRepo.find({ order: { createdAt: 'DESC' } });
+            const formatted = requests.map(r => new UserAccessRequestModel(
+                r.id, r.name, r.email, r.description, r.status, r.createdAt
+            ));
+            return new AccessRequestsListModel(true, 0, 'Access requests retrieved', formatted);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async closeAccessRequest(id: number): Promise<GlobalResponse> {
+        try {
+            const entity = await this.accessRequestRepo.findOne({ where: { id } });
+            if (!entity) {
+                throw new ErrorResponse(0, 'Access request not found');
+            }
+            entity.status = 'Completed';
+            await this.accessRequestRepo.save(entity);
+            return new GlobalResponse(true, 0, 'Access request closed');
         } catch (error) {
             throw error;
         }

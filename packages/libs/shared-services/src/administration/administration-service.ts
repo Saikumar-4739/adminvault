@@ -82,4 +82,8 @@ export class AdministrationService extends CommonAxiosService {
     async sendAssetApprovalEmail(reqModel: SendAssetApprovalEmailModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('email/sendAssetApprovalEmail'), reqModel, config);
     }
+
+    async getAllAccessRequests(config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosGetCall(this.getURLwithMainEndPoint('email/getAllAccessRequests'), config);
+    }
 }

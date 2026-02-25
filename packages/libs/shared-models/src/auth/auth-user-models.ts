@@ -177,14 +177,42 @@ export class UsersResponseModel {
     }
 }
 
+export class UserAccessRequestModel {
+    id: number;
+    name: string;
+    email: string;
+    description?: string;
+    status: string;
+    createdAt: Date;
+
+    constructor(id: number, name: string, email: string, description: string, status: string, createdAt: Date) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.description = description;
+        this.status = status;
+        this.createdAt = createdAt;
+    }
+}
+
+export class AccessRequestsListModel extends GlobalResponse {
+    requests: UserAccessRequestModel[];
+    constructor(status: boolean, code: number, message: string, requests: UserAccessRequestModel[]) {
+        super(status, code, message);
+        this.requests = requests;
+    }
+}
+
 export class RequestAccessModel {
     name: string;
     email: string;
     description?: string;
+    status?: string;
 
-    constructor(name: string, email: string, description?: string) {
+    constructor(name: string, email: string, description?: string, status?: string) {
         this.name = name;
         this.email = email;
         this.description = description;
+        this.status = status;
     }
 }

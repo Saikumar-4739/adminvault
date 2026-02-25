@@ -14,7 +14,6 @@ import { UserRoleEnum, IdRequestModel, CreateEmployeeModel, UpdateEmployeeModel,
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
 
 interface Employee {
     id: number;
@@ -56,7 +55,6 @@ const EmployeesPage: React.FC = () => {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<any>(null);
     const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', companyId: '', departmentId: '', accountStatus: EmployeeStatusEnum.ACTIVE as string, billingAmount: '', remarks: '', managerId: '' });
 
@@ -244,16 +242,16 @@ const EmployeesPage: React.FC = () => {
         const deptName = getDepartmentName(emp);
         if (!deptName || deptName === 'Unknown Dept') return 'from-slate-500 to-slate-600';
 
-        const deptLower = deptName.toLowerCase();
+        // const deptLower = deptName.toLowerCase();
         // Simple keyword matching for colors
-        if (deptLower.includes('it') || deptLower.includes('tech') || deptLower.includes('dev')) return 'from-blue-500 to-indigo-600';
-        if (deptLower.includes('hr') || deptLower.includes('human')) return 'from-pink-500 to-rose-500';
-        if (deptLower.includes('finance') || deptLower.includes('account')) return 'from-emerald-500 to-teal-600';
-        if (deptLower.includes('admin')) return 'from-orange-400 to-amber-500';
-        if (deptLower.includes('sale')) return 'from-violet-500 to-purple-600';
-        if (deptLower.includes('operation')) return 'from-cyan-500 to-blue-600';
-        if (deptLower.includes('market')) return 'from-fuchsia-500 to-pink-600';
-        if (deptLower.includes('support')) return 'from-amber-500 to-orange-600';
+        // if (deptLower.includes('it') || deptLower.includes('tech') || deptLower.includes('dev')) return 'from-blue-500 to-indigo-600';
+        // if (deptLower.includes('hr') || deptLower.includes('human')) return 'from-pink-500 to-rose-500';
+        // if (deptLower.includes('finance') || deptLower.includes('account')) return 'from-emerald-500 to-teal-600';
+        // if (deptLower.includes('admin')) return 'from-orange-400 to-amber-500';
+        // if (deptLower.includes('sale')) return 'from-violet-500 to-purple-600';
+        // if (deptLower.includes('operation')) return 'from-cyan-500 to-blue-600';
+        // if (deptLower.includes('market')) return 'from-fuchsia-500 to-pink-600';
+        // if (deptLower.includes('support')) return 'from-amber-500 to-orange-600';
 
         return 'from-slate-500 to-slate-600';
     };
@@ -349,11 +347,11 @@ const EmployeesPage: React.FC = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <div className="flex gap-2 shrink-0">
+                    <div className="flex flex-wrap sm:flex-nowrap gap-2 shrink-0">
                         <select
                             value={selectedOrg}
                             onChange={(e) => setSelectedOrg(e.target.value)}
-                            className="h-8 pl-2.5 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-w-[140px]"
+                            className="h-8 pl-2.5 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-w-[140px] flex-1 sm:flex-none"
                         >
                             <option value="">All Orgs</option>
                             {companies.map((c) => (
@@ -363,7 +361,7 @@ const EmployeesPage: React.FC = () => {
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="h-8 pl-2.5 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            className="h-8 pl-2.5 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 flex-1 sm:flex-none"
                         >
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
@@ -384,13 +382,6 @@ const EmployeesPage: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                </div>
-
-                {/* Results count */}
-                <div className="flex items-center justify-between -mt-1">
-                    <p className="text-[11px] text-slate-400 font-medium">
-                        Showing <span className="font-bold text-slate-600 dark:text-slate-300">{filteredEmployees.length}</span> of <span className="font-bold text-slate-600 dark:text-slate-300">{employees.length}</span> employees
-                    </p>
                 </div>
 
                 {/* Content */}
@@ -427,7 +418,7 @@ const EmployeesPage: React.FC = () => {
                                             }`}
                                     >
                                         {/* Top accent */}
-                                        <div className={`h-1 w-full bg-gradient-to-r ${getDepartmentBg(emp)}`} />
+                                        {/* <div className={`h-1 w-full bg-gradient-to-r ${getDepartmentBg(emp)}`} /> */}
 
                                         <div className="p-3">
                                             <div className="flex items-start gap-2.5 mb-2.5">
@@ -452,18 +443,14 @@ const EmployeesPage: React.FC = () => {
                                                     <Mail className="h-2.5 w-2.5 shrink-0 opacity-60" />
                                                     <span className="truncate">{emp.email}</span>
                                                 </div>
-                                                {emp.phNumber && (
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Phone className="h-2.5 w-2.5 shrink-0 opacity-60" />
-                                                        <span>{emp.phNumber}</span>
-                                                    </div>
-                                                )}
-                                                {emp.managerName && (
-                                                    <div className="flex items-center gap-1.5 text-indigo-500 dark:text-indigo-400">
-                                                        <Users className="h-2.5 w-2.5 shrink-0 opacity-70" />
-                                                        <span className="truncate">{emp.managerName}</span>
-                                                    </div>
-                                                )}
+                                                <div className="flex items-center gap-1.5">
+                                                    <Phone className="h-2.5 w-2.5 shrink-0 opacity-60" />
+                                                    <span>{emp.phNumber}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 text-indigo-500 dark:text-indigo-400">
+                                                    <Users className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                                                    <span className="truncate">{emp.managerName || '-'}</span>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -510,7 +497,6 @@ const EmployeesPage: React.FC = () => {
                                                     </div>
                                                     <div>
                                                         <div className="font-semibold text-slate-800 dark:text-white text-xs leading-tight">{emp.firstName} {emp.lastName}</div>
-                                                        <div className="text-[10px] text-slate-400">#{emp.id}</div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -560,12 +546,12 @@ const EmployeesPage: React.FC = () => {
                 {/* Modals */}
                 <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingEmployee ? 'Edit Employee Profile' : 'Add New Employee'} size="lg">
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input label="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required />
                             <Input label="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required />
                         </div>
                         <Input label="Email Address" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Select
                                 label="Organization"
                                 value={formData.companyId}
@@ -588,7 +574,7 @@ const EmployeesPage: React.FC = () => {
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9+\-\s]/g, '') })}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Select
                                 label="Department"
                                 value={formData.departmentId}
@@ -603,7 +589,7 @@ const EmployeesPage: React.FC = () => {
                                 options={[{ value: '', label: 'No Manager' }, ...filteredEmployees.filter(emp => !editingEmployee || emp.id !== editingEmployee.id).map(emp => ({ value: emp.id, label: `${emp.firstName} ${emp.lastName}` }))]}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Select
                                 label="Account Status"
                                 value={formData.accountStatus}

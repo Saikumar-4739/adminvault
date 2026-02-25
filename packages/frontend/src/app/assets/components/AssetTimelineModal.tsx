@@ -26,7 +26,7 @@ export const AssetTimelineModal: React.FC<AssetTimelineModalProps> = ({ isOpen, 
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (isOpen && asset && companyId) {
+        if (isOpen && asset && companyId !== undefined) {
             fetchTimeline();
         }
     }, [isOpen, asset, companyId]);

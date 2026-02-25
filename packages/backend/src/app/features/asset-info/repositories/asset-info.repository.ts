@@ -28,7 +28,6 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'device.name as "deviceName"',
                 'asset.configuration as "configuration"',
                 'asset.serialNumber as "serialNumber"',
-                'asset.expressCode as "expressCode"',
                 'asset.boxNo as "boxNo"',
                 'asset.assetStatusEnum as "assetStatusEnum"',
                 'brand.name as "brandName"',
@@ -50,6 +49,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .leftJoin('asset_types', 'device', 'asset.device_id = device.id')
             .leftJoin('asset_assign', 'assignment', 'asset.id = assignment.asset_id AND assignment.return_date IS NULL')
             .leftJoin('employees', 'employee', 'assignment.employee_id = employee.id')
+            .leftJoin('employees', 'manager', 'employee.manager_id = manager.id')
             .leftJoin('employees', 'previousUser', 'asset.previous_user_employee_id = previousUser.id')
             .select([
                 'asset.id as "id"',
@@ -71,6 +71,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'device.name as "deviceName"'
             ])
             .addSelect('CONCAT(employee.first_name, \' \', employee.last_name)', 'assignedTo')
+            .addSelect('CONCAT(manager.first_name, \' \', manager.last_name)', 'managerName')
             .addSelect('CONCAT(previousUser.first_name, \' \', previousUser.last_name)', 'previousUser')
             .addSelect('assignment.assigned_date', 'assignedDate')
             .addSelect('assignment.assigned_by_id', 'assignedById');
@@ -105,6 +106,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
         const query = this.createQueryBuilder('asset')
             .leftJoin('asset_types', 'device', 'asset.device_id = device.id')
             .leftJoin('employees', 'employee', 'asset.assigned_to_employee_id = employee.id')
+            .leftJoin('employees', 'manager', 'employee.manager_id = manager.id')
             .leftJoin('employees', 'previousUser', 'asset.previous_user_employee_id = previousUser.id')
             .select([
                 'asset.id as "id"',
@@ -125,6 +127,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'device.name as "deviceName"'
             ])
             .addSelect('CONCAT(employee.first_name, \' \', employee.last_name)', 'assignedTo')
+            .addSelect('CONCAT(manager.first_name, \' \', manager.last_name)', 'managerName')
             .addSelect('CONCAT(previousUser.first_name, \' \', previousUser.last_name)', 'previousUser');
 
         if (reqModel.companyId > 0) {

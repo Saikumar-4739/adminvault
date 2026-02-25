@@ -7,12 +7,13 @@ import { AssetInfoEntity } from './entities/asset-info.entity';
 import { AssetAssignEntity } from './entities/asset-assign.entity';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
 import { AssetAssignRepository } from './repositories/asset-assign.repository';
-import { LessThan } from 'typeorm';
+import { LessThan, IsNull } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { GetAllAssetAssignsModel, GetAssetAssignByIdModel, SendAssetAssignedEmailModel, UserRoleEnum } from '@adminvault/shared-models';
 import { EmailInfoService } from '../administration/email-info.service';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { AssetReturnHistoryEntity } from './entities/asset-return-history.entity';
 
 @Injectable()
 export class AssetInfoService {
@@ -58,12 +59,8 @@ export class AssetInfoService {
             entity.lastReturnDate = reqModel.lastReturnDate ? new Date(reqModel.lastReturnDate) : null;
             entity.complianceStatus = reqModel.complianceStatus || ComplianceStatusEnum.UNKNOWN;
             entity.lastSync = reqModel.lastSync ? new Date(reqModel.lastSync) : null;
-            entity.osVersion = reqModel.osVersion;
-            entity.macAddress = reqModel.macAddress;
-            entity.ipAddress = reqModel.ipAddress;
             entity.encryptionStatus = reqModel.encryptionStatus || EncryptionStatusEnum.UNKNOWN;
             entity.batteryLevel = reqModel.batteryLevel;
-            entity.storageTotal = reqModel.storageTotal;
             entity.storageAvailable = reqModel.storageAvailable;
             entity.assetStatusEnum = reqModel.assignedToEmployeeId ? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE) : (reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE);
             await transManager.getRepository(AssetInfoEntity).save(entity);
@@ -111,12 +108,8 @@ export class AssetInfoService {
 
             existing.complianceStatus = reqModel.complianceStatus || existing.complianceStatus;
             existing.lastSync = reqModel.lastSync ? new Date(reqModel.lastSync) : existing.lastSync;
-            existing.osVersion = reqModel.osVersion || existing.osVersion;
-            existing.macAddress = reqModel.macAddress || existing.macAddress;
-            existing.ipAddress = reqModel.ipAddress || existing.ipAddress;
             existing.encryptionStatus = reqModel.encryptionStatus || existing.encryptionStatus;
             existing.batteryLevel = reqModel.batteryLevel ?? existing.batteryLevel;
-            existing.storageTotal = reqModel.storageTotal || existing.storageTotal;
             existing.storageAvailable = reqModel.storageAvailable || existing.storageAvailable;
             existing.userId = userId || existing.userId;
 
@@ -160,7 +153,7 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Asset not found");
             }
 
-            const response = new AssetResponseModel(asset.id, asset.companyId, asset.deviceId, asset.serialNumber, asset.assetStatusEnum, asset.createdAt, asset.updatedAt, asset.purchaseDate, asset.warrantyExpiry, asset.brandId, asset.model, asset.configuration, asset.assignedToEmployeeId, asset.previousUserEmployeeId, asset.userAssignedDate, asset.lastReturnDate, asset.expressCode, asset.boxNo, asset.complianceStatus, asset.lastSync, asset.osVersion, asset.macAddress, asset.ipAddress, asset.encryptionStatus, asset.batteryLevel, asset.storageTotal, asset.storageAvailable);
+            const response = new AssetResponseModel(asset.id, asset.companyId, asset.deviceId, asset.serialNumber, asset.assetStatusEnum, asset.createdAt, asset.updatedAt, asset.purchaseDate, asset.warrantyExpiry, asset.brandId, asset.model, asset.configuration, asset.assignedToEmployeeId, asset.previousUserEmployeeId, asset.userAssignedDate, asset.lastReturnDate, asset.boxNo, asset.complianceStatus, asset.lastSync, asset.encryptionStatus, asset.batteryLevel, asset.storageAvailable);
             return new GetAssetByIdModel(true, 0, "Asset retrieved successfully", response);
         } catch (error) {
             throw error;
@@ -179,7 +172,7 @@ export class AssetInfoService {
         try {
             const companyId = reqModel.id;
             const assets = companyId ? await this.assetInfoRepo.find({ where: { companyId } }) : await this.assetInfoRepo.find();
-            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.expressCode, a.boxNo, a.complianceStatus, a.lastSync, a.osVersion, a.macAddress, a.ipAddress, a.encryptionStatus, a.batteryLevel, a.storageTotal, a.storageAvailable));
+            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
         } catch (error) {
             throw error;
@@ -383,7 +376,9 @@ export class AssetInfoService {
                         assignedByName,
                         assignedDate,
                         isReassignment,
-                        remarks
+                        remarks,
+                        `${employee.firstName} ${employee.lastName}`.trim(),
+                        'ASSIGNEE'
                     ));
 
                     // 2. Send to Manager (if exists)
@@ -397,7 +392,9 @@ export class AssetInfoService {
                                 assignedByName,
                                 assignedDate,
                                 isReassignment,
-                                remarks
+                                remarks,
+                                `${employee.firstName} ${employee.lastName}`.trim(),
+                                'MANAGER'
                             ));
                         }
                     }
@@ -418,7 +415,9 @@ export class AssetInfoService {
                                 assignedByName,
                                 assignedDate,
                                 isReassignment,
-                                remarks
+                                remarks,
+                                `${employee.firstName} ${employee.lastName}`.trim(),
+                                'ADMIN'
                             ));
                         }
                     }
@@ -436,7 +435,7 @@ export class AssetInfoService {
     }
 
     async returnAssetOp(reqModel: ReturnAssetOpRequestModel): Promise<GlobalResponse> {
-        const { assetId, userId, remarks } = reqModel;
+        const { assetId, userId, remarks, targetStatus } = reqModel;
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
             await transManager.startTransaction();
@@ -445,17 +444,35 @@ export class AssetInfoService {
             const asset = await assetRepo.findOne({ where: { id: assetId } });
             if (!asset) throw new NotFoundException('Asset not found');
 
-            asset.assetStatusEnum = AssetStatusEnum.AVAILABLE;
+            const previousUserId = asset.assignedToEmployeeId;
+
+            asset.assetStatusEnum = targetStatus || AssetStatusEnum.AVAILABLE;
             asset.previousUserEmployeeId = asset.assignedToEmployeeId;
             asset.assignedToEmployeeId = null as any;
+            asset.userAssignedDate = null as any;
             asset.lastReturnDate = new Date();
             await assetRepo.save(asset);
 
-            await transManager.getRepository(AssetAssignEntity).update({ assetId, isCurrent: true }, {
-                isCurrent: false,
-                returnDate: new Date(),
-                returnRemarks: remarks || ''
-            });
+            if (previousUserId) {
+                // Record into Return History Table
+                const returnHistory = new AssetReturnHistoryEntity();
+                returnHistory.assetId = assetId;
+                returnHistory.employeeId = previousUserId;
+                returnHistory.returnDate = new Date();
+                returnHistory.returnReason = remarks || 'Action from Manage Asset';
+                returnHistory.assetCondition = 'Good'; // Default condition since modal doesn't capture it yet
+                returnHistory.remarks = remarks || '';
+                returnHistory.userId = userId;
+                returnHistory.companyId = asset.companyId;
+                returnHistory.allocationDate = asset.userAssignedDate;
+                await transManager.getRepository(AssetReturnHistoryEntity).save(returnHistory);
+
+                // Update assignment table where return date is null
+                await transManager.getRepository(AssetAssignEntity).update(
+                    { assetId: assetId, employeeId: previousUserId, returnDate: IsNull() as any },
+                    { returnDate: new Date(), remarks: `Returned: ${remarks || 'No reason specified'}` }
+                );
+            }
 
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Asset returned successfully');
@@ -473,7 +490,7 @@ export class AssetInfoService {
         const assets = await this.assetInfoRepo.find({
             where: { companyId, warrantyExpiry: LessThan(dateLimit) }
         });
-        const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.expressCode, a.boxNo, a.complianceStatus, a.lastSync, a.osVersion, a.macAddress, a.ipAddress, a.encryptionStatus, a.batteryLevel, a.storageTotal, a.storageAvailable));
+        const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable));
         return new GetAllAssetsModel(true, 200, 'Expiring assets retrieved', responses);
     }
 }

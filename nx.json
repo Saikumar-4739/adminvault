@@ -5,27 +5,19 @@
     "default": {
       "runner": "nx/tasks-runners/default",
       "options": {
-        "cacheableOperations": [
-          "build",
-          "typecheck"
-        ],
+        "cacheableOperations": ["build", "typecheck"],
         "outputStyle": "stream"
       }
     }
   },
   "targetDefaults": {
     "build": {
-      "outputs": [
-        "{workspaceRoot}/dist/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "cache": true
     }
   },
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
       "!{projectRoot}/.eslintrc.json",
@@ -52,9 +44,7 @@
           "watchDepsName": "watch-deps"
         }
       },
-      "exclude": [
-        "packages/libs/backend-utils/*"
-      ]
+      "exclude": ["packages/libs/backend-utils/*"]
     },
     {
       "plugin": "@nx/next/plugin",
@@ -81,9 +71,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "include": [
-        "packages/libs/backend-utils/*"
-      ],
+      "include": ["packages/libs/backend-utils/*"],
       "options": {
         "typecheck": {
           "targetName": "typecheck"
@@ -100,7 +88,8 @@
       "plugin": "@nx/jest/plugin",
       "options": {
         "targetName": "test"
-      }
+      },
+      "exclude": ["packages/dummy-e2e/**/*"]
     }
   ],
   "generators": {

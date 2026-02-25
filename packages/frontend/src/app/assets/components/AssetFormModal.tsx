@@ -36,15 +36,9 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
         assetStatusEnum: AssetStatusEnum.AVAILABLE,
         purchaseDate: '',
         warrantyExpiry: '',
-        expressCode: '',
         boxNo: '',
         complianceStatus: ComplianceStatusEnum.UNKNOWN,
-        encryptionStatus: EncryptionStatusEnum.UNKNOWN,
-        osVersion: '',
-        macAddress: '',
-        ipAddress: '',
-        batteryLevel: '',
-        storageTotal: '',
+        encryptionStatus: EncryptionStatusEnum.ENCRYPTED,
         storageAvailable: '',
         assignedToEmployeeId: undefined as number | undefined,
         previousUserEmployeeId: undefined as number | undefined
@@ -107,15 +101,9 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                     assetStatusEnum: asset.assetStatusEnum || AssetStatusEnum.AVAILABLE,
                     purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
                     warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
-                    expressCode: asset.expressCode || '',
                     boxNo: asset.boxNo || '',
                     complianceStatus: asset.complianceStatus || ComplianceStatusEnum.UNKNOWN,
                     encryptionStatus: asset.encryptionStatus || EncryptionStatusEnum.UNKNOWN,
-                    osVersion: asset.osVersion || '',
-                    macAddress: asset.macAddress || '',
-                    ipAddress: asset.ipAddress || '',
-                    batteryLevel: asset.batteryLevel?.toString() || '',
-                    storageTotal: asset.storageTotal || '',
                     storageAvailable: asset.storageAvailable || '',
                     assignedToEmployeeId: asset.assignedToEmployeeId,
                     previousUserEmployeeId: asset.previousUserEmployeeId
@@ -131,15 +119,9 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                     assetStatusEnum: AssetStatusEnum.AVAILABLE,
                     purchaseDate: new Date().toISOString().split('T')[0],
                     warrantyExpiry: '',
-                    expressCode: '',
                     boxNo: '',
                     complianceStatus: ComplianceStatusEnum.UNKNOWN,
                     encryptionStatus: EncryptionStatusEnum.UNKNOWN,
-                    osVersion: '',
-                    macAddress: '',
-                    ipAddress: '',
-                    batteryLevel: '',
-                    storageTotal: '',
                     storageAvailable: '',
                     assignedToEmployeeId: undefined,
                     previousUserEmployeeId: undefined
@@ -162,8 +144,7 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                 deviceId: Number(formData.deviceId),
                 brandId: formData.brandId ? Number(formData.brandId) : undefined,
                 companyId: Number(formData.companyId),
-                id: asset?.id,
-                batteryLevel: formData.batteryLevel ? Number(formData.batteryLevel) : undefined
+                id: asset?.id
             };
 
             const response = asset
@@ -189,11 +170,11 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
             isOpen={isOpen}
             onClose={onClose}
             title={asset ? 'Update Asset' : 'Add New Asset'}
-            size="lg"
+            size="2xl"
         >
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                {/* Company and Asset Type */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="p-4 md:p-5 space-y-4">
+                {/* Details Row 1 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <Select
                         label="Company"
                         name="companyId"
@@ -216,10 +197,6 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                         ]}
                         required
                     />
-                </div>
-
-                {/* Brand and Model */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Select
                         label="Brand"
                         name="brandId"
@@ -230,16 +207,16 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                             ...brands.map(b => ({ value: b.id, label: b.name }))
                         ]}
                     />
+                </div>
+
+                {/* Details Row 2 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <Input
                         label="Model"
                         name="model"
                         value={formData.model}
                         onChange={handleChange}
                     />
-                </div>
-
-                {/* Serial Number and Status */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                         label="Serial Number"
                         name="serialNumber"
@@ -261,8 +238,8 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                     />
                 </div>
 
-                {/* Purchase Date and Warranty */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Details Row 3 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <Input
                         label="Purchase Date"
                         name="purchaseDate"
@@ -277,16 +254,6 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                         value={formData.warrantyExpiry}
                         onChange={handleChange}
                     />
-                </div>
-
-                {/* Express Code and Box Number */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                        label="Express Code"
-                        name="expressCode"
-                        value={formData.expressCode}
-                        onChange={handleChange}
-                    />
                     <Input
                         label="Box Number"
                         name="boxNo"
@@ -295,42 +262,9 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                     />
                 </div>
 
-                {/* Telemetry & Compliance Section */}
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-                    <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Device Telemetry</h3>
 
-                    {/* Row 1: System Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <Input
-                            label="OS Version"
-                            name="osVersion"
-                            value={formData.osVersion}
-                            onChange={handleChange}
-                        />
-                        <Input
-                            label="Storage Total"
-                            name="storageTotal"
-                            value={formData.storageTotal}
-                            onChange={handleChange}
-                        />
-                    </div>
 
-                    {/* Row 2: Network Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                            label="MAC Address"
-                            name="macAddress"
-                            value={formData.macAddress}
-                            onChange={handleChange}
-                        />
-                        <Input
-                            label="IP Address"
-                            name="ipAddress"
-                            value={formData.ipAddress}
-                            onChange={handleChange}
-                        />
-                    </div>
-                </div>
+
 
                 {/* Configuration */}
                 <div className="w-full">
@@ -341,7 +275,7 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                         name="configuration"
                         value={formData.configuration}
                         onChange={handleChange}
-                        rows={3}
+                        rows={2}
                         className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white resize-none focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all"
                     />
                 </div>
