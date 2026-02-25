@@ -9,6 +9,8 @@ interface AssetCardProps {
     onQRCode: (asset: any) => void;
     onHistory: (asset: any) => void;
     onAssign: (asset: any) => void;
+    isSelected?: boolean;
+    onToggleSelect?: (id: number) => void;
 }
 
 const getAssetIcon = (name?: string) => {
@@ -47,7 +49,7 @@ const getStatusConfig = (status?: string) => {
     return configs[statusUpper] || configs['AVAILABLE'];
 };
 
-export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onQRCode, onHistory, onAssign }: AssetCardProps) => {
+export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onQRCode, onHistory, onAssign, isSelected, onToggleSelect }: AssetCardProps) => {
     const assetName = asset.assetName || 'Unnamed Asset';
     const AssetIcon = getAssetIcon(asset.assetName);
     const statusConfig = getStatusConfig(asset.status);
@@ -59,7 +61,20 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, o
     return (
         <div className="group relative h-full">
             {/* Solid Card */}
-            <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden h-full flex flex-col">
+            <div className={`relative bg-white dark:bg-slate-900 rounded-2xl border ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700'} shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden h-full flex flex-col`}>
+
+                {/* Multi-select Checkbox */}
+                {onToggleSelect && (
+                    <div
+                        onClick={() => onToggleSelect(asset.id)}
+                        className={`absolute top-3 right-3 z-20 w-5 h-5 rounded-md border-2 cursor-pointer flex items-center justify-center transition-all ${isSelected
+                                ? 'bg-indigo-500 border-indigo-500 text-white'
+                                : 'bg-white/50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 group-hover:border-indigo-400'
+                            }`}
+                    >
+                        {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                    </div>
+                )}
 
                 {/* Status Accent Bar */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${statusConfig.gradient.replace('/10', '')}`}></div>
@@ -132,12 +147,26 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, o
                                 </div>
                             </div>
                         ) : (
-                            // Placeholder or Available Message to keep card height consistent if desired, or just null
+                            // Placeholder or Available Message to keep card height consistent
                             <div className="bg-emerald-50/50 dark:bg-emerald-900/10 rounded-lg p-2.5 border border-emerald-100 dark:border-emerald-900/20 flex items-center gap-2.5 opacity-70">
                                 <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
                                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                                 </div>
                                 <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Ready for Assignment</span>
+                            </div>
+                        )}
+
+                        {/* Financial Info (Feature 4) */}
+                        {(asset.purchaseCost > 0) && (
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2 border border-slate-100 dark:border-slate-800">
+                                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Purchase</p>
+                                    <p className="text-xs font-bold text-slate-600 dark:text-slate-300">${Number(asset.purchaseCost).toLocaleString()}</p>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2 border border-slate-100 dark:border-slate-800">
+                                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Valuation</p>
+                                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">${Number(asset.currentValue).toLocaleString()}</p>
+                                </div>
                             </div>
                         )}
                     </div>

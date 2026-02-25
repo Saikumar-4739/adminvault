@@ -91,6 +91,45 @@ export class LicensesController {
         }
     }
 
+    /**
+     * Get license utilization stats
+     */
+    @Post('getUtilization')
+    @ApiBody({ type: IdRequestModel })
+    async getUtilization(@Body() reqModel: IdRequestModel): Promise<any> {
+        try {
+            return await this.licensesService.getUtilization(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    /**
+     * Get compliance report
+     */
+    @Post('getComplianceReport')
+    @ApiBody({ type: IdRequestModel })
+    async getComplianceReport(@Body() reqModel: IdRequestModel): Promise<any> {
+        try {
+            return await this.licensesService.getComplianceReport(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    /**
+     * Get cost optimization insights
+     */
+    @Post('getCostOptimization')
+    @ApiBody({ type: IdRequestModel })
+    async getCostOptimization(@Body() reqModel: IdRequestModel): Promise<any> {
+        try {
+            return await this.licensesService.getCostOptimization(reqModel);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
     private extractIp(req: any): string {
         const xForwardedFor = req.headers['x-forwarded-for'];
         if (xForwardedFor) {

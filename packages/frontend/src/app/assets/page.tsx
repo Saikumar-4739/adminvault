@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Package, Warehouse, History, Plus, FileUp, Filter, Activity, CheckCircle2, User, RefreshCw, Clock, Check, Building2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Download } from 'lucide-react';
+import { exportToCSV } from '@/lib/csv-utils';
 import { ModernTabs } from './components/ModernTabs';
 import { AllAssetsTab } from './components/AllAssetsTab';
 import dynamic from 'next/dynamic';
@@ -16,6 +18,8 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { AssetSearchRequestModel, IdRequestModel, GetPendingApprovalsRequestModel, WebSocketEvent } from '@adminvault/shared-models';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWebSocketEvent } from '@/hooks/useWebSocket';
+import { BulkActionBar } from '@/components/common/BulkActionBar';
+import { Trash2 } from 'lucide-react';
 
 const AssetQRModal = dynamic(() => import('./components/AssetQRModal').then(mod => mod.AssetQRModal), { ssr: false });
 const AssetTimelineModal = dynamic(() => import('./components/AssetTimelineModal').then(mod => mod.AssetTimelineModal), { ssr: false });
@@ -80,6 +84,7 @@ const AssetsPage: React.FC = () => {
     const [statistics, setStatistics] = useState<AssetStatistics | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
     const fetchCompanies = React.useCallback(async () => {
         try {
@@ -162,6 +167,49 @@ const AssetsPage: React.FC = () => {
             setApprovalsLoading(false);
         }
     }, [user?.companyId]);
+
+    const handleToggleSelect = (id: number) => {
+        const next = new Set(selectedIds);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setSelectedIds(next);
+    };
+
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Are you sure you want to delete ${selectedIds.size} assets?`)) return;
+        try {
+            setIsLoading(true);
+            const ids = Array.from(selectedIds);
+            for (const id of ids) {
+                await assetService.deleteAsset(new IdRequestModel(id));
+            }
+            AlertMessages.getSuccessMessage(`Successfully deleted ${selectedIds.size} assets`);
+            setSelectedIds(new Set());
+            refresh();
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to perform bulk delete');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleBulkStatusUpdate = async (status: string) => {
+        try {
+            setIsLoading(true);
+            const ids = Array.from(selectedIds);
+            for (const id of ids) {
+                // Assuming updateAsset is available and status is part of it
+                await assetService.updateAsset({ id, assetStatusEnum: status } as any);
+            }
+            AlertMessages.getSuccessMessage(`Successfully updated ${selectedIds.size} assets to ${status}`);
+            setSelectedIds(new Set());
+            refresh();
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to perform bulk status update');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleDeapprove = async (approvalId: number) => {
         try {
@@ -366,26 +414,32 @@ const AssetsPage: React.FC = () => {
             <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/50 space-y-6">
                 <PageHeader
                     title="Asset Inventory"
-                    description="Manage and track hardware assets across the organization."
+                    description="Track and manage company hardware"
                     icon={<Package />}
-                    gradient="from-emerald-500 to-teal-600"
+                    gradient="from-blue-600 to-indigo-700"
                     actions={[
+                        {
+                            label: 'Export CSV',
+                            onClick: () => exportToCSV(assets, 'assets_inventory'),
+                            icon: <Download className="h-3.5 w-3.5" />,
+                            variant: 'outline'
+                        },
                         {
                             label: 'Filter',
                             onClick: () => setIsFilterModalOpen(true),
-                            icon: <Filter className="h-4 w-4" />,
+                            icon: <Filter className="h-3.5 w-3.5" />,
                             variant: 'outline'
                         },
                         {
                             label: 'Bulk Import',
                             onClick: () => setIsBulkImportOpen(true),
-                            icon: <FileUp className="h-4 w-4" />,
+                            icon: <FileUp className="h-3.5 w-3.5" />,
                             variant: 'outline'
                         },
                         {
                             label: 'Add Asset',
                             onClick: handleAddAsset,
-                            icon: <Plus className="h-4 w-4" />,
+                            icon: <Plus className="h-3.5 w-3.5" />,
                             variant: 'primary'
                         }
                     ]}
@@ -454,6 +508,8 @@ const AssetsPage: React.FC = () => {
                                 onPrint={handlePrint}
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
+                                selectedIds={selectedIds}
+                                onToggleSelect={handleToggleSelect}
                             />
                         )}
                         {activeTab === 'pending_approvals' && (
@@ -545,6 +601,8 @@ const AssetsPage: React.FC = () => {
                                 onPrint={handlePrint}
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
+                                selectedIds={selectedIds}
+                                onToggleSelect={handleToggleSelect}
                             />
                         )}
                         {activeTab === 'maintenance' && (
@@ -557,6 +615,8 @@ const AssetsPage: React.FC = () => {
                                 onPrint={handlePrint}
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
+                                selectedIds={selectedIds}
+                                onToggleSelect={handleToggleSelect}
                             />
                         )}
                         {activeTab === 'not_used' && (
@@ -569,10 +629,35 @@ const AssetsPage: React.FC = () => {
                                 onPrint={handlePrint}
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
+                                selectedIds={selectedIds}
+                                onToggleSelect={handleToggleSelect}
                             />
                         )}
                     </div>
                 </ModernTabs>
+
+                <BulkActionBar
+                    selectedCount={selectedIds.size}
+                    onClear={() => setSelectedIds(new Set())}
+                    actions={[
+                        {
+                            label: 'Mark Available',
+                            icon: <CheckCircle2 className="h-4 w-4" />,
+                            onClick: () => handleBulkStatusUpdate('available')
+                        },
+                        {
+                            label: 'Maintenance',
+                            icon: <Activity className="h-4 w-4" />,
+                            onClick: () => handleBulkStatusUpdate('maintenance')
+                        },
+                        {
+                            label: 'Delete',
+                            icon: <Trash2 className="h-4 w-4" />,
+                            onClick: handleBulkDelete,
+                            variant: 'danger'
+                        }
+                    ]}
+                />
 
                 {/* Modals */}
                 {isQRModalOpen && (

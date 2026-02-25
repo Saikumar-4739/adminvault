@@ -20,4 +20,13 @@ export class CompanyLicenseEntity extends CommonBaseEntity {
 
     @Column({ name: 'assigned_employee_id', nullable: true })
     assignedEmployeeId: number;
+
+    @Column({ name: 'total_seats', type: 'int', default: 1 })
+    totalSeats: number;
+
+    @Column({ name: 'cost_per_seat', type: 'decimal', precision: 12, scale: 2, default: 0 })
+    costPerSeat: number;
+
+    @Column({ name: 'billing_cycle', length: 50, default: 'MONTHLY' })
+    billingCycle: string; // MONTHLY, YEARLY, ONE_TIME
 }

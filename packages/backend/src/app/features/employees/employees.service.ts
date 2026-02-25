@@ -8,13 +8,20 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, IdRequestModel, CreateEmailInfoModel, EmailTypeEnum } from '@adminvault/shared-models';
 import { EmailInfoService } from '../administration/email-info.service';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType, WorkflowType } from '@adminvault/shared-models';
+import { OnboardingService } from '../onboarding/onboarding.service';
 
 @Injectable()
 export class EmployeesService {
     constructor(
         private dataSource: DataSource,
         private employeesRepo: EmployeesRepository,
-        private emailInfoService: EmailInfoService
+        private emailInfoService: EmailInfoService,
+        private auditLogService: AuditLogService,
+        private notificationsService: NotificationsService,
+        private onboardingService: OnboardingService
     ) { }
 
     async createEmployee(reqModel: CreateEmployeeModel): Promise<GlobalResponse> {
@@ -61,11 +68,51 @@ export class EmployeesService {
             newEmployee.managerId = reqModel.managerId;
             const savedEmployee = await transManager.getRepository(EmployeesEntity).save(newEmployee);
 
+            // Log activity
+            await this.auditLogService.logAction(
+                'CREATE',
+                'EMPLOYEE',
+                Number(savedEmployee.id),
+                savedEmployee.firstName + ' ' + savedEmployee.lastName,
+                reqModel.userId,
+                '',
+                '',
+                { email: savedEmployee.email, department: deptExists.name },
+                undefined,
+                'HR'
+            );
+
             // Automatically create Individual Identity (Email Info)
             const emailReq = new CreateEmailInfoModel(reqModel.companyId, EmailTypeEnum.USER, deptExists.name, reqModel.email, savedEmployee.id);
             await this.emailInfoService.createEmailInfo(emailReq);
 
             await transManager.completeTransaction();
+
+            // Persistent notification for creator
+            if (reqModel.userId) {
+                await this.notificationsService.createNotification(reqModel.userId, {
+                    title: 'Employee Record Created',
+                    message: `Employee record for ${savedEmployee.firstName} ${savedEmployee.lastName} has been created.`,
+                    type: NotificationType.SUCCESS,
+                    category: 'hr',
+                    link: '/employees'
+                });
+            }
+
+            // If employee has a userId (e.g. they already had an auth account), notify them too
+            if (savedEmployee.userId) {
+                await this.notificationsService.createNotification(savedEmployee.userId, {
+                    title: 'Onboarding Initiated',
+                    message: `Welcome! Your employee profile has been set up at ${deptExists.name}.`,
+                    type: NotificationType.INFO,
+                    category: 'onboarding',
+                    link: '/dashboard'
+                });
+            }
+
+            // Initialize Onboarding Workflow
+            await this.onboardingService.initializeWorkflow(savedEmployee.id, reqModel.companyId, WorkflowType.ONBOARDING);
+
             return new GlobalResponse(true, 0, "Employee and Identity created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -98,6 +145,31 @@ export class EmployeesService {
             updateData.managerId = reqModel.managerId;
             await transManager.getRepository(EmployeesEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
+
+            // Persistent notification for employee
+            if (existingEmployee.userId) {
+                await this.notificationsService.createNotification(existingEmployee.userId, {
+                    title: 'Profile Updated',
+                    message: `Your employee profile has been updated by an administrator.`,
+                    type: NotificationType.INFO,
+                    category: 'hr'
+                });
+            }
+
+            // Log activity
+            await this.auditLogService.logAction(
+                'UPDATE',
+                'EMPLOYEE',
+                Number(reqModel.id),
+                existingEmployee.firstName + ' ' + existingEmployee.lastName,
+                undefined,
+                '',
+                '',
+                { changes: reqModel },
+                undefined,
+                'HR'
+            );
+
             return new GlobalResponse(true, 0, "Employee updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -189,6 +261,24 @@ export class EmployeesService {
             await transManager.startTransaction();
             await transManager.getRepository(EmployeesEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
+
+            // Log activity
+            await this.auditLogService.logAction(
+                'DELETE',
+                'EMPLOYEE',
+                Number(reqModel.id),
+                existingEmployee.firstName + ' ' + existingEmployee.lastName,
+                undefined,
+                '',
+                '',
+                {},
+                undefined,
+                'HR'
+            );
+
+            // Initialize Offboarding Workflow
+            await this.onboardingService.initializeWorkflow(existingEmployee.id, existingEmployee.companyId, WorkflowType.OFFBOARDING);
+
             return new GlobalResponse(true, 0, "Employee deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();

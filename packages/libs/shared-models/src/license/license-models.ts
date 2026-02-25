@@ -13,6 +13,8 @@ export class CreateLicenseModel {
     expiryDate?: Date;
     seats?: number;
     remarks?: string;
+    costPerSeat?: number;
+    billingCycle?: string;
 
     constructor(
         companyId: number,
@@ -23,7 +25,9 @@ export class CreateLicenseModel {
         assignedDate?: Date,
         expiryDate?: Date,
         seats?: number,
-        remarks?: string
+        remarks?: string,
+        costPerSeat?: number,
+        billingCycle?: string
     ) {
         this.companyId = companyId;
         this.applicationId = applicationId;
@@ -34,6 +38,8 @@ export class CreateLicenseModel {
         this.expiryDate = expiryDate;
         this.seats = seats;
         this.remarks = remarks;
+        this.costPerSeat = costPerSeat;
+        this.billingCycle = billingCycle;
     }
 }
 
@@ -51,6 +57,8 @@ export class UpdateLicenseModel {
     expiryDate?: Date;
     seats?: number;
     remarks?: string;
+    costPerSeat?: number;
+    billingCycle?: string;
 
     constructor(
         id: number,
@@ -62,7 +70,9 @@ export class UpdateLicenseModel {
         assignedDate?: Date,
         expiryDate?: Date,
         seats?: number,
-        remarks?: string
+        remarks?: string,
+        costPerSeat?: number,
+        billingCycle?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -74,6 +84,8 @@ export class UpdateLicenseModel {
         this.expiryDate = expiryDate;
         this.seats = seats;
         this.remarks = remarks;
+        this.costPerSeat = costPerSeat;
+        this.billingCycle = billingCycle;
     }
 }
 
@@ -112,6 +124,9 @@ export class LicenseResponseModel {
     assignedDate?: Date | null;
     expiryDate?: Date | null;
     seats?: number | null;
+    totalSeats?: number | null;
+    costPerSeat?: number | null;
+    billingCycle?: string | null;
     remarks?: string | null;
     createdAt: Date;
     updatedAt: Date;
@@ -131,6 +146,9 @@ export class LicenseResponseModel {
         assignedDate?: Date | null,
         expiryDate?: Date | null,
         seats?: number | null,
+        totalSeats?: number | null,
+        costPerSeat?: number | null,
+        billingCycle?: string | null,
         remarks?: string | null,
         company?: any,
         application?: any,
@@ -145,6 +163,9 @@ export class LicenseResponseModel {
         this.assignedDate = assignedDate;
         this.expiryDate = expiryDate;
         this.seats = seats;
+        this.totalSeats = totalSeats;
+        this.costPerSeat = costPerSeat;
+        this.billingCycle = billingCycle;
         this.remarks = remarks;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;

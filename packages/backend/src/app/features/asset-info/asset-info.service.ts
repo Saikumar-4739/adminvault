@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum, IdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, GetExpiringWarrantyRequestModel } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum, IdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, GetExpiringWarrantyRequestModel, NotificationType } from '@adminvault/shared-models';
 import { AssetInfoEntity } from './entities/asset-info.entity';
 import { AssetAssignEntity } from './entities/asset-assign.entity';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
@@ -14,6 +14,8 @@ import { EmailInfoService } from '../administration/email-info.service';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { AssetReturnHistoryEntity } from './entities/asset-return-history.entity';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AssetInfoService {
@@ -21,7 +23,9 @@ export class AssetInfoService {
         private dataSource: DataSource,
         private assetInfoRepo: AssetInfoRepository,
         private assignRepo: AssetAssignRepository,
-        private emailInfoService: EmailInfoService
+        private emailInfoService: EmailInfoService,
+        private auditLogService: AuditLogService,
+        private notificationsService: NotificationsService
     ) { }
 
     /**
@@ -62,9 +66,29 @@ export class AssetInfoService {
             entity.encryptionStatus = reqModel.encryptionStatus || EncryptionStatusEnum.UNKNOWN;
             entity.batteryLevel = reqModel.batteryLevel;
             entity.storageAvailable = reqModel.storageAvailable;
+            entity.purchaseCost = reqModel.purchaseCost || 0;
+            entity.currentValue = reqModel.currentValue || reqModel.purchaseCost || 0;
+            entity.depreciationMethod = reqModel.depreciationMethod || 'STRAIGHT_LINE';
+            entity.usefulLifeYears = reqModel.usefulLifeYears || 5;
+            entity.salvageValue = reqModel.salvageValue || 0;
             entity.assetStatusEnum = reqModel.assignedToEmployeeId ? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE) : (reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE);
-            await transManager.getRepository(AssetInfoEntity).save(entity);
+            const saved = await transManager.getRepository(AssetInfoEntity).save(entity);
             await transManager.completeTransaction();
+
+            // Log activity
+            await this.auditLogService.logAction(
+                'CREATE',
+                'ASSET',
+                Number(saved.id),
+                saved.model + ' (' + saved.serialNumber + ')',
+                userId,
+                '',
+                '',
+                { model: saved.model, serialNumber: saved.serialNumber, status: saved.assetStatusEnum },
+                undefined,
+                'Inventory'
+            );
+
             return new GlobalResponse(true, 0, "Asset created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -111,6 +135,11 @@ export class AssetInfoService {
             existing.encryptionStatus = reqModel.encryptionStatus || existing.encryptionStatus;
             existing.batteryLevel = reqModel.batteryLevel ?? existing.batteryLevel;
             existing.storageAvailable = reqModel.storageAvailable || existing.storageAvailable;
+            existing.purchaseCost = reqModel.purchaseCost ?? existing.purchaseCost;
+            existing.currentValue = reqModel.currentValue ?? existing.currentValue;
+            existing.depreciationMethod = reqModel.depreciationMethod || existing.depreciationMethod;
+            existing.usefulLifeYears = reqModel.usefulLifeYears ?? existing.usefulLifeYears;
+            existing.salvageValue = reqModel.salvageValue ?? existing.salvageValue;
             existing.userId = userId || existing.userId;
 
             // Only update status if explicitly provided, otherwise keep existing
@@ -125,8 +154,23 @@ export class AssetInfoService {
                     existing.assetStatusEnum = AssetStatusEnum.IN_USE;
                 }
             }
-            await transManager.getRepository(AssetInfoEntity).save(existing);
+            const saved = await transManager.getRepository(AssetInfoEntity).save(existing);
             await transManager.completeTransaction();
+
+            // Log activity
+            await this.auditLogService.logAction(
+                'UPDATE',
+                'ASSET',
+                Number(saved.id),
+                saved.model + ' (' + saved.serialNumber + ')',
+                userId,
+                '',
+                '',
+                { changes: reqModel, status: saved.assetStatusEnum },
+                undefined,
+                'Inventory'
+            );
+
             return new GlobalResponse(true, 0, "Asset updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -153,7 +197,7 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Asset not found");
             }
 
-            const response = new AssetResponseModel(asset.id, asset.companyId, asset.deviceId, asset.serialNumber, asset.assetStatusEnum, asset.createdAt, asset.updatedAt, asset.purchaseDate, asset.warrantyExpiry, asset.brandId, asset.model, asset.configuration, asset.assignedToEmployeeId, asset.previousUserEmployeeId, asset.userAssignedDate, asset.lastReturnDate, asset.boxNo, asset.complianceStatus, asset.lastSync, asset.encryptionStatus, asset.batteryLevel, asset.storageAvailable);
+            const response = new AssetResponseModel(asset.id, asset.companyId, asset.deviceId, asset.serialNumber, asset.assetStatusEnum, asset.createdAt, asset.updatedAt, asset.purchaseDate, asset.warrantyExpiry, asset.brandId, asset.model, asset.configuration, asset.assignedToEmployeeId, asset.previousUserEmployeeId, asset.userAssignedDate, asset.lastReturnDate, asset.boxNo, asset.complianceStatus, asset.lastSync, asset.encryptionStatus, asset.batteryLevel, asset.storageAvailable, asset.purchaseCost, asset.currentValue, asset.depreciationMethod, asset.usefulLifeYears, asset.salvageValue);
             return new GetAssetByIdModel(true, 0, "Asset retrieved successfully", response);
         } catch (error) {
             throw error;
@@ -172,7 +216,7 @@ export class AssetInfoService {
         try {
             const companyId = reqModel.id;
             const assets = companyId ? await this.assetInfoRepo.find({ where: { companyId } }) : await this.assetInfoRepo.find();
-            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable));
+            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable, a.purchaseCost, a.currentValue, a.depreciationMethod, a.usefulLifeYears, a.salvageValue));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
         } catch (error) {
             throw error;
@@ -357,6 +401,20 @@ export class AssetInfoService {
 
             await transManager.completeTransaction();
 
+            // Log activity
+            await this.auditLogService.logAction(
+                'ASSIGN',
+                'ASSET',
+                Number(asset.id),
+                asset.model + ' (' + asset.serialNumber + ')',
+                userId,
+                '',
+                '',
+                { assignedToEmployeeId: employeeId, isReassignment, remarks },
+                undefined,
+                'Inventory'
+            );
+
             // Send Emails (Independent of transaction success/failure after commit)
             try {
                 // Fetch details for email
@@ -427,6 +485,47 @@ export class AssetInfoService {
                 console.error("Failed to send asset assignment emails", emailError);
             }
 
+            // --- PERSISTENT NOTIFICATIONS ---
+            try {
+                const employee = await this.dataSource.getRepository(EmployeesEntity).findOne({ where: { id: employeeId } });
+                const asset = await this.assetInfoRepo.findOne({ where: { id: assetId } });
+
+                if (employee && asset) {
+                    const assetName = `${asset.model} (SN: ${asset.serialNumber})`;
+
+                    // 1. To Assignee
+                    const assigneeUser = await this.dataSource.getRepository(AuthUsersEntity).findOne({ where: { email: employee.email } });
+                    if (assigneeUser) {
+                        await this.notificationsService.createNotification(assigneeUser.id, {
+                            title: 'Asset Assigned',
+                            message: `A new asset "${assetName}" has been assigned to you.`,
+                            type: NotificationType.SUCCESS,
+                            category: 'asset',
+                            link: '/self-service',
+                            metadata: { assetId: asset.id }
+                        });
+                    }
+
+                    // 2. To Manager
+                    if (employee.managerId) {
+                        const manager = await this.dataSource.getRepository(EmployeesEntity).findOne({ where: { id: employee.managerId } });
+                        if (manager) {
+                            const managerUser = await this.dataSource.getRepository(AuthUsersEntity).findOne({ where: { email: manager.email } });
+                            if (managerUser) {
+                                await this.notificationsService.createNotification(managerUser.id, {
+                                    title: 'Asset Assigned to Team Member',
+                                    message: `Asset "${assetName}" has been assigned to ${employee.firstName} ${employee.lastName}.`,
+                                    type: NotificationType.INFO,
+                                    category: 'asset'
+                                });
+                            }
+                        }
+                    }
+                }
+            } catch (notifyError) {
+                console.error("Failed to create asset assignment notifications", notifyError);
+            }
+
             return new GlobalResponse(true, 200, isReassignment ? 'Asset reassigned successfully' : 'Asset assigned successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -475,6 +574,41 @@ export class AssetInfoService {
             }
 
             await transManager.completeTransaction();
+
+            // Log activity
+            await this.auditLogService.logAction(
+                'RETURN',
+                'ASSET',
+                Number(asset.id),
+                asset.model + ' (' + asset.serialNumber + ')',
+                userId,
+                '',
+                '',
+                { previousUserId, targetStatus: asset.assetStatusEnum, remarks },
+                undefined,
+                'Inventory'
+            );
+
+            // --- PERSISTENT NOTIFICATIONS ---
+            try {
+                if (previousUserId) {
+                    const employee = await this.dataSource.getRepository(EmployeesEntity).findOne({ where: { id: previousUserId } });
+                    if (employee) {
+                        const user = await this.dataSource.getRepository(AuthUsersEntity).findOne({ where: { email: employee.email } });
+                        if (user) {
+                            await this.notificationsService.createNotification(user.id, {
+                                title: 'Asset Returned',
+                                message: `Your asset "${asset.model} (SN: ${asset.serialNumber})" has been marked as returned.`,
+                                type: NotificationType.INFO,
+                                category: 'asset'
+                            });
+                        }
+                    }
+                }
+            } catch (notifyError) {
+                console.error("Failed to create asset return notifications", notifyError);
+            }
+
             return new GlobalResponse(true, 200, 'Asset returned successfully');
         } catch (error) {
             await transManager.releaseTransaction();
@@ -490,7 +624,41 @@ export class AssetInfoService {
         const assets = await this.assetInfoRepo.find({
             where: { companyId, warrantyExpiry: LessThan(dateLimit) }
         });
-        const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable));
+        const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable, a.purchaseCost, a.currentValue, a.depreciationMethod, a.usefulLifeYears, a.salvageValue));
         return new GetAllAssetsModel(true, 200, 'Expiring assets retrieved', responses);
+    }
+
+    /**
+     * Calculate current value of an asset based on depreciation
+     * Updates the currentValue field in the database
+     * 
+     * @param assetId - ID of the asset to calculate for
+     */
+    async calculateDepreciation(assetId: number): Promise<number> {
+        const asset = await this.assetInfoRepo.findOne({ where: { id: assetId } });
+        if (!asset || !asset.purchaseDate || !asset.purchaseCost) return 0;
+
+        const now = new Date();
+        const purchaseDate = new Date(asset.purchaseDate);
+        const ageInYears = (now.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
+
+        let newValue = Number(asset.purchaseCost);
+        const salvageValue = Number(asset.salvageValue || 0);
+        const lifeYears = Number(asset.usefulLifeYears || 5);
+
+        if (asset.depreciationMethod === 'STRAIGHT_LINE') {
+            const annualDepreciation = (newValue - salvageValue) / lifeYears;
+            newValue = newValue - (annualDepreciation * ageInYears);
+        } else if (asset.depreciationMethod === 'DECLINING') {
+            const rate = 0.2; // 20% declining rate
+            newValue = newValue * Math.pow((1 - rate), ageInYears);
+        }
+
+        newValue = Math.max(newValue, salvageValue);
+
+        asset.currentValue = Number(newValue.toFixed(2));
+        await this.assetInfoRepo.save(asset);
+
+        return asset.currentValue;
     }
 }

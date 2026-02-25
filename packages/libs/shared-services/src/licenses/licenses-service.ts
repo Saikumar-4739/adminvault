@@ -20,4 +20,16 @@ export class LicensesService extends CommonAxiosService {
     async deleteLicense(model: { id: number }): Promise<GlobalResponse> {
         return this.axiosPostCall(`${this.baseUrl}/deleteLicense`, model);
     }
+
+    async getUtilization(req: IdRequestModel): Promise<any> {
+        return this.axiosPostCall(`${this.baseUrl}/getUtilization`, req);
+    }
+
+    async getComplianceReport(req: IdRequestModel): Promise<any> {
+        return this.axiosPostCall(`${this.baseUrl}/getComplianceReport`, req);
+    }
+
+    async getCostOptimization(req: IdRequestModel): Promise<any> {
+        return this.axiosPostCall(`${this.baseUrl}/getCostOptimization`, req);
+    }
 }

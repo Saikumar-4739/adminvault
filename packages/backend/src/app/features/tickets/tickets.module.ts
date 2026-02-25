@@ -16,12 +16,16 @@ import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { AdministrationModule } from '../administration/administration.module';
 import { WorkflowModule } from '../workflow/workflow.module';
 import { TicketWorkLogEntity } from './entities/ticket-work-log.entity';
+import { AuditLogModule } from '../audit-log/audit-log.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([TicketsEntity, TicketCommentsEntity, TicketStatusLogsEntity, EmployeesEntity, TicketMessageEntity, AuthUsersEntity, TicketWorkLogEntity]),
         AdministrationModule,
-        forwardRef(() => WorkflowModule)
+        forwardRef(() => WorkflowModule),
+        AuditLogModule,
+        NotificationsModule
     ],
     controllers: [TicketsController],
     providers: [TicketsService, TicketsRepository, TicketCommentsRepository, TicketStatusLogsRepository, EmployeesRepository, TicketsGateway],

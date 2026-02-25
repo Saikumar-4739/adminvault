@@ -14,6 +14,7 @@ export * from './asset-assign/asset-assign-models';
 export * from './document/document-models';
 export * from './ticket';
 export * from './license/license-models';
+export * from './contract/contract-models';
 export * from './dashboard/dashboard-models';
 export * from './administration';
 export * from './types/geolocation.types';
@@ -27,6 +28,7 @@ export * from './procurement/procurement.models';
 export * from './advanced/advanced-modules.models';
 export * from './websocket/websocket-events.model';
 export * from './network/network-stats.model';
-
+export * from './audit-log/audit-log.models';
+export * from './onboarding';
 
 export * from './knowledge-base';

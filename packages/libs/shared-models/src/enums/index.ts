@@ -15,4 +15,5 @@ export * from './setting-type.enum';
 export * from './compliance-status.enum';
 export * from './encryption-status.enum';
 export * from './ticket-severity.enum';
+export * from './contract-status.enum';
 

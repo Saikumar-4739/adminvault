@@ -3,8 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { SoftwareMasterEntity } from './entities/software-master.entity';
 import { AssetSoftwareEntity } from './entities/asset-software.entity';
-import { SoftwareModel, AssetSoftwareModel, GlobalResponse, GetAssetSoftwareRequestModel, InstallSoftwareRequestModel } from '@adminvault/shared-models';
+import { SoftwareModel, AssetSoftwareModel, GlobalResponse, GetAssetSoftwareRequestModel, InstallSoftwareRequestModel, NotificationType } from '@adminvault/shared-models';
 import { ErrorResponse } from '@adminvault/backend-utils';
+import { NotificationsService } from '../notifications/notifications.service';
+import { AssetInfoEntity } from './entities/asset-info.entity';
+import { EmployeesEntity } from '../employees/entities/employees.entity';
+import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 
 @Injectable()
 export class SoftwareService {
@@ -12,7 +16,8 @@ export class SoftwareService {
         @InjectRepository(SoftwareMasterEntity)
         private softwareRepo: Repository<SoftwareMasterEntity>,
         @InjectRepository(AssetSoftwareEntity)
-        private assetSoftwareRepo: Repository<AssetSoftwareEntity>
+        private assetSoftwareRepo: Repository<AssetSoftwareEntity>,
+        private notificationsService: NotificationsService
     ) { }
 
     async getAllSoftware(): Promise<SoftwareModel[]> {
@@ -73,6 +78,26 @@ export class SoftwareService {
             });
 
             await this.assetSoftwareRepo.save(install);
+
+            // Persistent notification
+            try {
+                const asset = await this.assetSoftwareRepo.manager.getRepository(AssetInfoEntity).findOne({ where: { id: assetId } });
+                if (asset && asset.assignedToEmployeeId) {
+                    const employee = await this.assetSoftwareRepo.manager.getRepository(EmployeesEntity).findOne({ where: { id: asset.assignedToEmployeeId } });
+                    if (employee && employee.userId) {
+                        const software = await this.softwareRepo.findOne({ where: { id: softwareId } });
+                        await this.notificationsService.createNotification(employee.userId, {
+                            title: 'Software Installed',
+                            message: `Software "${software ? software.name : 'Unknown'}" has been installed on your asset (${asset.model}).`,
+                            type: NotificationType.INFO,
+                            category: 'asset'
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Software install notification failed", e);
+            }
+
             return new GlobalResponse(true, 201, "Software installation logged");
         } catch (error) {
             throw error;

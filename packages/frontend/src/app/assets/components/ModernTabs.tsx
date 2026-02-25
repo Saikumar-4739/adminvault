@@ -35,7 +35,7 @@ export const ModernTabs: React.FC<ModernTabsProps> = ({ tabs, activeTab, onTabCh
                             <button
                                 key={tab.id}
                                 onClick={() => onTabChange(tab.id)}
-                                className={`relative flex-1 min-w-[140px] px-6 py-4 text-sm font-semibold transition-all duration-300 ${isActive
+                                className={`relative flex-1 min-w-[160px] px-6 py-1.5 text-xs font-semibold transition-all duration-300 ${isActive
                                     ? 'text-white'
                                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                     }`}
@@ -52,7 +52,7 @@ export const ModernTabs: React.FC<ModernTabsProps> = ({ tabs, activeTab, onTabCh
 
                                 {/* Tab Content */}
                                 <div className="relative flex items-center justify-center gap-2">
-                                    <Icon className={`h-4 w-4 ${isActive ? 'animate-pulse' : ''}`} />
+                                    <Icon className={`h-3.5 w-3.5 ${isActive ? 'animate-pulse' : ''}`} />
                                     <span>{tab.label}</span>
                                     {tab.count !== undefined && (
                                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${isActive
@@ -71,7 +71,7 @@ export const ModernTabs: React.FC<ModernTabsProps> = ({ tabs, activeTab, onTabCh
 
                                 {/* Separator */}
                                 {!isActive && index < tabs.length - 1 && (
-                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-8 bg-slate-200 dark:bg-slate-700"></div>
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
                                 )}
                             </button>
                         );

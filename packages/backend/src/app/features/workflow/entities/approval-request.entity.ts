@@ -28,4 +28,7 @@ export class ApprovalRequestEntity extends CommonBaseEntity {
 
     @Column('text', { nullable: true })
     remarks: string;
+
+    @Column('bigint', { nullable: true })
+    assignedToEmployeeId: number;
 }

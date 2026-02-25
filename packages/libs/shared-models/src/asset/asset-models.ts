@@ -21,6 +21,11 @@ export class CreateAssetModel {
     encryptionStatus?: EncryptionStatusEnum;
     batteryLevel?: number;
     storageAvailable?: string;
+    purchaseCost?: number;
+    currentValue?: number;
+    depreciationMethod?: string;
+    usefulLifeYears?: number;
+    salvageValue?: number;
 
     constructor(
         companyId: number,
@@ -41,7 +46,12 @@ export class CreateAssetModel {
         lastSync?: string,
         encryptionStatus?: EncryptionStatusEnum,
         batteryLevel?: number,
-        storageAvailable?: string
+        storageAvailable?: string,
+        purchaseCost?: number,
+        currentValue?: number,
+        depreciationMethod?: string,
+        usefulLifeYears?: number,
+        salvageValue?: number
     ) {
         this.companyId = companyId;
         this.deviceId = deviceId;
@@ -62,6 +72,11 @@ export class CreateAssetModel {
         this.encryptionStatus = encryptionStatus;
         this.batteryLevel = batteryLevel;
         this.storageAvailable = storageAvailable;
+        this.purchaseCost = purchaseCost;
+        this.currentValue = currentValue;
+        this.depreciationMethod = depreciationMethod;
+        this.usefulLifeYears = usefulLifeYears;
+        this.salvageValue = salvageValue;
     }
 }
 
@@ -88,9 +103,14 @@ export class UpdateAssetModel extends CreateAssetModel {
         lastSync?: string,
         encryptionStatus?: EncryptionStatusEnum,
         batteryLevel?: number,
-        storageAvailable?: string
+        storageAvailable?: string,
+        purchaseCost?: number,
+        currentValue?: number,
+        depreciationMethod?: string,
+        usefulLifeYears?: number,
+        salvageValue?: number
     ) {
-        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, brandId, model, configuration, assignedToEmployeeId, previousUserEmployeeId, userAssignedDate, lastReturnDate, boxNo, complianceStatus, lastSync, encryptionStatus, batteryLevel, storageAvailable);
+        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, brandId, model, configuration, assignedToEmployeeId, previousUserEmployeeId, userAssignedDate, lastReturnDate, boxNo, complianceStatus, lastSync, encryptionStatus, batteryLevel, storageAvailable, purchaseCost, currentValue, depreciationMethod, usefulLifeYears, salvageValue);
         this.id = id;
     }
 }
@@ -130,6 +150,11 @@ export class AssetResponseModel {
     encryptionStatus?: EncryptionStatusEnum;
     batteryLevel?: number;
     storageAvailable?: string;
+    purchaseCost?: number;
+    currentValue?: number;
+    depreciationMethod?: string;
+    usefulLifeYears?: number;
+    salvageValue?: number;
     createdAt: Date;
     updatedAt: Date;
 
@@ -155,7 +180,12 @@ export class AssetResponseModel {
         lastSync?: Date,
         encryptionStatus?: EncryptionStatusEnum,
         batteryLevel?: number,
-        storageAvailable?: string
+        storageAvailable?: string,
+        purchaseCost?: number,
+        currentValue?: number,
+        depreciationMethod?: string,
+        usefulLifeYears?: number,
+        salvageValue?: number
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -179,6 +209,11 @@ export class AssetResponseModel {
         this.encryptionStatus = encryptionStatus;
         this.batteryLevel = batteryLevel;
         this.storageAvailable = storageAvailable;
+        this.purchaseCost = purchaseCost;
+        this.currentValue = currentValue;
+        this.depreciationMethod = depreciationMethod;
+        this.usefulLifeYears = usefulLifeYears;
+        this.salvageValue = salvageValue;
     }
 }
 

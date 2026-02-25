@@ -17,6 +17,10 @@ import { AdministrationModule } from './features/administration/administration.m
 import { WorkflowModule } from './features/workflow/workflow.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { ProcurementModule } from './features/procurement/procurement.module';
+import { AuditLogModule } from './features/audit-log/audit-log.module';
+import { NotificationsModule } from './features/notifications/notifications.module';
+import { OnboardingModule } from './features/onboarding/onboarding.module';
+import { ContractModule } from './features/contracts/contract.module';
 import configuration from '../config/configuration';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -48,6 +52,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     WorkflowModule,
     KnowledgeBaseModule,
     ProcurementModule,
+    AuditLogModule,
+    NotificationsModule,
+    OnboardingModule,
+    ContractModule,
     EventEmitterModule.forRoot(),
     WebSocketModule,
     NetworkModule,

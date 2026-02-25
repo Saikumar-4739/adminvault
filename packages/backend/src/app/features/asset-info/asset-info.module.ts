@@ -20,11 +20,16 @@ import { SoftwareMasterEntity } from './entities/software-master.entity';
 import { AssetSoftwareEntity } from './entities/asset-software.entity';
 import { SoftwareService } from './software.service';
 import { AdministrationModule } from '../administration/administration.module';
+import { AuditLogModule } from '../audit-log/audit-log.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+
 @Module({
     imports: [
         TypeOrmModule.forFeature([AssetInfoEntity, AssetReturnHistoryEntity, AssetNextAssignmentEntity, AssetAssignEntity, EmployeesEntity, SoftwareMasterEntity, AssetSoftwareEntity]),
         forwardRef(() => WorkflowModule),
-        AdministrationModule
+        AdministrationModule,
+        AuditLogModule,
+        NotificationsModule
     ],
     controllers: [AssetInfoController],
     providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository, AssetAssignRepository, EmployeesRepository, SoftwareService],
