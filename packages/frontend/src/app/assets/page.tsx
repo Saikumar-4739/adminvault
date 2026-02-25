@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Package, Warehouse, History, Plus, FileUp, Filter, Activity, CheckCircle2, User, RefreshCw, Clock, Check } from 'lucide-react';
+import { Package, Warehouse, History, Plus, FileUp, Filter, Activity, CheckCircle2, User, RefreshCw, Clock, Check, Building2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { ModernTabs } from './components/ModernTabs';
 import { AllAssetsTab } from './components/AllAssetsTab';
@@ -391,13 +390,21 @@ const AssetsPage: React.FC = () => {
                         }
                     ]}
                 >
-                    <div className="w-64">
-                        <Select
-                            options={[{ value: 0, label: 'All Companies' }, ...companies.map(c => ({ value: c.id, label: c.companyName }))]}
+                    <div className="relative w-full sm:w-48 group">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500 group-focus-within:scale-110 transition-transform" />
+                        <select
                             value={selectedCompanyId}
                             onChange={handleCompanyChange}
-                            className="h-8 text-sm"
-                        />
+                            className="w-full pl-9 pr-8 h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-[10px] appearance-none outline-none shadow-sm cursor-pointer uppercase tracking-widest"
+                        >
+                            <option value={0}>All Companies</option>
+                            {companies.map(c => (
+                                <option key={c.id} value={c.id}>{c.companyName}</option>
+                            ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <Search className="h-3 w-3" />
+                        </div>
                     </div>
                 </PageHeader>
 

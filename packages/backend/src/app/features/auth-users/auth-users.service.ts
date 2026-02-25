@@ -6,7 +6,6 @@ import { AuthUsersRepository } from './repositories/auth-users.repository';
 import { AuthTokensRepository } from './repositories/auth-tokens.repository';
 import { AuthUsersEntity } from './entities/auth-users.entity';
 import { AuthTokensEntity } from './entities/auth-tokens.entity';
-import { AccessRequestEntity } from './entities/access-request.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { IdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RefreshTokenModel, RegisterUserModel, UpdateUserModel, UserResponseModel, UsersResponseModel, UserAccessRequestModel, AccessRequestsListModel } from '@adminvault/shared-models';
@@ -17,6 +16,7 @@ import { EmailInfoService } from '../administration/email-info.service';
 import { ForgotPasswordModel, ResetPasswordModel, RequestAccessModel, SendPasswordResetEmailModel } from '@adminvault/shared-models';
 import { Request } from 'express';
 import { IUserPayload } from '../../interfaces/auth.interface';
+import { AccessRequestEntity, AccessRequestStatus } from '../administration/entities/access-request.entity';
 
 const DEFAULT_MENUS = [
     {
@@ -122,7 +122,7 @@ export class AuthUsersService {
             newUser.status = true
             newUser.employeeId = employeeId
             await transManager.getRepository(AuthUsersEntity).save(newUser)
-            await transManager.getRepository(AccessRequestEntity).update({ email: reqModel.email }, { status: 'Completed' })
+            await transManager.getRepository(AccessRequestEntity).update({ email: reqModel.email }, { status: AccessRequestStatus.COMPLETED })
             await transManager.completeTransaction()
             return new GlobalResponse(true, 0, "User Created Successfully")
         } catch (err) {
@@ -218,7 +218,7 @@ export class AuthUsersService {
             entity.name = reqModel.name;
             entity.email = reqModel.email;
             entity.description = reqModel.description || '';
-            entity.status = '';
+            entity.status = AccessRequestStatus.PENDING;
             await this.accessRequestRepo.save(entity);
             await this.emailService.sendAccessRequestEmail(reqModel);
             return new GlobalResponse(true, 0, "Access request sent successfully");
@@ -245,7 +245,7 @@ export class AuthUsersService {
             if (!entity) {
                 throw new ErrorResponse(0, 'Access request not found');
             }
-            entity.status = 'Completed';
+            entity.status = AccessRequestStatus.COMPLETED;
             await this.accessRequestRepo.save(entity);
             return new GlobalResponse(true, 0, 'Access request closed');
         } catch (error) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { companyService, employeeService, applicationService, licensesService } from '@/lib/api/services';
-import { UserRoleEnum, CreateLicenseModel, DeleteLicenseModel, IdRequestModel } from '@adminvault/shared-models';
+import { UserRoleEnum, CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, IdRequestModel } from '@adminvault/shared-models';
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
     Plus, Key, Trash2, Shield, Pencil, Clock, Search,
@@ -65,6 +65,7 @@ const LicensesPage: React.FC = () => {
     const [applications, setApplications] = useState<Application[]>([]);
     const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editLicense, setEditLicense] = useState<License | null>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -196,6 +197,17 @@ const LicensesPage: React.FC = () => {
         }).length;
     }, [licenses]);
 
+    const assignedCount = useMemo(() => {
+        return licenses.filter(l => l.assignedEmployeeId).length;
+    }, [licenses]);
+
+    const expiredCount = useMemo(() => {
+        return licenses.filter(l => {
+            const daysLeft = getDaysRemaining(l.expiryDate);
+            return daysLeft !== null && daysLeft < 0;
+        }).length;
+    }, [licenses]);
+
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
             <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/40 space-y-8 pb-32">
@@ -220,9 +232,9 @@ const LicensesPage: React.FC = () => {
                             <select
                                 value={selectedCompanyId}
                                 onChange={(e) => setSelectedCompanyId(e.target.value)}
-                                className="w-full pl-9 pr-8 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-[10px] appearance-none outline-none shadow-sm cursor-pointer uppercase tracking-widest"
+                                className="w-full pl-9 pr-8 h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-[10px] appearance-none outline-none shadow-sm cursor-pointer uppercase tracking-widest"
                             >
-                                <option value="">Select Company...</option>
+                                <option value="">All Companies</option>
                                 {companies.map(c => (
                                     <option key={c.id} value={c.id}>{c.companyName}</option>
                                 ))}
@@ -239,7 +251,7 @@ const LicensesPage: React.FC = () => {
                                 placeholder="Search licences..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-4 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-xs outline-none shadow-sm"
+                                className="w-full pl-11 pr-4 h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-xs outline-none shadow-sm"
                             />
                         </div>
                     </div>
@@ -251,13 +263,21 @@ const LicensesPage: React.FC = () => {
                         <div className="p-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group">
                             <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
                             <div className="relative z-10">
-                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Total Assets</div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Total Licenses</div>
                                 <div className="text-3xl font-black text-slate-900 dark:text-white flex items-baseline gap-2">
                                     {licenses.length}
-                                    <span className="text-xs text-slate-400 font-bold">Licences</span>
+                                    <span className="text-xs text-slate-400 font-bold">Total</span>
                                 </div>
-                                <div className="mt-4 flex items-center gap-2">
-                                    <div className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[9px] font-black uppercase tracking-tight">Active Status</div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group">
+                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+                            <div className="relative z-10">
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Assigned Licenses</div>
+                                <div className="text-3xl font-black text-emerald-500 flex items-baseline gap-2">
+                                    {assignedCount}
+                                    <span className="text-xs text-slate-400 font-bold">Assigned</span>
                                 </div>
                             </div>
                         </div>
@@ -265,31 +285,23 @@ const LicensesPage: React.FC = () => {
                         <div className="p-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group">
                             <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
                             <div className="relative z-10">
-                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Near Expiry</div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Need Expiry</div>
                                 <div className="text-3xl font-black text-amber-500 flex items-baseline gap-2">
                                     {expiringSoonCount}
-                                    <span className="text-xs text-slate-400 font-bold">Licences</span>
-                                </div>
-                                <div className="mt-4 flex items-center gap-2">
-                                    <div className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 text-[9px] font-black uppercase tracking-tight">Action Required</div>
+                                    <span className="text-xs text-slate-400 font-bold">Soon</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-6 bg-gradient-to-br from-indigo-600 to-violet-800 rounded-3xl text-white shadow-xl shadow-indigo-600/20 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:rotate-12 transition-transform">
-                                <Shield className="w-12 h-12" />
+                        <div className="p-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group">
+                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-500/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+                            <div className="relative z-10">
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Already Expired</div>
+                                <div className="text-3xl font-black text-rose-500 flex items-baseline gap-2">
+                                    {expiredCount}
+                                    <span className="text-xs text-slate-400 font-bold">Expired</span>
+                                </div>
                             </div>
-                            <h4 className="font-black text-sm uppercase tracking-tight mb-2">Security Note</h4>
-                            <p className="text-[10px] text-indigo-100/70 font-medium leading-relaxed uppercase tracking-wider">
-                                All software allocations are monitored to ensure correct licence usage across the organisation.
-                            </p>
-                            <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="mt-6 w-full py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                            >
-                                Add New Licence
-                            </button>
                         </div>
                     </div>
 
@@ -343,7 +355,7 @@ const LicensesPage: React.FC = () => {
                                                     )}
                                                 </div>
                                                 <div className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded-lg border border-indigo-100 dark:border-indigo-900/10">
-                                                    {appLicenses.length} Units
+                                                    {appLicenses.length}
                                                 </div>
                                                 {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
                                             </div>
@@ -416,14 +428,14 @@ const LicensesPage: React.FC = () => {
                                                                         <td className="p-4 text-right">
                                                                             <div className="flex items-center justify-end gap-1">
                                                                                 <button
-                                                                                    onClick={() => setIsModalOpen(true)}
-                                                                                    className="h-8 w-8 inline-flex items-center justify-center opacity-0 group-hover/row:opacity-100 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-xl transition-all"
+                                                                                    onClick={() => { setEditLicense(license); setIsModalOpen(true); }}
+                                                                                    className="h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-xl transition-all"
                                                                                 >
                                                                                     <Pencil className="h-3.5 w-3.5" />
                                                                                 </button>
                                                                                 <button
                                                                                     onClick={() => handleDeleteClick(license.id)}
-                                                                                    className="h-8 w-8 inline-flex items-center justify-center opacity-0 group-hover/row:opacity-100 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all"
+                                                                                    className="h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all"
                                                                                 >
                                                                                     <Trash2 className="h-3.5 w-3.5" />
                                                                                 </button>
@@ -446,29 +458,54 @@ const LicensesPage: React.FC = () => {
 
                 <AddLicenseModal
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={() => { setIsModalOpen(false); setEditLicense(null); }}
+                    initialLicense={editLicense}
                     onSuccess={async (data) => {
                         try {
-                            const model = new CreateLicenseModel(
-                                data.companyId,
-                                data.applicationId,
-                                data.assignedEmployeeId || undefined,
-                                undefined,
-                                undefined,
-                                data.assignedDate || undefined,
-                                data.expiryDate || undefined,
-                                undefined,
-                                data.remarks || undefined
-                            );
-
-                            const response: any = await licensesService.createLicense(model);
-                            if (response.status) {
-                                AlertMessages.getSuccessMessage('Licence added successfully');
-                                fetchLicenses();
-                                return true;
+                            if (editLicense) {
+                                const model = new UpdateLicenseModel(
+                                    editLicense.id,
+                                    data.companyId,
+                                    data.applicationId,
+                                    data.assignedEmployeeId || undefined,
+                                    undefined,
+                                    undefined,
+                                    data.assignedDate || undefined,
+                                    data.expiryDate || undefined,
+                                    undefined,
+                                    data.remarks || undefined
+                                );
+                                const response: any = await licensesService.updateLicense(model);
+                                if (response.status) {
+                                    AlertMessages.getSuccessMessage('Licence updated successfully');
+                                    fetchLicenses();
+                                    return true;
+                                } else {
+                                    AlertMessages.getErrorMessage(response.message || 'Failed to update licence');
+                                    return false;
+                                }
                             } else {
-                                AlertMessages.getErrorMessage(response.message || 'Failed to add licence');
-                                return false;
+                                const model = new CreateLicenseModel(
+                                    data.companyId,
+                                    data.applicationId,
+                                    data.assignedEmployeeId || undefined,
+                                    undefined,
+                                    undefined,
+                                    data.assignedDate || undefined,
+                                    data.expiryDate || undefined,
+                                    undefined,
+                                    data.remarks || undefined
+                                );
+
+                                const response: any = await licensesService.createLicense(model);
+                                if (response.status) {
+                                    AlertMessages.getSuccessMessage('Licence added successfully');
+                                    fetchLicenses();
+                                    return true;
+                                } else {
+                                    AlertMessages.getErrorMessage(response.message || 'Failed to add licence');
+                                    return false;
+                                }
                             }
                         } catch (err: any) {
                             AlertMessages.getErrorMessage(err.message || 'An error occurred');

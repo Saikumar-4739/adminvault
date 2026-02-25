@@ -189,7 +189,7 @@ export default function UsersManagementPage() {
                 if (requestId !== null) {
                     // Optimistic update — show 'Completed' immediately
                     setAccessRequests(prev =>
-                        prev.map(r => r.id === requestId ? { ...r, status: 'Completed' } : r)
+                        prev.map(r => r.id === requestId ? { ...r, status: 'COMPLETED' } : r)
                     );
                     // Switch to access-requests tab so status change is visible
                     setActiveTab('access-requests');
@@ -396,11 +396,11 @@ export default function UsersManagementPage() {
                                 <div className="flex items-center gap-2 ml-auto">
                                     <span className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-md px-2 py-1 font-medium">
                                         <Clock className="h-3 w-3" />
-                                        {accessRequests.filter(r => r.status === 'pending').length} Pending
+                                        {accessRequests.filter(r => r.status?.toUpperCase() !== 'COMPLETED').length} Pending
                                     </span>
                                     <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 rounded-md px-2 py-1 font-medium">
                                         <CheckCircle className="h-3 w-3" />
-                                        {accessRequests.filter(r => r.status === 'Completed').length} Completed
+                                        {accessRequests.filter(r => r.status?.toUpperCase() === 'COMPLETED').length} Completed
                                     </span>
                                 </div>
                             </div>
@@ -455,7 +455,7 @@ export default function UsersManagementPage() {
                                                     {formatDate(req.createdAt)}
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    {req.status === 'Completed' ? (
+                                                    {req.status?.toUpperCase() === 'COMPLETED' ? (
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
                                                             <CheckCircle className="h-2.5 w-2.5" />
                                                             Completed
@@ -468,15 +468,14 @@ export default function UsersManagementPage() {
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3 text-right">
-                                                    {req.status !== 'Completed' && (
-                                                        <button
-                                                            onClick={() => openCreateFromRequest(req)}
-                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
-                                                        >
-                                                            <UserPlus className="h-3 w-3" />
-                                                            Create User
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        onClick={() => openCreateFromRequest(req)}
+                                                        disabled={req.status?.toUpperCase() === 'COMPLETED'}
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-indigo-50 dark:disabled:hover:bg-indigo-900/20"
+                                                    >
+                                                        <UserPlus className="h-3 w-3" />
+                                                        Create User
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}

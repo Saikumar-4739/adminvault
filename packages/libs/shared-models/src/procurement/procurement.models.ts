@@ -40,6 +40,7 @@ export class CreatePOModel {
     items: POItemModel[];
     notes?: string;
     timeSpentMinutes?: number;
+    approverId?: number;
 
     constructor(
         vendorId: number,
@@ -47,7 +48,8 @@ export class CreatePOModel {
         items: POItemModel[],
         expectedDeliveryDate?: Date,
         notes?: string,
-        timeSpentMinutes?: number
+        timeSpentMinutes?: number,
+        approverId?: number
     ) {
         this.vendorId = vendorId;
         this.orderDate = orderDate;
@@ -55,6 +57,7 @@ export class CreatePOModel {
         this.expectedDeliveryDate = expectedDeliveryDate;
         this.notes = notes;
         this.timeSpentMinutes = timeSpentMinutes;
+        this.approverId = approverId;
     }
 }
 
@@ -71,6 +74,7 @@ export class UpdatePOModel {
     items: POItemModel[];
     notes?: string;
     timeSpentMinutes?: number;
+    approverId?: number;
 
     constructor(
         id: number,
@@ -80,7 +84,8 @@ export class UpdatePOModel {
         items: POItemModel[],
         expectedDeliveryDate?: Date,
         notes?: string,
-        timeSpentMinutes?: number
+        timeSpentMinutes?: number,
+        approverId?: number
     ) {
         this.id = id;
         this.vendorId = vendorId;
@@ -90,6 +95,7 @@ export class UpdatePOModel {
         this.expectedDeliveryDate = expectedDeliveryDate;
         this.notes = notes;
         this.timeSpentMinutes = timeSpentMinutes;
+        this.approverId = approverId;
     }
 }
 
@@ -162,6 +168,8 @@ export class PurchaseOrderModel {
     notes?: string;
     timeSpentMinutes?: number;
     createdAt: Date;
+    approverId?: number;
+    approverName?: string;
 
     constructor(
         id: number,
@@ -177,7 +185,9 @@ export class PurchaseOrderModel {
         requesterName?: string,
         expectedDeliveryDate?: Date,
         notes?: string,
-        timeSpentMinutes?: number
+        timeSpentMinutes?: number,
+        approverId?: number,
+        approverName?: string
     ) {
         this.id = id;
         this.poNumber = poNumber;
@@ -193,6 +203,8 @@ export class PurchaseOrderModel {
         this.expectedDeliveryDate = expectedDeliveryDate;
         this.notes = notes;
         this.timeSpentMinutes = timeSpentMinutes;
+        this.approverId = approverId;
+        this.approverName = approverName;
     }
 }
 

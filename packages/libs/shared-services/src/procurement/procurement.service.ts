@@ -11,6 +11,10 @@ export class ProcurementService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURL('createPO'), model, config);
     }
 
+    async updatePO(id: number, model: CreatePOModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURL(`updatePO/${id}`), model, config);
+    }
+
     async getAllPOs(reqModel: GetAllPOsRequestModel, config?: AxiosRequestConfig): Promise<GetAllPOsModel> {
         return await this.axiosPostCall(this.getURL('getAllPOs'), reqModel, config);
     }

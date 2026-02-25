@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
-import { Plus, Users, Edit, Mail, Phone, LayoutGrid, List, Search, Upload } from 'lucide-react';
+import { Plus, Users, Edit, Mail, Phone, LayoutGrid, List, Search, Upload, Building2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, IdRequestModel, CreateEmployeeModel, UpdateEmployeeModel, EmployeeStatusEnum } from '@adminvault/shared-models';
@@ -278,11 +278,6 @@ const EmployeesPage: React.FC = () => {
         total: employees.length,
         active: employees.filter(e => e.empStatus?.toLowerCase() === 'active').length,
         inactive: employees.filter(e => e.empStatus?.toLowerCase() !== 'active').length,
-        newThisMonth: employees.filter(e => {
-            const date = new Date(e.createdAt || '');
-            const now = new Date();
-            return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-        }).length
     };
 
     const containerVariants = {
@@ -325,8 +320,7 @@ const EmployeesPage: React.FC = () => {
                         {[
                             { label: 'Total', value: stats.total, color: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' },
                             { label: 'Active', value: stats.active, color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
-                            { label: 'Inactive', value: stats.inactive, color: 'bg-rose-50 dark:bg-rose-900/30 text-roseald-700 dark:text-rose-400' },
-                            { label: 'New', value: stats.newThisMonth, color: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' },
+                            { label: 'Inactive', value: stats.inactive, color: 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' },
                         ].map(s => (
                             <span key={s.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${s.color}`}>
                                 <span className="text-[10px] font-medium opacity-70">{s.label}</span> {s.value}
@@ -348,16 +342,22 @@ const EmployeesPage: React.FC = () => {
                         />
                     </div>
                     <div className="flex flex-wrap sm:flex-nowrap gap-2 shrink-0">
-                        <select
-                            value={selectedOrg}
-                            onChange={(e) => setSelectedOrg(e.target.value)}
-                            className="h-8 pl-2.5 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-w-[140px] flex-1 sm:flex-none"
-                        >
-                            <option value="">All Orgs</option>
-                            {companies.map((c) => (
-                                <option key={c.id} value={c.id}>{c.companyName}</option>
-                            ))}
-                        </select>
+                        <div className="relative w-full sm:w-48 group shrink-0">
+                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500 group-focus-within:scale-110 transition-transform" />
+                            <select
+                                value={selectedOrg}
+                                onChange={(e) => setSelectedOrg(e.target.value)}
+                                className="w-full pl-9 pr-8 h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-[10px] appearance-none outline-none shadow-sm cursor-pointer uppercase tracking-widest"
+                            >
+                                <option value="">All Companies</option>
+                                {companies.map((c) => (
+                                    <option key={c.id} value={c.id}>{c.companyName}</option>
+                                ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <Search className="h-3 w-3" />
+                            </div>
+                        </div>
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}

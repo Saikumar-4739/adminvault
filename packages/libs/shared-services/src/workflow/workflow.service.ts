@@ -22,4 +22,8 @@ export class WorkflowService extends CommonAxiosService {
     async getPendingApprovals(reqObj: GetPendingApprovalsRequestModel, config?: AxiosRequestConfig): Promise<GetPendingApprovalsResponseModel> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('pending'), reqObj, config);
     }
+
+    async getApprovalHistory(reqObj: GetPendingApprovalsRequestModel, config?: AxiosRequestConfig): Promise<GetPendingApprovalsResponseModel> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('history'), reqObj, config);
+    }
 }

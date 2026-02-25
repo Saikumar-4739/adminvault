@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { EmailTypeEnum } from '@adminvault/shared-models';
+import { EmailTypeEnum, IdRequestModel } from '@adminvault/shared-models';
 import { employeeService, departmentService } from '@/lib/api/services';
 import { User, Mail, Shield, Building } from 'lucide-react';
 
@@ -39,8 +39,8 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
 
     const fetchEmployees = useCallback(async () => {
         try {
-            // Use getAllEmployees API with undefined to fetch global identity list
-            const response = await employeeService.getAllEmployees(undefined as any);
+            const req = new IdRequestModel(Number(companyId) || 0);
+            const response = await employeeService.getAllEmployees(req);
             if (response.status) {
                 const data = response.data || [];
                 setEmployees(data);
@@ -48,7 +48,7 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
         } catch (error) {
             console.error('Failed to fetch employees:', error);
         }
-    }, []);
+    }, [companyId]);
 
     const fetchDepartments = useCallback(async () => {
         try {
@@ -91,7 +91,7 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Configure Routing Point"
+            title="Allocate Email Address"
             size="lg"
         >
             <form onSubmit={handleSubmit} className="p-4 space-y-6">
@@ -100,10 +100,10 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600">
                             <Mail className="w-5 h-5" />
                         </div>
-                        <h3 className="font-black text-xs uppercase tracking-widest text-slate-500">Address Identity</h3>
+                        <h3 className="font-black text-xs uppercase tracking-widest text-slate-500">Email Details</h3>
                     </div>
                     <Input
-                        label="Routing Email"
+                        label="Email Address"
                         type="email"
                         required
                         value={formData.email}
@@ -152,7 +152,7 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                     <label className="flex items-center justify-between gap-2 px-1">
                         <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
                             <User className="w-3.5 h-3.5" />
-                            Primary Routing Handle
+                            Employee Name
                         </span>
                         <span className="text-[9px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full">
                             {employees.length} Identities
@@ -164,10 +164,10 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                             value={formData.employeeId}
                             onChange={e => setFormData({ ...formData, employeeId: e.target.value })}
                         >
-                            <option value="">General / System (No Owner)</option>
+                            <option value="">Unassigned</option>
                             {employees.map(emp => (
                                 <option key={emp.id} value={emp.id}>
-                                    {emp.firstName} {emp.lastName}{emp.managerName ? ` (Mgr: ${emp.managerName})` : ''} {emp.company?.companyName ? `[${emp.company.companyName}]` : ''}
+                                    {emp.firstName} {emp.lastName}
                                 </option>
                             ))}
                         </select>
@@ -175,12 +175,12 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                             <User className="w-4 h-4" />
                         </div>
                     </div>
-                    <p className="text-[9px] font-medium text-slate-500 px-1">This handle will be the primary contact for automated routing triggers.</p>
+                    <p className="text-[9px] font-medium text-slate-500 px-1">Select the employee to assign this email to.</p>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
-                    <Button variant="outline" type="button" onClick={onClose} className="rounded-xl px-8">Discard</Button>
-                    <Button variant="primary" type="submit" className="rounded-xl px-12 font-black">Link Endpoint</Button>
+                    <Button variant="outline" type="button" onClick={onClose} className="rounded-xl px-8">Cancel</Button>
+                    <Button variant="primary" type="submit" className="rounded-xl px-12 font-black">Save</Button>
                 </div>
             </form>
         </Modal>

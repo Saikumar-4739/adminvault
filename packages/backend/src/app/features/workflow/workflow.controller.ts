@@ -50,4 +50,14 @@ export class WorkflowController {
             return returnException(GetPendingApprovalsResponseModel, error);
         }
     }
+
+    @Post('history')
+    @ApiBody({ type: GetPendingApprovalsRequestModel })
+    async getHistory(@Body() reqModel: GetPendingApprovalsRequestModel): Promise<GetPendingApprovalsResponseModel> {
+        try {
+            return await this.workflowService.getApprovalHistory(reqModel);
+        } catch (error) {
+            return returnException(GetPendingApprovalsResponseModel, error);
+        }
+    }
 }

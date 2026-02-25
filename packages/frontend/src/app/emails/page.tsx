@@ -229,9 +229,9 @@ const InfoEmailsPage: React.FC = () => {
                             <select
                                 value={selectedOrg}
                                 onChange={(e) => setSelectedOrg(e.target.value)}
-                                className="w-full pl-9 pr-8 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-xs appearance-none outline-none shadow-sm cursor-pointer"
+                                className="w-full pl-9 pr-8 h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-[10px] appearance-none outline-none shadow-sm cursor-pointer uppercase tracking-widest"
                             >
-                                <option value="">Select Company...</option>
+                                <option value="">All Companies</option>
                                 {companies.map(c => (
                                     <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
                                 ))}
@@ -248,7 +248,7 @@ const InfoEmailsPage: React.FC = () => {
                                 placeholder="Search emails..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-4 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-xs outline-none shadow-sm"
+                                className="w-full pl-11 pr-4 h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-xs outline-none shadow-sm"
                             />
                         </div>
                     </div>
@@ -390,7 +390,7 @@ const InfoEmailsPage: React.FC = () => {
                                                                         <td className="p-4 text-right">
                                                                             <button
                                                                                 onClick={() => handleDeleteEmailInfo(acc.id)}
-                                                                                className="h-8 w-8 inline-flex items-center justify-center opacity-0 group-hover/row:opacity-100 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all shadow-sm"
+                                                                                className="h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all shadow-sm"
                                                                             >
                                                                                 <Trash2 className="h-4 w-4" />
                                                                             </button>

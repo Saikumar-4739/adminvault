@@ -4,7 +4,7 @@ import { AuthUsersController } from './auth-users.controller';
 import { AuthUsersService } from './auth-users.service';
 import { AuthUsersEntity } from './entities/auth-users.entity';
 import { AuthTokensEntity } from './entities/auth-tokens.entity';
-import { AccessRequestEntity } from './entities/access-request.entity';
+import { AccessRequestEntity } from '../administration/entities/access-request.entity';
 import { AuthUsersRepository } from './repositories/auth-users.repository';
 import { AuthTokensRepository } from './repositories/auth-tokens.repository';
 import { PassportModule } from '@nestjs/passport';

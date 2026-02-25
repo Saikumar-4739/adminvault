@@ -15,6 +15,9 @@ export class PurchaseOrderEntity extends CommonBaseEntity {
     @Column('int', { name: 'requester_id', nullable: true })
     requesterId: number;
 
+    @Column('int', { name: 'approver_id', nullable: true })
+    approverId: number;
+
     @Column('date', { name: 'order_date' })
     orderDate: Date;
 

@@ -288,4 +288,34 @@ export class WorkflowService {
             throw new ErrorResponse(500, 'Failed to fetch pending approvals');
         }
     }
+
+    async getApprovalHistory(reqModel: GetPendingApprovalsRequestModel): Promise<GetPendingApprovalsResponseModel> {
+        try {
+            const approvals = await this.approvalRepo.createQueryBuilder('request')
+                .leftJoin('employees', 'emp', 'request.requesterId = emp.id')
+                .leftJoin('employees', 'mgr', 'emp.manager_id = mgr.id')
+                .select([
+                    'request.id as id',
+                    'request.referenceType as "referenceType"',
+                    'request.referenceId as "referenceId"',
+                    'request.status as status',
+                    'request.createdAt as "createdAt"',
+                    'request.actionAt as "actionAt"',
+                    'request.remarks as remarks',
+                    'request.description as description',
+                    'request.requesterId as "requesterId"'
+                ])
+                .addSelect('CONCAT(emp.first_name, \' \', emp.last_name)', 'requesterName')
+                .addSelect('CONCAT(mgr.first_name, \' \', mgr.last_name)', 'managerName')
+                .where('request.companyId = :companyId', { companyId: reqModel.companyId })
+                .andWhere('request.status IN (:...statuses)', { statuses: [ApprovalStatusEnum.APPROVED, ApprovalStatusEnum.REJECTED] })
+                .orderBy('request.actionAt', 'DESC')
+                .getRawMany();
+
+            return new GetPendingApprovalsResponseModel(true, 200, 'Approval history retrieved successfully', approvals as any);
+        } catch (error) {
+            this.logger.error('Failed to fetch approval history', error);
+            throw new ErrorResponse(500, 'Failed to fetch approval history');
+        }
+    }
 }

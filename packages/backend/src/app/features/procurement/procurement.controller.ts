@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Param, Req, UseGuards } from '@nestjs/common';
 import { ProcurementService } from './procurement.service';
 import { CreatePOModel, GetAllPOsModel, GetPOByIdModel, GetAllPOsRequestModel, GetPORequestModel, UpdatePOStatusRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -19,6 +19,19 @@ export class ProcurementController {
             const userEmail = req.user?.email;
             const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
             return await this.service.createPO(data, userId, userEmail, ipAddress);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('updatePO/:id')
+    @ApiBody({ type: CreatePOModel })
+    async updatePO(@Param('id') id: number, @Body() data: CreatePOModel, @Req() req: any): Promise<GlobalResponse> {
+        try {
+            const userId = req.user?.id || req.user?.userId;
+            const userEmail = req.user?.email;
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            return await this.service.updatePO(id, data, userId, userEmail, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

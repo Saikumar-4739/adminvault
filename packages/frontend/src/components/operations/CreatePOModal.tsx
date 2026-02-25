@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Plus, Trash2, ShoppingCart } from 'lucide-react';
-import { CreatePOModel, POItemModel, Vendor } from '@adminvault/shared-models';
-import { vendorService, procurementService } from '@/lib/api/services';
+import { CreatePOModel, POItemModel, Vendor, IdRequestModel } from '@adminvault/shared-models';
+import { vendorService, procurementService, employeeService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,32 +15,53 @@ interface CreatePOModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    initialPO?: any;
 }
 
-export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps) {
+export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreatePOModalProps) {
     const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [vendors, setVendors] = useState<Vendor[]>([]);
+    const [approvers, setApprovers] = useState<any[]>([]);
 
-    const [formData, setFormData] = useState<any>({
+    const defaultForm = {
         vendorId: 0,
         orderDate: new Date().toISOString().split('T')[0],
         expectedDeliveryDate: '',
         notes: '',
+        approverId: 0,
         items: [{ itemName: '', quantity: 1, unitPrice: 0, sku: '', assetTypeId: undefined }]
-    });
+    };
+
+    const [formData, setFormData] = useState<any>(defaultForm);
 
     useEffect(() => {
         if (isOpen) {
             fetchMasters();
+            if (initialPO) {
+                setFormData({
+                    vendorId: initialPO.vendorId || 0,
+                    orderDate: initialPO.orderDate ? new Date(initialPO.orderDate).toISOString().split('T')[0] : '',
+                    expectedDeliveryDate: initialPO.expectedDeliveryDate ? new Date(initialPO.expectedDeliveryDate).toISOString().split('T')[0] : '',
+                    notes: initialPO.notes || '',
+                    approverId: initialPO.approverId || 0,
+                    items: initialPO.items?.length > 0 ? initialPO.items : [{ itemName: '', quantity: 1, unitPrice: 0, sku: '', assetTypeId: undefined }]
+                });
+            } else {
+                setFormData(defaultForm);
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, initialPO]);
 
     const fetchMasters = async () => {
         if (!user?.companyId) return;
         try {
-            const vRes = await vendorService.getAllVendors();
+            const [vRes, eRes] = await Promise.all([
+                vendorService.getAllVendors(),
+                employeeService.getAllEmployees(new IdRequestModel(user.companyId))
+            ]);
             setVendors(vRes.vendors || []);
+            setApprovers((eRes as any)?.data || (eRes as any)?.employees || []);
         } catch (err: any) {
             console.error('Failed to fetch masters', err);
         }
@@ -88,21 +109,20 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                 new Date(formData.orderDate),
                 formData.items.map((i: any) => new POItemModel(i.itemName, i.quantity, i.unitPrice, i.sku, i.assetTypeId)),
                 formData.expectedDeliveryDate ? new Date(formData.expectedDeliveryDate) : undefined,
-                formData.notes
+                formData.notes,
+                undefined, // timeSpentMinutes
+                formData.approverId || undefined // approverId
             );
-            const res = await procurementService.createPO(model);
+            const res = initialPO
+                ? await procurementService.updatePO(initialPO.id, model)
+                : await procurementService.createPO(model);
+
             if (res.status) {
-                AlertMessages.getSuccessMessage("Purchase Order created successfully");
+                AlertMessages.getSuccessMessage(`Purchase Order ${initialPO ? 'updated' : 'created'} successfully`);
                 onSuccess();
                 onClose();
                 // Reset form
-                setFormData({
-                    vendorId: 0,
-                    orderDate: new Date().toISOString().split('T')[0],
-                    expectedDeliveryDate: '',
-                    notes: '',
-                    items: [{ itemName: '', quantity: 1, unitPrice: 0, sku: '', assetTypeId: undefined }]
-                });
+                setFormData(defaultForm);
             } else {
                 AlertMessages.getErrorMessage(res.message);
             }
@@ -117,7 +137,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Create New Purchase Order"
+            title={initialPO ? `Update Purchase Order: ${initialPO.poNumber}` : "Create New Purchase Order"}
             size="2xl"
             footer={
                 <div className="flex gap-2 w-full">
@@ -128,7 +148,9 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                         </span>
                     </div>
                     <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-                    <Button variant="primary" onClick={handleSubmit} isLoading={isSubmitting}>Create PO & Submit</Button>
+                    <Button variant="primary" onClick={handleSubmit} isLoading={isSubmitting}>
+                        {initialPO ? 'Update PO' : 'Create PO & Submit'}
+                    </Button>
                 </div>
             }
         >
@@ -142,6 +164,16 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                         options={[
                             { label: 'Select Vendor', value: 0 },
                             ...vendors.map(v => ({ label: v.name, value: v.id }))
+                        ]}
+                    />
+
+                    <Select
+                        label="Approver (Optional)"
+                        value={formData.approverId}
+                        onChange={(e) => setFormData({ ...formData, approverId: Number(e.target.value) })}
+                        options={[
+                            { label: 'No Specific Approver', value: 0 },
+                            ...approvers.map(a => ({ label: `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.email, value: Number(a.id) }))
                         ]}
                     />
 
@@ -181,7 +213,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                     <div className="space-y-3">
                         {formData.items.map((item: any, index: number) => (
                             <div key={index} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 grid grid-cols-12 gap-3 items-end group">
-                                <div className="col-span-12 md:col-span-7">
+                                <div className="col-span-12 md:col-span-5">
                                     <Input
                                         label="Item Name"
                                         value={item.itemName}
@@ -189,7 +221,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                                         className="bg-white dark:bg-slate-900"
                                     />
                                 </div>
-                                <div className="col-span-6 md:col-span-2">
+                                <div className="col-span-5 md:col-span-3">
                                     <Input
                                         label="Qty"
                                         type="number"
@@ -199,11 +231,10 @@ export function CreatePOModal({ isOpen, onClose, onSuccess }: CreatePOModalProps
                                         className="bg-white dark:bg-slate-900 text-center"
                                     />
                                 </div>
-                                <div className="col-span-6 md:col-span-2">
+                                <div className="col-span-5 md:col-span-3">
                                     <Input
-                                        label="Price"
+                                        label="UnitPrice"
                                         type="number"
-                                        min={0}
                                         value={item.unitPrice}
                                         onChange={(e) => updateItem(index, 'unitPrice', Number(e.target.value))}
                                         className="bg-white dark:bg-slate-900"
