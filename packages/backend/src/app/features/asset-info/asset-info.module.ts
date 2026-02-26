@@ -18,7 +18,6 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { WorkflowModule } from '../workflow/workflow.module';
 import { SoftwareMasterEntity } from './entities/software-master.entity';
 import { AssetSoftwareEntity } from './entities/asset-software.entity';
-import { SoftwareService } from './software.service';
 import { AdministrationModule } from '../administration/administration.module';
 import { AuditLogModule } from '../audit-log/audit-log.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -32,7 +31,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
         NotificationsModule
     ],
     controllers: [AssetInfoController],
-    providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository, AssetAssignRepository, EmployeesRepository, SoftwareService],
-    exports: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, SoftwareService, AssetInfoRepository]
+    providers: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetInfoRepository, AssetReturnHistoryRepository, AssetNextAssignmentRepository, AssetAssignRepository, EmployeesRepository],
+    exports: [AssetInfoService, AssetTabsService, AssetBulkService, AssetHistoryService, AssetInfoRepository]
 })
 export class AssetInfoModule { }

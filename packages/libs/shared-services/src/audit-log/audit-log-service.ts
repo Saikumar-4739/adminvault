@@ -1,9 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import {
-    GetAllAuditLogsResponseModel,
-    GetAuditLogsRequestModel
-} from '@adminvault/shared-models';
+import { GetAllAuditLogsResponseModel, GetAuditLogsRequestModel } from '@adminvault/shared-models';
 
 export class AuditLogService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {

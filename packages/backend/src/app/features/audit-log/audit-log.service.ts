@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuditLogRepository } from './repositories/audit-log.repository';
 import { AuditLogEntity } from './entities/audit-log.entity';
-import { AuditLogModel, GetAllAuditLogsResponseModel } from '@adminvault/shared-models';
+import { AuditLogModel, GetAllAuditLogsResponseModel, GlobalResponse } from '@adminvault/shared-models';
+import { returnException } from '@adminvault/backend-utils';
 
 @Injectable()
 export class AuditLogService {

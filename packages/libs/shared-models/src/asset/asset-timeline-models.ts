@@ -9,16 +9,37 @@ export enum AssetTimelineEventType {
     UNKNOWN = 'UNKNOWN'
 }
 
-export interface AssetTimelineEvent {
-    id: string; // Unique ID for keying (can be composite)
+export class AssetTimelineEvent {
+    id: string;
     date: Date;
     type: AssetTimelineEventType;
     title: string;
     description?: string;
     employeeName?: string;
     employeeId?: number;
-    performedBy?: string; // Admin who performed the action if tracking available
-    metadata?: any; // For flexible extra data like return condition
+    performedBy?: string;
+    metadata?: any;
+    constructor(
+        id: string,
+        date: Date,
+        type: AssetTimelineEventType,
+        title: string,
+        description: string,
+        employeeName: string,
+        employeeId: number,
+        performedBy: string,
+        metadata: any
+    ) {
+        this.id = id;
+        this.date = date;
+        this.type = type;
+        this.title = title;
+        this.description = description;
+        this.employeeName = employeeName;
+        this.employeeId = employeeId;
+        this.performedBy = performedBy;
+        this.metadata = metadata;
+    }
 }
 
 export class AssetTimelineResponseModel extends GlobalResponse {

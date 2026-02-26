@@ -43,7 +43,6 @@ export class AssetInfoService extends CommonAxiosService {
         return await this.axiosPostCall(`${this.BASE_PATH}/deleteAsset`, reqObj, config);
     }
 
-    // --- STATISTICS & SEARCH ---
     async getAssetStatistics(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<AssetStatisticsResponseModel> {
         return await this.axiosPostCall(`${this.BASE_PATH}/statistics`, reqObj, config);
     }

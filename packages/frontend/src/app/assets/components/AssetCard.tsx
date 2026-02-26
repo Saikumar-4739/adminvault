@@ -63,7 +63,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, o
             {/* Solid Card */}
             <div className={`relative bg-white dark:bg-slate-900 rounded-2xl border ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700'} shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden h-full flex flex-col`}>
 
-                {/* Multi-select Checkbox */}
+                {/* Multi-select Checkbox
                 {onToggleSelect && (
                     <div
                         onClick={() => onToggleSelect(asset.id)}
@@ -74,7 +74,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, o
                     >
                         {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
                     </div>
-                )}
+                )} */}
 
                 {/* Status Accent Bar */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${statusConfig.gradient.replace('/10', '')}`}></div>

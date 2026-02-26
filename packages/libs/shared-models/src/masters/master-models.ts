@@ -3,7 +3,7 @@ import { GlobalResponse } from '../common/global-response';
 // ============================================
 // BASE INTERFACES
 // ============================================
-export interface MasterBase {
+export class MasterBase {
     id: number;
     userId: number;
     companyId?: number;  // Optional - masters are shared across companies
@@ -12,58 +12,231 @@ export interface MasterBase {
     isActive: boolean;
     createdAt?: Date;
     updatedAt?: Date;
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        this.id = id;
+        this.userId = userId;
+        this.name = name;
+        this.isActive = isActive;
+        this.companyId = companyId;
+        this.description = description;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 }
 
-export interface Department extends MasterBase {
+export class Department extends MasterBase {
     companyName?: string;
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        companyName?: string,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.companyName = companyName;
+    }
 }
 
-export interface Designation extends MasterBase {
+export class Designation extends MasterBase {
     level?: string;
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        level?: string,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.level = level;
+    }
 }
 
-export interface AssetType extends MasterBase {
+export class AssetType extends MasterBase {
     code?: string;
     companyName?: string;
 
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        code?: string,
+        companyName?: string,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.code = code;
+        this.companyName = companyName;
+    }
 }
 
-export interface DeviceBrand extends MasterBase {
+export class DeviceBrand extends MasterBase {
     website?: string;
     rating?: any;
-    description?: string; // Explicitly adding description if not already in MasterBase (it is, but ensuring clarity)
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        website?: string,
+        rating?: any,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.website = website;
+        this.rating = rating;
+    }
 }
 
-export interface Vendor extends MasterBase {
+export class Vendor extends MasterBase {
     contactPerson?: string;
     email?: string;
     phone?: string;
     address?: string;
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        contactPerson?: string,
+        email?: string,
+        phone?: string,
+        address?: string,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.contactPerson = contactPerson;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+    }
 }
 
-export interface Location extends MasterBase {
+export class Location extends MasterBase {
     address?: string;
     city?: string;
     country?: string;
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        address?: string,
+        city?: string,
+        country?: string,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.address = address;
+        this.city = city;
+        this.country = country;
+    }
 }
 
-export interface TicketCategory extends MasterBase {
+export class TicketCategory extends MasterBase {
     defaultPriority?: 'Low' | 'Medium' | 'High' | null;
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        defaultPriority?: 'Low' | 'Medium' | 'High' | null,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.defaultPriority = defaultPriority;
+    }
 }
 
-export interface License extends MasterBase {
+export class License extends MasterBase {
     purchaseDate?: Date;
     expiryDate?: Date;
     companyName?: string;
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        purchaseDate?: Date,
+        expiryDate?: Date,
+        companyName?: string,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.purchaseDate = purchaseDate;
+        this.expiryDate = expiryDate;
+        this.companyName = companyName;
+    }
 }
 
-export interface ExpenseCategory extends MasterBase {
+export class ExpenseCategory extends MasterBase {
     categoryType?: string;
     budgetLimit?: number;
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        companyId?: number,
+        description?: string,
+        categoryType?: string,
+        budgetLimit?: number,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.categoryType = categoryType;
+        this.budgetLimit = budgetLimit;
+    }
 }
 
 
-export interface SlackUserModel extends MasterBase {
+export class SlackUserModel extends MasterBase {
     email: string;
     slackUserId?: string;
     displayName?: string;
@@ -74,7 +247,39 @@ export interface SlackUserModel extends MasterBase {
     avatar?: string;
     employeeId?: number;
     companyName?: string;
-    isActive: boolean; // Explicit
+
+    constructor(
+        id: number,
+        userId: number,
+        name: string,
+        isActive: boolean,
+        email: string,
+        companyId?: number,
+        description?: string,
+        slackUserId?: string,
+        displayName?: string,
+        role?: string,
+        department?: string,
+        phone?: string,
+        notes?: string,
+        avatar?: string,
+        employeeId?: number,
+        companyName?: string,
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
+        this.email = email;
+        this.slackUserId = slackUserId;
+        this.displayName = displayName;
+        this.role = role;
+        this.department = department;
+        this.phone = phone;
+        this.notes = notes;
+        this.avatar = avatar;
+        this.employeeId = employeeId;
+        this.companyName = companyName;
+    }
 }
 
 // ============================================

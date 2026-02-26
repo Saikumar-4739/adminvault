@@ -2,11 +2,11 @@ import { Body, Controller, Post, Get, Req, Res, UseGuards } from '@nestjs/common
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
-import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { AuthUsersService } from './auth-users.service';
-import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel, RefreshTokenModel, IdRequestModel, AccessRequestsListModel } from '@adminvault/shared-models';
+import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel, RefreshTokenModel, IdRequestModel, AccessRequestsListModel, GlobalResponse } from '@adminvault/shared-models';
 import { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
+import { returnException } from '@adminvault/backend-utils';
 
 @ApiTags('Auth Users')
 @Controller('auth-users')

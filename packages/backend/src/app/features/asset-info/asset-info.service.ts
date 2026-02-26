@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
-import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum, IdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, GetExpiringWarrantyRequestModel, NotificationType } from '@adminvault/shared-models';
+import { CreateAssetModel, UpdateAssetModel, DeleteAssetModel, GetAssetModel, GetAllAssetsModel, GetAssetByIdModel, AssetResponseModel, AssetStatisticsResponseModel, AssetSearchRequestModel, GetAssetsWithAssignmentsResponseModel, AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum, IdRequestModel, CreateAssetAssignModel, UpdateAssetAssignModel, GetAssetAssignModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, GetExpiringWarrantyRequestModel, NotificationType, GlobalResponse } from '@adminvault/shared-models';
 import { AssetInfoEntity } from './entities/asset-info.entity';
 import { AssetAssignEntity } from './entities/asset-assign.entity';
 import { AssetInfoRepository } from './repositories/asset-info.repository';
@@ -16,6 +15,7 @@ import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { AssetReturnHistoryEntity } from './entities/asset-return-history.entity';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { ErrorResponse } from '@adminvault/backend-utils';
 
 @Injectable()
 export class AssetInfoService {

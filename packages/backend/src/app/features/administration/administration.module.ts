@@ -14,10 +14,7 @@ import { AuthUsersModule } from '../auth-users/auth-users.module';
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([AssetInfoEntity, AssetAssignEntity, AuthUsersEntity, EmailInfoEntity, AccessRequestEntity, EmployeesEntity]),
-        forwardRef(() => AuthUsersModule)
-    ],
+    imports: [TypeOrmModule.forFeature([AssetInfoEntity, AssetAssignEntity, AuthUsersEntity, EmailInfoEntity, AccessRequestEntity, EmployeesEntity]), forwardRef(() => AuthUsersModule)],
     controllers: [EmailController],
     providers: [EmailInfoService, EmailInfoRepository, AccessRequestRepository, EmployeesRepository],
     exports: [EmailInfoService, AccessRequestRepository]

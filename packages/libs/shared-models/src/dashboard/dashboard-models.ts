@@ -1,6 +1,6 @@
 import { GlobalResponse } from '../common/global-response';
 
-export interface DashboardStats {
+export class DashboardStats {
     assets: {
         total: number;
         byStatus: { status: string; count: string }[];
@@ -37,6 +37,22 @@ export interface DashboardStats {
             compliance: number;
         };
     };
+
+    constructor(
+        assets: { total: number; byStatus: { status: string; count: string }[] },
+        tickets: { total: number; byStatus: { status: string; count: string }[]; byPriority: { priority: string; count: string }[]; recent: any[] },
+        employees: { total: number; byDepartment: { department: string; count: string }[] },
+        licenses: { total: number; expiringSoon: { id: number; applicationName: string; expiryDate: Date | string; assignedTo: string }[] },
+        systemHealth: { assetUtilization: number; ticketResolutionRate: number; openCriticalTickets: number },
+        security: { score: number; metrics: { identity: number; devices: number; compliance: number } }
+    ) {
+        this.assets = assets;
+        this.tickets = tickets;
+        this.employees = employees;
+        this.licenses = licenses;
+        this.systemHealth = systemHealth;
+        this.security = security;
+    }
 }
 
 export class DashboardStatsResponseModel extends GlobalResponse {

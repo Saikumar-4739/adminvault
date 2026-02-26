@@ -65,16 +65,22 @@ export enum NotificationType {
 /**
  * Base WebSocket Payload
  */
-export interface WebSocketPayload {
+export class WebSocketPayload {
     timestamp: Date;
     userId?: number;
     companyId?: number;
+
+    constructor(timestamp: Date, userId?: number, companyId?: number) {
+        this.timestamp = timestamp;
+        this.userId = userId;
+        this.companyId = companyId;
+    }
 }
 
 /**
  * Notification Payload
  */
-export interface NotificationPayload extends WebSocketPayload {
+export class NotificationPayload extends WebSocketPayload {
     id: string;
     type: NotificationType;
     title: string;
@@ -82,22 +88,60 @@ export interface NotificationPayload extends WebSocketPayload {
     link?: string;
     icon?: string;
     read: boolean;
+
+    constructor(
+        timestamp: Date,
+        id: string,
+        type: NotificationType,
+        title: string,
+        message: string,
+        read: boolean,
+        userId?: number,
+        companyId?: number,
+        link?: string,
+        icon?: string
+    ) {
+        super(timestamp, userId, companyId);
+        this.id = id;
+        this.type = type;
+        this.title = title;
+        this.message = message;
+        this.read = read;
+        this.link = link;
+        this.icon = icon;
+    }
 }
 
 /**
  * Dashboard Update Payload
  */
-export interface DashboardUpdatePayload extends WebSocketPayload {
+export class DashboardUpdatePayload extends WebSocketPayload {
     metric: string;
     value: number | string;
     change?: number;
     trend?: 'up' | 'down' | 'stable';
+
+    constructor(
+        timestamp: Date,
+        metric: string,
+        value: number | string,
+        userId?: number,
+        companyId?: number,
+        change?: number,
+        trend?: 'up' | 'down' | 'stable'
+    ) {
+        super(timestamp, userId, companyId);
+        this.metric = metric;
+        this.value = value;
+        this.change = change;
+        this.trend = trend;
+    }
 }
 
 /**
  * Ticket Event Payload
  */
-export interface TicketEventPayload extends WebSocketPayload {
+export class TicketEventPayload extends WebSocketPayload {
     ticketId: number;
     ticketNumber: string;
     title: string;
@@ -106,46 +150,123 @@ export interface TicketEventPayload extends WebSocketPayload {
     assignedTo?: number;
     assignedToName?: string;
     comment?: string;
+
+    constructor(
+        timestamp: Date,
+        ticketId: number,
+        ticketNumber: string,
+        title: string,
+        userId?: number,
+        companyId?: number,
+        status?: string,
+        priority?: string,
+        assignedTo?: number,
+        assignedToName?: string,
+        comment?: string
+    ) {
+        super(timestamp, userId, companyId);
+        this.ticketId = ticketId;
+        this.ticketNumber = ticketNumber;
+        this.title = title;
+        this.status = status;
+        this.priority = priority;
+        this.assignedTo = assignedTo;
+        this.assignedToName = assignedToName;
+        this.comment = comment;
+    }
 }
 
 /**
  * Asset Event Payload
  */
-export interface AssetEventPayload extends WebSocketPayload {
+export class AssetEventPayload extends WebSocketPayload {
     assetId: number;
     assetTag: string;
     assetName: string;
     assetType?: string;
     assignedTo?: number;
     assignedToName?: string;
+
+    constructor(
+        timestamp: Date,
+        assetId: number,
+        assetTag: string,
+        assetName: string,
+        userId?: number,
+        companyId?: number,
+        assetType?: string,
+        assignedTo?: number,
+        assignedToName?: string
+    ) {
+        super(timestamp, userId, companyId);
+        this.assetId = assetId;
+        this.assetTag = assetTag;
+        this.assetName = assetName;
+        this.assetType = assetType;
+        this.assignedTo = assignedTo;
+        this.assignedToName = assignedToName;
+    }
 }
 
 /**
  * User Status Payload
  */
-export interface UserStatusPayload extends WebSocketPayload {
+export class UserStatusPayload extends WebSocketPayload {
     userId: number;
     username: string;
     status: 'online' | 'offline' | 'away';
     lastSeen?: Date;
+
+    constructor(
+        timestamp: Date,
+        userId: number,
+        username: string,
+        status: 'online' | 'offline' | 'away',
+        companyId?: number,
+        lastSeen?: Date
+    ) {
+        super(timestamp, userId, companyId);
+        this.userId = userId;
+        this.username = username;
+        this.status = status;
+        this.lastSeen = lastSeen;
+    }
 }
 
 /**
  * System Alert Payload
  */
-export interface SystemAlertPayload extends WebSocketPayload {
+export class SystemAlertPayload extends WebSocketPayload {
     severity: 'low' | 'medium' | 'high' | 'critical';
     title: string;
     message: string;
     action?: string;
     actionUrl?: string;
+
+    constructor(
+        timestamp: Date,
+        severity: 'low' | 'medium' | 'high' | 'critical',
+        title: string,
+        message: string,
+        userId?: number,
+        companyId?: number,
+        action?: string,
+        actionUrl?: string
+    ) {
+        super(timestamp, userId, companyId);
+        this.severity = severity;
+        this.title = title;
+        this.message = message;
+        this.action = action;
+        this.actionUrl = actionUrl;
+    }
 }
 
 
 /**
  * Approval Event Payload
  */
-export interface ApprovalEventPayload extends WebSocketPayload {
+export class ApprovalEventPayload extends WebSocketPayload {
     approvalId: number;
     workflowId: number;
     workflowName: string;
@@ -153,6 +274,28 @@ export interface ApprovalEventPayload extends WebSocketPayload {
     requestedByName: string;
     status: 'pending' | 'approved' | 'rejected';
     comment?: string;
+
+    constructor(
+        timestamp: Date,
+        approvalId: number,
+        workflowId: number,
+        workflowName: string,
+        requestedBy: number,
+        requestedByName: string,
+        status: 'pending' | 'approved' | 'rejected',
+        userId?: number,
+        companyId?: number,
+        comment?: string
+    ) {
+        super(timestamp, userId, companyId);
+        this.approvalId = approvalId;
+        this.workflowId = workflowId;
+        this.workflowName = workflowName;
+        this.requestedBy = requestedBy;
+        this.requestedByName = requestedByName;
+        this.status = status;
+        this.comment = comment;
+    }
 }
 
 /**

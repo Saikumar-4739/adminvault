@@ -82,7 +82,6 @@ export class CreateAssetModel {
 
 export class UpdateAssetModel extends CreateAssetModel {
     id: number;
-
     constructor(
         id: number,
         companyId: number,
@@ -233,28 +232,29 @@ export class GetAssetByIdModel extends GlobalResponse {
     }
 }
 
-// New Models for Enhanced Asset Management
+export class StatisticModel {
+    total: number;
+    available: number;
+    inUse: number;
+    maintenance: number;
+    retired: number;
+    constructor(total: number, available: number, inUse: number, maintenance: number, retired: number) {
+        this.total = total;
+        this.available = available;
+        this.inUse = inUse;
+        this.maintenance = maintenance;
+        this.retired = retired;
+    }
+}
+
 
 export class AssetStatisticsResponseModel extends GlobalResponse {
-    statistics: {
-        total: number;
-        available: number;
-        inUse: number;
-        maintenance: number;
-        retired: number;
-    };
-
+    statistics: StatisticModel;
     constructor(
         status: boolean,
         code: number,
         message: string,
-        statistics: {
-            total: number;
-            available: number;
-            inUse: number;
-            maintenance: number;
-            retired: number;
-        }
+        statistics: StatisticModel
     ) {
         super(status, code, message);
         this.statistics = statistics;
@@ -270,8 +270,6 @@ export class AssetSearchRequestModel {
     employeeId?: number;
     purchaseDateFrom?: Date;
     purchaseDateTo?: Date;
-    // warranty, etc. can be added here
-
     constructor(
         companyId: number,
         searchQuery?: string,
@@ -306,9 +304,8 @@ export class AssetWithAssignmentModel {
     lastReturnDate?: Date;
     createdAt: Date;
     updatedAt: Date;
-    // Assignment details
-    assignedTo?: string; // Employee name
-    managerName?: string; // Manager name
+    assignedTo?: string;
+    managerName?: string;
     assignedDate?: Date;
     assignedById?: number;
 

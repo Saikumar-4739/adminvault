@@ -1,9 +1,9 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { AuditLogService } from './audit-log.service';
 import { GetAllAuditLogsResponseModel, GetAuditLogsRequestModel } from '@adminvault/shared-models';
+import { returnException } from '@adminvault/backend-utils';
 
 @ApiTags('Audit Log')
 @Controller('audit-log')

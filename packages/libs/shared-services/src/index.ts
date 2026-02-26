@@ -7,15 +7,13 @@ export * from './masters'
 export * from './licenses'
 export * from './reports'
 export * from './tickets'
-export * from './utils'
 export * from './dashboard'
 export * from './workflow'
-export * from './knowledge-base/knowledge-base.service';
-export * from './procurement/procurement.service';
-export * from './network/network.service';
 export * from './audit-log';
 export * from './notifications';
 export * from './onboarding';
-export * from './contracts/contracts-service';
 export * from './config';
-
+export * from './knowledge-base';
+export * from './procurement';
+export * from './contracts';
+export * from './network/network.service';

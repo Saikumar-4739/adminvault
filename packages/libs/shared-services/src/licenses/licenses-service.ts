@@ -5,31 +5,31 @@ import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicen
 export class LicensesService extends CommonAxiosService {
     private baseUrl = '/licenses';
 
-    async getAllLicenses(req: IdRequestModel): Promise<GetAllLicensesResponseModel> {
-        return this.axiosPostCall(`${this.baseUrl}/getAllLicenses`, req);
+    async getAllLicenses(req: IdRequestModel, config?: AxiosRequestConfig): Promise<GetAllLicensesResponseModel> {
+        return this.axiosPostCall(`${this.baseUrl}/getAllLicenses`, req, config);
     }
 
-    async createLicense(model: CreateLicenseModel): Promise<GlobalResponse> {
-        return this.axiosPostCall(`${this.baseUrl}/createLicense`, model);
+    async createLicense(model: CreateLicenseModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return this.axiosPostCall(`${this.baseUrl}/createLicense`, model, config);
     }
 
-    async updateLicense(model: UpdateLicenseModel): Promise<GlobalResponse> {
-        return this.axiosPostCall(`${this.baseUrl}/updateLicense`, model);
+    async updateLicense(model: UpdateLicenseModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return this.axiosPostCall(`${this.baseUrl}/updateLicense`, model, config);
     }
 
-    async deleteLicense(model: { id: number }): Promise<GlobalResponse> {
-        return this.axiosPostCall(`${this.baseUrl}/deleteLicense`, model);
+    async deleteLicense(model: { id: number }, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return this.axiosPostCall(`${this.baseUrl}/deleteLicense`, model, config);
     }
 
-    async getUtilization(req: IdRequestModel): Promise<any> {
-        return this.axiosPostCall(`${this.baseUrl}/getUtilization`, req);
+    async getUtilization(req: IdRequestModel, config?: AxiosRequestConfig): Promise<any> {
+        return this.axiosPostCall(`${this.baseUrl}/getUtilization`, req, config);
     }
 
-    async getComplianceReport(req: IdRequestModel): Promise<any> {
-        return this.axiosPostCall(`${this.baseUrl}/getComplianceReport`, req);
+    async getComplianceReport(req: IdRequestModel, config?: AxiosRequestConfig): Promise<any> {
+        return this.axiosPostCall(`${this.baseUrl}/getComplianceReport`, req, config);
     }
 
-    async getCostOptimization(req: IdRequestModel): Promise<any> {
-        return this.axiosPostCall(`${this.baseUrl}/getCostOptimization`, req);
+    async getCostOptimization(req: IdRequestModel, config?: AxiosRequestConfig): Promise<any> {
+        return this.axiosPostCall(`${this.baseUrl}/getCostOptimization`, req, config);
     }
 }

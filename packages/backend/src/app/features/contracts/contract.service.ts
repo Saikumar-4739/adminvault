@@ -1,15 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, LessThanOrEqual } from 'typeorm';
 import { ContractRepository } from './repositories/contract.repository';
-import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
-import {
-    CreateContractModel,
-    UpdateContractModel,
-    ContractResponseModel,
-    IdRequestModel
-} from '@adminvault/shared-models';
+import { CreateContractModel, UpdateContractModel, IdRequestModel, GlobalResponse } from '@adminvault/shared-models';
 import { ContractEntity } from './entities/contract.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
+import { ErrorResponse } from '@adminvault/backend-utils';
 
 @Injectable()
 export class ContractService {

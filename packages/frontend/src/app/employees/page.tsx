@@ -477,7 +477,7 @@ const EmployeesPage: React.FC = () => {
                                             }`}
                                     >
                                         {/* Checkbox Overlay */}
-                                        <div
+                                        {/* <div
                                             onClick={(e) => { e.stopPropagation(); handleToggleEmployee(emp.id); }}
                                             className={`absolute top-4 left-4 z-20 w-5 h-5 rounded-md border-2 cursor-pointer flex items-center justify-center transition-all ${selectedEmployeeIds.has(emp.id)
                                                 ? 'bg-indigo-500 border-indigo-500 text-white'
@@ -485,7 +485,7 @@ const EmployeesPage: React.FC = () => {
                                                 }`}
                                         >
                                             {selectedEmployeeIds.has(emp.id) && <Check className="h-3.5 w-3.5" />}
-                                        </div>
+                                        </div> */}
 
                                         {/* Top accent */}
                                         {/* <div className={`h-1 w-full bg-gradient-to-r ${getDepartmentBg(emp)}`} /> */}

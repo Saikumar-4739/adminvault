@@ -1,11 +1,7 @@
 import { GlobalResponse } from '../common/global-response';
 import { AssetStatusEnum } from '../enums';
 
-// ============================================
-// STORE ASSETS TAB MODELS
-// ============================================
-
-export interface StoreAssetModel {
+export class StoreAssetModel {
     id: number;
     deviceName: string;
     configuration?: string;
@@ -18,6 +14,34 @@ export interface StoreAssetModel {
     brandName?: string;
     model?: string;
     warrantyExpiry?: Date;
+
+    constructor(
+        id: number,
+        deviceName: string,
+        serialNumber: string,
+        assetStatusEnum: AssetStatusEnum,
+        configuration?: string,
+        expressCode?: string,
+        boxNo?: string,
+        pastUserName?: string,
+        presentUserName?: string,
+        brandName?: string,
+        model?: string,
+        warrantyExpiry?: Date
+    ) {
+        this.id = id;
+        this.deviceName = deviceName;
+        this.serialNumber = serialNumber;
+        this.assetStatusEnum = assetStatusEnum;
+        this.configuration = configuration;
+        this.expressCode = expressCode;
+        this.boxNo = boxNo;
+        this.pastUserName = pastUserName;
+        this.presentUserName = presentUserName;
+        this.brandName = brandName;
+        this.model = model;
+        this.warrantyExpiry = warrantyExpiry;
+    }
 }
 
 export class GetStoreAssetsRequestModel {
@@ -35,11 +59,7 @@ export class GetStoreAssetsResponseModel extends GlobalResponse {
     }
 }
 
-// ============================================
-// RETURN ASSETS TAB MODELS
-// ============================================
-
-export interface ReturnAssetModel {
+export class ReturnAssetModel {
     id: number;
     employeeName: string;
     employeeRole?: string;
@@ -52,6 +72,33 @@ export interface ReturnAssetModel {
     assetCondition?: string;
     assetId: number;
     serialNumber?: string;
+    constructor(
+        id: number,
+        employeeName: string,
+        employeeRole: string,
+        laptopAllocationStatus: string,
+        desktopAllocationStatus: string,
+        configuration: string,
+        allocationDate: Date,
+        returnDate: Date,
+        returnReason: string,
+        assetCondition: string,
+        assetId: number,
+        serialNumber: string
+    ) {
+        this.id = id;
+        this.employeeName = employeeName;
+        this.employeeRole = employeeRole;
+        this.laptopAllocationStatus = laptopAllocationStatus;
+        this.desktopAllocationStatus = desktopAllocationStatus;
+        this.configuration = configuration;
+        this.allocationDate = allocationDate;
+        this.returnDate = returnDate;
+        this.returnReason = returnReason;
+        this.assetCondition = assetCondition;
+        this.assetId = assetId;
+        this.serialNumber = serialNumber;
+    }
 }
 
 export class GetReturnAssetsRequestModel {
@@ -115,10 +162,6 @@ export class ProcessReturnResponseModel extends GlobalResponse {
     }
 }
 
-// ============================================
-// NEXT ASSIGN ASSETS TAB MODELS
-// ============================================
-
 export enum NextAssignmentStatus {
     PENDING = 'Pending',
     ASSIGNED = 'Assigned',
@@ -131,7 +174,7 @@ export enum AssignmentPriority {
     HIGH = 'High'
 }
 
-export interface NextAssignmentModel {
+export class NextAssignmentModel {
     id: number;
     employeeName: string;
     employeeRole?: string;
@@ -145,6 +188,35 @@ export interface NextAssignmentModel {
     status: NextAssignmentStatus;
     priority?: AssignmentPriority;
     remarks?: string;
+    constructor(
+        id: number,
+        employeeName: string,
+        employeeRole: string,
+        laptopAllocationStatus: NextAssignmentStatus,
+        desktopAllocationStatus: NextAssignmentStatus,
+        assetType: string,
+        requestDate: Date,
+        expectedDate: Date,
+        assignedAssetId: number,
+        assignedAssetName: string,
+        status: NextAssignmentStatus,
+        priority: AssignmentPriority,
+        remarks: string
+    ) {
+        this.id = id;
+        this.employeeName = employeeName;
+        this.employeeRole = employeeRole;
+        this.laptopAllocationStatus = laptopAllocationStatus;
+        this.desktopAllocationStatus = desktopAllocationStatus;
+        this.assetType = assetType;
+        this.requestDate = requestDate;
+        this.expectedDate = expectedDate;
+        this.assignedAssetId = assignedAssetId;
+        this.assignedAssetName = assignedAssetName;
+        this.status = status;
+        this.priority = priority;
+        this.remarks = remarks;
+    }
 }
 
 export class GetNextAssignmentsRequestModel {

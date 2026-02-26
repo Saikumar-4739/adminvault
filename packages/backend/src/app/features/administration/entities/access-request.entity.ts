@@ -1,12 +1,5 @@
+import { AccessRequestStatus } from '@adminvault/shared-models';
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-
-export enum AccessRequestStatus {
-    PENDING = 'PENDING',
-    APPROVED = 'APPROVED',
-    REJECTED = 'REJECTED',
-    COMPLETED = 'COMPLETED'
-}
-
 @Entity('access_requests')
 export class AccessRequestEntity {
 
