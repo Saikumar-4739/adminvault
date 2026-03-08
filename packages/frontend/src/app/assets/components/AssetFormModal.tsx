@@ -262,10 +262,6 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                     />
                 </div>
 
-
-
-
-
                 {/* Configuration */}
                 <div className="w-full">
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
