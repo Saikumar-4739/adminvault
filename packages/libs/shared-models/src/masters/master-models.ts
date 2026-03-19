@@ -1,5 +1,100 @@
 import { GlobalResponse } from '../common/global-response';
 
+
+// ============================================
+// COMPANY MODELS
+// ============================================
+export class CreateCompanyModel {
+    companyName: string;
+    location: string;
+    estDate: Date;
+    email?: string;
+    phone?: string;
+    userId?: number;
+    constructor(companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number) {
+        this.companyName = companyName;
+        this.location = location;
+        this.estDate = estDate;
+        this.email = email;
+        this.phone = phone;
+        this.userId = userId;
+    }
+}
+
+export class UpdateCompanyModel extends CreateCompanyModel {
+    id: number;
+    constructor(id: number, companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number) {
+        super(companyName, location, estDate, email, phone, userId);
+        this.id = id;
+    }
+}
+
+export class DeleteCompanyModel {
+    id: number;
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+export class GetCompanyModel {
+    id: number;
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+export class CompanyResponseModel {
+    id: number;
+    companyName: string;
+    location: string;
+    estDate: Date;
+    email: string;
+    phone: string;
+    constructor(
+        id: number,
+        companyName: string,
+        location: string,
+        estDate: Date,
+        email: string,
+        phone: string
+    ) {
+        this.id = id;
+        this.companyName = companyName;
+        this.location = location;
+        this.estDate = estDate;
+        this.email = email;
+        this.phone = phone;
+    }
+}
+
+export class CompanyResponse extends GlobalResponse {
+    data: CompanyResponseModel[];
+    constructor(status: boolean, code: number, message: string, data: CompanyResponseModel[]) {
+        super(status, code, message);
+        this.data = data;
+    }
+}
+
+export class CompanyDropdownModel {
+    id: number;
+    name: string;
+    constructor(id: number, name: string) {
+        this.id = id;
+        this.name = name;
+    }
+}
+
+export class CompanyDropdownResponse extends GlobalResponse {
+    data: CompanyDropdownModel[];
+    constructor(status: boolean, code: number, message: string, data: CompanyDropdownModel[]) {
+        super(status, code, message);
+        this.data = data;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+
+
 // ============================================
 // BASE INTERFACES
 // ============================================
@@ -831,100 +926,6 @@ export class UpdateSlackUserModel {
 }
 
 
-
-
-
-// ============================================
-// COMPANY MODELS
-// ============================================
-export class CreateCompanyModel {
-    companyName: string;
-    location: string;
-    estDate: Date;
-    email?: string;
-    phone?: string;
-    userId?: number;
-    constructor(companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number) {
-        this.companyName = companyName;
-        this.location = location;
-        this.estDate = estDate;
-        this.email = email;
-        this.phone = phone;
-        this.userId = userId;
-    }
-}
-
-export class UpdateCompanyModel extends CreateCompanyModel {
-    id: number;
-    constructor(id: number, companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number) {
-        super(companyName, location, estDate, email, phone, userId);
-        this.id = id;
-    }
-}
-
-export class DeleteCompanyModel {
-    id: number;
-    constructor(id: number) {
-        this.id = id;
-    }
-}
-
-export class GetCompanyModel {
-    id: number;
-    constructor(id: number) {
-        this.id = id;
-    }
-}
-
-export class CompanyResponseModel {
-    id: number;
-    companyName: string;
-    location: string;
-    estDate: Date;
-    email: string;
-    phone: string;
-    constructor(
-        id: number,
-        companyName: string,
-        location: string,
-        estDate: Date,
-        email: string,
-        phone: string
-    ) {
-        this.id = id;
-        this.companyName = companyName;
-        this.location = location;
-        this.estDate = estDate;
-        this.email = email;
-        this.phone = phone;
-    }
-}
-
-export class CompanyResponse extends GlobalResponse {
-    data: CompanyResponseModel[];
-    constructor(status: boolean, code: number, message: string, data: CompanyResponseModel[]) {
-        super(status, code, message);
-        this.data = data;
-    }
-}
-
-export class CompanyDropdownModel {
-    id: number;
-    name: string;
-    constructor(id: number, name: string) {
-        this.id = id;
-        this.name = name;
-    }
-}
-
-export class CompanyDropdownResponse extends GlobalResponse {
-    data: CompanyDropdownModel[];
-    constructor(status: boolean, code: number, message: string, data: CompanyDropdownModel[]) {
-        super(status, code, message);
-        this.data = data;
-    }
-}
-
 export class DepartmentDropdownModel {
     id: number;
     name: string;
@@ -959,13 +960,14 @@ export class AssetTypeDropdownResponse extends GlobalResponse {
     }
 }
 
-export class InfrastructureMaster {
+export class CredentialVaultModel {
     id!: number;
     companyId!: number;
-    deviceName!: string;
-    serialNumber!: string;
+    appName!: string;
     description?: string;
-    purchaseDate?: Date | string;
+    password!: string;
+    expireDate?: Date | string;
+    owner!: string;
     isActive?: boolean;
     createdBy!: number;
     updatedBy?: number;
@@ -973,66 +975,72 @@ export class InfrastructureMaster {
     updatedAt?: Date | string;
 }
 
-export class CreateInfrastructureMasterModel {
+export class CreateCredentialVaultModel {
     createdBy!: number;
     companyId!: number;
-    deviceName!: string;
-    serialNumber!: string;
+    appName!: string;
     description?: string;
-    purchaseDate?: Date | string;
+    password!: string;
+    expireDate?: Date | string;
+    owner!: string;
     isActive?: boolean;
 
     constructor(
         createdBy: number,
         companyId: number,
-        deviceName: string,
-        serialNumber: string,
+        appName: string,
         description?: string,
-        purchaseDate?: Date | string,
+        password?: string,
+        expireDate?: Date | string,
+        owner?: string,
         isActive?: boolean
     ) {
         this.createdBy = createdBy;
         this.companyId = companyId;
-        this.deviceName = deviceName;
-        this.serialNumber = serialNumber;
+        this.appName = appName;
         this.description = description;
-        this.purchaseDate = purchaseDate;
+        this.password = password || '';
+        this.expireDate = expireDate;
+        this.owner = owner || '';
         this.isActive = isActive;
     }
 }
 
-export class UpdateInfrastructureMasterModel {
+export class UpdateCredentialVaultModel {
     id!: number;
-    deviceName?: string;
-    serialNumber?: string;
+    appName?: string;
     description?: string;
-    purchaseDate?: Date | string;
+    password?: string;
+    expireDate?: Date | string;
+    owner?: string;
     isActive?: boolean;
 
     constructor(
         id: number,
-        deviceName?: string,
-        serialNumber?: string,
+        appName?: string,
         description?: string,
-        purchaseDate?: Date | string,
+        password?: string,
+        expireDate?: Date | string,
+        owner?: string,
         isActive?: boolean
     ) {
         this.id = id;
-        this.deviceName = deviceName;
-        this.serialNumber = serialNumber;
+        this.appName = appName;
         this.description = description;
-        this.purchaseDate = purchaseDate;
+        this.password = password;
+        this.expireDate = expireDate;
+        this.owner = owner;
         this.isActive = isActive;
     }
 }
 
-export class DeleteInfrastructureMasterModel {
+export class DeleteCredentialVaultModel {
     id!: number;
 }
 
-export class GetAllInfrastructureMasterResponseModel extends GlobalResponse {
-    data: InfrastructureMaster[];
-    constructor(status: boolean, code: number, message: string, data: InfrastructureMaster[]) {
+export class GetAllCredentialVaultResponseModel extends GlobalResponse {
+    data: CredentialVaultModel[];
+    constructor(status: boolean, code: number, message: string, data: CredentialVaultModel[]) {
         super(status, code, message);
         this.data = data;
     }

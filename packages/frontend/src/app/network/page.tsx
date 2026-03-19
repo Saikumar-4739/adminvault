@@ -73,9 +73,9 @@ export default function NetworkPage() {
     ];
 
     return (
-        <div className="p-4 min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white space-y-6">
+        <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white space-y-8">
             <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>
-                <div className="space-y-6">
+                <div className="space-y-8">
                     {/* Header */}
                     <PageHeader
                         icon={<Network />}

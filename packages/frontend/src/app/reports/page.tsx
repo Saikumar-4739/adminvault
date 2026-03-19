@@ -148,7 +148,7 @@ const ReportsPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.SUPER_ADMIN]}>
-            <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/50 space-y-6">
+            <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/50 space-y-8">
                 {selectedReport ? (
                     // Detailed Report View
                     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">

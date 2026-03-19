@@ -6,5 +6,5 @@ export * from './vendor-service';
 export * from './application-service';
 export * from './license-master-service';
 export * from './slack-user-service';
-export * from './infrastructure-service';
+export * from './credential-vault-service';
 export * from './remote-service';

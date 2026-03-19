@@ -11,6 +11,10 @@ export class SlackUsersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('getAllSlackUsers'), {}, config);
     }
 
+    async importSlackUsers(config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('importSlackUsers'), {}, config);
+    }
+
     async createSlackUser(data: CreateSlackUserModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('createSlackUser'), data, config);
     }

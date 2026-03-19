@@ -4,20 +4,22 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-import { Building2, Users, Package, Smartphone, AppWindow, MessageSquare, Store, Search, FileText, Settings2 } from 'lucide-react';
+import { Building2, Users, Package, Smartphone, AppWindow, Store, Search, FileText, Settings2, Key, Database } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
+import { Button } from '@/components/ui/Button';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { BulkImportModal } from './components/BulkImportModal';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 
 const CompaniesMasterView = dynamic(() => import('./components/companies-master-view').then(mod => mod.CompaniesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Companies...</p> });
 const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view').then(mod => mod.DepartmentsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Departments...</p> });
 const AssetTypesMasterView = dynamic(() => import('./components/asset-types-master-view').then(mod => mod.AssetTypesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Asset Types...</p> });
 const DeviceBrandsMasterView = dynamic(() => import('./components/device-brands-master-view').then(mod => mod.DeviceBrandsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading device Brands...</p> });
 const LicensesMasterView = dynamic(() => import('./components/licenses-master-view').then(mod => mod.LicensesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Licenses...</p> });
-const SlackUsersMasterView = dynamic(() => import('./components/slack-users-master-view').then(mod => mod.SlackUsersMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Slack Integration...</p> });
+
 const VendorsMasterView = dynamic(() => import('./components/vendors-master-view').then(mod => mod.VendorsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Vendors...</p> });
-const InfrastructureMasterView = dynamic(() => import('./components/infrastructure-master-view').then(mod => mod.InfrastructureMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Infrastructure...</p> });
+const CredentialVaultMasterView = dynamic(() => import('./components/credential-vault-master-view').then(mod => mod.CredentialVaultMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Credential Vault...</p> });
 const RemoteMasterView = dynamic(() => import('./components/remote-master-view').then(mod => mod.RemoteMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Remote Tools...</p> });
 const DocumentsMasterView = dynamic(() => import('./components/documents-master-view').then(mod => mod.DocumentsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Documents...</p> });
 
@@ -80,12 +82,12 @@ const MastersPage: React.FC = () => {
             component: LicensesMasterView
         },
         {
-            id: 'infrastructure',
-            title: 'Infrastructure',
-            description: 'Manage hardware and infrastructure assets',
-            icon: Package,
+            id: 'credential-vault',
+            title: 'Credential Vault',
+            description: 'Determine access to saved credentials and app passwords',
+            icon: Key,
             color: 'from-orange-500 to-red-600',
-            component: InfrastructureMasterView
+            component: CredentialVaultMasterView
         },
         {
             id: 'remote-tools',
@@ -95,14 +97,7 @@ const MastersPage: React.FC = () => {
             color: 'from-teal-500 to-emerald-600',
             component: RemoteMasterView
         },
-        {
-            id: 'slack-users',
-            title: 'Slack Users',
-            description: 'Manage Slack user integration and mapping',
-            icon: MessageSquare,
-            color: 'from-rose-500 to-pink-600',
-            component: SlackUsersMasterView
-        },
+
         {
             id: 'vendors',
             title: 'Vendors',
@@ -124,6 +119,28 @@ const MastersPage: React.FC = () => {
     const selectedMasterData = masters.find(m => m.id === selectedMaster);
     const [searchQuery, setSearchQuery] = useState('');
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [isSeeding, setIsSeeding] = useState(false);
+
+    const handleSeed = async () => {
+        setIsSeeding(true);
+        try {
+            const res = await fetch('/api/seed/run', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            }).then(r => r.json());
+
+            if (res.success) {
+                AlertMessages.getSuccessMessage('Environment seeded with original data successfully!');
+                router.refresh();
+            } else {
+                AlertMessages.getErrorMessage('Seeding failed: ' + res.message);
+            }
+        } catch (e) {
+            AlertMessages.getErrorMessage('An error occurred during seeding');
+        } finally {
+            setIsSeeding(false);
+        }
+    };
 
     const filteredMasters = masters.filter(master =>
         master.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -155,22 +172,33 @@ const MastersPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN]}>
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 lg:p-8 space-y-6 overflow-y-auto">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 lg:p-8 space-y-8 overflow-y-auto">
                 <PageHeader
                     title="System Configuration"
                     description="General settings and organization masters"
                     icon={<Settings2 />}
                     gradient="from-slate-700 to-slate-900"
                 >
-                    <div className="relative max-w-xs ml-auto group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search master settings..."
-                            className="pl-9 pr-3 py-1.5 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm h-8"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                    <div className="flex items-center gap-3 ml-auto">
+                        <Button
+                            variant="primary"
+                            onClick={handleSeed}
+                            disabled={isSeeding}
+                            className="rounded-xl h-9 px-4 text-[10px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20"
+                        >
+                            <Database className={`h-3.5 w-3.5 mr-2 ${isSeeding ? 'animate-pulse' : ''}`} />
+                            Seed Demo Data
+                        </Button>
+                        <div className="relative max-w-xs group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search masters..."
+                                className="pl-9 pr-3 py-1.5 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm h-9"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </PageHeader>
 
@@ -180,7 +208,7 @@ const MastersPage: React.FC = () => {
                 />
 
                 {/* Master Grid Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-12">
                     {filteredMasters.length === 0 ? (
                         <div className="col-span-full py-24 text-center bg-white dark:bg-slate-900 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center gap-4">
                             <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-full shadow-lg">
@@ -198,30 +226,32 @@ const MastersPage: React.FC = () => {
                                 <button
                                     key={master.id}
                                     onClick={() => handleSelectMaster(master)}
-                                    className="group p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-2xl hover:-translate-y-1 transition-all text-left relative overflow-hidden flex flex-col h-full"
+                                    className="group p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-md hover:-translate-y-0.5 transition-all text-left relative overflow-hidden flex flex-col h-full"
                                 >
-                                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                                        <Icon className="h-16 w-16 text-indigo-500" />
+                                    <div className="absolute bottom-2 right-2 opacity-[0.04] group-hover:opacity-[0.1] transition-all duration-300 pointer-events-none z-0 border border-transparent">
+                                        <Icon className="h-10 w-10 text-indigo-500" />
                                     </div>
 
-                                    <div className="flex items-start justify-between mb-4 relative z-10">
-                                        <div className={`p-3 rounded-xl bg-gradient-to-br ${master.color} text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                                            <Icon className="h-5 w-5" />
+                                    <div className="flex items-center gap-3 mb-2.5 relative z-10">
+                                        <div className={`p-2.5 rounded-lg bg-gradient-to-br ${master.color} text-white shadow-sm group-hover:scale-105 transition-transform shrink-0`}>
+                                            <Icon className="h-4 w-4" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                                                {master.title}
+                                            </h3>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-1.5 relative z-10 flex-1">
-                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                            {master.title}
-                                        </h3>
-                                        <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                                    <div className="relative z-10 flex-1 mb-1">
+                                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
                                             {master.description}
                                         </p>
                                     </div>
 
-                                    <div className="mt-4 pt-4 border-t border-slate-50 dark:border-white/5 flex items-center justify-between relative z-10">
+                                    <div className="mt-auto pt-2 flex items-center justify-start relative z-10">
                                         <span className="text-[9px] font-bold text-slate-400 group-hover:text-indigo-500 uppercase tracking-wider transition-colors">
-                                            Access
+                                            Access &rarr;
                                         </span>
                                     </div>
                                 </button>

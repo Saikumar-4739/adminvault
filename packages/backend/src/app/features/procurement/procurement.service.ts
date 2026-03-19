@@ -1,10 +1,9 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { DataSource, In } from 'typeorm';
-import { CreatePOModel, PurchaseOrderModel, POItemModel, GetAllPOsModel, GetPOByIdModel, POStatusEnum, ApprovalTypeEnum, CreateApprovalRequestModel, GetAllPOsRequestModel, GetPORequestModel, UpdatePOStatusRequestModel } from '@adminvault/shared-models';
+import { CreatePOModel, PurchaseOrderModel, POItemModel, GetAllPOsModel, GetPOByIdModel, POStatusEnum, GetAllPOsRequestModel, GetPORequestModel, UpdatePOStatusRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { PurchaseOrderEntity } from './entities/purchase-order.entity';
 import { PurchaseOrderItemEntity } from './entities/purchase-order-item.entity';
-import { WorkflowService } from '../workflow/workflow.service';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { PurchaseOrderRepository } from './repositories/purchase-order.repository';
 import { PurchaseOrderItemRepository } from './repositories/purchase-order-item.repository';
@@ -21,8 +20,6 @@ export class ProcurementService {
         private poRepo: PurchaseOrderRepository,
         private poItemRepo: PurchaseOrderItemRepository,
         private employeeRepo: EmployeesRepository,
-        @Inject(forwardRef(() => WorkflowService))
-        private workflowService: WorkflowService,
         private notificationsService: NotificationsService
     ) { }
 
@@ -55,7 +52,7 @@ export class ProcurementService {
             po.companyId = employee.companyId || 0;
             po.orderDate = data.orderDate ? new Date(data.orderDate) : new Date();
             po.expectedDeliveryDate = data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate) : null;
-            po.status = POStatusEnum.PENDING_APPROVAL;
+            po.status = POStatusEnum.APPROVED;
             po.totalAmount = totalAmount;
             po.notes = data.notes;
             po.timeSpentMinutes = data.timeSpentMinutes || 0;
@@ -78,30 +75,19 @@ export class ProcurementService {
 
             await transManager.completeTransaction();
 
-            const approvalReq = new CreateApprovalRequestModel(
-                ApprovalTypeEnum.PURCHASE_ORDER,
-                Number(savedPO.id),
-                Number(employee.id),
-                Number(employee.companyId),
-                `Purchase Order Approval: ${savedPO.poNumber} (${savedPO.totalAmount})`,
-                undefined,
-                `${employee.firstName} ${employee.lastName}`,
-                savedPO.approverId || undefined
-            );
-            await this.workflowService.initiateApproval(approvalReq);
 
             // Persistent notification for requester
             if (userId) {
                 await this.notificationsService.createNotification(userId, {
                     title: 'Purchase Order Submitted',
-                    message: `Your PO #${savedPO.poNumber} has been submitted for approval.`,
+                    message: `Your PO #${savedPO.poNumber} has been submitted successfully.`,
                     type: NotificationType.INFO,
                     category: 'procurement',
                     link: '/purchase-order'
                 });
             }
 
-            return new GlobalResponse(true, 201, 'Purchase Order created and submitted for approval');
+            return new GlobalResponse(true, 201, 'Purchase Order created successfully');
         } catch (error) {
             await transManager.releaseTransaction();
             throw error instanceof ErrorResponse ? error : new ErrorResponse(500, error.message || 'Failed to create Purchase Order');

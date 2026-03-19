@@ -13,15 +13,8 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated && user) {
-        // Redirect based on user role (case-insensitive)
-        const role = user.role?.toUpperCase() || '';
-        if (role.includes('ADMIN') || role === 'MANAGER') {
-          // Admins and managers go to dashboard
-          router.push('/dashboard');
-        } else {
-          // Regular users go directly to create ticket page
-          router.push('/create-ticket');
-        }
+        // All users now go to the dashboard (Welcome/Features page)
+        router.push('/welcome');
       } else {
         router.push('/login');
       }

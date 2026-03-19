@@ -302,7 +302,7 @@ const TicketsPage: React.FC = () => {
                     formData.categoryEnum,
                     formData.priorityEnum,
                     formData.subject,
-                    TicketStatusEnum.PENDING,
+                    TicketStatusEnum.OPEN,
                     undefined, // employeeId
                     formData.assignAdminId ? Number(formData.assignAdminId) : undefined,
                     formData.responseDueTime ? new Date(formData.responseDueTime) : undefined, // expectedCompletionDate
@@ -486,7 +486,7 @@ const TicketsPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER]}>
-            <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-6">
+            <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-8">
                 <PageHeader
                     icon={<Ticket />}
                     title="Support Tickets"
@@ -750,9 +750,16 @@ const TicketsPage: React.FC = () => {
                                                     )}
                                                 </td>
                                                 <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
-                                                    <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                        <Clock className="h-3.5 w-3.5" />
-                                                        {getTimeAgo(ticket.createdAt)}
+                                                    <div className="flex flex-col items-center gap-1.5">
+                                                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                            <Clock className="h-3.5 w-3.5" />
+                                                            {getTimeAgo(ticket.createdAt)}
+                                                        </div>
+                                                        {getSLAStatus(ticket.slaDeadline, ticket.ticketStatus) && (
+                                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${getSLAStatus(ticket.slaDeadline, ticket.ticketStatus)?.color}`}>
+                                                                {getSLAStatus(ticket.slaDeadline, ticket.ticketStatus)?.label}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">

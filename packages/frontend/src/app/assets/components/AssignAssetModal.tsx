@@ -3,8 +3,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { assetService, employeeService, workflowService } from '@/lib/api/services';
-import { ApprovalTypeEnum, CreateApprovalRequestModel, IdRequestModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, AssetStatusEnum } from '@adminvault/shared-models';
+import { assetService, employeeService } from '@/lib/api/services';
+import { IdRequestModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, AssetStatusEnum } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -28,8 +28,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
     const [formData, setFormData] = useState({
         employeeId: '',
         assignedDate: new Date().toISOString().split('T')[0],
-        remarks: '',
-        requireApproval: false
+        remarks: ''
     });
 
     const fetchEmployees = useCallback(async () => {
@@ -53,8 +52,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
             setFormData({
                 employeeId: '',
                 assignedDate: new Date().toISOString().split('T')[0],
-                remarks: '',
-                requireApproval: false
+                remarks: ''
             });
         }
     }, [isOpen, fetchEmployees]);
@@ -81,42 +79,20 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
 
         try {
             if (actionType === 'reassign') {
-                if (formData.requireApproval) {
-                    const approvalReq = new CreateApprovalRequestModel(
-                        ApprovalTypeEnum.ASSET_ALLOCATION,
-                        asset.id,
-                        user.id,
-                        Number(user.companyId),
-                        formData.remarks || 'Asset Allocation Request',
-                        undefined,
-                        user.fullName || 'Admin',
-                        Number(formData.employeeId)
-                    );
+                const req = new AssignAssetOpRequestModel(
+                    asset.id,
+                    Number(formData.employeeId),
+                    user.id,
+                    formData.remarks
+                );
+                const response = await assetService.assignAssetOp(req);
 
-                    const response = await workflowService.initiateApproval(approvalReq);
-                    if (response.status) {
-                        AlertMessages.getSuccessMessage('Approval request submitted');
-                        onSuccess();
-                        onClose();
-                    } else {
-                        AlertMessages.getErrorMessage(response.message || 'Failed to submit approval');
-                    }
+                if (response.status) {
+                    AlertMessages.getSuccessMessage('Asset assigned successfully');
+                    onSuccess();
+                    onClose();
                 } else {
-                    const req = new AssignAssetOpRequestModel(
-                        asset.id,
-                        Number(formData.employeeId),
-                        user.id,
-                        formData.remarks
-                    );
-                    const response = await assetService.assignAssetOp(req);
-
-                    if (response.status) {
-                        AlertMessages.getSuccessMessage('Asset assigned successfully');
-                        onSuccess();
-                        onClose();
-                    } else {
-                        AlertMessages.getErrorMessage(response.message || 'Failed to assign asset');
-                    }
+                    AlertMessages.getErrorMessage(response.message || 'Failed to assign asset');
                 }
             } else {
                 // Handling Return, Maintenance, Retired
@@ -206,20 +182,6 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
                             />
                         </div>
 
-                        {/* Approval Checkbox */}
-                        <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <input
-                                type="checkbox"
-                                id="requireApproval"
-                                name="requireApproval"
-                                checked={formData.requireApproval}
-                                onChange={handleChange}
-                                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                            />
-                            <label htmlFor="requireApproval" className="text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
-                                Require Manager Approval
-                            </label>
-                        </div>
                     </>
                 )}
 
@@ -253,10 +215,10 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
                         isLoading={isLoading}
                         className="flex-1 h-11"
                     >
-                        {formData.requireApproval ? 'Submit for Approval' : 'Confirm'}
+                        Confirm
                     </Button>
                 </div>
             </form>
-        </Modal>
+        </Modal >
     );
 }

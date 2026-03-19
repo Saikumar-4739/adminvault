@@ -10,8 +10,8 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import {
     ShoppingCart, Plus, Search,
     Calendar, User, Building,
-    DollarSign, Clock, FileText, AlertCircle,
-    CheckCircle2, XCircle, Filter, Eye, Activity, Pen
+    DollarSign, FileText, AlertCircle,
+    CheckCircle2, XCircle, Filter, Eye, Pen
 } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, POStatusEnum, GetAllPOsRequestModel } from '@adminvault/shared-models';
@@ -32,7 +32,6 @@ const ProcurementPage: React.FC = () => {
     // Derived Metrics
     const totalPOs = pos.length;
     const totalSpend = pos.reduce((sum, po) => sum + (po.status === POStatusEnum.APPROVED || po.status === POStatusEnum.ORDERED || po.status === POStatusEnum.RECEIVED ? po.totalAmount : 0), 0);
-    const pendingApprovals = pos.filter(po => po.status === POStatusEnum.PENDING_APPROVAL).length;
     const activeVendors = new Set(pos.map(po => po.vendorId)).size;
 
     const filteredPOs = pos.filter(po => {
@@ -66,8 +65,6 @@ const ProcurementPage: React.FC = () => {
 
     const getStatusStyle = (status: POStatusEnum) => {
         switch (status) {
-            case POStatusEnum.PENDING_APPROVAL:
-                return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800';
             case POStatusEnum.APPROVED:
                 return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800';
             case POStatusEnum.REJECTED:
@@ -83,7 +80,6 @@ const ProcurementPage: React.FC = () => {
 
     const getStatusIcon = (status: POStatusEnum) => {
         switch (status) {
-            case POStatusEnum.PENDING_APPROVAL: return <Clock size={14} />;
             case POStatusEnum.APPROVED: return <CheckCircle2 size={14} />;
             case POStatusEnum.REJECTED: return <XCircle size={14} />;
             case POStatusEnum.ORDERED: return <ShoppingCart size={14} />;
@@ -96,7 +92,7 @@ const ProcurementPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-6">
+            <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-8">
                 <PageHeader
                     icon={<ShoppingCart className="text-white" />}
                     title="Procurement"
@@ -130,7 +126,6 @@ const ProcurementPage: React.FC = () => {
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
                                 <option value="ALL">All Statuses</option>
-                                <option value={POStatusEnum.PENDING_APPROVAL}>Pending</option>
                                 <option value={POStatusEnum.APPROVED}>Approved</option>
                                 <option value={POStatusEnum.ORDERED}>Ordered</option>
                                 <option value={POStatusEnum.RECEIVED}>Received</option>
@@ -161,15 +156,6 @@ const ProcurementPage: React.FC = () => {
                         <div>
                             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Spend</p>
                             <h3 className="text-2xl font-black text-slate-900 dark:text-white">${totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
-                        </div>
-                    </Card>
-                    <Card className="p-5 flex items-center gap-4 border-l-4 border-l-amber-500 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center shrink-0">
-                            <Activity className="text-amber-600 dark:text-amber-400" size={24} />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Pending Approval</p>
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white">{pendingApprovals}</h3>
                         </div>
                     </Card>
                     <Card className="p-5 flex items-center gap-4 border-l-4 border-l-emerald-500 shadow-sm hover:shadow-md transition-shadow">

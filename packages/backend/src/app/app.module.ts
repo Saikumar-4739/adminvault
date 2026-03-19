@@ -14,19 +14,24 @@ import { ReportsModule } from './features/reports/reports.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { DocumentsModule } from './features/documents/documents.module';
 import { AdministrationModule } from './features/administration/administration.module';
-import { WorkflowModule } from './features/workflow/workflow.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { ProcurementModule } from './features/procurement/procurement.module';
 import { AuditLogModule } from './features/audit-log/audit-log.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
 import { OnboardingModule } from './features/onboarding/onboarding.module';
 import { ContractModule } from './features/contracts/contract.module';
+import { CredentialVaultModule } from './features/credential-vault/credential-vault.module';
+import { DeviceHealthModule } from './features/device-health/device-health.module';
+import { ComplianceModule } from './features/compliance/compliance.module';
+import { OrganizationModule } from './features/organization/organization.module';
 import configuration from '../config/configuration';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { WebSocketModule } from './features/websocket/websocket.module';
 import { NetworkModule } from './features/network/network.module';
+import { SeedModule } from './features/seed/seed.module';
+import { SecurityModule } from './features/security/security.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 
@@ -49,16 +54,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     DashboardModule,
     DocumentsModule,
     AdministrationModule,
-    WorkflowModule,
     KnowledgeBaseModule,
     ProcurementModule,
     AuditLogModule,
     NotificationsModule,
     OnboardingModule,
     ContractModule,
+    CredentialVaultModule,
+    DeviceHealthModule,
+    ComplianceModule,
+    OrganizationModule,
     EventEmitterModule.forRoot(),
     WebSocketModule,
     NetworkModule,
+    SeedModule,
+    SecurityModule,
   ],
   controllers: [AppController],
   providers: [

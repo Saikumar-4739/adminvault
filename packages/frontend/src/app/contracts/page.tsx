@@ -127,7 +127,7 @@ export default function ContractsPage() {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN]}>
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 lg:p-8 space-y-6">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 lg:p-8 space-y-8">
                 <PageHeader
                     title="Contract Management"
                     description="Monitor vendor agreements, renewals, and compliance"

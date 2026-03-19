@@ -15,7 +15,6 @@ import { AssetReturnHistoryRepository } from './repositories/asset-return-histor
 import { AssetNextAssignmentRepository } from './repositories/asset-next-assignment.repository';
 import { AssetAssignRepository } from './repositories/asset-assign.repository';
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
-import { WorkflowModule } from '../workflow/workflow.module';
 import { SoftwareMasterEntity } from './entities/software-master.entity';
 import { AssetSoftwareEntity } from './entities/asset-software.entity';
 import { AdministrationModule } from '../administration/administration.module';
@@ -25,7 +24,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
     imports: [
         TypeOrmModule.forFeature([AssetInfoEntity, AssetReturnHistoryEntity, AssetNextAssignmentEntity, AssetAssignEntity, EmployeesEntity, SoftwareMasterEntity, AssetSoftwareEntity]),
-        forwardRef(() => WorkflowModule),
         AdministrationModule,
         AuditLogModule,
         NotificationsModule

@@ -9,7 +9,6 @@ import {
     AssetEventPayload,
     UserStatusPayload,
     SystemAlertPayload,
-    ApprovalEventPayload,
 } from '@adminvault/shared-models';
 
 /**
@@ -149,22 +148,6 @@ export class WebSocketService {
     }
 
 
-    /**
-     * Notify about pending approval
-     */
-    notifyApprovalPending(userId: number, approval: Omit<ApprovalEventPayload, 'timestamp'>): void {
-        this.emitToUser(userId, WebSocketEvent.APPROVAL_PENDING, approval);
-    }
-
-    /**
-     * Notify about approval decision
-     */
-    notifyApprovalDecision(userId: number, approval: Omit<ApprovalEventPayload, 'timestamp'>): void {
-        const event = approval.status === 'approved'
-            ? WebSocketEvent.APPROVAL_APPROVED
-            : WebSocketEvent.APPROVAL_REJECTED;
-        this.emitToUser(userId, event, approval);
-    }
 
     /**
      * Check if user is online

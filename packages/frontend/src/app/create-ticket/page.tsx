@@ -257,7 +257,7 @@ const SupportHubPage: React.FC = () => {
 
     return (
         <RouteGuard>
-            <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-6">
+            <div className="p-4 lg:p-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50 space-y-8">
                 <PageHeader
                     icon={<Ticket />}
                     title={`Support Hub`}

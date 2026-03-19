@@ -345,7 +345,7 @@ const EmployeesPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]} >
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 lg:p-6 space-y-4">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 lg:p-8 space-y-8">
 
                 {/* Header */}
                 <PageHeader

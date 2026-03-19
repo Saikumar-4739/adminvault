@@ -6,13 +6,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getSocket } from '@/lib/socket';
 import { ticketService } from '@/lib/api/services';
 import { TicketStatusEnum } from '@adminvault/shared-models';
-import { MessageSquare, Send, User, Bot, Ticket, PlusCircle } from 'lucide-react';
+import { MessageSquare, Send, User, Bot, Ticket, PlusCircle, Lock, Globe } from 'lucide-react';
 
 interface Message {
     id: number;
     senderId: number;
     senderType: 'user' | 'support';
     message: string;
+    commentType?: 'public' | 'internal';
     createdAt: string;
 }
 
@@ -24,6 +25,7 @@ const SupportChatPage: React.FC = () => {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputMessage, setInputMessage] = useState('');
+    const [commentType, setCommentType] = useState<'public' | 'internal'>('public');
     const [ticket, setTicket] = useState<any>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -117,6 +119,7 @@ const SupportChatPage: React.FC = () => {
             senderId: user.id,
             senderType: senderType,
             message: inputMessage,
+            commentType: commentType,
         });
 
         setInputMessage('');
@@ -210,10 +213,20 @@ const SupportChatPage: React.FC = () => {
                                 >
                                     <div
                                         className={`px-4 py-2.5 rounded-2xl shadow-sm ${isMine
-                                            ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white'
-                                            : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
+                                            ? commentType === 'internal' && message.commentType === 'internal'
+                                                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white'
+                                                : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white'
+                                            : message.commentType === 'internal'
+                                                ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-100 border border-amber-200 dark:border-amber-700'
+                                                : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
                                             }`}
                                     >
+                                        {message.commentType === 'internal' && (
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <Lock className="h-2.5 w-2.5 opacity-70" />
+                                                <span className="text-[9px] font-bold uppercase tracking-widest opacity-70">Internal Note</span>
+                                            </div>
+                                        )}
                                         <p className="text-sm leading-relaxed">{message.message}</p>
                                     </div>
                                     <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1.5 px-2">
@@ -247,22 +260,54 @@ const SupportChatPage: React.FC = () => {
                         </button>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 max-w-5xl mx-auto w-full">
-                        <input
-                            type="text"
-                            value={inputMessage}
-                            onChange={(e) => setInputMessage(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                            placeholder="Type command or query..."
-                            className="flex-1 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all text-sm"
-                        />
-                        <button
-                            onClick={handleSendMessage}
-                            disabled={!inputMessage.trim()}
-                            className="bg-indigo-600 text-white w-11 h-11 flex items-center justify-center rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-600/20 flex-shrink-0"
-                        >
-                            <Send className="h-5 w-5" />
-                        </button>
+                    <div className="flex flex-col gap-2 max-w-5xl mx-auto w-full">
+                        {/* Comment type toggle */}
+                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 self-start">
+                            <button
+                                onClick={() => setCommentType('public')}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${commentType === 'public'
+                                        ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                    }`}
+                            >
+                                <Globe className="h-3 w-3" />
+                                Public Reply
+                            </button>
+                            <button
+                                onClick={() => setCommentType('internal')}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${commentType === 'internal'
+                                        ? 'bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                    }`}
+                            >
+                                <Lock className="h-3 w-3" />
+                                Internal Note
+                            </button>
+                        </div>
+                        {/* Input row */}
+                        <div className={`flex items-center gap-2 w-full rounded-xl border-2 transition-colors ${commentType === 'internal'
+                                ? 'border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/10'
+                                : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'
+                            } px-1 py-1`}>
+                            <input
+                                type="text"
+                                value={inputMessage}
+                                onChange={(e) => setInputMessage(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                                placeholder={commentType === 'internal' ? 'Add internal note (only visible to agents)...' : 'Type your reply...'}
+                                className="flex-1 bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 px-3 py-2 focus:outline-none text-sm"
+                            />
+                            <button
+                                onClick={handleSendMessage}
+                                disabled={!inputMessage.trim()}
+                                className={`text-white w-10 h-10 flex items-center justify-center rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0 shadow-md ${commentType === 'internal'
+                                        ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20'
+                                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
+                                    }`}
+                            >
+                                <Send className="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

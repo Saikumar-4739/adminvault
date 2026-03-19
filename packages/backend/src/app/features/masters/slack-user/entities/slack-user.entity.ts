@@ -8,14 +8,20 @@ export class SlackUsersMasterEntity extends MasterBaseEntity {
     @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'User full name' })
     name: string;
 
-    @Column('varchar', { name: 'email', length: 255, nullable: false, comment: 'User email' })
+    @Column('varchar', { name: 'email', length: 255, nullable: true, comment: 'User email' })
     email: string;
 
     @Column('varchar', { name: 'slack_user_id', length: 50, nullable: true, comment: 'Slack User ID (e.g. U1234567)' })
     slackUserId: string;
 
+    @Column('varchar', { name: 'team_id', length: 50, nullable: true, comment: 'Slack Team/Workspace ID' })
+    teamId: string;
+
     @Column('varchar', { name: 'display_name', length: 255, nullable: true, comment: 'Slack Display Name' })
     displayName: string;
+
+    @Column('varchar', { name: 'avatar_url', length: 500, nullable: true, comment: 'Slack Avatar URL' })
+    avatarUrl: string;
 
     @Column('varchar', { name: 'role', length: 100, nullable: true, comment: 'User Role/Title' })
     role: string;
@@ -25,6 +31,15 @@ export class SlackUsersMasterEntity extends MasterBaseEntity {
 
     @Column('varchar', { name: 'phone', length: 50, nullable: true, comment: 'Phone Number' })
     phone: string;
+
+    @Column('varchar', { name: 'timezone', length: 100, nullable: true, comment: 'User Timezone' })
+    timezone: string;
+
+    @Column('varchar', { name: 'timezone_label', length: 100, nullable: true, comment: 'User Timezone Label' })
+    timezoneLabel: string;
+
+    @Column('boolean', { name: 'is_admin', nullable: true, default: false, comment: 'Whether user is a workspace admin' })
+    isAdmin: boolean;
 
     @Column('text', { name: 'notes', nullable: true, comment: 'Additional notes' })
     notes: string;

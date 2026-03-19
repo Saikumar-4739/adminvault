@@ -1,9 +1,8 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../../guards/jwt-auth.guard';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { CompanyInfoService } from './company-info.service';
-import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, GetCompanyModel } from '@adminvault/shared-models';
+import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, GetCompanyModel, CompanyResponse, CompanyDropdownResponse } from '@adminvault/shared-models';
 
 @ApiTags('Company Info')
 @Controller('company-info')
@@ -34,29 +33,29 @@ export class CompanyInfoController {
 
     @Post('getCompany')
     @ApiBody({ type: GetCompanyModel })
-    async getCompany(@Body() reqModel: GetCompanyModel): Promise<GlobalResponse> {
+    async getCompany(@Body() reqModel: GetCompanyModel): Promise<CompanyResponse> {
         try {
             return await this.service.getCompany(reqModel);
         } catch (error) {
-            return returnException(GlobalResponse, error);
+            return returnException(CompanyResponse, error);
         }
     }
 
     @Post('getAllCompanies')
-    async getAllCompanies(): Promise<GlobalResponse> {
+    async getAllCompanies(): Promise<CompanyResponse> {
         try {
             return await this.service.getAllCompanies();
         } catch (error) {
-            return returnException(GlobalResponse, error);
+            return returnException(CompanyResponse, error);
         }
     }
 
     @Post('getAllCompaniesDropdown')
-    async getAllCompaniesDropdown(): Promise<GlobalResponse> {
+    async getAllCompaniesDropdown(): Promise<CompanyDropdownResponse> {
         try {
             return await this.service.getAllCompaniesDropdown();
         } catch (error) {
-            return returnException(GlobalResponse, error);
+            return returnException(CompanyDropdownResponse, error);
         }
     }
 

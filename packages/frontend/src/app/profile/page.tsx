@@ -83,7 +83,7 @@ const ProfilePage: React.FC = () => {
 
     return (
         <RouteGuard>
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-950/20 p-6 lg:p-10 space-y-8 animate-in fade-in duration-500">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950/20 p-4 lg:p-8 space-y-8 animate-in fade-in duration-500">
                 {/* Content Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
                     {/* Details Card with integrated Identity */}

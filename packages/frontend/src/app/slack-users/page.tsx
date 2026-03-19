@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { employeeService, slackUserService, departmentService } from '@/lib/api/services';
-import { SlackUserModel, CreateSlackUserModel, UpdateSlackUserModel, EmployeeResponseModel, Department } from '@adminvault/shared-models';
+import { slackUserService, departmentService } from '@/lib/api/services';
+import { SlackUserModel, UpdateSlackUserModel, Department } from '@adminvault/shared-models';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { Search, Plus, MessageSquare, Pencil, Trash2, User, Users } from 'lucide-react';
+import {
+    Search, MessageSquare, Pencil, Trash2, Download,
+    RefreshCw, ExternalLink, Clock, Shield, Mail,
+    Building2, Slack
+} from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, IdRequestModel } from '@adminvault/shared-models';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,398 +18,237 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Spinner } from '@/components/ui/Spinner';
 
+const openSlackChat = (slackUserId: string, teamId: string) => {
+    if (!slackUserId) return;
+    const deepLink = teamId ? `slack://user?team=${teamId}&id=${slackUserId}` : `slack://user?id=${slackUserId}`;
+    const webLink = teamId ? `https://app.slack.com/client/${teamId}/${slackUserId}` : `https://slack.com`;
+    window.location.href = deepLink;
+    setTimeout(() => window.open(webLink, '_blank'), 1500);
+};
+
 const SlackUsersPage: React.FC = () => {
     const { user } = useAuth();
     const [users, setUsers] = useState<SlackUserModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isImporting, setIsImporting] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<SlackUserModel | null>(null);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [employees, setEmployees] = useState<EmployeeResponseModel[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
     const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        slackUserId: '',
-        displayName: '',
-        role: '',
-        department: '',
-        phone: '',
-        notes: ''
+        name: '', email: '', slackUserId: '', displayName: '',
+        role: '', department: '', phone: '', notes: ''
     });
 
-    useEffect(() => {
-        fetchUsers();
-        fetchInitialData();
-    }, []);
+    useEffect(() => { fetchUsers(); fetchInitialData(); }, []);
 
     const fetchInitialData = async () => {
         if (!user?.companyId) return;
         try {
-            const req = new IdRequestModel(user.companyId);
-            const [empRes, deptRes] = await Promise.all([
-                employeeService.getAllEmployees(req as any),
-                departmentService.getAllDepartments()
-            ]);
-
-            if (empRes.status) setEmployees(empRes.data || []);
+            const deptRes = await departmentService.getAllDepartments();
             if (deptRes.status) setDepartments(deptRes.departments);
-        } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'Failed to fetch initial data');
-        }
+        } catch { }
     };
 
     const fetchUsers = async () => {
-        if (!user?.companyId) return;
         try {
             setIsLoading(true);
-            // const req = new CompanyIdRequestModel(user.companyId);
             const response = await slackUserService.getAllSlackUsers();
-            if (response.status) {
-                setUsers(response.slackUsers || []);
-            } else {
-                AlertMessages.getErrorMessage(response.message);
-            }
-        } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'Failed to fetch Slack users');
-        } finally {
-            setIsLoading(false);
-        }
+            if (response.status) setUsers((response as any).slackUsers || (response as any).data || []);
+        } catch { } finally { setIsLoading(false); }
     };
 
-    const handleCreate = () => {
-        setEditingUser(null);
-        setSelectedEmployeeId('');
-        setFormData({
-            name: '',
-            email: '',
-            slackUserId: '',
-            displayName: '',
-            role: '',
-            department: '',
-            phone: '',
-            notes: ''
-        });
-        setIsModalOpen(true);
+    const handleImportFromSlack = async () => {
+        try {
+            setIsImporting(true);
+            const response = await slackUserService.importSlackUsers();
+            if (response.status) { AlertMessages.getSuccessMessage(response.message || 'Imported successfully'); fetchUsers(); }
+            else AlertMessages.getErrorMessage(response.message || 'Import failed');
+        } catch (e: any) { AlertMessages.getErrorMessage(e.message || 'Import failed'); }
+        finally { setIsImporting(false); }
     };
 
-    const handleEmployeeSelect = (employeeId: string) => {
-        setSelectedEmployeeId(employeeId);
-        if (employeeId) {
-            const emp = employees.find(e => e.id.toString() === employeeId);
-            if (emp) {
-                setFormData(prev => ({
-                    ...prev,
-                    name: `${emp.firstName} ${emp.lastName}`,
-                    email: emp.email,
-                    phone: emp.phNumber || prev.phone,
-                    department: emp.departmentName || prev.department
-                }));
-            }
-        }
-    };
-
-    const handleEdit = (user: SlackUserModel) => {
-        setEditingUser(user);
-        setFormData({
-            name: user.name,
-            email: user.email,
-            slackUserId: user.slackUserId || '',
-            displayName: user.displayName || '',
-            role: user.role || '',
-            department: user.department || '',
-            phone: user.phone || '',
-            notes: user.notes || ''
-        });
+    const handleEdit = (u: SlackUserModel) => {
+        setEditingUser(u);
+        setFormData({ name: u.name, email: u.email, slackUserId: u.slackUserId || '', displayName: u.displayName || '', role: u.role || '', department: u.department || '', phone: u.phone || '', notes: u.notes || '' });
         setIsModalOpen(true);
     };
 
     const handleSubmit = async () => {
+        if (!editingUser) return;
         try {
-            const currentUserId = user?.id || 1;
-            const currentCompanyId = user?.companyId || 1;
-
-            if (editingUser) {
-                const updateModel = new UpdateSlackUserModel(
-                    editingUser.id,
-                    formData.name,
-                    formData.email,
-                    formData.notes, // description
-                    true, // isActive
-                    formData.slackUserId,
-                    formData.displayName,
-                    formData.role,
-                    formData.department,
-                    formData.phone,
-                    formData.notes, // notes
-                    currentCompanyId
-                );
-                const response = await slackUserService.updateSlackUser(updateModel);
-                if (response.status) {
-                    AlertMessages.getSuccessMessage('Slack user updated successfully');
-                } else {
-                    AlertMessages.getErrorMessage(response.message);
-                }
-            } else {
-                const createModel = new CreateSlackUserModel(
-                    currentUserId,
-                    currentCompanyId,
-                    formData.name,
-                    formData.email,
-                    formData.notes, // description
-                    true, // isActive
-                    formData.slackUserId,
-                    formData.displayName,
-                    formData.role,
-                    formData.department,
-                    formData.phone,
-                    formData.notes // notes
-                );
-                const response = await slackUserService.createSlackUser(createModel);
-                if (response.status) {
-                    AlertMessages.getSuccessMessage('Slack user created successfully');
-                } else {
-                    AlertMessages.getErrorMessage(response.message);
-                }
-            }
-            setIsModalOpen(false);
-            fetchUsers();
-        } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'Failed to save Slack user');
-        }
-    };
-
-    const handleDelete = (id: number) => {
-        setUserToDelete(id);
-        setDeleteConfirmOpen(true);
+            const m = new UpdateSlackUserModel(editingUser.id, formData.name, formData.email, formData.notes, true, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, user?.companyId || 1);
+            const r = await slackUserService.updateSlackUser(m);
+            if (r.status) AlertMessages.getSuccessMessage('Updated successfully');
+            else AlertMessages.getErrorMessage(r.message);
+            setIsModalOpen(false); fetchUsers();
+        } catch (e: any) { AlertMessages.getErrorMessage(e.message); }
     };
 
     const confirmDelete = async () => {
         if (!userToDelete) return;
         try {
-            const req = new IdRequestModel(userToDelete);
-            const response = await slackUserService.deleteSlackUser(req);
-            if (response.status) {
-                AlertMessages.getSuccessMessage('Slack user deleted successfully');
-                fetchUsers();
-            } else {
-                AlertMessages.getErrorMessage(response.message);
-            }
-        } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'Failed to delete user');
-        } finally {
-            setDeleteConfirmOpen(false);
-            setUserToDelete(null);
-        }
+            const r = await slackUserService.deleteSlackUser(new IdRequestModel(userToDelete));
+            if (r.status) { AlertMessages.getSuccessMessage('Deleted'); fetchUsers(); }
+            else AlertMessages.getErrorMessage(r.message);
+        } catch { } finally { setDeleteConfirmOpen(false); setUserToDelete(null); }
     };
 
-    const filteredUsers = users.filter(user =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    const filtered = users.filter(u =>
+        u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.displayName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-6 space-y-8 max-w-[1600px] mx-auto min-h-screen">
-                {/* Header */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-display">
-                            Slack Users
-                        </h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium flex items-center gap-2">
-                            <MessageSquare className="h-4 w-4" />
-                            Manage Slack workspace users
-                        </p>
-                    </div>
+            <div className="p-4 lg:p-8 space-y-8 min-h-screen">
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                        <div className="relative flex-1 min-w-[280px]">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Search users..."
-                                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-sm shadow-sm"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
+                {/* Header */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4A154B] to-[#7C3085] flex items-center justify-center shadow-md">
+                            <Slack className="h-5 w-5 text-white" />
                         </div>
-                        <Button
-                            variant="primary"
-                            leftIcon={<Plus className="h-4 w-4" />}
-                            onClick={handleCreate}
-                            className="shadow-lg shadow-indigo-500/20"
-                        >
-                            Add User
+                        <div>
+                            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Slack Workspace</h1>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Sync and manage your workspace members</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            <input type="text" placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                                className="pl-9 pr-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 text-xs w-44" />
+                        </div>
+                        <button onClick={fetchUsers} className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
+                            <RefreshCw className="h-3.5 w-3.5" />
+                        </button>
+                        <Button variant="primary" onClick={handleImportFromSlack} disabled={isImporting}
+                            leftIcon={isImporting ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                            className="bg-gradient-to-r from-[#4A154B] to-[#7C3085] border-0 text-sm">
+                            {isImporting ? 'Importing...' : 'Import from Slack'}
                         </Button>
                     </div>
                 </div>
 
-                {/* Table */}
+                {/* Cards */}
                 {isLoading ? (
-                    <div className="flex justify-center py-20">
-                        <Spinner size="lg" />
-                    </div>
-                ) : filteredUsers.length === 0 ? (
-                    <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-                            <Users className="h-8 w-8 text-slate-400" />
+                    <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+                ) : filtered.length === 0 ? (
+                    <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4A154B] to-[#7C3085] flex items-center justify-center mx-auto mb-3">
+                            <Slack className="h-6 w-6 text-white" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">No users found</h3>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No Slack members yet</h3>
+                        <p className="text-xs text-slate-500">Click <strong>Import from Slack</strong> to sync your workspace.</p>
                     </div>
                 ) : (
-                    <Card className="overflow-hidden border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm p-0">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-16">S.No</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Details</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Organization & Contact</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Status</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                    {filteredUsers.map((user, index) => (
-                                        <tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
-                                            <td className="px-6 py-4 text-sm font-medium text-slate-500 dark:text-slate-400">
-                                                {index + 1}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shrink-0">
-                                                        <User className="h-5 w-5" />
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+                        {filtered.map(u => {
+                            const a = u as any;
+                            const initials = u.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+                            return (
+                                <div key={u.id} className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md hover:border-violet-300 dark:hover:border-violet-700 transition-all flex flex-col gap-2">
+
+                                    {/* Avatar row */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <div className="relative shrink-0">
+                                                {a.avatarUrl
+                                                    ? <img src={a.avatarUrl} alt={u.name} className="w-8 h-8 rounded-lg object-cover" />
+                                                    : <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs">{initials}</div>
+                                                }
+                                                {a.isAdmin && (
+                                                    <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full flex items-center justify-center">
+                                                        <Shield className="h-2 w-2 text-white" />
                                                     </div>
-                                                    <div>
-                                                        <div className="font-bold text-slate-900 dark:text-white">
-                                                            {user.name}
-                                                        </div>
-                                                        {user.displayName && (
-                                                            <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
-                                                                @{user.displayName}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm font-medium text-slate-900 dark:text-white mb-0.5">{user.email}</div>
-                                                <div className="text-xs text-slate-500 dark:text-slate-400">
-                                                    {user.role || 'No Role'} {user.department && `â€¢ ${user.department}`}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${user.isActive
-                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
-                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800'
-                                                    }`}>
-                                                    {user.isActive ? 'Active' : 'Inactive'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <button
-                                                        onClick={() => handleEdit(user)}
-                                                        className="p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg text-slate-500 hover:text-indigo-600 transition-colors"
-                                                        title="Edit User"
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(user.id)}
-                                                        className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg text-slate-500 hover:text-rose-600 transition-colors"
-                                                        title="Delete User"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="text-xs font-semibold text-slate-900 dark:text-white truncate">{u.name}</div>
+                                                {u.displayName && <div className="text-[10px] text-violet-500 truncate">@{u.displayName}</div>}
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                            {u.slackUserId && (
+                                                <button onClick={() => openSlackChat(u.slackUserId!, a.teamId)} title="Chat in Slack"
+                                                    className="p-1 rounded-md bg-gradient-to-br from-[#4A154B] to-[#7C3085] text-white">
+                                                    <MessageSquare className="h-2.5 w-2.5" />
+                                                </button>
+                                            )}
+                                            <button onClick={() => handleEdit(u)} className="p-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-400 hover:text-indigo-600">
+                                                <Pencil className="h-2.5 w-2.5" />
+                                            </button>
+                                            <button onClick={() => { setUserToDelete(u.id); setDeleteConfirmOpen(true); }} className="p-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-400 hover:text-rose-600">
+                                                <Trash2 className="h-2.5 w-2.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Details */}
+                                    <div className="space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                        {u.email && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3 shrink-0" /><span className="truncate">{u.email}</span></div>}
+                                        {u.role && <div className="flex items-center gap-1.5"><Building2 className="h-3 w-3 shrink-0" /><span className="truncate">{u.role}{u.department && ` · ${u.department}`}</span></div>}
+                                        {a.timezoneLabel && <div className="flex items-center gap-1.5"><Clock className="h-3 w-3 shrink-0" /><span className="truncate">{a.timezoneLabel}</span></div>}
+                                    </div>
+
+                                    {/* Footer */}
+                                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
+                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase border ${u.isActive
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
+                                            : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                                            {u.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                        {u.slackUserId && (
+                                            <button onClick={() => openSlackChat(u.slackUserId!, a.teamId)}
+                                                className="flex items-center gap-1 text-[10px] font-semibold text-violet-600 hover:text-violet-800 transition-colors">
+                                                <ExternalLink className="h-2.5 w-2.5" />Chat
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 )}
 
-                {/* Modal */}
-                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingUser ? 'Edit Slack User' : 'Add Slack User'} size="lg">
-                    <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
-                        {!editingUser && (
-                            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800/50">
-                                <label className="block text-sm font-bold text-indigo-900 dark:text-indigo-100 mb-2">Select Employee (Optional)</label>
-                                <select
-                                    value={selectedEmployeeId}
-                                    onChange={(e) => handleEmployeeSelect(e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
-                                >
-                                    <option value="">-- Choose Employee --</option>
-                                    {employees.map(emp => (
-                                        <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.email})</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input label="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="Full Name" />
-                            <Input label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required placeholder="email@company.com" />
+                {/* Edit Modal */}
+                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Edit Slack Member" size="lg">
+                    <form onSubmit={e => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <Input label="Name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                            <Input label="Email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input label="Slack User ID" value={formData.slackUserId} onChange={(e) => setFormData({ ...formData, slackUserId: e.target.value })} placeholder="U123456789" />
-                            <Input label="Display Name" value={formData.displayName} onChange={(e) => setFormData({ ...formData, displayName: e.target.value })} placeholder="@username" />
+                        <div className="grid grid-cols-2 gap-3">
+                            <Input label="Slack User ID" value={formData.slackUserId} onChange={e => setFormData({ ...formData, slackUserId: e.target.value })} />
+                            <Input label="Display Name" value={formData.displayName} onChange={e => setFormData({ ...formData, displayName: e.target.value })} />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input label="Role" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} placeholder="Developer" />
+                        <div className="grid grid-cols-2 gap-3">
+                            <Input label="Role / Title" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} />
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Department</label>
-                                <select
-                                    value={formData.department}
-                                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
-                                >
-                                    <option value="">-- Select Department --</option>
-                                    {departments.map(dept => (
-                                        <option key={dept.id} value={dept.name}>{dept.name}</option>
-                                    ))}
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Department</label>
+                                <select value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}
+                                    className="w-full px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm">
+                                    <option value="">-- Select --</option>
+                                    {departments.map((d: any) => <option key={d.id} value={d.name}>{d.name}</option>)}
                                 </select>
                             </div>
                         </div>
-                        <Input label="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Remarks</label>
-                            <textarea
-                                value={formData.notes}
-                                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                rows={3}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 font-medium text-sm"
-                                placeholder="Enter any additional remarks..."
-                            />
-                        </div>
-                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                            <Button variant="outline" onClick={() => setIsModalOpen(false)} type="button">Cancel</Button>
-                            <Button variant="primary" type="submit">{editingUser ? 'Update User' : 'Create User'}</Button>
+                        <Input label="Phone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                        <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
+                            <Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                            <Button variant="primary" type="submit">Update Member</Button>
                         </div>
                     </form>
                 </Modal>
 
-                <DeleteConfirmDialog
-                    isOpen={deleteConfirmOpen}
-                    onClose={() => setDeleteConfirmOpen(false)}
-                    onConfirm={confirmDelete}
-                    itemName="Slack User"
-                />
+                <DeleteConfirmDialog isOpen={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} onConfirm={confirmDelete} itemName="Slack Member" />
             </div>
         </RouteGuard>
     );
 };
-
-
-
 
 export default SlackUsersPage;

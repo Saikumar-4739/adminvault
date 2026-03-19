@@ -8,7 +8,8 @@ import {
     Package, LayoutDashboard, ChevronLeft, ChevronRight, Cpu, Settings2,
     BarChart3, Mail, Users, Laptop, ShoppingCart, Key, Network,
     ShieldCheck, Ticket, PlusCircle, UserCircle, BookOpen, CheckSquare,
-    Library, Globe, HelpCircle, LayoutGrid
+    Library, Globe, HelpCircle, LayoutGrid, Slack, Contact, Monitor,
+    History, ClipboardCheck, Store, ShieldAlert, Shield, Lock, UserCheck
 } from 'lucide-react';
 
 const IconMap: Record<string, any> = {
@@ -31,7 +32,17 @@ const IconMap: Record<string, any> = {
     Globe,
     HelpCircle,
     LayoutGrid,
-    Package
+    Package,
+    Slack,
+    Contact,
+    Monitor,
+    History,
+    ClipboardCheck,
+    Store,
+    ShieldAlert,
+    Shield,
+    Lock,
+    UserCheck
 };
 
 const getIcon = (name: string) => IconMap[name] || Package;
@@ -57,16 +68,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         return allowedMenus || [];
     }, [allowedMenus]);
 
-    // Expand all groups by default
+    // Sync active group based on current pathname
     useEffect(() => {
-        if (menuTree.length > 0 && expandedGroups.length === 0) {
-            setExpandedGroups(menuTree.map(m => m.key));
+        if (menuTree.length > 0) {
+            const activeGroup = menuTree.find(m =>
+                m.children?.some((c: any) =>
+                    c.key === 'dashboard' ? pathname === '/dashboard' : pathname?.startsWith(`/${c.key}`)
+                )
+            );
+            if (activeGroup && !expandedGroups.includes(activeGroup.key)) {
+                setExpandedGroups([activeGroup.key]);
+            }
         }
-    }, [menuTree]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [menuTree, pathname]);
 
     const toggleGroup = (key: string) => {
         setExpandedGroups(prev =>
-            prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+            prev.includes(key) ? [] : [key]
         );
     };
 

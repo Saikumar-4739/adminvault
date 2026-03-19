@@ -60,7 +60,7 @@ export default function OnboardingDashboard() {
     );
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-4 lg:p-8 space-y-8 animate-fade-in min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">

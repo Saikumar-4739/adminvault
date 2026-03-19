@@ -17,4 +17,5 @@ export * from './encryption-status.enum';
 export * from './ticket-severity.enum';
 export * from './contract-status.enum';
 export * from './access-request-enum';
-
+export * from './threat-gravity.enum';
+export * from './protocol-status.enum';

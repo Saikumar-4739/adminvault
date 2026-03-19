@@ -6,7 +6,7 @@ import { VendorModule } from './vendor/vendor.module';
 import { LicenseModule } from './license/license.module';
 import { SlackUserModule } from './slack-user/slack-user.module';
 import { CompanyInfoModule } from './company-info/company-info.module';
-import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { CredentialVaultModule } from './credential-vault/credential-vault.module';
 import { RemoteModule } from './remote/remote.module';
 
 import { MastersBulkController } from './bulk-import/masters-bulk.controller';
@@ -21,7 +21,7 @@ import { MastersBulkService } from './bulk-import/masters-bulk.service';
         LicenseModule,
         SlackUserModule,
         CompanyInfoModule,
-        InfrastructureModule,
+        CredentialVaultModule,
         RemoteModule
     ],
     controllers: [MastersBulkController],

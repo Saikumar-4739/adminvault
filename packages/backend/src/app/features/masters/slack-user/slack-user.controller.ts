@@ -20,6 +20,16 @@ export class SlackUserController {
         }
     }
 
+    @Post('importSlackUsers')
+    async importSlackUsers(@Req() req: any): Promise<GlobalResponse> {
+        try {
+            const companyId = req.user?.companyId;
+            return await this.slackUserService.importSlackUsers(companyId);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
     @Post('createSlackUser')
     @ApiBody({ type: CreateSlackUserModel })
     async createSlackUser(@Body() reqModel: CreateSlackUserModel, @Req() req: any): Promise<GlobalResponse> {

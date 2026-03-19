@@ -39,11 +39,6 @@ export enum WebSocketEvent {
     SYSTEM_MAINTENANCE = 'system:maintenance',
 
 
-    // Workflow events
-    WORKFLOW_UPDATED = 'workflow:updated',
-    APPROVAL_PENDING = 'approval:pending',
-    APPROVAL_APPROVED = 'approval:approved',
-    APPROVAL_REJECTED = 'approval:rejected',
 
     // Network monitoring events
     NETWORK_STATS_UPDATE = 'network:stats:update',
@@ -263,40 +258,6 @@ export class SystemAlertPayload extends WebSocketPayload {
 }
 
 
-/**
- * Approval Event Payload
- */
-export class ApprovalEventPayload extends WebSocketPayload {
-    approvalId: number;
-    workflowId: number;
-    workflowName: string;
-    requestedBy: number;
-    requestedByName: string;
-    status: 'pending' | 'approved' | 'rejected';
-    comment?: string;
-
-    constructor(
-        timestamp: Date,
-        approvalId: number,
-        workflowId: number,
-        workflowName: string,
-        requestedBy: number,
-        requestedByName: string,
-        status: 'pending' | 'approved' | 'rejected',
-        userId?: number,
-        companyId?: number,
-        comment?: string
-    ) {
-        super(timestamp, userId, companyId);
-        this.approvalId = approvalId;
-        this.workflowId = workflowId;
-        this.workflowName = workflowName;
-        this.requestedBy = requestedBy;
-        this.requestedByName = requestedByName;
-        this.status = status;
-        this.comment = comment;
-    }
-}
 
 /**
  * WebSocket Room Types

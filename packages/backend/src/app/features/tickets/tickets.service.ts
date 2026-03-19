@@ -9,8 +9,6 @@ import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel
 import { TicketsGateway } from './tickets.gateway';
 import { EmailInfoService } from '../administration/email-info.service';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
-import { WorkflowService } from '../workflow/workflow.service';
-import { CreateApprovalRequestModel, ApprovalTypeEnum } from '@adminvault/shared-models';
 import { TicketWorkLogEntity } from './entities/ticket-work-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -26,7 +24,6 @@ export class TicketsService {
         private workLogRepo: Repository<TicketWorkLogEntity>,
         private gateway: TicketsGateway,
         private emailInfoService: EmailInfoService,
-        private workflowService: WorkflowService,
         private auditLogService: AuditLogService
     ) { }
 
@@ -100,17 +97,6 @@ export class TicketsService {
             // Notify admins via WebSocket
             this.gateway.emitTicketCreated(savedTicket);
 
-            // Trigger Workflow for High Priority Tickets OR if status is PENDING
-            if (savedTicket.priorityEnum === TicketPriorityEnum.HIGH || savedTicket.ticketStatus === TicketStatusEnum.PENDING) {
-                const approvalReq = new CreateApprovalRequestModel(
-                    ApprovalTypeEnum.TICKET,
-                    Number(savedTicket.id),
-                    Number(employee.id), // requester
-                    Number(employee.companyId),
-                    `Ticket Approval Request: ${savedTicket.subject} (${savedTicket.priorityEnum})`
-                );
-                await this.workflowService.initiateApproval(approvalReq);
-            }
 
             // Send Emails
             // 1. To User
@@ -260,9 +246,9 @@ export class TicketsService {
                 .leftJoinAndMapOne('ticket.employee', 'employees', 'emp', 'emp.id = ticket.employeeId')
                 .orderBy('ticket.createdAt', 'DESC');
 
-            if (companyId) {
-                query.where('ticket.companyId = :companyId', { companyId });
-            }
+            // if (companyId) {
+            //     query.where('ticket.companyId = :companyId', { companyId });
+            // }
 
             const tickets: any[] = await query.getMany();
 

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as nodemailer from 'nodemailer';
 import { EmailInfoEntity } from './entities/email-info.entity';
-import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel, GetAllEmailInfoModel, EmailStatsResponseModel, EmailStatusEnum, RequestAccessModel, GlobalResponse, IdRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, SendAssetApprovalEmailModel, SendAssetAssignedEmailModel, SendTicketStatusUpdateEmailModel } from '@adminvault/shared-models';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel, GetAllEmailInfoModel, EmailStatsResponseModel, EmailStatusEnum, RequestAccessModel, GlobalResponse, IdRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, SendAssetAssignedEmailModel, SendTicketStatusUpdateEmailModel } from '@adminvault/shared-models';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse } from '@adminvault/backend-utils';
 import { ConfigService } from '@nestjs/config';
@@ -168,11 +168,7 @@ export class EmailInfoService {
         <!-- Button -->
         <tr>
           <td align="center" style="padding:20px;">
-            <a href="${frontendUrl}/approvals"
-               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
-                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
-              Review Request
-            </a>
+            <a href="${frontendUrl}/dashboard"
           </td>
         </tr>
 
@@ -542,119 +538,6 @@ export class EmailInfoService {
   async getAllAccessRequests(): Promise<AccessRequestEntity[]> {
     return await this.accessRequestRepo.find({ order: { createdAt: 'DESC' } });
   }
-
-  async sendAssetApprovalEmail(reqModel: SendAssetApprovalEmailModel): Promise<boolean> {
-    const { approverEmail, requesterName, message, assetStats } = reqModel;
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
-    const emailUser = this.configService.get<string>('EMAIL_USER');
-    const emailPass = this.configService.get<string>('EMAIL_PASS');
-
-    this.logger.log(`Attempting to send email. User: ${emailUser ? 'Set' : 'Missing'}, Pass: ${emailPass ? 'Set' : 'Missing'}`);
-    if (!emailUser || !emailPass) {
-      this.logger.error('Email credentials missing');
-      return false;
-    }
-
-    const mailOptions = {
-      from: `"AdminVault Assets" <${emailUser}>`,
-      to: approverEmail,
-      subject: `[Action Required] Asset Assignment Approval Request from ${requesterName}`,
-      html: `
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
-  <tr>
-    <td align="center" style="padding:20px;">
-      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
-        
-        <!-- Header -->
-        <tr>
-          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
-            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
-          </td>
-        </tr>
-
-        <!-- Message -->
-        <tr>
-          <td style="padding:16px 20px;font-size:14px;color:#111827;">
-            Hello,<br><br>
-            <strong>${requesterName}</strong> has submitted an <strong>asset assignment request</strong> that requires your approval as their manager.
-            ${message ? `<br><br><strong>Remarks:</strong> <em>"${message}"</em>` : ''}
-            <br><br>Please log in to AdminVault and review the pending approval request.
-          </td>
-        </tr>
-
-        ${assetStats ? `
-        <!-- Horizontal Info Row -->
-        <tr>
-          <td style="padding:12px 20px;">
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                
-                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Total Assets</div>
-                  <strong style="font-size:13px;">${assetStats.total}</strong>
-                </td>
-
-                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Active</div>
-                  <strong style="font-size:13px;color:#10b981;">${assetStats.inUse}</strong>
-                </td>
-
-                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Available</div>
-                  <strong style="font-size:13px;color:#3b82f6;">${assetStats.available}</strong>
-                </td>
-
-                <td width="25%" style="padding:8px;">
-                  <div style="font-size:11px;color:#6b7280;">Maintenance</div>
-                  <strong style="font-size:13px;color:#f59e0b;">${assetStats.maintenance}</strong>
-                </td>
-
-              </tr>
-            </table>
-          </td>
-        </tr>
-        ` : ''}
-
-        <!-- Button -->
-        <tr>
-          <td align="center" style="padding:20px;">
-            <a href="${frontendUrl}/approvals"
-               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
-                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
-              Review Approval Request
-            </a>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
-                     font-size:11px;color:#6b7280;">
-            Automated notification • Do not reply
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
-            `,
-    };
-
-    try {
-      this.logger.log(`Sending email to: ${approverEmail} from: ${emailUser}`);
-      const info = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Asset approval email sent to ${approverEmail}: ${info.messageId}`);
-      return true;
-    } catch (error) {
-      this.logger.error(`Error sending asset approval email to ${approverEmail}`, error);
-      if (error instanceof Error) {
-        this.logger.error(`Error stack: ${error.stack}`);
-      }
-      return false;
-    }
-  }
-
   async sendAssetAssignedEmail(reqModel: SendAssetAssignedEmailModel): Promise<boolean> {
     const { recipientEmail, recipientName, assetName, assignedBy, assignedDate, isReassignment, remarks, assignedToName, recipientRole } = reqModel;
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
