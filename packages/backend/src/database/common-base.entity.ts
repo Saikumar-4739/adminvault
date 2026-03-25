@@ -7,6 +7,9 @@ export abstract class CommonBaseEntity {
     @Column({ type: 'bigint', name: 'user_id', nullable: true })
     userId: number;
 
+    @Column({ type: 'varchar', name: 'user_name', nullable: true })
+    userName: string;
+
     @Column({ type: 'bigint', name: 'company_id', nullable: true })
     companyId: number;
 

@@ -9,12 +9,6 @@ export class PurchaseOrderEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'po_number', length: 50, unique: true })
     poNumber: string;
 
-    @Column({ type: 'bigint', name: 'company_id', nullable: true })
-    companyId: number;
-
-    @Column({ type: 'bigint', name: 'user_id', nullable: true })
-    userId: number;
-
     @Column('int', { name: 'vendor_id', nullable: true })
     vendorId: number;
 

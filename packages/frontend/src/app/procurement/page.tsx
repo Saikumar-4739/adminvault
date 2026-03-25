@@ -5,23 +5,17 @@ import { procurementService } from '@/lib/api/services';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
-
 import { PageHeader } from '@/components/ui/PageHeader';
-import {
-    ShoppingCart, Plus, Search,
-    Calendar, User, Building,
-    DollarSign, FileText, AlertCircle,
-    CheckCircle2, XCircle, Filter, Eye, Pen
-} from 'lucide-react';
+import { ShoppingCart, Plus, Search, Calendar, User, Building, DollarSign, FileText, AlertCircle, CheckCircle2, XCircle, Filter, Eye, Pen } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, POStatusEnum, GetAllPOsRequestModel, UpdatePOStatusRequestModel } from '@adminvault/shared-models';
+import { UserRoleEnum, POStatusEnum, UpdatePOStatusRequestModel, PurchaseOrderModel } from '@adminvault/shared-models';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
-import { CreatePOModal } from '@/components/operations/CreatePOModal';
+import { CreatePOModal } from './components/CreatePOModal';
 
 const ProcurementPage: React.FC = () => {
     const { user } = useAuth();
-    const [pos, setPos] = useState<any[]>([]);
+    const [pos, setPos] = useState<PurchaseOrderModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -32,7 +26,7 @@ const ProcurementPage: React.FC = () => {
 
     // Derived Metrics
     const totalPOs = pos.length;
-    const totalSpend = pos.reduce((sum, po) => sum + (po.status === POStatusEnum.APPROVED || po.status === POStatusEnum.ORDERED || po.status === POStatusEnum.RECEIVED ? (po.totalAmount || 0) : 0), 0);
+    const totalSpend = pos.reduce((sum, po) => sum + (po.status === POStatusEnum.APPROVED || po.status === POStatusEnum.ORDERED || po.status === POStatusEnum.RECEIVED ? (Number(po.totalAmount) || 0) : 0), 0);
     const activeVendors = new Set(pos.map(po => po.vendorId)).size;
 
     const filteredPOs = pos.filter(po => {
@@ -59,8 +53,7 @@ const ProcurementPage: React.FC = () => {
         if (!user?.companyId) return;
         setIsLoading(true);
         try {
-            const req = new GetAllPOsRequestModel(user.companyId);
-            const response = await procurementService.getAllPOs(req);
+            const response = await procurementService.getAllPurchaseOrders();
             if (response.status) {
                 setPos(response.pos || []);
             } else {
@@ -158,13 +151,13 @@ const ProcurementPage: React.FC = () => {
                                     <td>${item.itemName}</td>
                                     <td>${item.assetTypeName || 'N/A'}</td>
                                     <td style="text-align: right">${item.quantity}</td>
-                                    <td style="text-align: right">$${item.unitPrice.toLocaleString()}</td>
-                                    <td style="text-align: right">$${(item.quantity * item.unitPrice).toLocaleString()}</td>
+                                    <td style="text-align: right">$${item.unitPrice.toFixed(2)}</td>
+                                    <td style="text-align: right">$${(item.quantity * item.unitPrice).toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
-                    <div class="total">Total: $${po.totalAmount.toLocaleString()}</div>
+                    <div class="total">Total: $${(Number(po.totalAmount) || 0).toFixed(2)}</div>
                     <div style="margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 10px; color: #94a3b8; text-align: center;">
                         Generated via AdminVault Procurement System
                     </div>
@@ -269,7 +262,7 @@ const ProcurementPage: React.FC = () => {
                         </div>
                         <div>
                             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Spend</p>
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white">${totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-white">${totalSpend.toFixed(2)}</h3>
                         </div>
                     </Card>
                     <Card className="p-5 flex items-center gap-4 border-l-4 border-l-emerald-500 shadow-sm hover:shadow-md transition-shadow uppercase">
@@ -354,7 +347,6 @@ const ProcurementPage: React.FC = () => {
                                         <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-wider hidden md:table-cell">Requester</th>
                                         <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-wider hidden sm:table-cell">Date</th>
                                         <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">Total Amount</th>
-                                        <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-wider">Status</th>
                                         <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-wider text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -391,7 +383,7 @@ const ProcurementPage: React.FC = () => {
                                                 {po.orderDate ? new Date(po.orderDate).toLocaleDateString() : 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap font-bold text-sm text-slate-900 dark:text-white">
-                                                ${(po.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                ${(Number(po.totalAmount) || 0).toFixed(2)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border ${getStatusStyle(po.status)}`}>
@@ -527,8 +519,8 @@ const ProcurementPage: React.FC = () => {
                                                     <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{item.itemName}</td>
                                                     <td className="px-4 py-3 text-sm text-slate-500">{item.assetTypeName || 'N/A'}</td>
                                                     <td className="px-4 py-3 text-sm text-slate-500 text-center">{item.quantity}</td>
-                                                    <td className="px-4 py-3 text-sm text-slate-500 text-right">${(item.unitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 text-right">${((item.quantity || 0) * (item.unitPrice || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                    <td className="px-4 py-3 text-sm text-slate-500 text-right">${(item.unitPrice || 0).toFixed(2)}</td>
+                                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 text-right">${((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2)}</td>
                                                 </tr>
                                             )) : (
                                                 <tr>
@@ -539,7 +531,7 @@ const ProcurementPage: React.FC = () => {
                                         <tfoot className="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
                                             <tr>
                                                 <td colSpan={3} className="px-4 py-3 text-xs font-black text-slate-500 uppercase tracking-wider text-right">Total Amount:</td>
-                                                <td className="px-4 py-3 text-lg font-black text-indigo-600 dark:text-indigo-400 text-right">${(selectedPO.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                <td className="px-4 py-3 text-lg font-black text-indigo-600 dark:text-indigo-400 text-right">${(Number(selectedPO.totalAmount) || 0).toFixed(2)}</td>
                                             </tr>
                                         </tfoot>
                                     </table>

@@ -15,9 +15,6 @@ export class PurchaseOrderItemEntity extends CommonBaseEntity {
     @Column('decimal', { name: 'unit_price', precision: 10, scale: 2, default: 0 })
     unitPrice: number;
 
-    @Column('decimal', { name: 'total_price', precision: 10, scale: 2, default: 0 })
-    totalPrice: number;
-
     @Column('int', { name: 'asset_type_id', nullable: true, comment: 'Links to Asset Type for auto-creation' })
     assetTypeId: number;
 }

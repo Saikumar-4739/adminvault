@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Plus, Trash2, ShoppingCart } from 'lucide-react';
-import { CreatePOModel, POItemModel, Vendor, IdRequestModel } from '@adminvault/shared-models';
+import { CreatePOModel, UpdatePOModel, POItemModel, Vendor, IdRequestModel } from '@adminvault/shared-models';
 import { vendorService, procurementService, employeeService, companyService, assetTypeService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,17 +25,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
     const [approvers, setApprovers] = useState<any[]>([]);
     const [companies, setCompanies] = useState<any[]>([]);
     const [assetTypes, setAssetTypes] = useState<any[]>([]);
-
-    const defaultForm = {
-        vendorId: 0,
-        orderDate: new Date().toISOString().split('T')[0],
-        expectedDeliveryDate: '',
-        notes: '',
-        approverId: 0,
-        companyId: user?.companyId || 0,
-        items: [{ itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }]
-    };
-
+    const defaultForm = { vendorId: 0, orderDate: new Date().toISOString().split('T')[0], expectedDeliveryDate: '', notes: '', approverId: 0, companyId: user?.companyId || 0, items: [{ itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }] };
     const [formData, setFormData] = useState<any>(defaultForm);
 
     useEffect(() => {
@@ -60,27 +50,19 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
     const fetchMasters = async () => {
         if (!user?.companyId) return;
         try {
-            const [vRes, eRes, cRes, atRes] = await Promise.all([
-                vendorService.getAllVendors(),
-                employeeService.getAllEmployees(new IdRequestModel(7)),
-                companyService.getAllCompaniesDropdown(),
-                assetTypeService.getAllAssetTypesDropdown()
-            ]);
+            const [vRes, eRes, cRes, atRes] = await Promise.all([vendorService.getAllVendors(), employeeService.getAllEmployees(new IdRequestModel(user.companyId)), companyService.getAllCompaniesDropdown(), assetTypeService.getAllAssetTypesDropdown()]);
             setVendors(vRes.vendors || []);
             const employeeList = (eRes as any)?.data || (eRes as any)?.employees || (Array.isArray(eRes) ? eRes : []);
             setApprovers(employeeList);
             setCompanies((cRes as any)?.data || (cRes as any)?.companies || []);
             setAssetTypes((atRes as any)?.data || (atRes as any)?.assetTypes || []);
         } catch (err: any) {
-            console.error('Failed to fetch masters', err);
+            AlertMessages.getErrorMessage(err.message);
         }
     };
 
     const addItem = () => {
-        setFormData({
-            ...formData,
-            items: [...formData.items, { itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }]
-        });
+        setFormData({ ...formData, items: [...formData.items, { itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }] });
     };
 
     const removeItem = (index: number) => {
@@ -113,19 +95,24 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
 
         setIsSubmitting(true);
         try {
-            const model = new CreatePOModel(
-                formData.vendorId,
-                new Date(formData.orderDate),
-                formData.items.map((i: any) => new POItemModel(i.itemName, Number(i.quantity || 0), Number(i.unitPrice || 0), undefined, i.assetTypeId ? Number(i.assetTypeId) : undefined)),
-                formData.companyId,
-                formData.expectedDeliveryDate ? new Date(formData.expectedDeliveryDate) : undefined,
-                formData.notes,
-                undefined, // timeSpentMinutes
-                formData.approverId || undefined // approverId
-            );
-            const res = initialPO
-                ? await procurementService.updatePO(initialPO.id, model)
-                : await procurementService.createPurchaseOrder(model);
+            const items = formData.items.map((i: any) => new POItemModel(
+                i.itemName,
+                Number(i.quantity || 0),
+                Number(i.unitPrice || 0),
+                Number(i.assetTypeId) || undefined
+            ));
+
+            const orderDate = new Date(formData.orderDate);
+            const expectedDeliveryDate = formData.expectedDeliveryDate ? new Date(formData.expectedDeliveryDate) : undefined;
+
+            let res;
+            if (initialPO) {
+                const model = new UpdatePOModel(initialPO.id, user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined);
+                res = await procurementService.updatePurchaseOrder(model);
+            } else {
+                const model = new CreatePOModel(user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined);
+                res = await procurementService.createPurchaseOrder(model);
+            }
 
             if (res.status) {
                 AlertMessages.getSuccessMessage(`Purchase Order ${initialPO ? 'updated' : 'created'} successfully`);
@@ -137,7 +124,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                 AlertMessages.getErrorMessage(res.message);
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || "Failed to create Purchase Order");
+            AlertMessages.getErrorMessage(err.message);
         } finally {
             setIsSubmitting(false);
         }
@@ -148,7 +135,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
             isOpen={isOpen}
             onClose={onClose}
             title={initialPO ? `Update Purchase Order: ${initialPO.poNumber}` : "Create New Purchase Order"}
-            size="2xl"
+            size="4xl"
             footer={
                 <div className="flex gap-2 w-full">
                     <div className="flex-1 flex items-center px-4">
@@ -206,12 +193,12 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                     />
 
                     <Select
-                        label="Approver (Optional)"
+                        label="Approver"
                         value={formData.approverId}
                         onChange={(e) => setFormData({ ...formData, approverId: Number(e.target.value) })}
                         options={[
                             { label: 'No Specific Approver', value: 0 },
-                            ...approvers.map(a => ({ label: `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.email, value: Number(a.id) }))
+                            ...approvers.filter(a => a.userId).map(a => ({ label: `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.email, value: Number(a.userId) }))
                         ]}
                     />
                 </div>
@@ -280,7 +267,6 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                         ))}
                     </div>
                 </div>
-
             </form>
         </Modal>
     );

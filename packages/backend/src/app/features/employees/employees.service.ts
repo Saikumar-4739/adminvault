@@ -205,7 +205,7 @@ export class EmployeesService {
                 }
             }
 
-            const employeeResponse = new EmployeeResponseModel(employee.id, employee.companyId, employee.firstName, employee.lastName, employee.email, employee.departmentId, employee.empStatus, employee.phNumber, employee.billingAmount, employee.remarks, deptName, employee.slackUserId, employee.slackDisplayName, employee.slackAvatar, employee.isSlackActive, employee.managerId, managerName);
+            const employeeResponse = new EmployeeResponseModel(employee.id, employee.companyId, employee.firstName, employee.lastName, employee.email, employee.departmentId, employee.empStatus, employee.phNumber, employee.billingAmount, employee.remarks, deptName, employee.slackUserId, employee.slackDisplayName, employee.slackAvatar, employee.isSlackActive, employee.managerId, managerName, undefined, employee.userId);
             return new GetEmployeeResponseModel(true, 0, "Employee retrieved successfully", employeeResponse);
         } catch (error) {
             throw error;
@@ -247,7 +247,7 @@ export class EmployeesService {
                 users.forEach(u => userRoleMap.set(Number(u.id), u.userRole));
             }
 
-            const employeeResponses = employees.map(emp => new EmployeeResponseModel(emp.id, emp.companyId, emp.firstName, emp.lastName, emp.email, emp.departmentId, emp.empStatus, emp.phNumber, emp.billingAmount, emp.remarks, deptMap.get(Number(emp.departmentId)), emp.slackUserId, emp.slackDisplayName, emp.slackAvatar, emp.isSlackActive, emp.managerId, managerMap.get(Number(emp.managerId)) || '', userRoleMap.get(Number(emp.userId))));
+            const employeeResponses = employees.map(emp => new EmployeeResponseModel(emp.id, emp.companyId, emp.firstName, emp.lastName, emp.email, emp.departmentId, emp.empStatus, emp.phNumber, emp.billingAmount, emp.remarks, deptMap.get(Number(emp.departmentId)), emp.slackUserId, emp.slackDisplayName, emp.slackAvatar, emp.isSlackActive, emp.managerId, managerMap.get(Number(emp.managerId)) || '', userRoleMap.get(Number(emp.userId)), emp.userId));
             return new GetAllEmployeesResponseModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {
             throw error;
