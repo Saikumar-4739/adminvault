@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as nodemailer from 'nodemailer';
 import { EmailInfoEntity } from './entities/email-info.entity';
-import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel, GetAllEmailInfoModel, EmailStatsResponseModel, EmailStatusEnum, RequestAccessModel, GlobalResponse, IdRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, SendAssetAssignedEmailModel, SendTicketStatusUpdateEmailModel } from '@adminvault/shared-models';
+import { CreateEmailInfoModel, UpdateEmailInfoModel, DeleteEmailInfoModel, GetEmailInfoModel, GetEmailInfoByIdModel, EmailInfoResponseModel, GetAllEmailInfoModel, EmailStatsResponseModel, EmailStatusEnum, RequestAccessModel, GlobalResponse, IdRequestModel, SendTicketCreatedEmailModel, SendPasswordResetEmailModel, SendAssetAssignedEmailModel, SendTicketStatusUpdateEmailModel, SendPOApprovalEmailModel } from '@adminvault/shared-models';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse } from '@adminvault/backend-utils';
 import { ConfigService } from '@nestjs/config';
@@ -653,6 +653,98 @@ export class EmailInfoService {
       if (error instanceof Error) {
         this.logger.error(`Error stack: ${error.stack}`);
       }
+      return false;
+    }
+  }
+
+  async sendPOApprovalEmail(reqModel: SendPOApprovalEmailModel): Promise<boolean> {
+    const { recipientEmail, recipientName, poNumber, requesterName, totalAmount, vendorName, poId } = reqModel;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+
+    const mailOptions = {
+      from: `"AdminVault Procurement" <${emailUser}>`,
+      to: recipientEmail,
+      subject: `[Approval Required] New Purchase Order: ${poNumber}`,
+      html: `
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
+  <tr>
+    <td align="center" style="padding:20px;">
+      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
+        
+        <!-- Header -->
+        <tr>
+          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
+          </td>
+        </tr>
+
+        <!-- Message -->
+        <tr>
+          <td style="padding:16px 20px;font-size:14px;color:#111827;">
+            Hello <strong>${recipientName}</strong>,<br><br>
+            A new purchase order <strong>${poNumber}</strong> has been submitted and requires your approval.
+          </td>
+        </tr>
+
+        <!-- Horizontal Info Row -->
+        <tr>
+          <td style="padding:12px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc; border:1px solid #f1f5f9; border-radius: 8px;">
+              <tr>
+                <td width="33%" style="padding:12px; border-right:1px solid #f1f5f9;">
+                  <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">PO Number</div>
+                  <strong style="font-size:14px; color:#1e293b;">${poNumber}</strong>
+                </td>
+                <td width="33%" style="padding:12px; border-right:1px solid #f1f5f9;">
+                  <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">Total Amount</div>
+                  <strong style="font-size:14px; color:#1e293b;">$${totalAmount.toLocaleString()}</strong>
+                </td>
+                <td width="33%" style="padding:12px;">
+                  <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">Vendor</div>
+                  <strong style="font-size:14px; color:#1e293b;">${vendorName}</strong>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="3" style="padding:12px; border-top:1px solid #f1f5f9;">
+                   <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">Requester</div>
+                   <strong style="font-size:14px; color:#1e293b;">${requesterName}</strong>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Button -->
+        <tr>
+          <td align="center" style="padding:30px 20px;">
+            <a href="${frontendUrl}/procurement" 
+               style="background:#4f46e5; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-size:14px; font-weight:bold; display:inline-block; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1), 0 2px 4px -1px rgba(79, 70, 229, 0.06);">
+              Review & Approve PO
+            </a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:16px 20px; border-top:1px solid #f1f5f9; font-size:11px; color:#94a3b8; background-color: #fcfcfd;">
+            AdminVault Procurement System • Automated notification
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+      `,
+    };
+
+    try {
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`PO approval email sent for ${poNumber} to ${recipientEmail}: ${info.messageId}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`Error sending PO approval email for ${poNumber} to ${recipientEmail}`, error);
       return false;
     }
   }

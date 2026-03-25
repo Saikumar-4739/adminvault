@@ -23,12 +23,12 @@ const DEFAULT_MENUS = [
         key: 'main',
         label: 'Workspace',
         icon: 'LayoutGrid',
-        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN],
+        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN],
         children: [
             // { key: 'welcome', label: 'Welcome', icon: 'Sparkles', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER, UserRoleEnum.VIEWER, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
+            { key: 'masters', label: 'Masters', icon: 'Settings2', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'reports', label: 'Reports', icon: 'BarChart3', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
-            { key: 'masters', label: 'Configuration', icon: 'Settings2', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
         ]
     },
     {
@@ -70,29 +70,10 @@ const DEFAULT_MENUS = [
         roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN],
         children: [
             { key: 'users-management', label: 'Authentication', icon: 'UserCheck', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
-            { key: 'credential-vault-secure', label: 'Credential Vault', icon: 'Lock', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
-            { key: 'security-center', label: 'Security Center', icon: 'ShieldAlert', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
-            { key: 'audit-logs', label: 'Audit Logs', icon: 'History', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] }
-        ]
-    },
-    {
-        key: 'compliance',
-        label: 'Compliance',
-        icon: 'FileCheck',
-        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER],
-        children: [
-            { key: 'company-policies', label: 'Company Policies', icon: 'FileText', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER, UserRoleEnum.USER] },
-            { key: 'access-reviews', label: 'Access Reviews', icon: 'ClipboardCheck', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.MANAGER] }
-        ]
-    },
-    {
-        key: 'organization',
-        label: 'Organization',
-        icon: 'Building',
-        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN],
-        children: [
-            { key: 'billing', label: 'Billing & Subscriptions', icon: 'CreditCard', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
-            { key: 'vendors-management', label: 'Vendor Management', icon: 'Store', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] }
+            // { key: 'security-center', label: 'Security Center', icon: 'ShieldAlert', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+            // { key: 'audit-logs', label: 'Audit Logs', icon: 'History', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
+            { key: 'masters?view=credential-vault', label: 'Credential Vault', icon: 'Lock', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+
         ]
     },
     {

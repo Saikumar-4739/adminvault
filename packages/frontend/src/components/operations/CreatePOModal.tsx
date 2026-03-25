@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Plus, Trash2, ShoppingCart } from 'lucide-react';
 import { CreatePOModel, POItemModel, Vendor, IdRequestModel } from '@adminvault/shared-models';
-import { vendorService, procurementService, employeeService } from '@/lib/api/services';
+import { vendorService, procurementService, employeeService, companyService, assetTypeService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -23,6 +23,8 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [approvers, setApprovers] = useState<any[]>([]);
+    const [companies, setCompanies] = useState<any[]>([]);
+    const [assetTypes, setAssetTypes] = useState<any[]>([]);
 
     const defaultForm = {
         vendorId: 0,
@@ -30,7 +32,8 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
         expectedDeliveryDate: '',
         notes: '',
         approverId: 0,
-        items: [{ itemName: '', quantity: 1, unitPrice: 0, sku: '', assetTypeId: undefined }]
+        companyId: user?.companyId || 0,
+        items: [{ itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }]
     };
 
     const [formData, setFormData] = useState<any>(defaultForm);
@@ -45,7 +48,8 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                     expectedDeliveryDate: initialPO.expectedDeliveryDate ? new Date(initialPO.expectedDeliveryDate).toISOString().split('T')[0] : '',
                     notes: initialPO.notes || '',
                     approverId: initialPO.approverId || 0,
-                    items: initialPO.items?.length > 0 ? initialPO.items : [{ itemName: '', quantity: 1, unitPrice: 0, sku: '', assetTypeId: undefined }]
+                    companyId: initialPO.companyId || user?.companyId || 0,
+                    items: initialPO.items?.length > 0 ? initialPO.items : [{ itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }]
                 });
             } else {
                 setFormData(defaultForm);
@@ -56,12 +60,17 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
     const fetchMasters = async () => {
         if (!user?.companyId) return;
         try {
-            const [vRes, eRes] = await Promise.all([
+            const [vRes, eRes, cRes, atRes] = await Promise.all([
                 vendorService.getAllVendors(),
-                employeeService.getAllEmployees(new IdRequestModel(user.companyId))
+                employeeService.getAllEmployees(new IdRequestModel(7)),
+                companyService.getAllCompaniesDropdown(),
+                assetTypeService.getAllAssetTypesDropdown()
             ]);
             setVendors(vRes.vendors || []);
-            setApprovers((eRes as any)?.data || (eRes as any)?.employees || []);
+            const employeeList = (eRes as any)?.data || (eRes as any)?.employees || (Array.isArray(eRes) ? eRes : []);
+            setApprovers(employeeList);
+            setCompanies((cRes as any)?.data || (cRes as any)?.companies || []);
+            setAssetTypes((atRes as any)?.data || (atRes as any)?.assetTypes || []);
         } catch (err: any) {
             console.error('Failed to fetch masters', err);
         }
@@ -70,7 +79,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
     const addItem = () => {
         setFormData({
             ...formData,
-            items: [...formData.items, { itemName: '', quantity: 1, unitPrice: 0, sku: '', assetTypeId: undefined }]
+            items: [...formData.items, { itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }]
         });
     };
 
@@ -107,7 +116,8 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
             const model = new CreatePOModel(
                 formData.vendorId,
                 new Date(formData.orderDate),
-                formData.items.map((i: any) => new POItemModel(i.itemName, i.quantity, i.unitPrice, i.sku, i.assetTypeId)),
+                formData.items.map((i: any) => new POItemModel(i.itemName, Number(i.quantity || 0), Number(i.unitPrice || 0), undefined, i.assetTypeId ? Number(i.assetTypeId) : undefined)),
+                formData.companyId,
                 formData.expectedDeliveryDate ? new Date(formData.expectedDeliveryDate) : undefined,
                 formData.notes,
                 undefined, // timeSpentMinutes
@@ -115,7 +125,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
             );
             const res = initialPO
                 ? await procurementService.updatePO(initialPO.id, model)
-                : await procurementService.createPO(model);
+                : await procurementService.createPurchaseOrder(model);
 
             if (res.status) {
                 AlertMessages.getSuccessMessage(`Purchase Order ${initialPO ? 'updated' : 'created'} successfully`);
@@ -155,7 +165,18 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
             }
         >
             <form className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <Select
+                        label="Company"
+                        value={formData.companyId}
+                        onChange={(e) => setFormData({ ...formData, companyId: Number(e.target.value) })}
+                        required
+                        options={[
+                            { label: 'Select Company', value: 0 },
+                            ...companies.map(c => ({ label: c.name, value: Number(c.id) }))
+                        ]}
+                    />
+
                     <Select
                         label="Vendor"
                         value={formData.vendorId}
@@ -167,6 +188,23 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                         ]}
                     />
 
+                    <Input
+                        label="Order Date"
+                        type="date"
+                        value={formData.orderDate}
+                        onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
+                        required
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                        label="Expected Delivery Date"
+                        type="date"
+                        value={formData.expectedDeliveryDate}
+                        onChange={(e) => setFormData({ ...formData, expectedDeliveryDate: e.target.value })}
+                    />
+
                     <Select
                         label="Approver (Optional)"
                         value={formData.approverId}
@@ -176,27 +214,6 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                             ...approvers.map(a => ({ label: `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.email, value: Number(a.id) }))
                         ]}
                     />
-
-                    <Input
-                        label="Order Date"
-                        type="date"
-                        value={formData.orderDate}
-                        onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
-                        required
-                    />
-
-                    <Input
-                        label="Expected Delivery Date"
-                        type="date"
-                        value={formData.expectedDeliveryDate}
-                        onChange={(e) => setFormData({ ...formData, expectedDeliveryDate: e.target.value })}
-                    />
-
-                    <Input
-                        label="Reference / SKU Prefix"
-                        value={formData.notes || ''}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    />
                 </div>
 
                 <div className="space-y-4">
@@ -205,7 +222,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                             <ShoppingCart size={16} className="text-indigo-500" />
                             Order Items
                         </h4>
-                        <Button variant="outline" size="sm" onClick={addItem} className="h-8 py-0 px-3 font-bold text-xs uppercase tracking-widest">
+                        <Button type="button" variant="outline" size="sm" onClick={addItem} className="h-8 py-0 px-3 font-bold text-xs uppercase tracking-widest">
                             <Plus size={14} className="mr-1" /> Add Item
                         </Button>
                     </div>
@@ -213,7 +230,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                     <div className="space-y-3">
                         {formData.items.map((item: any, index: number) => (
                             <div key={index} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 grid grid-cols-12 gap-3 items-end group">
-                                <div className="col-span-12 md:col-span-5">
+                                <div className="col-span-12 md:col-span-4">
                                     <Input
                                         label="Item Name"
                                         value={item.itemName}
@@ -221,22 +238,32 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                                         className="bg-white dark:bg-slate-900"
                                     />
                                 </div>
-                                <div className="col-span-5 md:col-span-3">
+                                <div className="col-span-12 md:col-span-3">
+                                    <Select
+                                        label="Asset Type"
+                                        value={item.assetTypeId}
+                                        onChange={(e) => updateItem(index, 'assetTypeId', e.target.value)}
+                                        options={[
+                                            { label: 'Select Type', value: 0 },
+                                            ...assetTypes.map(at => ({ label: at.name, value: Number(at.id) }))
+                                        ]}
+                                    />
+                                </div>
+                                <div className="col-span-5 md:col-span-2">
                                     <Input
                                         label="Qty"
                                         type="number"
-                                        min={1}
                                         value={item.quantity}
-                                        onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
+                                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
                                         className="bg-white dark:bg-slate-900 text-center"
                                     />
                                 </div>
-                                <div className="col-span-5 md:col-span-3">
+                                <div className="col-span-5 md:col-span-2">
                                     <Input
-                                        label="UnitPrice"
+                                        label="Price"
                                         type="number"
                                         value={item.unitPrice}
-                                        onChange={(e) => updateItem(index, 'unitPrice', Number(e.target.value))}
+                                        onChange={(e) => updateItem(index, 'unitPrice', e.target.value)}
                                         className="bg-white dark:bg-slate-900"
                                     />
                                 </div>
@@ -254,14 +281,6 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                     </div>
                 </div>
 
-                <div>
-                    <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Additional Notes</label>
-                    <textarea
-                        className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all min-h-[100px]"
-                        value={formData.notes || ''}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    />
-                </div>
             </form>
         </Modal>
     );

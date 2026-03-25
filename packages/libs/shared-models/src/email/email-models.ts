@@ -224,3 +224,30 @@ export class GetAllAccessRequestsModel extends GlobalResponse {
     }
 }
 
+export class SendPOApprovalEmailModel {
+    recipientEmail: string;
+    recipientName: string;
+    poNumber: string;
+    requesterName: string;
+    totalAmount: number;
+    vendorName: string;
+    poId: number;
+
+    constructor(
+        recipientEmail: string,
+        recipientName: string,
+        poNumber: string,
+        requesterName: string,
+        totalAmount: number,
+        vendorName: string,
+        poId: number
+    ) {
+        this.recipientEmail = recipientEmail;
+        this.recipientName = recipientName;
+        this.poNumber = poNumber;
+        this.requesterName = requesterName;
+        this.totalAmount = totalAmount;
+        this.vendorName = vendorName;
+        this.poId = poId;
+    }
+}

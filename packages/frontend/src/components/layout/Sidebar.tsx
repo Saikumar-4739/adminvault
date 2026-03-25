@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,10 +52,12 @@ interface SidebarProps {
     onClose?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
     const { user, allowedMenus } = useAuth();
     const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     // Close mobile menu on route change
     useEffect(() => {
@@ -68,24 +70,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         return allowedMenus || [];
     }, [allowedMenus]);
 
-    // Sync active group based on current pathname
+    // Sync active group based on current pathname and handle initial expansion
     useEffect(() => {
         if (menuTree.length > 0) {
+            // Initial expansion: expand all groups with children
+            if (!isInitialized) {
+                const allParentKeys = menuTree
+                    .filter(m => m.children && m.children.length > 0)
+                    .map(m => m.key);
+                setExpandedGroups(allParentKeys);
+                setIsInitialized(true);
+            }
+
+            // Also ensure active group is expanded if navigating
             const activeGroup = menuTree.find(m =>
                 m.children?.some((c: any) =>
                     c.key === 'dashboard' ? pathname === '/dashboard' : pathname?.startsWith(`/${c.key}`)
                 )
             );
             if (activeGroup && !expandedGroups.includes(activeGroup.key)) {
-                setExpandedGroups([activeGroup.key]);
+                setExpandedGroups(prev => prev.includes(activeGroup.key) ? prev : [...prev, activeGroup.key]);
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [menuTree, pathname]);
+    }, [menuTree, pathname, isInitialized]);
 
     const toggleGroup = (key: string) => {
         setExpandedGroups(prev =>
-            prev.includes(key) ? [] : [key]
+            prev.includes(key)
+                ? prev.filter(k => k !== key)
+                : [...prev, key]
         );
     };
 
@@ -94,7 +108,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         const hasChildren = children.length > 0;
         const isExpanded = expandedGroups.includes(item.key);
         const Icon = getIcon(item.icon);
-        const isActive = item.key === 'dashboard' ? pathname === '/dashboard' : pathname?.startsWith(`/${item.key}`);
+
+        // Handle active state for links with query parameters (e.g., masters?view=credential-vault)
+        const [keyPath, keyQuery] = item.key.split('?');
+        const isActive = keyQuery
+            ? pathname === `/${keyPath}` && searchParams.toString().includes(keyQuery)
+            : item.key === 'dashboard' ? pathname === '/dashboard' : pathname?.startsWith(`/${item.key}`);
 
         return (
             <div key={item.key} className="w-full">

@@ -394,7 +394,6 @@ const EmployeesPage: React.FC = () => {
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Search by name, email, department..."
                             className="w-full pl-8 pr-3 h-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -623,7 +622,7 @@ const EmployeesPage: React.FC = () => {
                                             </td>
                                             <td className="px-3 py-2 text-right hidden lg:table-cell">
                                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                                    ₹{Number(emp.billingAmount || 0).toLocaleString('en-IN')}
+                                                    ${Number(emp.billingAmount || 0).toLocaleString('en-US')}
                                                 </span>
                                             </td>
                                             <td className="px-3 py-2">
@@ -701,7 +700,6 @@ const EmployeesPage: React.FC = () => {
                             <textarea
                                 value={formData.remarks}
                                 onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                                placeholder="Any additional notes..."
                                 rows={2}
                                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none text-sm resize-none"
                             />

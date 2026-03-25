@@ -7,25 +7,25 @@ import { GlobalResponse } from '../common/global-response';
 
 export class POItemModel {
     itemName: string;
-    sku?: string;
     quantity: number;
     unitPrice: number;
     totalPrice: number;
     assetTypeId?: number;
+    assetTypeName?: string;
 
     constructor(
         itemName: string,
         quantity: number,
         unitPrice: number,
-        sku?: string,
-        assetTypeId?: number
+        assetTypeId?: number,
+        assetTypeName?: string
     ) {
         this.itemName = itemName;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.totalPrice = quantity * unitPrice;
-        this.sku = sku;
         this.assetTypeId = assetTypeId;
+        this.assetTypeName = assetTypeName;
     }
 }
 
@@ -38,6 +38,7 @@ export class CreatePOModel {
     orderDate: Date;
     expectedDeliveryDate?: Date;
     items: POItemModel[];
+    companyId: number;
     notes?: string;
     timeSpentMinutes?: number;
     approverId?: number;
@@ -46,6 +47,7 @@ export class CreatePOModel {
         vendorId: number,
         orderDate: Date,
         items: POItemModel[],
+        companyId: number,
         expectedDeliveryDate?: Date,
         notes?: string,
         timeSpentMinutes?: number,
@@ -54,6 +56,7 @@ export class CreatePOModel {
         this.vendorId = vendorId;
         this.orderDate = orderDate;
         this.items = items;
+        this.companyId = companyId;
         this.expectedDeliveryDate = expectedDeliveryDate;
         this.notes = notes;
         this.timeSpentMinutes = timeSpentMinutes;
@@ -72,6 +75,7 @@ export class UpdatePOModel {
     expectedDeliveryDate?: Date;
     status: POStatusEnum;
     items: POItemModel[];
+    companyId: number;
     notes?: string;
     timeSpentMinutes?: number;
     approverId?: number;
@@ -82,6 +86,7 @@ export class UpdatePOModel {
         orderDate: Date,
         status: POStatusEnum,
         items: POItemModel[],
+        companyId: number,
         expectedDeliveryDate?: Date,
         notes?: string,
         timeSpentMinutes?: number,
@@ -92,6 +97,7 @@ export class UpdatePOModel {
         this.orderDate = orderDate;
         this.status = status;
         this.items = items;
+        this.companyId = companyId;
         this.expectedDeliveryDate = expectedDeliveryDate;
         this.notes = notes;
         this.timeSpentMinutes = timeSpentMinutes;
@@ -170,6 +176,7 @@ export class PurchaseOrderModel {
     createdAt: Date;
     approverId?: number;
     approverName?: string;
+    companyName?: string;
 
     constructor(
         id: number,
@@ -187,7 +194,8 @@ export class PurchaseOrderModel {
         notes?: string,
         timeSpentMinutes?: number,
         approverId?: number,
-        approverName?: string
+        approverName?: string,
+        companyName?: string
     ) {
         this.id = id;
         this.poNumber = poNumber;
@@ -205,6 +213,7 @@ export class PurchaseOrderModel {
         this.timeSpentMinutes = timeSpentMinutes;
         this.approverId = approverId;
         this.approverName = approverName;
+        this.companyName = companyName;
     }
 }
 

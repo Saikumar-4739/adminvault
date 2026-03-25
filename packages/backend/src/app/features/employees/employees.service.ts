@@ -12,6 +12,7 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType, WorkflowType } from '@adminvault/shared-models';
 import { OnboardingService } from '../onboarding/onboarding.service';
+import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 
 @Injectable()
 export class EmployeesService {
@@ -214,7 +215,7 @@ export class EmployeesService {
     async getAllEmployees(reqModel: IdRequestModel): Promise<GetAllEmployeesResponseModel> {
         try {
             let employees: EmployeesEntity[];
-            const companyId = reqModel.id;
+            const companyId = Number(reqModel.id);
 
             if (companyId) {
                 employees = await this.employeesRepo.find({ where: { companyId } });
@@ -222,7 +223,7 @@ export class EmployeesService {
                 employees = await this.employeesRepo.find();
             }
 
-            const deptIds = [...new Set(employees.map(e => Number(e.departmentId)))];
+            const deptIds = [...new Set(employees.filter(e => e.departmentId && Number(e.departmentId) > 0).map(e => Number(e.departmentId)))];
             const deptMap = new Map<number, string>();
 
             if (deptIds.length > 0) {
@@ -232,14 +233,21 @@ export class EmployeesService {
                 });
             }
 
-            const managerIds = [...new Set(employees.filter(e => e.managerId).map(e => Number(e.managerId)))];
+            const managerIds = [...new Set(employees.filter(e => e.managerId && Number(e.managerId) > 0).map(e => Number(e.managerId)))];
             const managerMap = new Map<number, string>();
             if (managerIds.length > 0) {
                 const managers = await this.employeesRepo.find({ where: { id: In(managerIds) } });
                 managers.forEach(m => managerMap.set(Number(m.id), `${m.firstName} ${m.lastName}`));
             }
 
-            const employeeResponses = employees.map(emp => new EmployeeResponseModel(emp.id, emp.companyId, emp.firstName, emp.lastName, emp.email, emp.departmentId, emp.empStatus, emp.phNumber, emp.billingAmount, emp.remarks, deptMap.get(Number(emp.departmentId)), emp.slackUserId, emp.slackDisplayName, emp.slackAvatar, emp.isSlackActive, emp.managerId, managerMap.get(Number(emp.managerId)) || ''));
+            const userIds = [...new Set(employees.filter(e => e.userId && Number(e.userId) > 0).map(e => Number(e.userId)))];
+            const userRoleMap = new Map<number, string>();
+            if (userIds.length > 0) {
+                const users = await this.dataSource.getRepository(AuthUsersEntity).find({ where: { id: In(userIds) } });
+                users.forEach(u => userRoleMap.set(Number(u.id), u.userRole));
+            }
+
+            const employeeResponses = employees.map(emp => new EmployeeResponseModel(emp.id, emp.companyId, emp.firstName, emp.lastName, emp.email, emp.departmentId, emp.empStatus, emp.phNumber, emp.billingAmount, emp.remarks, deptMap.get(Number(emp.departmentId)), emp.slackUserId, emp.slackDisplayName, emp.slackAvatar, emp.isSlackActive, emp.managerId, managerMap.get(Number(emp.managerId)) || '', userRoleMap.get(Number(emp.userId))));
             return new GetAllEmployeesResponseModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {
             throw error;

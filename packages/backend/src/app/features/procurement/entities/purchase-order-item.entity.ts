@@ -9,9 +9,6 @@ export class PurchaseOrderItemEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'item_name', length: 255 })
     itemName: string;
 
-    @Column('varchar', { name: 'sku', length: 100, nullable: true })
-    sku: string;
-
     @Column('int', { name: 'quantity', default: 1 })
     quantity: number;
 

@@ -11,8 +11,11 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { VendorsMasterEntity } from '../masters/vendor/entities/vendor.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
+import { CompanyInfoEntity } from '../masters/company-info/entities/company-info.entity';
+import { AssetTypeMasterEntity } from '../masters/asset-type/entities/asset-type.entity';
 import { NotificationsService } from '../notifications/notifications.service';
-import { NotificationType } from '@adminvault/shared-models';
+import { NotificationType, SendPOApprovalEmailModel } from '@adminvault/shared-models';
+import { EmailInfoService } from '../administration/email-info.service';
 @Injectable()
 export class ProcurementService {
     constructor(
@@ -20,26 +23,20 @@ export class ProcurementService {
         private poRepo: PurchaseOrderRepository,
         private poItemRepo: PurchaseOrderItemRepository,
         private employeeRepo: EmployeesRepository,
-        private notificationsService: NotificationsService
+        private notificationsService: NotificationsService,
+        @Inject(forwardRef(() => EmailInfoService))
+        private emailInfoService: EmailInfoService
     ) { }
 
-    async createPO(data: CreatePOModel, userId?: number, userEmail?: string, ipAddress?: string): Promise<GlobalResponse> {
+    async createPurchaseOrder(data: CreatePOModel, userId?: number, userEmail?: string, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const employee = await this.employeeRepo.findOne({
-                where: [
-                    { userId: userId },
-                    { email: userEmail }
-                ]
-            });
+            const employee = await this.employeeRepo.findOne({ where: [{ userId: userId }, { email: userEmail }] });
             if (!employee) {
                 throw new ErrorResponse(404, 'Employee profile not found for current user');
             }
 
             await transManager.startTransaction();
-            const repo = transManager.getRepository(PurchaseOrderEntity);
-            const itemRepo = transManager.getRepository(PurchaseOrderItemEntity);
-
             const poNumber = `PO-${Date.now()}`;
             const totalAmount = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
 
@@ -47,19 +44,17 @@ export class ProcurementService {
             po.poNumber = poNumber;
             po.vendorId = data.vendorId;
             po.requesterId = employee.id;
-            po.approverId = data.approverId || null;
-            po.userId = userId || 0;
-            po.companyId = employee.companyId || 0;
-            po.orderDate = data.orderDate ? new Date(data.orderDate) : new Date();
-            po.expectedDeliveryDate = data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate) : null;
-            po.status = POStatusEnum.APPROVED;
+            po.approverId = data.approverId;
+            po.userId = userId;
+            po.companyId = data.companyId;
+            po.orderDate = data.orderDate;
+            po.expectedDeliveryDate = data.expectedDeliveryDate;
+            po.status = POStatusEnum.ORDERED;
             po.totalAmount = totalAmount;
             po.notes = data.notes;
-            po.timeSpentMinutes = data.timeSpentMinutes || 0;
+            po.timeSpentMinutes = data.timeSpentMinutes;
 
-            const savedPO = await repo.save(po);
-
-            // Save items separately (no more cascade via relation)
+            const savedPO = await transManager.getRepository(PurchaseOrderEntity).save(po);
             const itemEntities = data.items.map(i => {
                 const item = new PurchaseOrderItemEntity();
                 item.purchaseOrderId = savedPO.id;
@@ -67,42 +62,37 @@ export class ProcurementService {
                 item.quantity = i.quantity;
                 item.unitPrice = i.unitPrice;
                 item.totalPrice = i.quantity * i.unitPrice;
-                item.sku = i.sku;
                 item.assetTypeId = i.assetTypeId;
                 return item;
             });
-            await itemRepo.save(itemEntities);
-
+            await transManager.getRepository(PurchaseOrderItemEntity).save(itemEntities);
             await transManager.completeTransaction();
-
-
             // Persistent notification for requester
             if (userId) {
-                await this.notificationsService.createNotification(userId, {
-                    title: 'Purchase Order Submitted',
-                    message: `Your PO #${savedPO.poNumber} has been submitted successfully.`,
-                    type: NotificationType.INFO,
-                    category: 'procurement',
-                    link: '/purchase-order'
-                });
+                await this.notificationsService.createNotification(userId, { title: 'Purchase Order Submitted', message: `Your PO #${savedPO.poNumber} has been submitted successfully.`, type: NotificationType.INFO, category: 'procurement', link: '/purchase-order' });
+            }
+
+            // Send email to approver if present
+            if (savedPO.approverId) {
+                const approver = await this.employeeRepo.findOne({ where: { id: savedPO.approverId } });
+                const vendor = await this.dataSource.getRepository(VendorsMasterEntity).findOne({ where: { id: savedPO.vendorId } });
+                if (approver && approver.email) {
+                    await this.emailInfoService.sendPOApprovalEmail(new SendPOApprovalEmailModel(approver.email, `${approver.firstName} ${approver.lastName}`, savedPO.poNumber, `${employee.firstName} ${employee.lastName}`, totalAmount, vendor?.name || 'N/A', savedPO.id
+                    ));
+                }
             }
 
             return new GlobalResponse(true, 201, 'Purchase Order created successfully');
         } catch (error) {
             await transManager.releaseTransaction();
-            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, error.message || 'Failed to create Purchase Order');
+            throw error;
         }
     }
 
     async updatePO(id: number, data: CreatePOModel, userId?: number, userEmail?: string, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const employee = await this.employeeRepo.findOne({
-                where: [
-                    { userId: userId },
-                    { email: userEmail }
-                ]
-            });
+            const employee = await this.employeeRepo.findOne({ where: [{ userId: userId }, { email: userEmail }] });
             if (!employee) {
                 throw new ErrorResponse(404, 'Employee profile not found for current user');
             }
@@ -113,8 +103,6 @@ export class ProcurementService {
                 throw new ErrorResponse(404, 'Purchase Order not found');
             }
 
-            // Only allow updates if not already approved/rejected/etc (optional logic, skipping strict checks for now to allow full edits)
-
             await transManager.startTransaction();
             const transRepo = transManager.getRepository(PurchaseOrderEntity);
             const itemRepo = transManager.getRepository(PurchaseOrderItemEntity);
@@ -122,6 +110,7 @@ export class ProcurementService {
             const totalAmount = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
 
             existingPO.vendorId = data.vendorId;
+            existingPO.companyId = data.companyId || existingPO.companyId;
             existingPO.approverId = data.approverId || existingPO.approverId;
             existingPO.orderDate = data.orderDate ? new Date(data.orderDate) : existingPO.orderDate;
             existingPO.expectedDeliveryDate = data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate) : null;
@@ -133,7 +122,6 @@ export class ProcurementService {
 
             // Replace items entirely
             await itemRepo.delete({ purchaseOrderId: existingPO.id });
-
             const itemEntities = data.items.map(i => {
                 const item = new PurchaseOrderItemEntity();
                 item.purchaseOrderId = existingPO.id;
@@ -141,7 +129,6 @@ export class ProcurementService {
                 item.quantity = i.quantity;
                 item.unitPrice = i.unitPrice;
                 item.totalPrice = i.quantity * i.unitPrice;
-                item.sku = i.sku;
                 item.assetTypeId = i.assetTypeId;
                 return item;
             });
@@ -159,17 +146,16 @@ export class ProcurementService {
 
     async getAllPOs(reqModel: GetAllPOsRequestModel): Promise<GetAllPOsModel> {
         try {
-            // Fetch all POs for employees of this company
+            // Fetch all POs for employees of this company for backward compatibility
             const companyEmployees = await this.dataSource.getRepository(EmployeesEntity).find({
                 where: { companyId: reqModel.companyId }
             });
             const employeeIds = companyEmployees.map(e => e.id);
-            if (employeeIds.length === 0) {
-                return new GetAllPOsModel(true, 200, 'Purchase Orders retrieved successfully', []);
-            }
 
             const pos = await this.poRepo.find({
-                where: { requesterId: In(employeeIds) },
+                where: employeeIds.length > 0
+                    ? [{ companyId: reqModel.companyId }, { requesterId: In(employeeIds) }]
+                    : { companyId: reqModel.companyId },
                 order: { createdAt: 'DESC' }
             });
 
@@ -187,6 +173,12 @@ export class ProcurementService {
                 itemsByPo.get(key).push(i);
             });
 
+            // Fetch asset types for items
+            const assetTypeIds = [...new Set(allItems.map(i => Number(i.assetTypeId)))].filter(id => id > 0);
+            const assetTypeInfos = await this.dataSource.getRepository(AssetTypeMasterEntity).find({ where: { id: In(assetTypeIds) } });
+            const assetTypeMap = new Map<number, string>();
+            assetTypeInfos.forEach(at => assetTypeMap.set(Number(at.id), at.name));
+
             // Fetch auth users (requesters)
             const userIdsToFetch = [...new Set(pos.map(p => Number(p.userId)))].filter(id => !isNaN(id) && id > 0);
             const authUsers = await this.dataSource.getRepository(AuthUsersEntity).find({ where: { id: In(userIdsToFetch) } });
@@ -195,9 +187,9 @@ export class ProcurementService {
 
             // Fetch employees (approvers)
             const employeeIdsToFetch = [...new Set([
-                ...pos.map(p => Number(p.requesterId)), // fallback
+                ...pos.filter(p => p.requesterId).map(p => Number(p.requesterId)), // fallback
                 ...pos.filter(p => p.approverId).map(p => Number(p.approverId))
-            ])].filter(id => !isNaN(id));
+            ])].filter(id => !isNaN(id) && id > 0);
             const employees = await this.dataSource.getRepository(EmployeesEntity).find({ where: { id: In(employeeIdsToFetch) } });
             const employeeMap = new Map<number, string>();
             employees.forEach(e => employeeMap.set(Number(e.id), `${e.firstName} ${e.lastName}`));
@@ -208,16 +200,26 @@ export class ProcurementService {
             const vendorMap = new Map<number, string>();
             vendors.forEach(v => vendorMap.set(Number(v.id), v.name));
 
+            // Fetch companies
+            const companyIds = [...new Set(pos.filter(p => p.companyId).map(p => Number(p.companyId)))].filter(id => id > 0);
+            const companyInfos = await this.dataSource.getRepository(CompanyInfoEntity).find({ where: { id: In(companyIds) } });
+            const companyMap = new Map<number, string>();
+            companyInfos.forEach(c => companyMap.set(Number(c.id), c.companyName));
+
             const responses = pos.map(p => new PurchaseOrderModel(
                 p.id, p.poNumber, p.vendorId, p.requesterId, p.orderDate, p.status, p.totalAmount, p.createdAt,
-                (itemsByPo.get(Number(p.id)) || []).map(i => new POItemModel(i.itemName, i.quantity, i.unitPrice, i.sku, i.assetTypeId)),
+                (itemsByPo.get(Number(p.id)) || []).map((i: PurchaseOrderItemEntity) => new POItemModel(
+                    i.itemName, i.quantity, i.unitPrice, i.assetTypeId,
+                    i.assetTypeId ? assetTypeMap.get(Number(i.assetTypeId)) : undefined
+                )),
                 vendorMap.get(Number(p.vendorId)) || undefined, // vendor name mapped
                 userMap.get(Number(p.userId)) || employeeMap.get(Number(p.requesterId)) || null,
                 p.expectedDeliveryDate,
                 p.notes,
                 p.timeSpentMinutes,
                 p.approverId || undefined,
-                p.approverId ? employeeMap.get(Number(p.approverId)) || undefined : undefined
+                p.approverId ? employeeMap.get(Number(p.approverId)) || undefined : undefined,
+                companyMap.get(Number(p.companyId)) || undefined
             ));
 
             return new GetAllPOsModel(true, 200, 'Purchase Orders retrieved successfully', responses);
@@ -261,16 +263,33 @@ export class ProcurementService {
                 if (vendor) vendorName = vendor.name;
             }
 
+            // Fetch company name separately
+            let companyName: string | undefined = undefined;
+            if (p.companyId) {
+                const company = await this.dataSource.getRepository(CompanyInfoEntity).findOne({ where: { id: Number(p.companyId) } });
+                if (company) companyName = company.companyName;
+            }
+
+            // Fetch asset types for items
+            const itemAssetTypeIds = [...new Set(items.map(i => Number(i.assetTypeId)))].filter(id => id > 0);
+            const itemAssetTypes = await this.dataSource.getRepository(AssetTypeMasterEntity).find({ where: { id: In(itemAssetTypeIds) } });
+            const itemAssetTypeMap = new Map<number, string>();
+            itemAssetTypes.forEach(at => itemAssetTypeMap.set(Number(at.id), at.name));
+
             const response = new PurchaseOrderModel(
                 p.id, p.poNumber, p.vendorId, p.requesterId, p.orderDate, p.status, p.totalAmount, p.createdAt,
-                items.map(i => new POItemModel(i.itemName, i.quantity, i.unitPrice, i.sku, i.assetTypeId)),
+                items.map(i => new POItemModel(
+                    i.itemName, i.quantity, i.unitPrice, i.assetTypeId,
+                    i.assetTypeId ? itemAssetTypeMap.get(Number(i.assetTypeId)) : undefined
+                )),
                 vendorName, // vendor name mapped
                 requesterName,
                 p.expectedDeliveryDate,
                 p.notes,
                 p.timeSpentMinutes,
                 p.approverId || undefined,
-                approverName
+                approverName,
+                companyName
             );
 
             return new GetPOByIdModel(true, 200, 'Purchase Order retrieved successfully', response);

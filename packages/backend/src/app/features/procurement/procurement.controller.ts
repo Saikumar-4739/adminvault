@@ -11,14 +11,14 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 export class ProcurementController {
     constructor(private readonly service: ProcurementService) { }
 
-    @Post('createPO')
+    @Post('createPurchaseOrder')
     @ApiBody({ type: CreatePOModel })
     async createPO(@Body() data: CreatePOModel, @Req() req: any): Promise<GlobalResponse> {
         try {
             const userId = req.user?.id || req.user?.userId;
             const userEmail = req.user?.email;
             const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.service.createPO(data, userId, userEmail, ipAddress);
+            return await this.service.createPurchaseOrder(data, userId, userEmail, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

@@ -115,6 +115,7 @@ export class EmployeeResponseModel {
     isSlackActive?: boolean;
     managerId?: number | null;
     managerName?: string;
+    userRole?: string;
 
     constructor(
         id: number,
@@ -133,7 +134,8 @@ export class EmployeeResponseModel {
         slackAvatar?: string,
         isSlackActive?: boolean,
         managerId?: number | null,
-        managerName?: string
+        managerName?: string,
+        userRole?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -152,6 +154,7 @@ export class EmployeeResponseModel {
         this.isSlackActive = isSlackActive;
         this.managerId = managerId;
         this.managerName = managerName;
+        this.userRole = userRole;
     }
 }
 

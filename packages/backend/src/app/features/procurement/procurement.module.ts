@@ -10,9 +10,10 @@ import { PurchaseOrderRepository } from './repositories/purchase-order.repositor
 import { PurchaseOrderItemRepository } from './repositories/purchase-order-item.repository';
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AdministrationModule } from '../administration/administration.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([PurchaseOrderEntity, PurchaseOrderItemEntity, EmployeesEntity, VendorsMasterEntity]), NotificationsModule],
+    imports: [TypeOrmModule.forFeature([PurchaseOrderEntity, PurchaseOrderItemEntity, EmployeesEntity, VendorsMasterEntity]), NotificationsModule, forwardRef(() => AdministrationModule)],
     controllers: [ProcurementController],
     providers: [ProcurementService, PurchaseOrderRepository, PurchaseOrderItemRepository, EmployeesRepository],
     exports: [ProcurementService]

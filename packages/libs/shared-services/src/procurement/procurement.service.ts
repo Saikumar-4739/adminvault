@@ -7,8 +7,8 @@ export class ProcurementService extends CommonAxiosService {
         return '/procurement/' + childUrl;
     }
 
-    async createPO(model: CreatePOModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
-        return await this.axiosPostCall(this.getURL('createPO'), model, config);
+    async createPurchaseOrder(model: CreatePOModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURL('createPurchaseOrder'), model, config);
     }
 
     async updatePO(id: number, model: CreatePOModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
