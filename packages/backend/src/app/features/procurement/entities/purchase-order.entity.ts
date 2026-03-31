@@ -35,4 +35,7 @@ export class PurchaseOrderEntity extends CommonBaseEntity {
 
     @Column('int', { name: 'time_spent_minutes', default: 0 })
     timeSpentMinutes: number;
+
+    @Column('varchar', { name: 'invoice_url', length: 500, nullable: true })
+    invoiceUrl: string;
 }

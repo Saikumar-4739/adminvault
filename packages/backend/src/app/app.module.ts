@@ -20,7 +20,6 @@ import { AuditLogModule } from './features/audit-log/audit-log.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
 import { OnboardingModule } from './features/onboarding/onboarding.module';
 import { ContractModule } from './features/contracts/contract.module';
-import { DeviceHealthModule } from './features/device-health/device-health.module';
 import configuration from '../config/configuration';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -56,7 +55,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     NotificationsModule,
     OnboardingModule,
     ContractModule,
-    DeviceHealthModule,
     EventEmitterModule.forRoot(),
     WebSocketModule,
     NetworkModule,

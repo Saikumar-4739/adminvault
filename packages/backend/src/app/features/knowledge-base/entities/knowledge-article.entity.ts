@@ -23,4 +23,7 @@ export class KnowledgeArticleEntity extends CommonBaseEntity {
     @Column({ default: 0 })
     viewCount: number;
 
+    @Column({ type: 'varchar', length: 500, nullable: true })
+    fileUrl: string;
+
 }

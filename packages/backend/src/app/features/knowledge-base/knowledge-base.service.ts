@@ -3,18 +3,34 @@ import { KnowledgeItemsRepository } from './repositories/knowledge-items.reposit
 import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, GetKnowledgeArticleResponseModel, GetAllKnowledgeArticlesResponseModel, GetKnowledgeBaseStatsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { ErrorResponse } from '@adminvault/backend-utils';
 import { AuthUsersService } from '../auth-users/auth-users.service';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class KnowledgeBaseService {
+    private readonly uploadPath = path.resolve(__dirname, '../../../../../../uploads/knowledge-base');
+
     constructor(
         private repo: KnowledgeItemsRepository,
         private authService: AuthUsersService
-    ) { }
+    ) {
+        if (!fs.existsSync(this.uploadPath)) {
+            fs.mkdirSync(this.uploadPath, { recursive: true });
+        }
+    }
 
-    async createArticle(reqModel: CreateArticleRequestModel): Promise<GlobalResponse> {
+    async createArticle(reqModel: CreateArticleRequestModel, file?: Express.Multer.File): Promise<GlobalResponse> {
         try {
             await this.authService.getMe(reqModel.authorId);
-            const entity = this.repo.create({ ...reqModel, userId: reqModel.authorId, viewCount: 0 });
+            let fileUrl = '';
+            if (file) {
+                const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+                const fileName = `${Date.now()}-${sanitizedOriginalName}`;
+                const filePath = path.join(this.uploadPath, fileName);
+                fs.writeFileSync(filePath, file.buffer);
+                fileUrl = fileName; // We store just the filename, frontend can construct the download URL
+            }
+            const entity = this.repo.create({ ...reqModel, userId: reqModel.authorId, viewCount: 0, fileUrl });
             await this.repo.save(entity);
             return new GlobalResponse(true, 201, 'Article created successfully');
         } catch (error) {
@@ -22,13 +38,26 @@ export class KnowledgeBaseService {
         }
     }
 
-    async updateArticle(reqModel: UpdateArticleRequestModel): Promise<GlobalResponse> {
+    async updateArticle(reqModel: UpdateArticleRequestModel, file?: Express.Multer.File): Promise<GlobalResponse> {
         try {
             const existing = await this.repo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
                 throw new ErrorResponse(404, 'Article not found');
             }
-            await this.repo.update(reqModel.id, reqModel);
+            let fileUrl = existing.fileUrl;
+            if (file) {
+                // Delete old file if exists
+                if (existing.fileUrl) {
+                    const oldPath = path.join(this.uploadPath, existing.fileUrl);
+                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                }
+                const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+                const fileName = `${Date.now()}-${sanitizedOriginalName}`;
+                const filePath = path.join(this.uploadPath, fileName);
+                fs.writeFileSync(filePath, file.buffer);
+                fileUrl = fileName;
+            }
+            await this.repo.update(reqModel.id, { ...reqModel, fileUrl });
             return new GlobalResponse(true, 200, 'Article updated successfully');
         } catch (error) {
             throw error;
@@ -81,4 +110,12 @@ export class KnowledgeBaseService {
             throw error;
         }
     }
-}   
+
+    getAttachmentPath(fileName: string): string {
+        const filePath = path.join(this.uploadPath, fileName);
+        if (!fs.existsSync(filePath)) {
+            throw new ErrorResponse(404, 'File not found');
+        }
+        return filePath;
+    }
+}

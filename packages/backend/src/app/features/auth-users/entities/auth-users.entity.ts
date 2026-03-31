@@ -50,6 +50,9 @@ export class AuthUsersEntity {
   @Column('timestamp', { name: 'reset_token_expiry', nullable: true, comment: 'Expiry for reset token' })
   resetTokenExpiry: Date;
 
+  @Column('timestamp', { name: 'password_changed_at', nullable: true, comment: 'Timestamp of last password change' })
+  passwordChangedAt: Date;
+
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', comment: 'Record last update timestamp' })
   updatedAt: Date;
 }

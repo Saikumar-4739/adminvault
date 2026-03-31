@@ -34,6 +34,10 @@ export class RemoteService {
             newRemote.userId = reqModel.createdBy; // Map createdBy to userId
             newRemote.remoteTool = reqModel.remoteToolName;
             newRemote.username = reqModel.userName;
+            newRemote.userFullname = reqModel.userFullname;
+            newRemote.deviceSerialNumber = reqModel.deviceSerialNumber;
+            newRemote.ipAddress = reqModel.ipAddress;
+            newRemote.recoveryEmail = reqModel.recoveryEmail;
             newRemote.password = reqModel.password;
             newRemote.notes = reqModel.notes;
             newRemote.isActive = reqModel.isActive ?? true;
@@ -67,6 +71,10 @@ export class RemoteService {
                 companyId: 0, // Default or fetch if available
                 remoteToolName: remote.remoteTool,
                 userName: remote.username,
+                userFullname: remote.userFullname,
+                deviceSerialNumber: remote.deviceSerialNumber,
+                ipAddress: remote.ipAddress,
+                recoveryEmail: remote.recoveryEmail,
                 password: remote.password,
                 notes: remote.notes,
                 isActive: remote.isActive,
@@ -103,6 +111,10 @@ export class RemoteService {
             const updateData: Partial<RemoteMasterEntity> = {
                 remoteTool: reqModel.remoteToolName,
                 username: reqModel.userName,
+                userFullname: reqModel.userFullname,
+                deviceSerialNumber: reqModel.deviceSerialNumber,
+                ipAddress: reqModel.ipAddress,
+                recoveryEmail: reqModel.recoveryEmail,
                 password: reqModel.password,
                 notes: reqModel.notes,
                 isActive: reqModel.isActive

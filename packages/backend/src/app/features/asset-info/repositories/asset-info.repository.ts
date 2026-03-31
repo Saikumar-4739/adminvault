@@ -16,7 +16,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
         const companyId = reqModel.id;
         return await this.createQueryBuilder('asset')
             .leftJoin('asset_types', 'device', 'asset.device_id = device.id')
-            .leftJoin('device_brands', 'brand', 'asset.brand_id = brand.id')
+            .leftJoin('device_configs', 'brand', 'asset.device_config_id = brand.id')
             .leftJoin('employees', 'pastUser', 'asset.previous_user_employee_id = pastUser.id')
             .leftJoin('employees', 'presentUser', 'asset.assigned_to_employee_id = presentUser.id')
             .where('asset.company_id = :companyId', { companyId })
@@ -55,7 +55,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'asset.id as "id"',
                 'asset.company_id as "companyId"',
                 'asset.device_id as "deviceId"',
-                'asset.brand_id as "brandId"',
+                'asset.device_config_id as "deviceConfigId"',
                 'asset.model as "model"',
                 'asset.configuration as "configuration"',
                 'asset.serial_number as "serialNumber"',
@@ -112,7 +112,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'asset.id as "id"',
                 'asset.company_id as "companyId"',
                 'asset.device_id as "deviceId"',
-                'asset.brand_id as "brandId"',
+                'asset.device_config_id as "deviceConfigId"',
                 'asset.model as "model"',
                 'asset.configuration as "configuration"',
                 'asset.serial_number as "serialNumber"',
@@ -146,8 +146,8 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             query.andWhere('asset.asset_status_enum IN (:...statuses)', { statuses });
         }
 
-        if (reqModel.brandIds && reqModel.brandIds.length > 0) {
-            query.andWhere('asset.brand_id IN (:...brandIds)', { brandIds: reqModel.brandIds });
+        if (reqModel.deviceConfigIds && reqModel.deviceConfigIds.length > 0) {
+            query.andWhere('asset.device_config_id IN (:...deviceConfigIds)', { deviceConfigIds: reqModel.deviceConfigIds });
         }
 
         if (reqModel.assetTypeIds && reqModel.assetTypeIds.length > 0) {

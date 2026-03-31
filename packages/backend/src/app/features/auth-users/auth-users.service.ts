@@ -48,7 +48,6 @@ const DEFAULT_MENUS = [
         roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN],
         children: [
             { key: 'assets', label: 'Hardware Assets', icon: 'Monitor', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
-            { key: 'device-health', label: 'Device Health (MDM)', icon: 'Cpu', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
             { key: 'licenses', label: 'Software Licenses', icon: 'Key', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'procurement', label: 'Procurement', icon: 'ShoppingCart', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] }
         ]
@@ -72,7 +71,7 @@ const DEFAULT_MENUS = [
             { key: 'users-management', label: 'Authentication', icon: 'UserCheck', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             // { key: 'security-center', label: 'Security Center', icon: 'ShieldAlert', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
             // { key: 'audit-logs', label: 'Audit Logs', icon: 'History', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
-            { key: 'masters?view=credential-vault', label: 'Credential Vault', icon: 'Lock', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
+            { key: 'credential-vault', label: 'Credential Vault', icon: 'Lock', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
 
         ]
     },
@@ -143,6 +142,7 @@ export class AuthUsersService {
             newUser.userRole = reqModel.role
             newUser.status = true
             newUser.employeeId = employeeId
+            newUser.passwordChangedAt = new Date()
             await transManager.getRepository(AuthUsersEntity).save(newUser)
             await transManager.getRepository(AccessRequestEntity).update({ email: reqModel.email }, { status: AccessRequestStatus.COMPLETED })
             await transManager.completeTransaction()
@@ -164,6 +164,26 @@ export class AuthUsersService {
     async loginUser(reqModel: LoginUserModel, req?: Request): Promise<LoginResponseModel> {
         try {
             const user = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
+            if (!user) {
+                throw new ErrorResponse(401, "Invalid credentials");
+            }
+
+            // Check Password Expiry
+            if (user.passwordChangedAt) {
+                const now = new Date();
+                const diffTime = Math.abs(now.getTime() - user.passwordChangedAt.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                const adminRoles = [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN];
+                const isItemAdmin = adminRoles.includes(user.userRole);
+
+                const expiryLimitDays = isItemAdmin ? 1 : 7;
+
+                if (diffDays > expiryLimitDays) {
+                    throw new ErrorResponse(401, `Password expired (${isItemAdmin ? '1 day' : '7 days'} limit). Please reset your password.`);
+                }
+            }
+
             const payload = { username: user.email, email: user.email, sub: user.id, companyId: user.companyId, role: user.userRole };
             const accessToken = this.generateAccessToken(payload);
             const refreshToken = this.generateRefreshToken({ ...payload, sub: user.id });
@@ -420,6 +440,7 @@ export class AuthUsersService {
             // Optionally clear reset token fields if they were used in a mixed flow, though not strictly necessary here
             user.resetToken = null;
             user.resetTokenExpiry = null;
+            user.passwordChangedAt = new Date();
             await this.authUsersRepo.save(user);
 
             return new GlobalResponse(true, 200, "Password has been reset successfully.");

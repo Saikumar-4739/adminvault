@@ -693,7 +693,7 @@ const EmployeesPage: React.FC = () => {
                                 onChange={(e) => setFormData({ ...formData, accountStatus: e.target.value })}
                                 options={[{ value: EmployeeStatusEnum.ACTIVE, label: 'Active' }, { value: EmployeeStatusEnum.INACTIVE, label: 'Inactive' }]}
                             />
-                            <Input label="Billing Amount" type="number" step="0.01" value={formData.billingAmount} onChange={(e) => setFormData({ ...formData, billingAmount: e.target.value })} />
+                            <Input label="Billing Amount ($)" type="number" step="0.01" value={formData.billingAmount} onChange={(e) => setFormData({ ...formData, billingAmount: e.target.value })} />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Additional Remarks</label>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-    Package, LayoutDashboard, ChevronLeft, ChevronRight, Cpu, Settings2,
+    Package, LayoutDashboard, ChevronLeft, ChevronRight, Settings2,
     BarChart3, Mail, Users, Laptop, ShoppingCart, Key, Network,
     ShieldCheck, Ticket, PlusCircle, UserCircle, BookOpen, CheckSquare,
     Library, Globe, HelpCircle, LayoutGrid, Slack, Contact, Monitor,
@@ -171,11 +171,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
         `}>
             <div className={`h-16 flex items-center px-6 border-b border-slate-900`}>
                 <div className="flex items-center gap-3 w-full">
-                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
-                        <Cpu className="h-5 w-5" />
+                    <div className="w-8 h-8 flex items-center justify-center text-white shrink-0 overflow-hidden">
+                        <img src="/bos-logo.svg" alt="Logo" className="h-8 w-8 object-contain" />
                     </div>
                     <h1 className="text-lg font-black text-white tracking-tight flex-1">
-                        AdminVault
+                        BOS Vault
                     </h1>
                     <button onClick={onClose} className="lg:hidden p-1 rounded-md hover:bg-slate-800 text-slate-400">
                         <ChevronLeft className="h-5 w-5" />

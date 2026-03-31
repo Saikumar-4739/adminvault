@@ -107,10 +107,10 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
 
             let res;
             if (initialPO) {
-                const model = new UpdatePOModel(initialPO.id, user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined);
+                const model = new UpdatePOModel(initialPO.id, user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined, initialPO.invoiceUrl);
                 res = await procurementService.updatePurchaseOrder(model);
             } else {
-                const model = new CreatePOModel(user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined);
+                const model = new CreatePOModel(user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined, undefined);
                 res = await procurementService.createPurchaseOrder(model);
             }
 

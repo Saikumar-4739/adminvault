@@ -23,7 +23,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '', companyId: '', isActive: true });
+    const [formData, setFormData] = useState({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '', companyId: '', category: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const lastFetchedCompanyId = useRef<number | null>(null);
@@ -58,7 +58,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
         try {
             const companyIdToUse = Number(formData.companyId) || user.companyId;
             if (isEditMode && editingId) {
-                const model = new UpdateVendorModel(editingId, formData.name, formData.description, formData.isActive, formData.contactPerson, formData.email, formData.phone, formData.address, companyIdToUse);
+                const model = new UpdateVendorModel(editingId, formData.name, formData.description, formData.isActive, formData.contactPerson, formData.email, formData.phone, formData.address, companyIdToUse, formData.category);
                 const response = await vendorService.updateVendor(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -68,7 +68,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateVendorModel(user.id, companyIdToUse, formData.name, formData.description, formData.isActive ?? true, formData.contactPerson, formData.email, formData.phone, formData.address);
+                const model = new CreateVendorModel(user.id, companyIdToUse, formData.name, formData.description, formData.isActive ?? true, formData.contactPerson, formData.email, formData.phone, formData.address, formData.category);
                 const response = await vendorService.createVendor(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -94,6 +94,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
             phone: item.phone || '',
             address: item.address || '',
             companyId: item.companyId?.toString() || '',
+            category: item.category || '',
             isActive: item.isActive ?? true
         });
         setIsModalOpen(true);
@@ -124,7 +125,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '', companyId: '', isActive: true });
+        setFormData({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '', companyId: '', category: '', isActive: true });
     };
 
     return (
@@ -151,6 +152,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Name</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Contact Person</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Phone</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Category</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                 </tr>
@@ -164,6 +166,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.contactPerson || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.phone || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm italic text-slate-500">{item.category || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${item.isActive
                                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
@@ -195,6 +198,7 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input label="Vendor Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-14" required />
+                        <Input label="Category" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="h-14" />
                     </div>
 
 

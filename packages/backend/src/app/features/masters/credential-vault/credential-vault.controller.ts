@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { CredentialVaultService } from './credential-vault.service';
 import { CreateCredentialVaultModel, UpdateCredentialVaultModel, GetAllCredentialVaultResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
@@ -58,5 +58,15 @@ export class CredentialVaultController {
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
+    }
+
+    @Get('list')
+    async list() {
+        return this.vaultService.getAllCredentialVaults();
+    }
+
+    @Get('reveal/:id')
+    async reveal(@Param('id') id: number) {
+        return this.vaultService.getCredentialVault({ id });
     }
 }

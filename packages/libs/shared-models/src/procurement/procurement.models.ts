@@ -10,6 +10,7 @@ export class CreatePOModel extends CommonRequestModel {
     notes?: string;
     timeSpentMinutes?: number;
     approverId?: number;
+    invoiceUrl?: string;
 
     constructor(
         username: string,
@@ -22,7 +23,8 @@ export class CreatePOModel extends CommonRequestModel {
         expectedDeliveryDate?: Date,
         notes?: string,
         timeSpentMinutes?: number,
-        approverId?: number
+        approverId?: number,
+        invoiceUrl?: string
     ) {
         super(username, userId, ipAddress, companyId);
         this.vendorId = vendorId;
@@ -32,6 +34,7 @@ export class CreatePOModel extends CommonRequestModel {
         this.notes = notes;
         this.timeSpentMinutes = timeSpentMinutes;
         this.approverId = approverId;
+        this.invoiceUrl = invoiceUrl;
     }
 }
 
@@ -75,8 +78,9 @@ export class UpdatePOModel extends CreatePOModel {
         notes?: string,
         timeSpentMinutes?: number,
         approverId?: number,
+        invoiceUrl?: string,
     ) {
-        super(username, userId, ipAddress, companyId, vendorId, orderDate, items, expectedDeliveryDate, notes, timeSpentMinutes, approverId);
+        super(username, userId, ipAddress, companyId, vendorId, orderDate, items, expectedDeliveryDate, notes, timeSpentMinutes, approverId, invoiceUrl);
         this.id = id;
     }
 }
@@ -128,6 +132,7 @@ export class PurchaseOrderModel {
     approverId?: number;
     approverName?: string;
     companyName?: string;
+    invoiceUrl?: string;
 
     constructor(
         id: number,
@@ -146,7 +151,8 @@ export class PurchaseOrderModel {
         timeSpentMinutes?: number,
         approverId?: number,
         approverName?: string,
-        companyName?: string
+        companyName?: string,
+        invoiceUrl?: string
     ) {
         this.id = id;
         this.poNumber = poNumber;
@@ -165,6 +171,7 @@ export class PurchaseOrderModel {
         this.approverId = approverId;
         this.approverName = approverName;
         this.companyName = companyName;
+        this.invoiceUrl = invoiceUrl;
     }
 }
 

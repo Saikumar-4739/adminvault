@@ -9,8 +9,8 @@ export class AssetInfoEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'device_id', nullable: false, comment: 'Reference to device_info table' })
     deviceId: number;
 
-    @Column('bigint', { name: 'brand_id', nullable: true, comment: 'Reference to brand master table' })
-    brandId: number;
+    @Column('bigint', { name: 'device_config_id', nullable: true, comment: 'Reference to device_configurations master table' })
+    deviceConfigId: number;
 
     @Column('varchar', { name: 'model', length: 255, nullable: true, comment: 'Asset model' })
     model: string;

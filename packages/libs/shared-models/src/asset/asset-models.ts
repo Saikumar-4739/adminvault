@@ -4,7 +4,7 @@ import { AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '../
 export class CreateAssetModel {
     companyId: number;
     deviceId: number;
-    brandId?: number;
+    deviceConfigId?: number;
     model?: string;
     serialNumber: string;
     boxNo?: string;
@@ -34,7 +34,7 @@ export class CreateAssetModel {
         assetStatusEnum: AssetStatusEnum,
         purchaseDate?: string,
         warrantyExpiry?: string,
-        brandId?: number,
+        deviceConfigId?: number,
         model?: string,
         configuration?: string,
         assignedToEmployeeId?: number,
@@ -55,7 +55,7 @@ export class CreateAssetModel {
     ) {
         this.companyId = companyId;
         this.deviceId = deviceId;
-        this.brandId = brandId;
+        this.deviceConfigId = deviceConfigId;
         this.model = model;
         this.serialNumber = serialNumber;
         this.boxNo = boxNo;
@@ -90,7 +90,7 @@ export class UpdateAssetModel extends CreateAssetModel {
         assetStatusEnum: AssetStatusEnum = AssetStatusEnum.AVAILABLE,
         purchaseDate?: string,
         warrantyExpiry?: string,
-        brandId?: number,
+        deviceConfigId?: number,
         model?: string,
         configuration?: string,
         assignedToEmployeeId?: number,
@@ -109,7 +109,7 @@ export class UpdateAssetModel extends CreateAssetModel {
         usefulLifeYears?: number,
         salvageValue?: number
     ) {
-        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, brandId, model, configuration, assignedToEmployeeId, previousUserEmployeeId, userAssignedDate, lastReturnDate, boxNo, complianceStatus, lastSync, encryptionStatus, batteryLevel, storageAvailable, purchaseCost, currentValue, depreciationMethod, usefulLifeYears, salvageValue);
+        super(companyId, deviceId, serialNumber, assetStatusEnum, purchaseDate, warrantyExpiry, deviceConfigId, model, configuration, assignedToEmployeeId, previousUserEmployeeId, userAssignedDate, lastReturnDate, boxNo, complianceStatus, lastSync, encryptionStatus, batteryLevel, storageAvailable, purchaseCost, currentValue, depreciationMethod, usefulLifeYears, salvageValue);
         this.id = id;
     }
 }
@@ -132,7 +132,7 @@ export class AssetResponseModel {
     id: number;
     companyId: number;
     deviceId: number;
-    brandId?: number;
+    deviceConfigId?: number;
     model?: string;
     serialNumber: string;
     boxNo?: string;
@@ -167,7 +167,7 @@ export class AssetResponseModel {
         updatedAt: Date,
         purchaseDate?: Date,
         warrantyExpiry?: Date,
-        brandId?: number,
+        deviceConfigId?: number,
         model?: string,
         configuration?: string,
         assignedToEmployeeId?: number,
@@ -189,7 +189,7 @@ export class AssetResponseModel {
         this.id = id;
         this.companyId = companyId;
         this.deviceId = deviceId;
-        this.brandId = brandId;
+        this.deviceConfigId = deviceConfigId;
         this.model = model;
         this.serialNumber = serialNumber;
         this.boxNo = boxNo;
@@ -265,7 +265,7 @@ export class AssetSearchRequestModel {
     companyId: number;
     searchQuery?: string;
     statusFilter?: AssetStatusEnum[];
-    brandIds?: number[];
+    deviceConfigIds?: number[];
     assetTypeIds?: number[];
     employeeId?: number;
     purchaseDateFrom?: Date;
@@ -274,7 +274,7 @@ export class AssetSearchRequestModel {
         companyId: number,
         searchQuery?: string,
         statusFilter?: AssetStatusEnum[],
-        brandIds?: number[],
+        deviceConfigIds?: number[],
         assetTypeIds?: number[],
         employeeId?: number,
         purchaseDateFrom?: Date,
@@ -283,7 +283,7 @@ export class AssetSearchRequestModel {
         this.companyId = companyId;
         this.searchQuery = searchQuery;
         this.statusFilter = statusFilter;
-        this.brandIds = brandIds;
+        this.deviceConfigIds = deviceConfigIds;
         this.assetTypeIds = assetTypeIds;
         this.employeeId = employeeId;
         this.purchaseDateFrom = purchaseDateFrom;

@@ -7,12 +7,48 @@ export class KnowledgeBaseService extends CommonAxiosService {
         return '/knowledge-base/' + childUrl;
     }
 
-    async createArticle(reqObj: CreateArticleRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+    async createArticle(reqObj: CreateArticleRequestModel, file?: File, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            Object.keys(reqObj).forEach(key => {
+                const value = (reqObj as any)[key];
+                if (Array.isArray(value)) {
+                    value.forEach(v => formData.append(key, v));
+                } else if (value !== undefined) {
+                    formData.append(key, value.toString());
+                }
+            });
+            return await this.axiosPostCall(this.getURLwithMainEndPoint('createArticle'), formData, {
+                ...config,
+                headers: { ...config?.headers, 'Content-Type': 'multipart/form-data' }
+            });
+        }
         return await this.axiosPostCall(this.getURLwithMainEndPoint('createArticle'), reqObj, config);
     }
 
-    async updateArticle(reqObj: UpdateArticleRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+    async updateArticle(reqObj: UpdateArticleRequestModel, file?: File, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            Object.keys(reqObj).forEach(key => {
+                const value = (reqObj as any)[key];
+                if (Array.isArray(value)) {
+                    value.forEach(v => formData.append(key, v));
+                } else if (value !== undefined) {
+                    formData.append(key, value.toString());
+                }
+            });
+            return await this.axiosPostCall(this.getURLwithMainEndPoint('updateArticle'), formData, {
+                ...config,
+                headers: { ...config?.headers, 'Content-Type': 'multipart/form-data' }
+            });
+        }
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateArticle'), reqObj, config);
+    }
+
+    getAttachmentUrl(fileName: string): string {
+        return `${this.URL}${this.getURLwithMainEndPoint(`download/${fileName}`)}`;
     }
 
     async deleteArticle(reqObj: IdRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {

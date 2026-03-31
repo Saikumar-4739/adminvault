@@ -5,7 +5,7 @@ import { Check } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { AssetStatusEnum } from '@adminvault/shared-models';
-import { brandService, assetTypeService } from '@/lib/api/services';
+import { deviceConfigService, assetTypeService } from '@/lib/api/services';
 
 interface AdvancedFilterModalProps {
     isOpen: boolean;
@@ -19,24 +19,24 @@ interface AdvancedFilterModalProps {
 }
 
 export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, onClose, onApply, initialFilters }: AdvancedFilterModalProps) => {
-    const [brands, setBrands] = useState<any[]>([]);
+    const [deviceConfigs, setDeviceConfigs] = useState<any[]>([]);
     const [assetTypes, setAssetTypes] = useState<any[]>([]);
     const [localFilters, setLocalFilters] = useState<any>({
-        brandIds: [],
+        deviceConfigIds: [],
         assetTypeIds: [],
         statusFilter: [],
         purchaseDateFrom: '',
         purchaseDateTo: ''
     });
 
-    const fetchBrands = useCallback(async () => {
+    const fetchDeviceConfigs = useCallback(async () => {
         try {
-            const response = await brandService.getAllBrands();
+            const response = await deviceConfigService.getAllDeviceConfigs();
             if (response.status) {
-                setBrands(response.brands || []);
+                setDeviceConfigs(response.deviceConfigs || []);
             }
         } catch (error) {
-            console.error('Failed to fetch brands:', error);
+            console.error('Failed to fetch device configurations:', error);
         }
     }, []);
 
@@ -54,16 +54,16 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen
     useEffect(() => {
         if (isOpen) {
             setLocalFilters({
-                brandIds: initialFilters.brandIds || [],
+                deviceConfigIds: initialFilters.deviceConfigIds || [],
                 assetTypeIds: initialFilters.assetTypeIds || [],
                 statusFilter: initialFilters.statusFilter || [],
                 purchaseDateFrom: initialFilters.purchaseDateFrom || '',
                 purchaseDateTo: initialFilters.purchaseDateTo || ''
             });
-            fetchBrands();
+            fetchDeviceConfigs();
             fetchAssetTypes();
         }
-    }, [isOpen, initialFilters, fetchBrands, fetchAssetTypes]);
+    }, [isOpen, initialFilters, fetchDeviceConfigs, fetchAssetTypes]);
 
     const handleStatusToggle = (status: AssetStatusEnum) => {
         setLocalFilters((prev: any) => {
@@ -76,13 +76,13 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen
         });
     };
 
-    const handleBrandToggle = (id: number) => {
+    const handleDeviceConfigToggle = (id: number) => {
         setLocalFilters((prev: any) => {
-            const current = prev.brandIds || [];
+            const current = prev.deviceConfigIds || [];
             if (current.includes(id)) {
-                return { ...prev, brandIds: current.filter((i: number) => i !== id) };
+                return { ...prev, deviceConfigIds: current.filter((i: number) => i !== id) };
             } else {
-                return { ...prev, brandIds: [...current, id] };
+                return { ...prev, deviceConfigIds: [...current, id] };
             }
         });
     };
@@ -105,7 +105,7 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen
 
     const handleClear = () => {
         setLocalFilters({
-            brandIds: [],
+            deviceConfigIds: [],
             assetTypeIds: [],
             statusFilter: [],
             purchaseDateFrom: '',
@@ -165,23 +165,23 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen
                     </div>
                 </div>
 
-                {/* Brands Section */}
+                {/* Device Configurations Section */}
                 <div>
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Brands</h3>
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Device Configurations</h3>
                     <div className="flex flex-wrap gap-2">
-                        {brands.map((brand: any) => (
+                        {deviceConfigs.map((config: any) => (
                             <button
-                                key={brand.id}
-                                onClick={() => handleBrandToggle(brand.id)}
+                                key={config.id}
+                                onClick={() => handleDeviceConfigToggle(config.id)}
                                 className={`
                                     flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors
-                                    ${localFilters.brandIds?.includes(brand.id)
+                                    ${localFilters.deviceConfigIds?.includes(config.id)
                                         ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300'
                                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700'}
                                 `}
                             >
-                                {localFilters.brandIds?.includes(brand.id) && <Check className="h-3 w-3" />}
-                                {brand.name || brand.brandName}
+                                {localFilters.deviceConfigIds?.includes(config.id) && <Check className="h-3 w-3" />}
+                                {config.name || config.laptopCompany}
                             </button>
                         ))}
                     </div>

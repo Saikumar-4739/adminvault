@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
-import { Lock, Mail, Shield, Eye, EyeOff, ArrowRight, Sparkles, Users, Moon, Sun, BookOpen, Package, BarChart3, Key, Ticket } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, ArrowRight, Users, BookOpen, Package, Key, Ticket } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { LoginUserModel } from '@adminvault/shared-models';
 import Link from 'next/link';
@@ -14,7 +14,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 const LoginPage: React.FC = () => {
     const router = useRouter();
     const { login, isLoading, isAuthenticated } = useAuth();
-    const { isDarkMode, toggleDarkMode } = useTheme();
+    const { isDarkMode } = useTheme();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -103,21 +103,13 @@ const LoginPage: React.FC = () => {
                     <div className={`space-y-4 hidden lg:block transition-colors duration-700 ${isDarkMode ? 'text-white' : 'text-slate-900'
                         }`}>
                         <div className="space-y-4 animate-slide-up">
-                            {/* Badge */}
-                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-sm animate-glow ${isDarkMode
-                                ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-400/30'
-                                : 'bg-white/80 border-blue-100 shadow-sm shadow-blue-500/10'
-                                }`}>
-                                <Sparkles className="h-3 w-3 text-cyan-400 animate-pulse" />
-                                <span className="text-xs font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">Enterprise-Grade Platform</span>
-                            </div>
 
                             {/* Title */}
                             <div>
                                 <h1 className="text-4xl font-black leading-tight mb-3 tracking-tight">
                                     <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>Welcome to </span>
                                     <span className="bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-500 bg-clip-text text-transparent animate-gradient">
-                                        AdminVault
+                                        BOS Vault
                                     </span>
                                 </h1>
                                 <p className={`text-base leading-relaxed max-w-none font-medium ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
@@ -276,10 +268,10 @@ const LoginPage: React.FC = () => {
                                 {/* Refined Branding - Minimal Height */}
                                 <div className="text-center mb-4">
                                     <div className="inline-flex items-center justify-center gap-2 mb-2">
-                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                                            <Shield className="h-4 w-4 text-white" />
+                                        <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
+                                            <img src="/bos-logo.svg" alt="Logo" className="h-8 w-8 object-contain" />
                                         </div>
-                                        <h1 className={`text-lg font-black bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent`}>AdminVault</h1>
+                                        <h1 className={`text-lg font-black bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent`}>BOS Vault</h1>
                                     </div>
                                     <h2 className={`text-lg font-black mb-0 transition-colors duration-700 ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>Welcome Back</h2>
                                     <p className={`text-[10px] font-medium transition-colors duration-700 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>Sign in to your account</p>
@@ -437,7 +429,7 @@ const LoginPage: React.FC = () => {
                 {/* Footer */}
                 <div className="absolute bottom-6 left-0 right-0 z-20 text-center">
                     <p className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-700 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                        © 2026 AdminVault • Secure Enterprise Access
+                        © 2026 BOS Vault • Secure Access
                     </p>
                 </div>
 

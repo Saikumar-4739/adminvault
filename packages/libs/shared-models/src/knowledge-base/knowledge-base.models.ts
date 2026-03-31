@@ -1,12 +1,9 @@
 import { GlobalResponse } from '../common/global-response';
 
 export enum KnowledgeCategoryEnum {
+    COMPANY_POLICY = 'COMPANY_POLICY',
     IT_POLICY = 'IT_POLICY',
-    TROUBLESHOOTING = 'TROUBLESHOOTING',
-    HOW_TO = 'HOW_TO',
-    SOFTWARE = 'SOFTWARE',
-    HARDWARE = 'HARDWARE',
-    SECURITY = 'SECURITY',
+    HR_POLICY = 'HR_POLICY',
     OTHER = 'OTHER'
 }
 
@@ -20,9 +17,11 @@ export class KnowledgeArticleModel {
     isPublished: boolean;
     viewCount: number;
     tags?: string[];
+    fileUrl?: string;
     createdAt?: Date;
     updatedAt?: Date;
-    constructor(id: number, title: string, content: string, category: KnowledgeCategoryEnum, authorId: number, companyId: number, isPublished: boolean, viewCount: number, tags: string[], createdAt: Date, updatedAt: Date) {
+
+    constructor(id: number, title: string, content: string, category: KnowledgeCategoryEnum, authorId: number, companyId: number, isPublished: boolean, viewCount: number, tags: string[], createdAt: Date, updatedAt: Date, fileUrl?: string) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -34,6 +33,7 @@ export class KnowledgeArticleModel {
         this.tags = tags;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.fileUrl = fileUrl;
     }
 }
 
@@ -45,7 +45,9 @@ export class CreateArticleRequestModel {
     companyId: number;
     tags?: string[];
     isPublished?: boolean;
-    constructor(title: string, content: string, category: KnowledgeCategoryEnum, authorId: number, companyId: number, tags: string[], isPublished: boolean,) {
+    fileUrl?: string;
+
+    constructor(title: string, content: string, category: KnowledgeCategoryEnum, authorId: number, companyId: number, tags: string[], isPublished: boolean, fileUrl?: string) {
         this.title = title;
         this.content = content;
         this.category = category;
@@ -53,6 +55,7 @@ export class CreateArticleRequestModel {
         this.companyId = companyId;
         this.tags = tags;
         this.isPublished = isPublished;
+        this.fileUrl = fileUrl;
     }
 }
 
@@ -64,7 +67,9 @@ export class UpdateArticleRequestModel {
     tags?: string[];
     isPublished?: boolean;
     editorId: number;
-    constructor(id: number, title: string, content: string, category: KnowledgeCategoryEnum, tags: string[], isPublished: boolean, editorId: number) {
+    fileUrl?: string;
+
+    constructor(id: number, title: string, content: string, category: KnowledgeCategoryEnum, tags: string[], isPublished: boolean, editorId: number, fileUrl?: string) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -72,6 +77,7 @@ export class UpdateArticleRequestModel {
         this.tags = tags;
         this.isPublished = isPublished;
         this.editorId = editorId;
+        this.fileUrl = fileUrl;
     }
 }
 

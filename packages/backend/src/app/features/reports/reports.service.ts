@@ -208,13 +208,13 @@ export class ReportsService {
                 a.created_at AS createdAt,
                 a.updated_at AS updatedAt,
                 d.device_name AS deviceName,
-                b.name AS brandName,
+                b.laptop_company AS brandName,
                 CONCAT(e1.first_name, ' ', e1.last_name) AS assignedTo,
                 e1.email AS assignedEmail,
                 CONCAT(e2.first_name, ' ', e2.last_name) AS previousUser
             FROM asset_info a
             LEFT JOIN device_info d ON a.device_id = d.id
-            LEFT JOIN device_brands b ON a.brand_id = b.id
+            LEFT JOIN device_configs b ON a.device_config_id = b.id
             LEFT JOIN employees e1 ON a.assigned_to_employee_id = e1.id
             LEFT JOIN employees e2 ON a.previous_user_employee_id = e2.id
             ORDER BY a.id DESC
@@ -226,7 +226,7 @@ export class ReportsService {
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
-            'Brand': asset.brandName || 'N/A',
+            'Device Configuration': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',
             'Configuration': asset.configuration || 'N/A',
             'Box Number': asset.boxNo || 'N/A',
@@ -262,7 +262,7 @@ export class ReportsService {
                 a.created_at AS createdAt,
                 a.updated_at AS updatedAt,
                 d.device_name AS deviceName,
-                b.name AS brandName,
+                b.laptop_company AS brandName,
                 CONCAT(e1.first_name, ' ', e1.last_name) AS assignedTo,
                 e1.email AS assignedEmail,
                 e1.ph_number AS assignedPhone,
@@ -270,7 +270,7 @@ export class ReportsService {
                 CONCAT(e2.first_name, ' ', e2.last_name) AS previousUser
             FROM asset_info a
             LEFT JOIN device_info d ON a.device_id = d.id
-            LEFT JOIN device_brands b ON a.brand_id = b.id
+            LEFT JOIN device_configs b ON a.device_config_id = b.id
             INNER JOIN employees e1 ON a.assigned_to_employee_id = e1.id
             LEFT JOIN departments dept ON e1.department_id = dept.id
             LEFT JOIN employees e2 ON a.previous_user_employee_id = e2.id
@@ -284,7 +284,7 @@ export class ReportsService {
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
-            'Brand': asset.brandName || 'N/A',
+            'Device Configuration': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',
             'Configuration': asset.configuration || 'N/A',
             'Box Number': asset.boxNo || 'N/A',
@@ -396,12 +396,12 @@ export class ReportsService {
                 a.warranty_expiry AS warrantyExpiry,
                 a.purchase_date AS purchaseDate,
                 d.device_name AS deviceName,
-                b.name AS brandName,
+                b.laptop_company AS brandName,
                 CONCAT(e1.first_name, ' ', e1.last_name) AS assignedTo,
                 (a.warranty_expiry - CURRENT_DATE) AS daysUntilExpiry
             FROM asset_info a
             LEFT JOIN device_info d ON a.device_id = d.id
-            LEFT JOIN device_brands b ON a.brand_id = b.id
+            LEFT JOIN device_configs b ON a.device_config_id = b.id
             LEFT JOIN employees e1 ON a.assigned_to_employee_id = e1.id
             WHERE a.warranty_expiry IS NOT NULL 
             AND a.warranty_expiry >= CURRENT_DATE
@@ -414,7 +414,7 @@ export class ReportsService {
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
-            'Brand': asset.brandName || 'N/A',
+            'Device Configuration': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',
             'Assigned To': asset.assignedTo || 'Unassigned',
             'Purchase Date': asset.purchaseDate || 'N/A',
@@ -428,16 +428,16 @@ export class ReportsService {
             SELECT 
                 dept.name AS departmentName,
                 d.device_name AS deviceName,
-                b.name AS brandName,
+                b.laptop_company AS brandName,
                 COUNT(a.id) AS assetCount,
                 STRING_AGG(a.serial_number, ', ') AS serialNumbers
             FROM asset_info a
             INNER JOIN employees e ON a.assigned_to_employee_id = e.id
             INNER JOIN departments dept ON e.department_id = dept.id
             LEFT JOIN device_info d ON a.device_id = d.id
-            LEFT JOIN device_brands b ON a.brand_id = b.id
+            LEFT JOIN device_configs b ON a.device_config_id = b.id
             WHERE a.assigned_to_employee_id IS NOT NULL
-            GROUP BY dept.name, d.device_name, b.name
+            GROUP BY dept.name, d.device_name, b.laptop_company
             ORDER BY dept.name, assetCount DESC
         `;
 
@@ -446,7 +446,7 @@ export class ReportsService {
         return rawResults.map((row: any) => ({
             'Department': row.departmentName,
             'Device Type': row.deviceName || 'N/A',
-            'Brand': row.brandName || 'N/A',
+            'Device Configuration': row.brandName || 'N/A',
             'Asset Count': row.assetCount,
             'Serial Numbers': row.serialNumbers
         }));
@@ -456,7 +456,7 @@ export class ReportsService {
         const query = `
             SELECT 
                 d.device_name AS deviceName,
-                b.name AS brandName,
+                b.laptop_company AS brandName,
                 a.model,
                 a.asset_status_enum AS status,
                 COUNT(a.id) AS totalAssets,
@@ -464,8 +464,8 @@ export class ReportsService {
                 SUM(CASE WHEN a.assigned_to_employee_id IS NULL THEN 1 ELSE 0 END) AS unassignedCount
             FROM asset_info a
             LEFT JOIN device_info d ON a.device_id = d.id
-            LEFT JOIN device_brands b ON a.brand_id = b.id
-            GROUP BY d.device_name, b.name, a.model, a.asset_status_enum
+            LEFT JOIN device_configs b ON a.device_config_id = b.id
+            GROUP BY d.device_name, b.laptop_company, a.model, a.asset_status_enum
             ORDER BY d.device_name, totalAssets DESC
         `;
 
@@ -473,7 +473,7 @@ export class ReportsService {
 
         return rawResults.map((row: any) => ({
             'Device Type': row.deviceName || 'N/A',
-            'Brand': row.brandName || 'N/A',
+            'Device Configuration': row.brandName || 'N/A',
             'Model': row.model || 'N/A',
             'Status': row.status,
             'Total Assets': row.totalAssets,
@@ -492,10 +492,10 @@ export class ReportsService {
                 a.asset_status_enum AS status,
                 a.purchase_date AS purchaseDate,
                 d.device_name AS deviceName,
-                b.name AS brandName
+                b.laptop_company AS brandName
             FROM asset_info a
             LEFT JOIN device_info d ON a.device_id = d.id
-            LEFT JOIN device_brands b ON a.brand_id = b.id
+            LEFT JOIN device_configs b ON a.device_config_id = b.id
             WHERE a.assigned_to_employee_id IS NULL
             ORDER BY a.created_at DESC
         `;
@@ -506,7 +506,7 @@ export class ReportsService {
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
-            'Brand': asset.brandName || 'N/A',
+            'Device Configuration': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',
             'Configuration': asset.configuration || 'N/A',
             'Status': asset.status,
@@ -710,23 +710,23 @@ export class ReportsService {
         }));
     }
 
-    async getDeviceBrandsReport(format = 'summary') {
+    async getDeviceConfigsReport(format = 'summary') {
         const query = `
             SELECT 
-                b.name AS brandName,
+                b.laptop_company AS brandName,
                 d.device_name AS deviceType,
                 COUNT(a.id) AS assetCount
-            FROM device_brands b
-            LEFT JOIN asset_info a ON b.id = a.brand_id
+            FROM device_configs b
+            LEFT JOIN asset_info a ON b.id = a.device_config_id
             LEFT JOIN device_info d ON a.device_id = d.id
-            GROUP BY b.name, d.device_name
+            GROUP BY b.laptop_company, d.device_name
             ORDER BY assetCount DESC
         `;
 
         const rawResults = await this.dataSource.query(query);
 
         return rawResults.map((row: any) => ({
-            'Brand': row.brandName,
+            'Device Configuration': row.brandName,
             'Device Type': row.deviceType || 'N/A',
             'Asset Count': row.assetCount
         }));
@@ -787,8 +787,8 @@ export class ReportsService {
             case 'Department Summary Report':
                 data = await this.getDepartmentSummaryReport(fetchFormat);
                 break;
-            case 'Device Brands Report':
-                data = await this.getDeviceBrandsReport(fetchFormat);
+            case 'Device Configuration Report':
+                data = await this.getDeviceConfigsReport(fetchFormat);
                 break;
             default:
                 throw new Error('Report type not implemented');

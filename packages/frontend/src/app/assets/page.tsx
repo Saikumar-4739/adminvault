@@ -12,6 +12,8 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 import { assetService, companyService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { AssetSearchRequestModel, IdRequestModel } from '@adminvault/shared-models';
@@ -33,7 +35,7 @@ interface Asset {
     serialNumber?: string;
     companyId: number;
     deviceId?: number;
-    brandId?: number;
+    deviceConfigId?: number;
     model?: string;
     configuration?: string;
     status?: string;
@@ -69,6 +71,7 @@ const AssetsPage: React.FC = () => {
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState<any>(null);
 
@@ -104,7 +107,7 @@ const AssetsPage: React.FC = () => {
                     serialNumber: item.serialNumber,
                     companyId: item.companyId,
                     deviceId: item.deviceId,
-                    brandId: item.brandId,
+                    deviceConfigId: item.deviceConfigId,
                     model: item.model,
                     configuration: item.configuration,
                     status: (item.assetStatusEnum || item.status || 'available').toString().toLowerCase(),
@@ -212,14 +215,13 @@ const AssetsPage: React.FC = () => {
     // WebSocket listeners for real-time updates
 
     const searchAssets = React.useCallback(async (filters: any) => {
-        // if (!selectedCompanyId) return; // Allow 0
         setIsLoading(true);
         try {
             const request = new AssetSearchRequestModel(
                 selectedCompanyId,
                 filters.searchQuery,
                 filters.statusFilter,
-                filters.brandIds,
+                filters.deviceConfigIds,
                 filters.assetTypeIds,
                 filters.employeeId,
                 filters.purchaseDateFrom,
@@ -235,7 +237,7 @@ const AssetsPage: React.FC = () => {
                     serialNumber: item.serialNumber,
                     companyId: item.companyId,
                     deviceId: item.deviceId,
-                    brandId: item.brandId,
+                    deviceConfigId: item.deviceConfigId,
                     model: item.model,
                     configuration: item.configuration,
                     status: (item.assetStatusEnum || item.status || 'available').toString().toLowerCase(),
@@ -287,6 +289,11 @@ const AssetsPage: React.FC = () => {
     const handleAssign = (asset: any) => {
         setSelectedAsset(asset);
         setIsAssignModalOpen(true);
+    };
+
+    const handleView = (asset: any) => {
+        setSelectedAsset(asset);
+        setIsViewModalOpen(true);
     };
 
     const handleDelete = (asset: any) => {
@@ -451,6 +458,7 @@ const AssetsPage: React.FC = () => {
                                 onPrint={handlePrint}
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
+                                onView={handleView}
                                 selectedIds={selectedIds}
                                 onToggleSelect={handleToggleSelect}
                             />
@@ -465,6 +473,7 @@ const AssetsPage: React.FC = () => {
                                 onPrint={handlePrint}
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
+                                onView={handleView}
                                 selectedIds={selectedIds}
                                 onToggleSelect={handleToggleSelect}
                             />
@@ -479,6 +488,7 @@ const AssetsPage: React.FC = () => {
                                 onPrint={handlePrint}
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
+                                onView={handleView}
                                 selectedIds={selectedIds}
                                 onToggleSelect={handleToggleSelect}
                             />
@@ -493,6 +503,7 @@ const AssetsPage: React.FC = () => {
                                 onPrint={handlePrint}
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
+                                onView={handleView}
                                 selectedIds={selectedIds}
                                 onToggleSelect={handleToggleSelect}
                             />
@@ -579,6 +590,28 @@ const AssetsPage: React.FC = () => {
                         }}
                     />
 
+                )}
+                {isViewModalOpen && (
+                    <Modal
+                        isOpen={isViewModalOpen}
+                        onClose={() => setIsViewModalOpen(false)}
+                        title="Asset Configuration Details"
+                        size="md"
+                    >
+                        <div className="space-y-4 p-2">
+                            <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 italic">Technical Specifications</h4>
+                                <div className="space-y-3">
+                                    <pre className="text-xs font-mono text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap bg-white dark:bg-black/20 p-3 rounded-lg border border-slate-100 dark:border-white/5">
+                                        {selectedAsset?.configuration || 'No configuration details available for this asset.'}
+                                    </pre>
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <Button variant="primary" onClick={() => setIsViewModalOpen(false)}>Close Details</Button>
+                            </div>
+                        </div>
+                    </Modal>
                 )}
                 <DeleteConfirmationModal
                     isOpen={isDeleteModalOpen}

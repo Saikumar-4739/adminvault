@@ -10,7 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import {
     FileText, Upload, Download, Trash2, Search, Plus, File as FileIcon,
-    Lock, ArrowLeft, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive
+    Lock, ArrowLeft, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Eye
 } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
@@ -167,6 +167,27 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
         }
     }, [documents]);
 
+    const handleView = useCallback(async (id: number) => {
+        try {
+            const doc = documents.find(d => d.id === id);
+
+            if (doc?.isSecure) {
+                setSecureDocId(id);
+                setIsPasswordModalOpen(true);
+                return;
+            }
+
+            const blob = await documentsService.downloadFile(id);
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            // We don't revoke immediately because the new tab needs it
+            // window.URL.revokeObjectURL(url); 
+        } catch (error) {
+            console.error('View failed:', error);
+            AlertMessages.getErrorMessage('Failed to open document preview.');
+        }
+    }, [documents]);
+
     const handleSecureDownload = async () => {
         if (!secureDocId || !securePassword) return;
         setIsLoading(true);
@@ -238,7 +259,7 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                         <div className="flex items-center gap-2 w-full md:w-auto justify-end">
                             {onBack && (
                                 <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
-                                    Back
+                                    Back to Masters
                                 </Button>
                             )}
                             <Button size="xs" variant="success" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsUploadModalOpen(true)}>
@@ -274,7 +295,6 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                                                             <p className="font-medium text-slate-900 dark:text-white text-sm truncate max-w-xs">{doc.originalName}</p>
                                                             {doc.isSecure && <Lock className="w-3 h-3 text-amber-500" />}
                                                         </div>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">ID: {doc.id.toString().padStart(4, '0')}</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -289,6 +309,13 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                                             </td>
                                             <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
                                                 <div className="flex justify-center gap-2">
+                                                    <button
+                                                        onClick={() => handleView(doc.id)}
+                                                        className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm"
+                                                        title="View"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </button>
                                                     <button
                                                         onClick={() => handleDownload(doc.id)}
                                                         className="h-7 w-7 flex items-center justify-center rounded bg-emerald-500 hover:bg-emerald-600 text-white transition-colors shadow-sm"
@@ -360,14 +387,12 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                     <div className="grid grid-cols-2 gap-4">
                         <Input
                             label="Category"
-                            placeholder="e.g. Legal, Finance"
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
                             className="h-14"
                         />
                         <Input
                             label="Tags"
-                            placeholder="e.g. 2024, confidential"
                             value={tags}
                             onChange={(e) => setTags(e.target.value)}
                             className="h-14"

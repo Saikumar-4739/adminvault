@@ -22,7 +22,17 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ remoteToolName: '', userName: '', password: '', notes: '', isActive: true });
+    const [formData, setFormData] = useState({
+        remoteToolName: '',
+        userName: '',
+        userFullname: '',
+        deviceSerialNumber: '',
+        ipAddress: '',
+        recoveryEmail: '',
+        password: '',
+        notes: '',
+        isActive: true
+    });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const remoteService = new RemoteService();
@@ -61,7 +71,11 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
                     formData.userName,
                     formData.password,
                     formData.notes,
-                    formData.isActive
+                    formData.isActive,
+                    formData.userFullname,
+                    formData.deviceSerialNumber,
+                    formData.ipAddress,
+                    formData.recoveryEmail
                 );
                 const response = await remoteService.updateRemote(model);
                 if (response.status) {
@@ -79,7 +93,11 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
                     formData.userName,
                     formData.password,
                     formData.notes,
-                    formData.isActive ?? true
+                    formData.isActive ?? true,
+                    formData.userFullname,
+                    formData.deviceSerialNumber,
+                    formData.ipAddress,
+                    formData.recoveryEmail
                 );
                 const response = await remoteService.createRemote(model);
                 if (response.status) {
@@ -101,6 +119,10 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
         setFormData({
             remoteToolName: item.remoteToolName,
             userName: item.userName,
+            userFullname: item.userFullname || '',
+            deviceSerialNumber: item.deviceSerialNumber || '',
+            ipAddress: item.ipAddress || '',
+            recoveryEmail: item.recoveryEmail || '',
             password: item.password,
             notes: item.notes || '',
             isActive: item.isActive ?? true
@@ -133,7 +155,17 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ remoteToolName: '', userName: '', password: '', notes: '', isActive: true });
+        setFormData({
+            remoteToolName: '',
+            userName: '',
+            userFullname: '',
+            deviceSerialNumber: '',
+            ipAddress: '',
+            recoveryEmail: '',
+            password: '',
+            notes: '',
+            isActive: true
+        });
     };
 
     return (
@@ -157,9 +189,11 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
                         <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
                             <thead className="bg-slate-50/80 dark:bg-slate-800/80">
                                 <tr>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Tool Name</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Username</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Notes</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Device</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Serial Number</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">IP Address</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">User ID</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">User</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                 </tr>
@@ -171,8 +205,10 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
                                     remoteTools?.map((item: RemoteMaster) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.remoteToolName}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.deviceSerialNumber || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.ipAddress || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.userName}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.notes || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.userFullname || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${item.isActive
                                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
@@ -202,10 +238,20 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
 
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Remote Tool" : "Add Remote Tool"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input label="Remote Tool Name" value={formData.remoteToolName} onChange={(e) => setFormData({ ...formData, remoteToolName: e.target.value })} className="h-14" required />
-                    <Input label="Username" value={formData.userName} onChange={(e) => setFormData({ ...formData, userName: e.target.value })} className="h-14" required />
-                    <Input label="Password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-14" required />
-                    <Input label="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="h-14" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Device" value={formData.remoteToolName} onChange={(e) => setFormData({ ...formData, remoteToolName: e.target.value })} className="h-12" required />
+                        <Input label="Device Serial Number" value={formData.deviceSerialNumber} onChange={(e) => setFormData({ ...formData, deviceSerialNumber: e.target.value })} className="h-12" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="IP Address" value={formData.ipAddress} onChange={(e) => setFormData({ ...formData, ipAddress: e.target.value })} className="h-12" />
+                        <Input label="Recovery Email" value={formData.recoveryEmail} onChange={(e) => setFormData({ ...formData, recoveryEmail: e.target.value })} className="h-12" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="User ID" value={formData.userName} onChange={(e) => setFormData({ ...formData, userName: e.target.value })} className="h-12" required />
+                        <Input label="User" value={formData.userFullname} onChange={(e) => setFormData({ ...formData, userFullname: e.target.value })} className="h-12" />
+                    </div>
+                    <Input label="Password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-12" required />
+                    <Input label="Description" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="h-12" />
 
                     <div className="flex items-center gap-2">
                         <input

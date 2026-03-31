@@ -243,7 +243,9 @@ export class LicensesService {
             assignedEmployeeId: reqModel.assignedEmployeeId,
             assignedDate: reqModel.assignedDate || null,
             expiryDate: reqModel.expiryDate || null,
-            remarks: reqModel.remarks || null
+            remarks: reqModel.remarks || null,
+            costPerSeat: reqModel.costPerSeat || 0,
+            billingCycle: reqModel.billingCycle || 'MONTHLY'
         };
 
         await this.repo.update(reqModel.id, updateData);

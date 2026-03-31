@@ -1,6 +1,6 @@
 'use client';
 
-import { Laptop, Monitor, Smartphone, Tablet, HardDrive, User, CheckCircle2, UserPlus, Pencil, Trash2, History, QrCode } from 'lucide-react';
+import { Laptop, Monitor, Smartphone, Tablet, HardDrive, User, CheckCircle2, UserPlus, Pencil, Trash2, History, QrCode, Eye } from 'lucide-react';
 
 interface AssetCardProps {
     asset: any;
@@ -9,6 +9,7 @@ interface AssetCardProps {
     onQRCode: (asset: any) => void;
     onHistory: (asset: any) => void;
     onAssign: (asset: any) => void;
+    onView: (asset: any) => void;
     isSelected?: boolean;
     onToggleSelect?: (id: number) => void;
 }
@@ -49,7 +50,7 @@ const getStatusConfig = (status?: string) => {
     return configs[statusUpper] || configs['AVAILABLE'];
 };
 
-export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onQRCode, onHistory, onAssign, isSelected, onToggleSelect }: AssetCardProps) => {
+export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onQRCode, onHistory, onAssign, onView, isSelected, onToggleSelect }: AssetCardProps) => {
     const assetName = asset.assetName || 'Unnamed Asset';
     const AssetIcon = getAssetIcon(asset.assetName);
     const statusConfig = getStatusConfig(asset.status);
@@ -107,6 +108,14 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, o
 
                         {/* Top Right Actions */}
                         <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => onView(asset)}
+                                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-600 transition-colors"
+                                title="View Details"
+                            >
+                                <Eye className="h-4 w-4" />
+                            </button>
+
                             <button
                                 onClick={() => onEdit(asset)}
                                 className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 transition-colors"

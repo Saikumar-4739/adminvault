@@ -3,7 +3,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('licenses')
 @Index('idx_license_app', ['applicationId'])
-@Index('idx_license_user', ['userId'])
 export class CompanyLicenseEntity extends CommonBaseEntity {
 
     @Column({ name: 'application_id', nullable: false })
@@ -28,5 +27,5 @@ export class CompanyLicenseEntity extends CommonBaseEntity {
     costPerSeat: number;
 
     @Column({ name: 'billing_cycle', length: 50, default: 'MONTHLY' })
-    billingCycle: string; // MONTHLY, YEARLY, ONE_TIME
+    billingCycle: string;
 }

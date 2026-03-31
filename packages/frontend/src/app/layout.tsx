@@ -25,8 +25,8 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: 'AdminVault - Enterprise Management Platform',
-  description: 'Modern enterprise management platform for companies, employees, assets, and more',
+  title: 'BOS Vault - Platform',
+  description: 'Modern management platform for companies, employees, assets, and more',
   manifest: '/manifest.json',
   icons: {
     icon: [

@@ -1,84 +1,105 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { BrandRepository } from './repositories/brand.repository';
+import { DeviceConfigRepository } from './repositories/brand.repository';
 import { CompanyInfoRepository } from '../company-info/repositories/company-info.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
-import { CreateBrandModel, UpdateBrandModel, IdRequestModel, GetAllBrandsResponseModel } from '@adminvault/shared-models';
-import { BrandsMasterEntity } from './entities/brand.entity';
+import { CreateDeviceConfigModel, UpdateDeviceConfigModel, IdRequestModel, GetAllDeviceConfigsResponseModel } from '@adminvault/shared-models';
+import { DeviceConfigEntity } from './entities/brand.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
 
 @Injectable()
-export class BrandService {
+export class DeviceConfigService {
     constructor(
         private dataSource: DataSource,
-        private brandRepo: BrandRepository,
+        private deviceConfigRepo: DeviceConfigRepository,
         private companyRepo: CompanyInfoRepository
     ) { }
 
-    async createBrand(reqModel: CreateBrandModel): Promise<GlobalResponse> {
+    async createDeviceConfig(reqModel: CreateDeviceConfigModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existingBrand = await this.brandRepo.findOne({ where: { name: reqModel.name } });
-            if (existingBrand) {
-                throw new ErrorResponse(400, 'Brand already exists');
+            const existing = await this.deviceConfigRepo.findOne({ where: { laptopCompany: reqModel.laptopCompany, model: reqModel.model } });
+            if (existing) {
+                throw new ErrorResponse(400, 'Device configuration already exists');
             }
             await transManager.startTransaction();
-            const saveEnti = new BrandsMasterEntity();
-            saveEnti.name = reqModel.name;
-            saveEnti.description = reqModel.description;
-            saveEnti.isActive = reqModel.isActive;
-            saveEnti.website = reqModel.website;
-            saveEnti.rating = reqModel.rating;
+            const saveEnti = new DeviceConfigEntity();
+            saveEnti.laptopCompany = reqModel.laptopCompany;
+            saveEnti.model = reqModel.model;
+            saveEnti.isActive = reqModel.isActive ?? true;
+            saveEnti.configuration = reqModel.configuration;
+            saveEnti.ram = reqModel.ram;
+            saveEnti.storage = reqModel.storage;
             saveEnti.userId = reqModel.userId;
-            await transManager.getRepository(BrandsMasterEntity).save(saveEnti);
+            await transManager.getRepository(DeviceConfigEntity).save(saveEnti);
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 201, 'Brand created successfully');
+            return new GlobalResponse(true, 201, 'Device configuration created successfully');
         } catch (error) {
             await transManager.releaseTransaction();
             throw error;
         }
     }
 
-    async getAllBrands(): Promise<GetAllBrandsResponseModel> {
+    async getAllDeviceConfigs(): Promise<GetAllDeviceConfigsResponseModel> {
         try {
-            const brands = await this.brandRepo.find();
-            const brandsWithCompanyName = brands.map(brand => ({ id: brand.id, userId: brand.userId, createdAt: brand.createdAt, updatedAt: brand.updatedAt, name: brand.name, description: brand.description, isActive: brand.isActive, website: brand.website, rating: brand.rating }));
-            return new GetAllBrandsResponseModel(true, 200, 'Brands retrieved successfully', brandsWithCompanyName);
+            const configs = await this.deviceConfigRepo.find();
+            const mappedConfigs = configs.map(config => ({
+                id: config.id,
+                userId: config.userId,
+                createdAt: config.createdAt,
+                updatedAt: config.updatedAt,
+                name: `${config.laptopCompany} ${config.model}`,
+                description: config.configuration,
+                isActive: config.isActive,
+                laptopCompany: config.laptopCompany,
+                model: config.model,
+                configuration: config.configuration,
+                ram: config.ram,
+                storage: config.storage
+            }));
+            return new GetAllDeviceConfigsResponseModel(true, 200, 'Device configurations retrieved successfully', mappedConfigs);
         } catch (error) {
             throw error;
         }
     }
 
 
-    async updateBrand(reqModel: UpdateBrandModel): Promise<GlobalResponse> {
+    async updateDeviceConfig(reqModel: UpdateDeviceConfigModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const existing = await this.brandRepo.findOne({ where: { id: reqModel.id } });
+            const existing = await this.deviceConfigRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
-                throw new ErrorResponse(404, 'Brand not found');
+                throw new ErrorResponse(404, 'Device configuration not found');
             }
 
             await transManager.startTransaction();
-            await transManager.getRepository(BrandsMasterEntity).update(reqModel.id, { name: reqModel.name, description: reqModel.description, isActive: reqModel.isActive, website: reqModel.website, rating: reqModel.rating });
+            await transManager.getRepository(DeviceConfigEntity).update(reqModel.id, {
+                laptopCompany: reqModel.laptopCompany,
+                model: reqModel.model,
+                isActive: reqModel.isActive,
+                configuration: reqModel.configuration,
+                ram: reqModel.ram,
+                storage: reqModel.storage
+            });
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 200, 'Brand updated successfully');
+            return new GlobalResponse(true, 200, 'Device configuration updated successfully');
         } catch (error) {
             await transManager.releaseTransaction();
             throw error;
         }
     }
 
-    async deleteBrand(reqModel: IdRequestModel): Promise<GlobalResponse> {
+    async deleteDeviceConfig(reqModel: IdRequestModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const delEntity = await this.brandRepo.findOne({ where: { id: reqModel.id } });
+            const delEntity = await this.deviceConfigRepo.findOne({ where: { id: reqModel.id } });
             if (!delEntity) {
-                throw new ErrorResponse(404, 'Brand not found');
+                throw new ErrorResponse(404, 'Device configuration not found');
             }
             await transManager.startTransaction();
-            await transManager.getRepository(BrandsMasterEntity).remove(delEntity);
+            await transManager.getRepository(DeviceConfigEntity).remove(delEntity);
             await transManager.completeTransaction();
-            return new GlobalResponse(true, 200, 'Brand deleted successfully');
+            return new GlobalResponse(true, 200, 'Device configuration deleted successfully');
         } catch (error) {
             await transManager.releaseTransaction();
             throw error;

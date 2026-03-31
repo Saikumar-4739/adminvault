@@ -1,5 +1,7 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiBody } from '@nestjs/swagger';
+import { Controller, Post, Body, UseGuards, Request, UploadedFile, UseInterceptors, Get, Param, Res } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import express from 'express';
+import { ApiTags, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { KnowledgeBaseService } from './knowledge-base.service';
 import { CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, GlobalResponse, GetKnowledgeArticleResponseModel, GetAllKnowledgeArticlesResponseModel, GetKnowledgeBaseStatsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
@@ -12,20 +14,22 @@ export class KnowledgeBaseController {
     constructor(private service: KnowledgeBaseService) { }
 
     @Post('createArticle')
-    @ApiBody({ type: CreateArticleRequestModel })
-    async createArticle(@Body() reqModel: CreateArticleRequestModel): Promise<GlobalResponse> {
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('file'))
+    async createArticle(@UploadedFile() file: Express.Multer.File, @Body() reqModel: CreateArticleRequestModel): Promise<GlobalResponse> {
         try {
-            return await this.service.createArticle(reqModel);
+            return await this.service.createArticle(reqModel, file);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
     }
 
     @Post('updateArticle')
-    @ApiBody({ type: UpdateArticleRequestModel })
-    async updateArticle(@Body() reqModel: UpdateArticleRequestModel): Promise<GlobalResponse> {
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('file'))
+    async updateArticle(@UploadedFile() file: Express.Multer.File, @Body() reqModel: UpdateArticleRequestModel): Promise<GlobalResponse> {
         try {
-            return await this.service.updateArticle(reqModel);
+            return await this.service.updateArticle(reqModel, file);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -68,6 +72,16 @@ export class KnowledgeBaseController {
             return await this.service.getStats(reqModel);
         } catch (error) {
             return returnException(GetKnowledgeBaseStatsResponseModel, error);
+        }
+    }
+
+    @Get('download/:fileName')
+    async downloadAttachment(@Param('fileName') fileName: string, @Res() res: express.Response) {
+        try {
+            const filePath = this.service.getAttachmentPath(fileName);
+            res.download(filePath, fileName.split('-').slice(1).join('-') || fileName);
+        } catch (error) {
+            res.status(404).json({ status: false, message: 'File not found' });
         }
     }
 }

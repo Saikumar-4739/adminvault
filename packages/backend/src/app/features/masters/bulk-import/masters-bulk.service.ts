@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
-import { BrandService } from '../brand/brand.service';
+import { DeviceConfigService } from '../brand/brand.service';
 import { DepartmentService } from '../department/department.service';
 import { CompanyInfoService } from '../company-info/company-info.service';
 import { AssetTypeService } from '../asset-type/asset-type.service';
 import { LicenseService } from '../license/license.service';
 import { VendorService } from '../vendor/vendor.service';
-import { CreateBrandModel, CreateDepartmentModel, CreateCompanyModel, CreateAssetTypeModel, CreateLicenseMasterModel, CreateVendorModel } from '@adminvault/shared-models';
+import { CreateDeviceConfigModel, CreateDepartmentModel, CreateCompanyModel, CreateAssetTypeModel, CreateLicenseMasterModel, CreateVendorModel } from '@adminvault/shared-models';
 import { GlobalResponse } from '@adminvault/backend-utils';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class MastersBulkService {
     private readonly logger = new Logger(MastersBulkService.name);
 
     constructor(
-        private readonly brandService: BrandService,
+        private readonly deviceConfigService: DeviceConfigService,
         private readonly departmentService: DepartmentService,
         private readonly companyService: CompanyInfoService,
         private readonly assetTypeService: AssetTypeService,
@@ -27,7 +27,7 @@ export class MastersBulkService {
         await workbook.xlsx.load(file.buffer as any);
 
         const summary = {
-            brands: { success: 0, failed: 0, errors: [] },
+            deviceConfigs: { success: 0, failed: 0, errors: [] },
             departments: { success: 0, failed: 0, errors: [] },
             companies: { success: 0, failed: 0, errors: [] },
             assetTypes: { success: 0, failed: 0, errors: [] },
@@ -41,8 +41,8 @@ export class MastersBulkService {
             const sheetName = worksheet.name.trim().toLowerCase();
             this.logger.log(`Processing sheet: ${sheetName}`);
 
-            if (sheetName === 'brands') {
-                await this.processBrands(worksheet, summary.brands);
+            if (sheetName === 'deviceconfigs' || sheetName === 'device configurations' || sheetName === 'brands') {
+                await this.processDeviceConfigs(worksheet, summary.deviceConfigs);
             } else if (sheetName === 'departments') {
                 await this.processDepartments(worksheet, summary.departments);
             } else if (sheetName === 'companies') {
@@ -61,48 +61,51 @@ export class MastersBulkService {
         return new GlobalResponse(true, 200, 'Bulk import completed', summary);
     }
 
-    private async processBrands(sheet: ExcelJS.Worksheet, stats: { success: number, failed: number, errors: string[] }) {
+    private async processDeviceConfigs(sheet: ExcelJS.Worksheet, stats: { success: number, failed: number, errors: string[] }) {
         // Assume row 1 is header
         const headers: { [key: string]: number } = {};
         const headerRow = sheet.getRow(1);
         headerRow.eachCell((cell, colNumber) => {
-            headers[cell.text.toLowerCase()] = colNumber;
+            headers[cell.text.toLowerCase().replace(/\s+/g, '')] = colNumber;
         });
 
-        const rows = sheet.getRows(2, sheet.rowCount) || []; // getRows(start, count) - might need adjustment if rowCount includes empty
+        const rows = sheet.getRows(2, sheet.rowCount) || [];
 
         // Iterate from row 2
         for (let i = 2; i <= sheet.rowCount; i++) {
             const row = sheet.getRow(i);
             if (!row.hasValues) continue;
 
-            const name = this.getCellValue(row, headers['name']);
-            const code = this.getCellValue(row, headers['code']);
+            const laptopCompany = this.getCellValue(row, headers['laptopcompany'] || headers['name']);
+            const modelName = this.getCellValue(row, headers['model']);
 
             // Minimal validation
-            if (!name) {
-                // Determine if it's an empty row efficiently
-                if (!name && !code) continue;
+            if (!laptopCompany || !modelName) {
+                if (!laptopCompany && !modelName) continue;
                 stats.failed++;
-                stats.errors.push(`Row ${i}: Missing name`);
+                stats.errors.push(`Row ${i}: Missing laptop company or model`);
                 continue;
             }
 
-            const model: CreateBrandModel = {
-                name: String(name),
-                description: String(this.getCellValue(row, headers['description']) || ''),
-                website: String(this.getCellValue(row, headers['website']) || ''),
-                rating: Number(this.getCellValue(row, headers['rating']) || 0),
-                isActive: this.getCellValue(row, headers['isactive']) === true || String(this.getCellValue(row, headers['isactive'])).toLowerCase() === 'true',
-                userId: 1 // Default user ID for now, or extract from context if available
-            };
+            const createModel = new CreateDeviceConfigModel(
+                1, // Default userId
+                0, // companyId
+                `${laptopCompany} ${modelName}`,
+                String(this.getCellValue(row, headers['configuration']) || ''),
+                this.getCellValue(row, headers['isactive']) === true || String(this.getCellValue(row, headers['isactive'])).toLowerCase() === 'true',
+                String(laptopCompany),
+                String(modelName),
+                String(this.getCellValue(row, headers['configuration']) || ''),
+                String(this.getCellValue(row, headers['ram']) || ''),
+                String(this.getCellValue(row, headers['storage']) || '')
+            );
 
             try {
-                await this.brandService.createBrand(model);
+                await this.deviceConfigService.createDeviceConfig(createModel);
                 stats.success++;
             } catch (error: any) {
                 stats.failed++;
-                stats.errors.push(`Row ${i} (${name}): ${error.message || 'Unknown error'}`);
+                stats.errors.push(`Row ${i} (${laptopCompany} ${modelName}): ${error.message || 'Unknown error'}`);
             }
         }
     }
@@ -294,17 +297,17 @@ export class MastersBulkService {
     async generateTemplate(): Promise<Buffer> {
         const workbook = new ExcelJS.Workbook();
 
-        // Brands Sheet
-        const brandSheet = workbook.addWorksheet('Brands');
-        brandSheet.columns = [
-            { header: 'Name', key: 'name', width: 30 },
-            { header: 'Code', key: 'code', width: 20 },
-            { header: 'Description', key: 'description', width: 40 },
+        // Device Configurations Sheet
+        const configSheet = workbook.addWorksheet('Device Configurations');
+        configSheet.columns = [
+            { header: 'Laptop Company', key: 'laptopCompany', width: 30 },
+            { header: 'Model', key: 'model', width: 30 },
+            { header: 'Configuration', key: 'configuration', width: 40 },
+            { header: 'RAM', key: 'ram', width: 15 },
+            { header: 'Storage', key: 'storage', width: 15 },
             { header: 'IsActive', key: 'isActive', width: 10 },
-            { header: 'Website', key: 'website', width: 30 },
-            { header: 'Rating', key: 'rating', width: 10 },
         ];
-        brandSheet.addRow({ name: 'Example Brand', code: 'EX_BRAND', description: 'Example Description', isActive: true, website: 'https://example.com', rating: 5 });
+        configSheet.addRow({ laptopCompany: 'Dell', model: 'Latitude 5420', configuration: 'i5, 11th Gen', ram: '16GB', storage: '512GB SSD', isActive: true });
 
         // Departments Sheet
         const deptSheet = workbook.addWorksheet('Departments');

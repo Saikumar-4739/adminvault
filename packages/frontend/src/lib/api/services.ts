@@ -1,4 +1,4 @@
-import { AuthUsersService, AdministrationService, EmployeesService, AssetInfoService, AssetTabsService, TicketsService, LicensesService, ReportsService, DashboardService, DocumentsService, CompanyService, ProcurementService, DepartmentService, AssetTypeService, BrandService, VendorService, ApplicationService, SlackUserService, NetworkService, LicenseMasterService, AuditLogService, NotificationsService, OnboardingService, ContractsService, SecurityService } from '@adminvault/shared-services';
+import { AuthUsersService, AdministrationService, EmployeesService, AssetInfoService, AssetTabsService, TicketsService, LicensesService, ReportsService, DashboardService, DocumentsService, CompanyService, ProcurementService, DepartmentService, AssetTypeService, DeviceConfigService, VendorService, ApplicationService, SlackUserService, NetworkService, LicenseMasterService, AuditLogService, NotificationsService, OnboardingService, ContractsService, SecurityService } from '@adminvault/shared-services';
 
 export const authService = new AuthUsersService();
 export const administrationService = new AdministrationService();
@@ -8,7 +8,7 @@ export const assetTabsService = new AssetTabsService();
 export const ticketService = new TicketsService();
 export const departmentService = new DepartmentService();
 export const assetTypeService = new AssetTypeService();
-export const brandService = new BrandService();
+export const deviceConfigService = new DeviceConfigService();
 export const vendorService = new VendorService();
 export const applicationService = new ApplicationService();
 export const licenseMasterService = new LicenseMasterService();
@@ -36,7 +36,7 @@ export const services = {
     ticket: ticketService,
     department: departmentService,
     assetType: assetTypeService,
-    brand: brandService,
+    brand: deviceConfigService,
     vendor: vendorService,
     application: applicationService,
     licenseMaster: licenseMasterService,

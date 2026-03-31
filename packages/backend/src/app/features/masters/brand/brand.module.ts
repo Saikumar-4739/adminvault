@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BrandService } from './brand.service';
-import { BrandController } from './brand.controller';
-import { BrandsMasterEntity } from './entities/brand.entity';
-import { BrandRepository } from './repositories/brand.repository';
-import { CompanyInfoModule } from '../company-info/company-info.module';
+import { DeviceConfigService } from './brand.service';
+import { DeviceConfigController } from './brand.controller';
+import { DeviceConfigEntity } from './entities/brand.entity';
+import { DeviceConfigRepository } from './repositories/brand.repository';
+import { CompanyInfoRepository } from '../company-info/repositories/company-info.repository';
+import { CompanyInfoEntity } from '../company-info/entities/company-info.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([BrandsMasterEntity]), CompanyInfoModule],
-    controllers: [BrandController],
-    providers: [BrandService, BrandRepository],
-    exports: [BrandService],
+    imports: [TypeOrmModule.forFeature([DeviceConfigEntity, CompanyInfoEntity])],
+    controllers: [DeviceConfigController],
+    providers: [DeviceConfigService, DeviceConfigRepository, CompanyInfoRepository],
+    exports: [DeviceConfigService]
 })
 export class BrandModule { }

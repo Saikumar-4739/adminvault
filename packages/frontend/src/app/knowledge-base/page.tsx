@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Book, Search, Plus, Tag, BookOpen, ChevronRight, FileText, Globe, Lock } from 'lucide-react';
+import { Book, Search, Plus, BookOpen, ChevronRight, FileText, Lock, Shield, Users, Download, Paperclip } from 'lucide-react';
 import { KnowledgeCategoryEnum, CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, IdRequestModel } from '@adminvault/shared-models';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { Modal } from '@/components/ui/Modal';
@@ -24,7 +24,7 @@ const KnowledgeBasePage: React.FC = () => {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editArticleId, setEditArticleId] = useState<number | null>(null);
-    const [newArticle, setNewArticle] = useState<any>({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true });
+    const [newArticle, setNewArticle] = useState<any>({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true, file: null as File | null });
     const kbService = new KnowledgeBaseService();
 
     useEffect(() => {
@@ -78,13 +78,13 @@ const KnowledgeBasePage: React.FC = () => {
 
             if (isEditMode && editArticleId) {
                 const req = new UpdateArticleRequestModel(editArticleId, newArticle.title, newArticle.content, newArticle.category, tagsArray, newArticle.isPublished, user!.id);
-                const res = await kbService.updateArticle(req);
+                const res = await kbService.updateArticle(req, newArticle.file);
                 if (res.status) {
                     AlertMessages.getSuccessMessage(res.message);
                     setIsCreateOpen(false);
                     setIsEditMode(false);
                     setEditArticleId(null);
-                    setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true });
+                    setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true, file: null });
                     searchArticles();
                     fetchStats();
                     if (selectedArticle && selectedArticle.id === editArticleId) {
@@ -95,11 +95,11 @@ const KnowledgeBasePage: React.FC = () => {
                 }
             } else {
                 const req = new CreateArticleRequestModel(newArticle.title, newArticle.content, newArticle.category, user!.id, user!.companyId, tagsArray, newArticle.isPublished);
-                const res = await kbService.createArticle(req);
+                const res = await kbService.createArticle(req, newArticle.file);
                 if (res.status) {
                     AlertMessages.getSuccessMessage(res.message);
                     setIsCreateOpen(false);
-                    setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true });
+                    setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true, file: null });
                     searchArticles();
                     fetchStats();
                 } else {
@@ -112,7 +112,7 @@ const KnowledgeBasePage: React.FC = () => {
     };
 
     const openEditModal = (article: any) => {
-        setNewArticle({ title: article.title, category: article.category, content: article.content, tags: article.tags ? article.tags.join(', ') : '', isPublished: article.isPublished });
+        setNewArticle({ title: article.title, category: article.category, content: article.content, tags: article.tags ? article.tags.join(', ') : '', isPublished: article.isPublished, file: null });
         setEditArticleId(article.id);
         setIsEditMode(true);
         setIsCreateOpen(true);
@@ -120,13 +120,15 @@ const KnowledgeBasePage: React.FC = () => {
     };
 
     const categoryIcons: Record<string, any> = {
+        [KnowledgeCategoryEnum.COMPANY_POLICY]: Shield,
         [KnowledgeCategoryEnum.IT_POLICY]: Lock,
-        [KnowledgeCategoryEnum.TROUBLESHOOTING]: Tag,
-        [KnowledgeCategoryEnum.HOW_TO]: BookOpen,
-        [KnowledgeCategoryEnum.SOFTWARE]: Globe,
-        [KnowledgeCategoryEnum.HARDWARE]: FileText,
-        [KnowledgeCategoryEnum.SECURITY]: Lock,
+        [KnowledgeCategoryEnum.HR_POLICY]: Users,
         [KnowledgeCategoryEnum.OTHER]: Book
+    };
+
+    const formatCategory = (cat: string) => {
+        if (!cat) return '';
+        return cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
     };
 
     return (
@@ -141,7 +143,7 @@ const KnowledgeBasePage: React.FC = () => {
                         {
                             label: 'Write Article',
                             icon: <Plus className="w-4 h-4" />,
-                            onClick: () => { setIsEditMode(false); setEditArticleId(null); setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true }); setIsCreateOpen(true); },
+                            onClick: () => { setIsEditMode(false); setEditArticleId(null); setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true, file: null }); setIsCreateOpen(true); },
                             variant: 'primary'
                         }
                     ]}
@@ -202,7 +204,7 @@ const KnowledgeBasePage: React.FC = () => {
                                     >
                                         <span className="flex items-center gap-3">
                                             <Icon className="w-4 h-4" />
-                                            {cat.replace(/_/g, ' ')}
+                                            {formatCategory(cat)}
                                         </span>
                                         {stats && <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-xs">{stats.byCategory[cat] || 0}</span>}
                                     </button>
@@ -232,7 +234,7 @@ const KnowledgeBasePage: React.FC = () => {
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2">
                                                         <span className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                                                            {article.category}
+                                                            {formatCategory(article.category)}
                                                         </span>
                                                         <span className="text-xs text-slate-400 font-medium">
                                                             {new Date(article.createdAt).toLocaleDateString()}
@@ -308,6 +310,36 @@ const KnowledgeBasePage: React.FC = () => {
                             onChange={(e) => setNewArticle({ ...newArticle, tags: e.target.value })}
                         />
 
+                        <div className="space-y-2">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Attachment (Optional)
+                            </label>
+                            <div className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    leftIcon={<Paperclip className="w-4 h-4" />}
+                                    onClick={() => document.getElementById('kb-file-upload')?.click()}
+                                >
+                                    Choose File
+                                </Button>
+                                <input
+                                    id="kb-file-upload"
+                                    type="file"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                            setNewArticle({ ...newArticle, file: e.target.files[0] });
+                                        }
+                                    }}
+                                />
+                                <span className="text-sm text-slate-500 truncate">
+                                    {newArticle.file ? newArticle.file.name : 'No file chosen'}
+                                </span>
+                            </div>
+                        </div>
+
                         <div className="flex justify-end gap-3 pt-4">
                             <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
                             <Button type="submit" variant="primary">{isEditMode ? 'Update Article' : 'Publish Knowledge'}</Button>
@@ -326,7 +358,7 @@ const KnowledgeBasePage: React.FC = () => {
                         <div className="p-6 space-y-6">
                             <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
                                 <span className="px-2.5 py-1 rounded-md bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300 text-xs font-bold uppercase tracking-wider">
-                                    {selectedArticle.category}
+                                    {formatCategory(selectedArticle.category)}
                                 </span>
                                 <span className="text-sm text-slate-500 dark:text-slate-400">
                                     Last updated: {new Date(selectedArticle.createdAt).toLocaleDateString()}
@@ -338,6 +370,28 @@ const KnowledgeBasePage: React.FC = () => {
                                     {selectedArticle.content}
                                 </p>
                             </div>
+
+                            {selectedArticle.fileUrl && (
+                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 shadow-sm">
+                                            <FileText className="w-5 h-5 text-cyan-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900 dark:text-white">Attachment</p>
+                                            <p className="text-xs text-slate-500 truncate max-w-[200px]">{selectedArticle.fileUrl.split('-').slice(1).join('-')}</p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="primary"
+                                        size="xs"
+                                        leftIcon={<Download className="w-4 h-4" />}
+                                        onClick={() => window.open(kbService.getAttachmentUrl(selectedArticle.fileUrl), '_blank')}
+                                    >
+                                        Download
+                                    </Button>
+                                </div>
+                            )}
 
                             {selectedArticle.tags && selectedArticle.tags.length > 0 && (
                                 <div className="border-t border-slate-100 dark:border-slate-800 pt-4">

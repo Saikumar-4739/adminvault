@@ -189,9 +189,12 @@ export class AssetType extends MasterBase {
     }
 }
 
-export class DeviceBrand extends MasterBase {
-    website?: string;
-    rating?: any;
+export class DeviceConfig extends MasterBase {
+    laptopCompany?: string;
+    model?: string;
+    configuration?: string;
+    ram?: string;
+    storage?: string;
 
     constructor(
         id: number,
@@ -200,22 +203,30 @@ export class DeviceBrand extends MasterBase {
         isActive: boolean,
         companyId?: number,
         description?: string,
-        website?: string,
-        rating?: any,
+        laptopCompany?: string,
+        model?: string,
+        configuration?: string,
+        ram?: string,
+        storage?: string,
         createdAt?: Date,
         updatedAt?: Date
     ) {
         super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
-        this.website = website;
-        this.rating = rating;
+        this.laptopCompany = laptopCompany;
+        this.model = model;
+        this.configuration = configuration;
+        this.ram = ram;
+        this.storage = storage;
     }
 }
+
 
 export class Vendor extends MasterBase {
     contactPerson?: string;
     email?: string;
     phone?: string;
     address?: string;
+    category?: string;
 
     constructor(
         id: number,
@@ -228,6 +239,7 @@ export class Vendor extends MasterBase {
         email?: string,
         phone?: string,
         address?: string,
+        category?: string,
         createdAt?: Date,
         updatedAt?: Date
     ) {
@@ -236,6 +248,7 @@ export class Vendor extends MasterBase {
         this.email = email;
         this.phone = phone;
         this.address = address;
+        this.category = category;
     }
 }
 
@@ -419,14 +432,20 @@ export class CreateAssetTypeModel extends CreateMasterModel {
     }
 }
 
-export class CreateBrandModel extends CreateMasterModel {
-    website?: string;
-    rating?: number;
+export class CreateDeviceConfigModel extends CreateMasterModel {
+    laptopCompany: string;
+    model: string;
+    configuration: string;
+    ram: string;
+    storage: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, laptopCompany?: string, model?: string, configuration?: string, ram?: string, storage?: string, id?: number) {
         super(userId, 0, name, description, isActive, id);
-        this.website = website;
-        this.rating = rating;
+        this.laptopCompany = laptopCompany || '';
+        this.model = model || '';
+        this.configuration = configuration || '';
+        this.ram = ram || '';
+        this.storage = storage || '';
     }
 }
 
@@ -461,13 +480,15 @@ export class CreateVendorModel extends CreateMasterModel {
     email?: string;
     phone?: string;
     address?: string;
+    category?: string;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, category?: string, id?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.contactPerson = contactPerson;
         this.email = email;
         this.phone = phone;
         this.address = address;
+        this.category = category;
     }
 }
 
@@ -540,21 +561,27 @@ export class UpdateAssetTypeModel {
     }
 }
 
-export class UpdateBrandModel {
+export class UpdateDeviceConfigModel {
     id: number;
     name: string;
     description?: string;
     isActive: boolean;
-    website?: string;
-    rating?: number;
+    laptopCompany: string;
+    model: string;
+    configuration: string;
+    ram: string;
+    storage: string;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, website?: string, rating?: number) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, laptopCompany?: string, model?: string, configuration?: string, ram?: string, storage?: string) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive ?? true;
-        this.website = website;
-        this.rating = rating;
+        this.laptopCompany = laptopCompany || '';
+        this.model = model || '';
+        this.configuration = configuration || '';
+        this.ram = ram || '';
+        this.storage = storage || '';
     }
 }
 
@@ -568,8 +595,9 @@ export class UpdateVendorModel {
     phone?: string;
     address?: string;
     companyId?: number;
+    category?: string;
 
-    constructor(id: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, companyId?: number) {
+    constructor(id: number, name: string, description?: string, isActive?: boolean, contactPerson?: string, email?: string, phone?: string, address?: string, companyId?: number, category?: string) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -579,6 +607,7 @@ export class UpdateVendorModel {
         this.phone = phone;
         this.address = address;
         this.companyId = companyId;
+        this.category = category;
     }
 }
 
@@ -669,12 +698,12 @@ export class GetAllAssetTypesResponseModel extends GlobalResponse {
     }
 }
 
-export class GetAllBrandsResponseModel extends GlobalResponse {
-    brands: DeviceBrand[];
+export class GetAllDeviceConfigsResponseModel extends GlobalResponse {
+    deviceConfigs: DeviceConfig[];
 
-    constructor(status: boolean, code: number, message: string, brands: DeviceBrand[]) {
+    constructor(status: boolean, code: number, message: string, deviceConfigs: DeviceConfig[]) {
         super(status, code, message);
-        this.brands = brands;
+        this.deviceConfigs = deviceConfigs;
     }
 }
 
@@ -756,12 +785,12 @@ export class CreateAssetTypeResponseModel extends GlobalResponse {
     }
 }
 
-export class CreateBrandResponseModel extends GlobalResponse {
-    brand: DeviceBrand;
+export class CreateDeviceConfigResponseModel extends GlobalResponse {
+    deviceConfig: DeviceConfig;
 
-    constructor(status: boolean, code: number, message: string, brand: DeviceBrand) {
+    constructor(status: boolean, code: number, message: string, deviceConfig: DeviceConfig) {
         super(status, code, message);
-        this.brand = brand;
+        this.deviceConfig = deviceConfig;
     }
 }
 
@@ -825,12 +854,12 @@ export class UpdateAssetTypeResponseModel extends GlobalResponse {
     }
 }
 
-export class UpdateBrandResponseModel extends GlobalResponse {
-    brand: DeviceBrand;
+export class UpdateDeviceConfigResponseModel extends GlobalResponse {
+    deviceConfig: DeviceConfig;
 
-    constructor(status: boolean, code: number, message: string, brand: DeviceBrand) {
+    constructor(status: boolean, code: number, message: string, deviceConfig: DeviceConfig) {
         super(status, code, message);
-        this.brand = brand;
+        this.deviceConfig = deviceConfig;
     }
 }
 
@@ -1051,6 +1080,10 @@ export class RemoteMaster {
     companyId!: number;
     remoteToolName!: string;
     userName!: string;
+    userFullname?: string;
+    deviceSerialNumber?: string;
+    ipAddress?: string;
+    recoveryEmail?: string;
     password!: string;
     notes?: string;
     isActive?: boolean;
@@ -1065,6 +1098,10 @@ export class CreateRemoteMasterModel {
     companyId!: number;
     remoteToolName!: string;
     userName!: string;
+    userFullname?: string;
+    deviceSerialNumber?: string;
+    ipAddress?: string;
+    recoveryEmail?: string;
     password!: string;
     notes?: string;
     isActive?: boolean;
@@ -1076,7 +1113,11 @@ export class CreateRemoteMasterModel {
         userName: string,
         password: string,
         notes?: string,
-        isActive?: boolean
+        isActive?: boolean,
+        userFullname?: string,
+        deviceSerialNumber?: string,
+        ipAddress?: string,
+        recoveryEmail?: string
     ) {
         this.createdBy = createdBy;
         this.companyId = companyId;
@@ -1085,6 +1126,10 @@ export class CreateRemoteMasterModel {
         this.password = password;
         this.notes = notes;
         this.isActive = isActive;
+        this.userFullname = userFullname;
+        this.deviceSerialNumber = deviceSerialNumber;
+        this.ipAddress = ipAddress;
+        this.recoveryEmail = recoveryEmail;
     }
 }
 
@@ -1092,6 +1137,10 @@ export class UpdateRemoteMasterModel {
     id!: number;
     remoteToolName?: string;
     userName?: string;
+    userFullname?: string;
+    deviceSerialNumber?: string;
+    ipAddress?: string;
+    recoveryEmail?: string;
     password?: string;
     notes?: string;
     isActive?: boolean;
@@ -1102,7 +1151,11 @@ export class UpdateRemoteMasterModel {
         userName?: string,
         password?: string,
         notes?: string,
-        isActive?: boolean
+        isActive?: boolean,
+        userFullname?: string,
+        deviceSerialNumber?: string,
+        ipAddress?: string,
+        recoveryEmail?: string
     ) {
         this.id = id;
         this.remoteToolName = remoteToolName;
@@ -1110,6 +1163,10 @@ export class UpdateRemoteMasterModel {
         this.password = password;
         this.notes = notes;
         this.isActive = isActive;
+        this.userFullname = userFullname;
+        this.deviceSerialNumber = deviceSerialNumber;
+        this.ipAddress = ipAddress;
+        this.recoveryEmail = recoveryEmail;
     }
 }
 

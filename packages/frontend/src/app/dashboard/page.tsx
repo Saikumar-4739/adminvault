@@ -87,6 +87,7 @@ const DashboardPage: React.FC = () => {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [companies, setCompanies] = useState<any[]>([]);
     const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
     const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
@@ -131,8 +132,9 @@ const DashboardPage: React.FC = () => {
     const fetchStats = async (companyId?: number) => {
         try {
             setIsLoading(true);
-            const id = companyId || selectedCompanyId || user?.companyId;
-            if (!id) {
+            const id = (companyId !== undefined) ? companyId : (selectedCompanyId !== null ? selectedCompanyId : user?.companyId);
+
+            if (id === undefined || id === null) {
                 AlertMessages.getErrorMessage('No company selected');
                 return;
             }
@@ -151,36 +153,47 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    // Consolidated initialization
     useEffect(() => {
-        const loadCompanies = async () => {
+        const initializeDashboard = async () => {
+            if (!isAuthenticated) return;
+
             try {
+                // 1. Load companies first
                 const response = await companyService.getAllCompaniesDropdown();
+                let companiesList: any[] = [];
                 if (response && response.status && response.data) {
-                    setCompanies(response.data);
-                    if (user?.companyId) {
-                        setSelectedCompanyId(user.companyId);
+                    companiesList = response.data;
+                    setCompanies(companiesList);
+                }
+
+                // 2. Resolve which company to select
+                let targetCompanyId = null;
+                if (user?.companyId) {
+                    targetCompanyId = Number(user.companyId);
+                } else if (companiesList.length > 0) {
+                    targetCompanyId = Number(companiesList[0].id);
+                }
+
+                if (targetCompanyId !== null) {
+                    setSelectedCompanyId(targetCompanyId);
+                    // 3. Fetch stats for the resolved company
+                    if (!hasFetched.current) {
+                        hasFetched.current = true;
+                        fetchStats(targetCompanyId);
                     }
                 }
             } catch (error) {
-                console.error('Failed to load companies:', error);
+                console.error('Dashboard initialization failed:', error);
+            } finally {
+                setIsInitialLoading(false);
             }
         };
-        if (isAuthenticated) {
-            loadCompanies();
-        }
-    }, [isAuthenticated, user]);
 
-    useEffect(() => {
-        if (!hasFetched.current && isAuthenticated && selectedCompanyId) {
-            hasFetched.current = true;
-            fetchStats();
+        if (isAuthenticated && isInitialLoading) {
+            initializeDashboard();
         }
-
-        if (!isAuthenticated) {
-            hasFetched.current = false;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAuthenticated, selectedCompanyId]);
+    }, [isAuthenticated, user, isInitialLoading]);
 
     const assetData = useMemo(() =>
         stats?.assets.byStatus.map(item => ({
@@ -268,7 +281,7 @@ const DashboardPage: React.FC = () => {
         }
     };
 
-    if (isLoading && !stats) {
+    if (!isAuthenticated || isInitialLoading) {
         return <LoadingScreen />;
     }
 
@@ -302,18 +315,16 @@ const DashboardPage: React.FC = () => {
                             <Select
                                 value={selectedCompanyId?.toString() || ''}
                                 onChange={(e) => {
-                                    const newCompanyId = parseInt(e.target.value);
+                                    const value = e.target.value;
+                                    const newCompanyId = parseInt(value);
                                     setSelectedCompanyId(newCompanyId);
                                     hasFetched.current = false;
                                     fetchStats(newCompanyId);
                                 }}
-                                options={[
-                                    { value: '', label: 'Global View (All Companies)' },
-                                    ...companies.map((company) => ({
-                                        value: company.id,
-                                        label: company.name
-                                    }))
-                                ]}
+                                options={companies.map((company) => ({
+                                    value: company.id.toString(),
+                                    label: company.name
+                                }))}
                                 className="h-8 text-[10px] font-bold rounded-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
                             />
                         </div>
@@ -510,9 +521,9 @@ const DashboardPage: React.FC = () => {
                                     <table className="w-full text-left border-collapse min-w-[500px]">
                                         <thead>
                                             <tr className="border-b border-slate-100 dark:border-slate-800">
-                                                <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Descriptor</th>
-                                                <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Engagement</th>
-                                                <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Urgency</th>
+                                                <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-left">Subject</th>
+                                                <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-left">Status</th>
+                                                <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-left">Priority</th>
                                                 <th className="py-2.5 px-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right whitespace-nowrap">Source</th>
                                             </tr>
                                         </thead>

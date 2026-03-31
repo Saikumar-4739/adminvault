@@ -52,7 +52,7 @@ export class AssetInfoService {
             entity.companyId = reqModel.companyId;
             entity.deviceId = reqModel.deviceId;
             entity.serialNumber = reqModel.serialNumber;
-            entity.brandId = reqModel.brandId;
+            entity.deviceConfigId = reqModel.deviceConfigId;
             entity.model = reqModel.model;
             entity.configuration = reqModel.configuration;
             entity.assignedToEmployeeId = reqModel.assignedToEmployeeId;
@@ -120,7 +120,7 @@ export class AssetInfoService {
             existing.companyId = reqModel.companyId;
             existing.deviceId = reqModel.deviceId;
             existing.serialNumber = reqModel.serialNumber;
-            existing.brandId = reqModel.brandId;
+            existing.deviceConfigId = reqModel.deviceConfigId;
             existing.model = reqModel.model;
             existing.configuration = reqModel.configuration;
             existing.assignedToEmployeeId = reqModel.assignedToEmployeeId !== undefined ? reqModel.assignedToEmployeeId : existing.assignedToEmployeeId;
@@ -197,7 +197,7 @@ export class AssetInfoService {
                 throw new ErrorResponse(0, "Asset not found");
             }
 
-            const response = new AssetResponseModel(asset.id, asset.companyId, asset.deviceId, asset.serialNumber, asset.assetStatusEnum, asset.createdAt, asset.updatedAt, asset.purchaseDate, asset.warrantyExpiry, asset.brandId, asset.model, asset.configuration, asset.assignedToEmployeeId, asset.previousUserEmployeeId, asset.userAssignedDate, asset.lastReturnDate, asset.boxNo, asset.complianceStatus, asset.lastSync, asset.encryptionStatus, asset.batteryLevel, asset.storageAvailable, asset.purchaseCost, asset.currentValue, asset.depreciationMethod, asset.usefulLifeYears, asset.salvageValue);
+            const response = new AssetResponseModel(asset.id, asset.companyId, asset.deviceId, asset.serialNumber, asset.assetStatusEnum, asset.createdAt, asset.updatedAt, asset.purchaseDate, asset.warrantyExpiry, asset.deviceConfigId, asset.model, asset.configuration, asset.assignedToEmployeeId, asset.previousUserEmployeeId, asset.userAssignedDate, asset.lastReturnDate, asset.boxNo, asset.complianceStatus, asset.lastSync, asset.encryptionStatus, asset.batteryLevel, asset.storageAvailable, asset.purchaseCost, asset.currentValue, asset.depreciationMethod, asset.usefulLifeYears, asset.salvageValue);
             return new GetAssetByIdModel(true, 0, "Asset retrieved successfully", response);
         } catch (error) {
             throw error;
@@ -216,7 +216,7 @@ export class AssetInfoService {
         try {
             const companyId = reqModel.id;
             const assets = companyId ? await this.assetInfoRepo.find({ where: { companyId } }) : await this.assetInfoRepo.find();
-            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable, a.purchaseCost, a.currentValue, a.depreciationMethod, a.usefulLifeYears, a.salvageValue));
+            const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.deviceConfigId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable, a.purchaseCost, a.currentValue, a.depreciationMethod, a.usefulLifeYears, a.salvageValue));
             return new GetAllAssetsModel(true, 0, "Assets retrieved successfully", responses);
         } catch (error) {
             throw error;
@@ -624,7 +624,7 @@ export class AssetInfoService {
         const assets = await this.assetInfoRepo.find({
             where: { companyId, warrantyExpiry: LessThan(dateLimit) }
         });
-        const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.brandId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable, a.purchaseCost, a.currentValue, a.depreciationMethod, a.usefulLifeYears, a.salvageValue));
+        const responses = assets.map(a => new AssetResponseModel(a.id, a.companyId, a.deviceId, a.serialNumber, a.assetStatusEnum, a.createdAt, a.updatedAt, a.purchaseDate, a.warrantyExpiry, a.deviceConfigId, a.model, a.configuration, a.assignedToEmployeeId, a.previousUserEmployeeId, a.userAssignedDate, a.lastReturnDate, a.boxNo, a.complianceStatus, a.lastSync, a.encryptionStatus, a.batteryLevel, a.storageAvailable, a.purchaseCost, a.currentValue, a.depreciationMethod, a.usefulLifeYears, a.salvageValue));
         return new GetAllAssetsModel(true, 200, 'Expiring assets retrieved', responses);
     }
 

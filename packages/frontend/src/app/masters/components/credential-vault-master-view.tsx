@@ -1,11 +1,8 @@
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { CreateCredentialVaultModel, UpdateCredentialVaultModel, CredentialVaultModel, IdRequestModel } from '@adminvault/shared-models';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
+import { Pencil, Trash2, Key, Eye, EyeOff, Copy, User, Calendar, ExternalLink } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/Input';
@@ -14,9 +11,14 @@ import { CredentialVaultService } from '@adminvault/shared-services';
 
 interface CredentialVaultMasterViewProps {
     onBack?: () => void;
+    searchTerm?: string;
 }
 
-export const CredentialVaultMasterView: React.FC<CredentialVaultMasterViewProps> = ({ onBack }) => {
+export interface CredentialVaultMasterViewHandle {
+    showAddModal: () => void;
+}
+
+export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHandle, CredentialVaultMasterViewProps>(({ onBack, searchTerm = '' }, ref) => {
     const { user } = useAuth();
     const [vaults, setVaults] = useState<CredentialVaultModel[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,8 +27,13 @@ export const CredentialVaultMasterView: React.FC<CredentialVaultMasterViewProps>
     const [formData, setFormData] = useState({ appName: '', description: '', password: '', expireDate: '', owner: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [revealedPasswords, setRevealedPasswords] = useState<Record<number, boolean>>({});
     const vaultService = new CredentialVaultService();
     const initialized = useRef(false);
+
+    useImperativeHandle(ref, () => ({
+        showAddModal: () => setIsModalOpen(true)
+    }));
 
     useEffect(() => {
         if (!initialized.current && user?.companyId) {
@@ -49,6 +56,14 @@ export const CredentialVaultMasterView: React.FC<CredentialVaultMasterViewProps>
             AlertMessages.getErrorMessage(error.message);
         }
     };
+
+    const filteredVaults = useMemo(() => {
+        return vaults.filter(v =>
+            v.appName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            v.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            v.owner?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [vaults, searchTerm]);
 
     const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
@@ -97,7 +112,8 @@ export const CredentialVaultMasterView: React.FC<CredentialVaultMasterViewProps>
         }
     };
 
-    const handleEdit = (item: CredentialVaultModel): void => {
+    const handleEdit = (item: CredentialVaultModel, e: React.MouseEvent): void => {
+        e.stopPropagation();
         setIsEditMode(true);
         setEditingId(item.id);
         const expireDateStr = item.expireDate
@@ -115,7 +131,8 @@ export const CredentialVaultMasterView: React.FC<CredentialVaultMasterViewProps>
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: number): void => {
+    const handleDeleteClick = (id: number, e: React.MouseEvent): void => {
+        e.stopPropagation();
         setDeletingId(id);
         setIsDeleteDialogOpen(true);
     };
@@ -143,103 +160,156 @@ export const CredentialVaultMasterView: React.FC<CredentialVaultMasterViewProps>
         setFormData({ appName: '', description: '', password: '', expireDate: '', owner: '', isActive: true });
     };
 
+    const toggleReveal = (id: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setRevealedPasswords(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const copyToClipboard = (text: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        AlertMessages.getSuccessMessage('Copied to clipboard!');
+    };
+
     const formatDate = (date: Date | string | null | undefined): string => {
-        if (!date) return '-';
+        if (!date) return 'No expiry';
         return new Date(date).toLocaleDateString();
     };
 
     return (
-        <>
-            <Card className="border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden h-[600px] flex flex-col p-0">
-                <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100">Credential Vault</h3>
-                    <div className="flex items-center gap-3">
-                        {onBack && (
-                            <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
-                                Back to Masters
-                            </Button>
-                        )}
-                        <Button size="xs" variant="success" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
-                            Add Credential
+        <div className="space-y-4">
+
+            {filteredVaults.length === 0 ? (
+                <div className="py-16 text-center bg-white dark:bg-slate-900 rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-white/10 shadow-sm flex flex-col items-center gap-3">
+                    <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-full">
+                        <Key className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <div className="space-y-1">
+                        <p className="font-black uppercase tracking-widest text-slate-900 dark:text-white text-xs">No Credentials Found</p>
+                        <p className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto">No secrets found matching your query.</p>
+                    </div>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-12">
+                    {filteredVaults.map((item) => (
+                        <div
+                            key={item.id}
+                            className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[1.25rem] shadow-sm hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5 transition-all duration-300 p-4 overflow-hidden"
+                        >
+                            {/* Card Background Decoration */}
+                            <div className="absolute top-0 right-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] group-hover:scale-110 transition-all duration-500">
+                                <Key className="h-16 w-16 text-blue-500 rotate-12" />
+                            </div>
+
+                            <div className="relative z-10 flex flex-col h-full space-y-3">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center border border-blue-500/20">
+                                            <span className="text-sm font-black text-blue-600 uppercase">{item.appName?.charAt(0)}</span>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className="text-xs font-black text-slate-900 dark:text-white tracking-tight truncate uppercase leading-none">{item.appName}</h3>
+                                            <p className="text-[9px] font-bold text-slate-400 truncate max-w-[120px] mt-1 italic">{item.description || 'System Secret'}</p>
+                                        </div>
+                                    </div>
+                                    <div className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${item.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
+                                        {item.isActive ? 'active' : 'inactive'}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50/50 dark:bg-white/5 rounded-lg p-2.5 space-y-2 border border-slate-100 dark:border-white/5">
+                                    <div className="flex items-center justify-between group/pw">
+                                        <div className="space-y-0.5">
+                                            <p className="text-[8px] uppercase tracking-widest font-black text-slate-400">Secret</p>
+                                            <p className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 tracking-wider">
+                                                {revealedPasswords[item.id] ? item.password : '••••••••'}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center opacity-0 group-hover/pw:opacity-100 transition-opacity">
+                                            <button onClick={(e) => toggleReveal(item.id, e)} className="p-1.5 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-all">
+                                                {revealedPasswords[item.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                            </button>
+                                            <button onClick={(e) => copyToClipboard(item.password, e)} className="p-1.5 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-all">
+                                                <Copy className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-px bg-slate-200/50 dark:bg-white/5" />
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-0.5">
+                                            <div className="flex items-center gap-1 text-[8px] uppercase tracking-widest font-black text-slate-400">
+                                                <User className="h-2.5 w-2.5" />
+                                                Owner
+                                            </div>
+                                            <p className="text-[9px] font-bold text-slate-600 dark:text-slate-300 truncate tracking-tight">{item.owner || '-'}</p>
+                                        </div>
+                                        <div className="space-y-0.5 text-right">
+                                            <div className="flex items-center justify-end gap-1 text-[8px] uppercase tracking-widest font-black text-slate-400">
+                                                <Calendar className="h-2.5 w-2.5" />
+                                                Expiry
+                                            </div>
+                                            <p className="text-[9px] font-bold text-slate-600 dark:text-slate-300 tracking-tight">{formatDate(item.expireDate)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-auto pt-1 flex items-center justify-between">
+                                    <div className="flex items-center gap-0.5">
+                                        <button onClick={(e) => handleEdit(item, e)} className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-slate-400 hover:text-blue-600 transition-all">
+                                            <Pencil className="h-3.5 w-3.5" />
+                                        </button>
+                                        <button onClick={(e) => handleDeleteClick(item.id, e)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg text-slate-400 hover:text-rose-600 transition-all">
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
+                                    {item.description?.includes('http') && (
+                                        <a href={item.description} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-blue-500 hover:text-blue-600 transition-colors">
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Update Sentinel Secret" : "Seal New Credential"}>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input label="Application Name" value={formData.appName} onChange={(e) => setFormData({ ...formData, appName: e.target.value })} className="h-14" required />
+                        <Input label="Owner / Dept" value={formData.owner} onChange={(e) => setFormData({ ...formData, owner: e.target.value })} className="h-14" />
+                    </div>
+
+                    <div className="space-y-1">
+                        <Input label="Secret Content / Password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-14" required />
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Encrypted at rest with AES-256</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input label="Expiry Date" type="date" value={formData.expireDate} onChange={(e) => setFormData({ ...formData, expireDate: e.target.value })} className="h-14" />
+                        <div className="flex items-center p-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 h-14 translate-y-2">
+                            <label className="flex items-center gap-3 cursor-pointer w-full">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.isActive}
+                                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                                    className="w-5 h-5 text-blue-600 border-slate-300 rounded-lg focus:ring-blue-500 transition-all"
+                                />
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">Active Access</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <Input label="Security Notes / URL" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="h-20" />
+
+                    <div className="flex justify-end gap-3 pt-4 pt-6 border-t border-slate-100 dark:border-white/5">
+                        <Button variant="outline" type="button" onClick={handleCloseModal} className="rounded-xl px-8 h-12 uppercase tracking-widest text-[10px] font-black">Cancel</Button>
+                        <Button variant="primary" type="submit" className="rounded-xl px-8 h-12 bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/20 uppercase tracking-widest text-[10px] font-black">
+                            {isEditMode ? 'Commit Changes' : 'Secure Credential'}
                         </Button>
-                    </div>
-                </CardHeader>
-                <CardContent className="flex-1 overflow-hidden p-4">
-                    <div className="overflow-x-auto h-full">
-                        <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
-                            <thead className="bg-slate-50/80 dark:bg-slate-800/80">
-                                <tr>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">App Name</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Password</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Owner</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Expire Date</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white dark:bg-gray-900">
-                                {vaults?.length === 0 ? (
-                                    <tr><td colSpan={7} className="p-8 text-center text-slate-500">No credentials found</td></tr>
-                                ) : (
-                                    vaults?.map((item: CredentialVaultModel) => (
-                                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.appName}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.description || '-'}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">••••••••</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.owner || '-'}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{formatDate(item.expireDate)}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${item.isActive
-                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                                                    }`}>
-                                                    {item.isActive ? 'Active' : 'Inactive'}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                <div className="flex justify-center gap-2">
-                                                    <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                    <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Edit Credential" : "Add Credential"}>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input label="App Name" value={formData.appName} onChange={(e) => setFormData({ ...formData, appName: e.target.value })} className="h-14" required />
-                    <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="h-14" />
-                    <Input label="Password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-14" required />
-                    <Input label="Owner" value={formData.owner} onChange={(e) => setFormData({ ...formData, owner: e.target.value })} className="h-14" />
-                    <Input label="Expire Date" type="date" value={formData.expireDate} onChange={(e) => setFormData({ ...formData, expireDate: e.target.value })} className="h-14" />
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="isActive"
-                            checked={formData.isActive}
-                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                        />
-                        <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Active
-                        </label>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-4">
-                        <Button variant="outline" type="button" onClick={handleCloseModal}>Cancel</Button>
-                        <Button variant="primary" type="submit">{isEditMode ? 'Update' : 'Create'}</Button>
                     </div>
                 </form>
             </Modal>
@@ -248,8 +318,10 @@ export const CredentialVaultMasterView: React.FC<CredentialVaultMasterViewProps>
                 isOpen={isDeleteDialogOpen}
                 onClose={() => setIsDeleteDialogOpen(false)}
                 onConfirm={handleConfirmDelete}
-                itemName="Credential Vault"
+                itemName={`${filteredVaults.find(v => v.id === deletingId)?.appName} Credential`}
             />
-        </>
+        </div>
     );
-}
+});
+
+CredentialVaultMasterView.displayName = 'CredentialVaultMasterView';

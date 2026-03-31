@@ -1,24 +1,25 @@
 import { Column, Entity, Index } from 'typeorm';
 import { MasterBaseEntity } from '../../../../../database/master-base.entity';
 
-@Entity('device_brands')
-@Index('idx_brand_name', ['name'])
-export class BrandsMasterEntity extends MasterBaseEntity {
+@Entity('device_configs')
+@Index('idx_device_config_company', ['laptopCompany'])
+export class DeviceConfigEntity extends MasterBaseEntity {
 
-    @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'Brand name' })
-    name: string;
+    @Column('varchar', { name: 'laptop_company', length: 255, nullable: false, comment: 'Laptop Company' })
+    laptopCompany: string;
 
-    @Column('text', { name: 'description', nullable: true, comment: 'Brand description' })
-    description: string;
+    @Column('varchar', { name: 'model', length: 255, nullable: true, comment: 'Device Model' })
+    model: string;
 
-    @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether brand is active' })
+    @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Whether config is active' })
     isActive: boolean;
 
+    @Column('varchar', { name: 'configuration', length: 500, nullable: true, comment: 'Device Configuration' })
+    configuration: string;
 
+    @Column('varchar', { name: 'ram', length: 100, nullable: true, comment: 'RAM' })
+    ram: string;
 
-    @Column('varchar', { name: 'website', length: 500, nullable: true, comment: 'Brand website URL' })
-    website: string;
-
-    @Column('decimal', { name: 'rating', precision: 3, scale: 2, nullable: true, comment: 'Brand rating (0-5)' })
-    rating: number;
+    @Column('varchar', { name: 'storage', length: 100, nullable: true, comment: 'Storage' })
+    storage: string;
 }

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { procurementService } from '@/lib/api/services';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { ShoppingCart, Plus, Search, Calendar, User, Building, DollarSign, FileText, AlertCircle, CheckCircle2, XCircle, Filter, Eye, Pen } from 'lucide-react';
+import { ShoppingCart, Plus, Search, Calendar, User, Building, DollarSign, FileText, AlertCircle, CheckCircle2, XCircle, Filter, Eye, Pen, FileUp, ExternalLink, Trash2 } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, POStatusEnum, UpdatePOStatusRequestModel, PurchaseOrderModel } from '@adminvault/shared-models';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +23,8 @@ const ProcurementPage: React.FC = () => {
     const [selectedPO, setSelectedPO] = useState<any | null>(null);
     const [editPO, setEditPO] = useState<any | null>(null);
     const [activeTab, setActiveTab] = useState<'OPEN' | 'APPROVED' | 'REJECTED'>('OPEN');
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Derived Metrics
     const totalPOs = pos.length;
@@ -78,6 +80,85 @@ const ProcurementPage: React.FC = () => {
             }
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message || 'Failed to update status');
+        }
+    };
+
+    const handleInvoiceUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !selectedPO || !user) return;
+
+        setIsUploading(true);
+        try {
+            // In a real app, we would upload to S3/Cloudinary here
+            // For this demo, we'll simulate an upload and use a mock URL
+            // and update the PO with this URL
+
+            // Simulating API delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const mockUrl = `https://bos-vault.storage/invoices/${selectedPO.poNumber}_invoice.pdf`;
+
+            // Create the update model
+            const updateModel = {
+                id: selectedPO.id,
+                username: user.fullName || 'User',
+                userId: user.id,
+                ipAddress: '127.0.0.1',
+                companyId: user.companyId || 1,
+                vendorId: selectedPO.vendorId,
+                orderDate: selectedPO.orderDate,
+                items: selectedPO.items || [],
+                expectedDeliveryDate: selectedPO.expectedDeliveryDate,
+                notes: selectedPO.notes,
+                invoiceUrl: mockUrl
+            };
+
+            const response = await procurementService.updatePurchaseOrder(updateModel as any);
+
+            if (response.status) {
+                AlertMessages.getSuccessMessage('Invoice uploaded successfully');
+                // Refresh data
+                fetchPOs();
+                // Update local state for immediate feedback
+                setSelectedPO({ ...selectedPO, invoiceUrl: mockUrl });
+            } else {
+                AlertMessages.getErrorMessage(response.message);
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to upload invoice');
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const handleRemoveInvoice = async () => {
+        if (!selectedPO || !user) return;
+
+        try {
+            const updateModel = {
+                id: selectedPO.id,
+                username: user.fullName || 'User',
+                userId: user.id,
+                ipAddress: '127.0.0.1',
+                companyId: user.companyId || 1,
+                vendorId: selectedPO.vendorId,
+                orderDate: selectedPO.orderDate,
+                items: selectedPO.items || [],
+                expectedDeliveryDate: selectedPO.expectedDeliveryDate,
+                notes: selectedPO.notes,
+                invoiceUrl: '' // Clearing the URL
+            };
+
+            const response = await procurementService.updatePurchaseOrder(updateModel as any);
+
+            if (response.status) {
+                AlertMessages.getSuccessMessage('Invoice removed successfully');
+                fetchPOs();
+                setSelectedPO({ ...selectedPO, invoiceUrl: null });
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage('Failed to remove invoice');
         }
     };
 
@@ -150,9 +231,9 @@ const ProcurementPage: React.FC = () => {
                                 <tr>
                                     <td>${item.itemName}</td>
                                     <td>${item.assetTypeName || 'N/A'}</td>
-                                    <td style="text-align: right">${item.quantity}</td>
-                                    <td style="text-align: right">$${item.unitPrice.toFixed(2)}</td>
-                                    <td style="text-align: right">$${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                    <td style="text-align: right">${Number(item.quantity) || 0}</td>
+                                    <td style="text-align: right">$${(Number(item.unitPrice) || 0).toFixed(2)}</td>
+                                    <td style="text-align: right">$${((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)).toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -518,9 +599,9 @@ const ProcurementPage: React.FC = () => {
                                                 <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                                     <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{item.itemName}</td>
                                                     <td className="px-4 py-3 text-sm text-slate-500">{item.assetTypeName || 'N/A'}</td>
-                                                    <td className="px-4 py-3 text-sm text-slate-500 text-center">{item.quantity}</td>
-                                                    <td className="px-4 py-3 text-sm text-slate-500 text-right">${(item.unitPrice || 0).toFixed(2)}</td>
-                                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 text-right">${((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2)}</td>
+                                                    <td className="px-4 py-3 text-sm text-slate-500 text-center">{Number(item.quantity) || 0}</td>
+                                                    <td className="px-4 py-3 text-sm text-slate-500 text-right">${(Number(item.unitPrice) || 0).toFixed(2)}</td>
+                                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 text-right">${((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)).toFixed(2)}</td>
                                                 </tr>
                                             )) : (
                                                 <tr>
@@ -552,6 +633,79 @@ const ProcurementPage: React.FC = () => {
                                     <div className="text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 min-h-[46px] whitespace-pre-wrap">
                                         {selectedPO.notes || 'No notes provided.'}
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Invoice Section */}
+                            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <FileText size={16} className="text-blue-500" />
+                                    Procurement Documents
+                                </h4>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onChange={handleInvoiceUpload}
+                                />
+
+                                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center">
+                                    {selectedPO.invoiceUrl ? (
+                                        <div className="space-y-4 w-full max-w-sm">
+                                            <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-2 text-emerald-600">
+                                                <CheckCircle2 size={32} />
+                                            </div>
+                                            <div>
+                                                <h5 className="font-bold text-slate-900 dark:text-white">Invoice Uploaded</h5>
+                                                <p className="text-xs text-slate-500 mt-1">Official vendor invoice is attached to this PO</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    className="flex-1 gap-2 bg-indigo-600 hover:bg-indigo-700"
+                                                    onClick={() => window.open(selectedPO.invoiceUrl, '_blank')}
+                                                >
+                                                    <ExternalLink size={16} />
+                                                    View Invoice
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    className="gap-2 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50"
+                                                    onClick={handleRemoveInvoice}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mx-auto mb-2 text-blue-500 group-hover:scale-110 transition-transform">
+                                                <FileUp size={32} />
+                                            </div>
+                                            <div>
+                                                <h5 className="font-bold text-slate-900 dark:text-white">No Invoice Attached</h5>
+                                                <p className="text-xs text-slate-500 mt-1 max-w-[240px]">Upload the final vendor invoice to complete the procurement records</p>
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={isUploading}
+                                            >
+                                                {isUploading ? (
+                                                    <>
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent" />
+                                                        Uploading...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Plus size={16} />
+                                                        Upload Invoice
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

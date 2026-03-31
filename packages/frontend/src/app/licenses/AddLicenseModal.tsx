@@ -1,8 +1,8 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import { Building, Shield, User, Calendar, MessageSquare, Plus, DollarSign, Users, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 
 interface AddLicenseModalProps {
     isOpen: boolean;
@@ -14,13 +14,11 @@ interface AddLicenseModalProps {
     initialLicense?: any;
 }
 
-
-
 export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClose, onSuccess, companies, applications, employees, initialLicense }: AddLicenseModalProps) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         applicationId: '',
         companyId: '',
-        expiryDate: '',
         assignedDate: '',
         remarks: '',
         assignedEmployeeId: '',
@@ -34,7 +32,6 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
             setFormData({
                 applicationId: initialLicense.applicationId?.toString() || '',
                 companyId: initialLicense.companyId?.toString() || '',
-                expiryDate: initialLicense.expiryDate ? new Date(initialLicense.expiryDate).toISOString().split('T')[0] : '',
                 assignedDate: initialLicense.assignedDate ? new Date(initialLicense.assignedDate).toISOString().split('T')[0] : '',
                 remarks: initialLicense.remarks || '',
                 assignedEmployeeId: initialLicense.assignedEmployeeId?.toString() || '',
@@ -45,7 +42,7 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
         } else if (!isOpen) {
             setFormData({
                 applicationId: '', companyId: '',
-                expiryDate: '', assignedDate: '', remarks: '', assignedEmployeeId: '',
+                assignedDate: '', remarks: '', assignedEmployeeId: '',
                 seats: '1', costPerSeat: '0', billingCycle: 'MONTHLY'
             });
         }
@@ -53,214 +50,121 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const success = await onSuccess({
-            ...formData,
-            companyId: Number(formData.companyId),
-            applicationId: Number(formData.applicationId),
-            assignedDate: formData.assignedDate || null,
-            expiryDate: formData.expiryDate || null,
-            remarks: formData.remarks || null,
-            assignedEmployeeId: formData.assignedEmployeeId ? Number(formData.assignedEmployeeId) : null,
-            seats: Number(formData.seats),
-            costPerSeat: Number(formData.costPerSeat),
-            billingCycle: formData.billingCycle
-        });
-
-        if (success) {
-            setFormData({
-                applicationId: '', companyId: '',
-                expiryDate: '', assignedDate: '', remarks: '', assignedEmployeeId: '',
-                seats: '1', costPerSeat: '0', billingCycle: 'MONTHLY'
+        setIsSubmitting(true);
+        try {
+            const success = await onSuccess({
+                ...formData,
+                companyId: Number(formData.companyId),
+                applicationId: Number(formData.applicationId),
+                assignedDate: formData.assignedDate || null,
+                remarks: formData.remarks || null,
+                assignedEmployeeId: formData.assignedEmployeeId ? Number(formData.assignedEmployeeId) : null,
+                seats: Number(formData.seats),
+                costPerSeat: Number(formData.costPerSeat),
+                billingCycle: formData.billingCycle
             });
-            onClose();
+
+            if (success) {
+                setFormData({
+                    applicationId: '', companyId: '',
+                    assignedDate: '', remarks: '', assignedEmployeeId: '',
+                    seats: '1', costPerSeat: '0', billingCycle: 'MONTHLY'
+                });
+                onClose();
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
-
-    if (!isOpen) return null;
 
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
             title={initialLicense ? "Update Software License" : "Add Software License"}
-            size="lg"
+            size="2xl"
+            footer={
+                <div className="flex gap-2 w-full justify-end">
+                    <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+                    <Button variant="primary" onClick={handleSubmit} isLoading={isSubmitting}>
+                        {initialLicense ? 'Update License' : 'Save License'}
+                    </Button>
+                </div>
+            }
         >
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <form className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
+                        label="Company"
+                        value={formData.companyId}
+                        onChange={e => setFormData({ ...formData, companyId: e.target.value, assignedEmployeeId: '' })}
+                        required
+                        options={[
+                            { label: 'Select Company', value: '' },
+                            ...companies.map(c => ({ label: c.companyName, value: c.id }))
+                        ]}
+                    />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Organization context */}
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
-                            <Building className="w-3.5 h-3.5" />
-                            Company
-                        </label>
-                        <div className="relative group/select">
-                            <select
-                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
-                                value={formData.companyId}
-                                onChange={e => setFormData({ ...formData, companyId: e.target.value, assignedEmployeeId: '' })}
-                                required
-                            >
-                                <option value="">Select Company</option>
-                                {companies.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover/select:text-indigo-500 transition-colors">
-                                <Plus className="w-4 h-4" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* App Selection */}
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
-                            <Shield className="w-3.5 h-3.5" />
-                            Software Product
-                        </label>
-                        <div className="relative group/select">
-                            <select
-                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
-                                value={formData.applicationId}
-                                onChange={e => setFormData({ ...formData, applicationId: e.target.value })}
-                                required
-                            >
-                                <option value="">Select Software Product</option>
-                                {applications.map(app => (
-                                    <option key={app.id} value={app.id}>{app.name}</option>
-                                ))}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover/select:text-indigo-500 transition-colors">
-                                <Plus className="w-4 h-4" />
-                            </div>
-                        </div>
-                    </div>
+                    <Select
+                        label="Software Product"
+                        value={formData.applicationId}
+                        onChange={e => setFormData({ ...formData, applicationId: e.target.value })}
+                        required
+                        options={[
+                            { label: 'Select Software Product', value: '' },
+                            ...applications.map(app => ({ label: app.name, value: app.id }))
+                        ]}
+                    />
                 </div>
 
-                {/* Personnel Assignment */}
-                <div className="space-y-2">
-                    <label className="flex items-center justify-between px-1">
-                        <span className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                            <User className="w-3.5 h-3.5" />
-                            Assign To Employee
-                        </span>
-                        {formData.companyId && (
-                            <span className="text-[10px] font-semibold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">
-                                Company Selected
-                            </span>
-                        )}
-                    </label>
-                    <div className="relative group/select">
-                        <select
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            value={formData.assignedEmployeeId}
-                            onChange={e => setFormData({ ...formData, assignedEmployeeId: e.target.value })}
-                            disabled={!formData.companyId}
-                        >
-                            <option value="">{formData.companyId ? 'Leave blank for company-wide license' : 'Select a company first'}</option>
-                            {employees
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
+                        label="Assign To Employee"
+                        value={formData.assignedEmployeeId}
+                        onChange={e => setFormData({ ...formData, assignedEmployeeId: e.target.value })}
+                        disabled={!formData.companyId}
+                        options={[
+                            { label: formData.companyId ? 'Leave blank for company-wide license' : 'Select a company first', value: '' },
+                            ...employees
                                 .filter(emp => !formData.companyId || Number(emp.companyId) === Number(formData.companyId))
-                                .map(emp => (
-                                    <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-                                ))
-                            }
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover/select:text-indigo-500 transition-colors">
-                            <User className="w-4 h-4" />
-                        </div>
-                    </div>
+                                .map(emp => ({ label: `${emp.firstName} ${emp.lastName}`, value: emp.id }))
+                        ]}
+                    />
+
+                    <Select
+                        label="Billing Cycle"
+                        value={formData.billingCycle}
+                        onChange={e => setFormData({ ...formData, billingCycle: e.target.value })}
+                        options={[
+                            { label: 'Monthly', value: 'MONTHLY' },
+                            { label: 'Yearly', value: 'YEARLY' },
+                            { label: 'One-time', value: 'ONE_TIME' }
+                        ]}
+                    />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Starting Date */}
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
-                            <Calendar className="w-3.5 h-3.5" />
-                            Allocation Date
-                        </label>
-                        <input
-                            type="date"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                            value={formData.assignedDate}
-                            onChange={e => setFormData({ ...formData, assignedDate: e.target.value })}
-                        />
-                    </div>
-
-                    {/* Expiry Date */}
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
-                            <Calendar className="w-3.5 h-3.5" />
-                            Expiry Date
-                        </label>
-                        <input
-                            type="date"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                            value={formData.expiryDate}
-                            onChange={e => setFormData({ ...formData, expiryDate: e.target.value })}
-                        />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                        label="Allocation Date"
+                        type="date"
+                        value={formData.assignedDate}
+                        onChange={e => setFormData({ ...formData, assignedDate: e.target.value })}
+                    />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Seats */}
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
-                            <Users className="w-3.5 h-3.5" />
-                            Total Seats
-                        </label>
-                        <input
-                            type="number"
-                            min="1"
-                            placeholder="1"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
-                            value={formData.seats}
-                            onChange={e => setFormData({ ...formData, seats: e.target.value })}
-                            required
-                        />
-                    </div>
-
-                    {/* Cost per Seat */}
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
-                            <DollarSign className="w-3.5 h-3.5" />
-                            Cost per Seat
-                        </label>
-                        <div className="relative group">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                                className="w-full pl-7 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-bold"
-                                value={formData.costPerSeat}
-                                onChange={e => setFormData({ ...formData, costPerSeat: e.target.value })}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Billing Cycle */}
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
-                            <RefreshCw className="w-3.5 h-3.5" />
-                            Billing Cycle
-                        </label>
-                        <select
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer font-bold"
-                            value={formData.billingCycle}
-                            onChange={e => setFormData({ ...formData, billingCycle: e.target.value })}
-                        >
-                            <option value="MONTHLY">Monthly</option>
-                            <option value="YEARLY">Yearly</option>
-                            <option value="ONE_TIME">One-time</option>
-                        </select>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                        label="License Cost ($)"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.costPerSeat}
+                        onChange={e => setFormData({ ...formData, costPerSeat: e.target.value })}
+                    />
                 </div>
 
-                {/* Remarks */}
                 <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        Notes
-                    </label>
+                    <label className="text-sm font-bold text-slate-700 dark:text-slate-200">Notes / Remarks</label>
                     <textarea
                         placeholder="Add notes, serial numbers, or license keys here..."
                         rows={3}
@@ -269,23 +173,7 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                         onChange={e => setFormData({ ...formData, remarks: e.target.value })}
                     />
                 </div>
-
-                <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-6 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        className="px-6 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 active:scale-95 transition-all"
-                    >
-                        {initialLicense ? 'Update' : 'Save'}
-                    </button>
-                </div>
             </form>
         </Modal>
     );
-}
+};

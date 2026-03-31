@@ -22,4 +22,12 @@ export class CredentialVaultService extends CommonAxiosService {
     async deleteCredentialVault(reqObj: DeleteCredentialVaultModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteCredentialVault'), reqObj, config);
     }
+
+    async list(): Promise<any> {
+        return this.axiosGetCall(this.getURLwithMainEndPoint('list'));
+    }
+
+    async reveal(id: number): Promise<any> {
+        return this.axiosGetCall(this.getURLwithMainEndPoint(`reveal/${id}`));
+    }
 }

@@ -42,15 +42,15 @@ export class AssetBulkService {
                 const transManager = new GenericTransactionManager(this.dataSource);
                 try {
                     const assetTypeId = Number(row[0]);
-                    const brandId = Number(row[1]);
+                    const deviceConfigId = Number(row[1]);
                     const model = row[2]?.toString();
                     const serialNumber = row[3]?.toString();
                     const configuration = row[4]?.toString();
                     const purchaseDateRaw = row[5];
                     const statusStr = row[6]?.toString()?.toLowerCase();
 
-                    if (!assetTypeId || !brandId || !serialNumber) {
-                        errors.push({ row: rowNumber, error: 'Asset Type ID, Brand ID and Serial Number are required' });
+                    if (!assetTypeId || !deviceConfigId || !serialNumber) {
+                        errors.push({ row: rowNumber, error: 'Asset Type ID, Device Configuration ID and Serial Number are required' });
                         continue;
                     }
 
@@ -79,7 +79,7 @@ export class AssetBulkService {
                     const newAsset = new AssetInfoEntity();
                     newAsset.companyId = reqModel.companyId;
                     newAsset.deviceId = assetTypeId;
-                    newAsset.brandId = brandId;
+                    newAsset.deviceConfigId = deviceConfigId;
                     newAsset.model = model || '';
                     newAsset.serialNumber = serialNumber;
                     newAsset.configuration = configuration || '';
@@ -94,7 +94,7 @@ export class AssetBulkService {
                     await transManager.releaseTransaction();
                     let errorMessage = err.message || 'Unknown error';
                     if (errorMessage.includes('foreign key constraint')) {
-                        errorMessage = 'Invalid Asset Type ID or Brand ID (Foreign Key Violation)';
+                        errorMessage = 'Invalid Asset Type ID or Device Configuration ID (Foreign Key Violation)';
                     }
                     errors.push({ row: rowNumber, error: errorMessage });
                 }

@@ -183,6 +183,14 @@ const InfoEmailsPage: React.FC = () => {
 
     const groupedData = useMemo(() => {
         const groups: Record<string, typeof emailInfoList> = {};
+
+        // If not employee emails, return a single flat group
+        if (activeTab !== 'USER') {
+            const label = CategoryConfig[activeTab].label;
+            groups[label] = filteredEmails;
+            return groups;
+        }
+
         const emailDepts = [...new Set(filteredEmails.map(e => e.department || 'Unassigned'))];
         const masterDepts = departments.map(d => d.name);
 
@@ -203,7 +211,7 @@ const InfoEmailsPage: React.FC = () => {
         });
 
         return groups;
-    }, [filteredEmails, departments, searchQuery]);
+    }, [filteredEmails, departments, searchQuery, activeTab]);
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN]}>

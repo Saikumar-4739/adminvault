@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@adminvault/shared-models';
-import { assetService, companyService, brandService, assetTypeService } from '@/lib/api/services';
+import { assetService, companyService, deviceConfigService, assetTypeService } from '@/lib/api/services';
 import { useToast } from '@/contexts/ToastContext';
 
 interface AssetFormModalProps {
@@ -24,11 +24,11 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
     const { success, error: toastError } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [companies, setCompanies] = useState<any[]>([]);
-    const [brands, setBrands] = useState<any[]>([]);
+    const [deviceConfigs, setDeviceConfigs] = useState<any[]>([]);
     const [assetTypes, setAssetTypes] = useState<any[]>([]);
     const [formData, setFormData] = useState({
         deviceId: '',
-        brandId: '',
+        deviceConfigId: '',
         model: '',
         serialNumber: '',
         configuration: '',
@@ -50,14 +50,14 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
         return user?.companyId || 1;
     }, []);
 
-    const fetchBrands = useCallback(async () => {
+    const fetchDeviceConfigs = useCallback(async () => {
         try {
-            const response = await brandService.getAllBrands();
+            const response = await deviceConfigService.getAllDeviceConfigs();
             if (response.status) {
-                setBrands(response.brands || []);
+                setDeviceConfigs(response.deviceConfigs || []);
             }
         } catch (error) {
-            console.error('Failed to fetch brands:', error);
+            console.error('Failed to fetch device configurations:', error);
         }
     }, [getCompanyId]);
 
@@ -86,14 +86,14 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
 
     useEffect(() => {
         if (isOpen) {
-            fetchBrands();
+            fetchDeviceConfigs();
             fetchAssetTypes();
             fetchCompanies();
 
             if (asset) {
                 setFormData({
                     deviceId: asset.deviceId?.toString() || '',
-                    brandId: asset.brandId?.toString() || '',
+                    deviceConfigId: asset.deviceConfigId?.toString() || '',
                     model: asset.model || '',
                     serialNumber: asset.serialNumber || '',
                     configuration: asset.configuration || '',
@@ -111,7 +111,7 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
             } else {
                 setFormData({
                     deviceId: '',
-                    brandId: '',
+                    deviceConfigId: '',
                     model: '',
                     serialNumber: '',
                     configuration: '',
@@ -128,7 +128,7 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                 });
             }
         }
-    }, [isOpen, asset, fetchBrands, fetchAssetTypes, fetchCompanies]);
+    }, [isOpen, asset, fetchDeviceConfigs, fetchAssetTypes, fetchCompanies]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -142,7 +142,7 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
             const payload = {
                 ...formData,
                 deviceId: Number(formData.deviceId),
-                brandId: formData.brandId ? Number(formData.brandId) : undefined,
+                deviceConfigId: formData.deviceConfigId ? Number(formData.deviceConfigId) : undefined,
                 companyId: Number(formData.companyId),
                 id: asset?.id
             };
@@ -198,13 +198,13 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({ isOpen, onClose,
                         required
                     />
                     <Select
-                        label="Brand"
-                        name="brandId"
-                        value={formData.brandId}
+                        label="Device Configuration"
+                        name="deviceConfigId"
+                        value={formData.deviceConfigId}
                         onChange={handleChange}
                         options={[
-                            { value: '', label: 'Select Brand' },
-                            ...brands.map(b => ({ value: b.id, label: b.name }))
+                            { value: '', label: 'Select Configuration' },
+                            ...deviceConfigs.map(b => ({ value: b.id, label: b.name }))
                         ]}
                     />
                 </div>
