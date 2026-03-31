@@ -340,7 +340,7 @@ const AssetsPage: React.FC = () => {
                     <div>
                         <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 opacity-90">{label}</p>
                         <div className="flex items-baseline gap-2">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-none tracking-tight">{value || 0}</h3>
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none tracking-tight">{value || 0}</h3>
                             {trend && (
                                 <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded-full">
                                     {trend}
@@ -348,7 +348,7 @@ const AssetsPage: React.FC = () => {
                             )}
                         </div>
                     </div>
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`p-2 rounded-lg sm:p-2.5 sm:rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg group-hover:scale-110 transition-transform duration-300 shrink-0`}>
                         {React.cloneElement(icon, { className: 'h-5 w-5' })}
                     </div>
                 </div>
@@ -361,7 +361,7 @@ const AssetsPage: React.FC = () => {
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.MANAGER]}>
-            <div className="p-4 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/50 space-y-8">
+            <div className="p-3 sm:p-6 lg:p-8 min-h-screen bg-slate-50 dark:bg-slate-950/50 space-y-6 sm:space-y-8">
                 <PageHeader
                     title="Asset Inventory"
                     description="Track and manage company hardware"
@@ -413,7 +413,7 @@ const AssetsPage: React.FC = () => {
                 </PageHeader>
 
                 {/* Statistics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
                     <StatCard
                         label="Total Inventory"
                         value={statistics?.total}

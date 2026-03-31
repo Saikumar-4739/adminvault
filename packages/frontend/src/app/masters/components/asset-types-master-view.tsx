@@ -146,7 +146,7 @@ export const AssetTypesMasterView: React.FC<AssetTypesMasterViewProps> = ({ onBa
                             </thead>
                             <tbody className="bg-white dark:bg-gray-900">
                                 {assetTypes?.length === 0 ? (
-                                    <tr><td colSpan={4} className="p-8 text-center text-slate-500">No asset types found</td></tr>
+                                    <tr><td colSpan={3} className="p-8 text-center text-slate-500">No asset types found</td></tr>
                                 ) : (
                                     assetTypes?.map((item: AssetType) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">

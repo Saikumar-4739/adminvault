@@ -308,6 +308,7 @@ export class AssetWithAssignmentModel {
     managerName?: string;
     assignedDate?: Date;
     assignedById?: number;
+    configuration?: string;
 
     constructor(
         id: number,
@@ -325,7 +326,8 @@ export class AssetWithAssignmentModel {
         assignedById?: number,
         userAssignedDate?: Date,
         lastReturnDate?: Date,
-        managerName?: string
+        managerName?: string,
+        configuration?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -343,6 +345,7 @@ export class AssetWithAssignmentModel {
         this.userAssignedDate = userAssignedDate;
         this.lastReturnDate = lastReturnDate;
         this.managerName = managerName;
+        this.configuration = configuration;
     }
 }
 

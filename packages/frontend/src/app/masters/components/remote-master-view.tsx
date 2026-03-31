@@ -200,7 +200,7 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
                             </thead>
                             <tbody className="bg-white dark:bg-gray-900">
                                 {remoteTools?.length === 0 ? (
-                                    <tr><td colSpan={5} className="p-8 text-center text-slate-500">No records found</td></tr>
+                                    <tr><td colSpan={7} className="p-8 text-center text-slate-500">No records found</td></tr>
                                 ) : (
                                     remoteTools?.map((item: RemoteMaster) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">

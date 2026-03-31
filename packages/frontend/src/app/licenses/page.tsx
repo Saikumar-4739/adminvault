@@ -6,7 +6,7 @@ import { UserRoleEnum, CreateLicenseModel, UpdateLicenseModel, DeleteLicenseMode
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
     Plus, Key, Trash2, Shield, Pencil, Search,
-    Building2,
+    Building2, Clock,
     ChevronDown, ChevronRight
 } from 'lucide-react';
 
@@ -26,8 +26,11 @@ interface License {
     companyId: number;
     applicationId: number;
     expiryDate?: string;
+    purchaseDate?: string;
     assignedDate?: string;
     remarks?: string;
+    licenseKey?: string;
+    seats?: number;
     totalSeats?: number;
     costPerSeat?: number;
     billingCycle?: string;
@@ -367,6 +370,7 @@ export default function LicensesPage() {
 
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Company</th>
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Assigned Employee</th>
+                                                                    <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Allocation Date</th>
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Cost</th>
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                                                 </tr>
@@ -406,6 +410,14 @@ export default function LicensesPage() {
                                                                                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Unassigned</span>
                                                                                     </div>
                                                                                 )}
+                                                                            </td>
+                                                                            <td className="p-4">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <Clock className="w-3.5 h-3.5 text-indigo-500/50" />
+                                                                                    <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight">
+                                                                                        {license.assignedDate ? new Date(license.assignedDate).toLocaleDateString() : 'N/A'}
+                                                                                    </span>
+                                                                                </div>
                                                                             </td>
                                                                             <td className="p-4">
                                                                                 <div className="flex flex-col">
@@ -462,11 +474,11 @@ export default function LicensesPage() {
                                     Number(data.companyId),
                                     Number(data.applicationId),
                                     data.assignedEmployeeId ? Number(data.assignedEmployeeId) : undefined,
-                                    undefined,
-                                    undefined,
+                                    data.licenseKey || undefined,
+                                    undefined, // purchaseDate
                                     data.assignedDate ? new Date(data.assignedDate) : undefined,
-                                    data.expiryDate ? new Date(data.expiryDate) : undefined,
-                                    Number(data.seats),
+                                    undefined, // expiryDate
+                                    undefined, // seats
                                     data.remarks || undefined,
                                     Number(data.costPerSeat),
                                     data.billingCycle
@@ -485,11 +497,11 @@ export default function LicensesPage() {
                                     Number(data.companyId),
                                     Number(data.applicationId),
                                     data.assignedEmployeeId ? Number(data.assignedEmployeeId) : undefined,
-                                    undefined,
-                                    undefined,
+                                    data.licenseKey || undefined,
+                                    undefined, // purchaseDate
                                     data.assignedDate ? new Date(data.assignedDate) : undefined,
-                                    data.expiryDate ? new Date(data.expiryDate) : undefined,
-                                    Number(data.seats),
+                                    undefined, // expiryDate
+                                    undefined, // seats
                                     data.remarks || undefined,
                                     Number(data.costPerSeat),
                                     data.billingCycle

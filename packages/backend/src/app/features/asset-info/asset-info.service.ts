@@ -74,21 +74,6 @@ export class AssetInfoService {
             entity.assetStatusEnum = reqModel.assignedToEmployeeId ? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE) : (reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE);
             const saved = await transManager.getRepository(AssetInfoEntity).save(entity);
             await transManager.completeTransaction();
-
-            // Log activity
-            await this.auditLogService.logAction(
-                'CREATE',
-                'ASSET',
-                Number(saved.id),
-                saved.model + ' (' + saved.serialNumber + ')',
-                userId,
-                '',
-                '',
-                { model: saved.model, serialNumber: saved.serialNumber, status: saved.assetStatusEnum },
-                undefined,
-                'Inventory'
-            );
-
             return new GlobalResponse(true, 0, "Asset created successfully");
         } catch (error) {
             await transManager.releaseTransaction();
@@ -107,11 +92,11 @@ export class AssetInfoService {
     async updateAsset(reqModel: UpdateAssetModel, userId?: number): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            if (!reqModel.companyId) {
+            if (!reqModel.id) {
                 throw new ErrorResponse(0, "Asset ID is required");
             }
 
-            const existing = await this.assetInfoRepo.findOne({ where: { id: reqModel.companyId } });
+            const existing = await this.assetInfoRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
                 throw new ErrorResponse(0, "Asset not found");
             }

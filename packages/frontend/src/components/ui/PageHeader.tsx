@@ -66,7 +66,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                 {customActions}
 
                 {structuredActions.length > 0 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         {structuredActions.map((action, index) => (
                             <Button
                                 key={index}

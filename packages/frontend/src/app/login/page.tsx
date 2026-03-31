@@ -174,7 +174,7 @@ const LoginPage: React.FC = () => {
                                 },
                                 {
                                     icon: BookOpen,
-                                    title: 'Knowledge Base',
+                                    title: 'Help Center',
                                     desc: 'Docs, guides & internal help',
                                     darkContainer:
                                         'bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20 hover:border-violet-400/40',
@@ -273,7 +273,6 @@ const LoginPage: React.FC = () => {
                                         </div>
                                         <h1 className={`text-lg font-black bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent`}>BOS Vault</h1>
                                     </div>
-                                    <h2 className={`text-lg font-black mb-0 transition-colors duration-700 ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>Welcome Back</h2>
                                     <p className={`text-[10px] font-medium transition-colors duration-700 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>Sign in to your account</p>
                                 </div>
 

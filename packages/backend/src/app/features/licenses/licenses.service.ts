@@ -72,8 +72,8 @@ export class LicensesService {
                 l.createdAt,
                 l.updatedAt,
                 l.assignedEmployeeId,
-                undefined, // licenseKey
-                undefined, // purchaseDate
+                l.licenseKey,
+                l.purchaseDate,
                 l.assignedDate,
                 l.expiryDate,
                 undefined, // seats
@@ -198,6 +198,8 @@ export class LicensesService {
             companyId: reqModel.companyId,
             applicationId: reqModel.applicationId,
             assignedEmployeeId: reqModel.assignedEmployeeId,
+            licenseKey: reqModel.licenseKey || null,
+            purchaseDate: reqModel.purchaseDate || null,
             assignedDate: reqModel.assignedDate || null,
             expiryDate: reqModel.expiryDate || null,
             remarks: reqModel.remarks || null,
@@ -241,6 +243,8 @@ export class LicensesService {
         const updateData: Partial<CompanyLicenseEntity> = {
             applicationId: reqModel.applicationId,
             assignedEmployeeId: reqModel.assignedEmployeeId,
+            licenseKey: reqModel.licenseKey || null,
+            purchaseDate: reqModel.purchaseDate || null,
             assignedDate: reqModel.assignedDate || null,
             expiryDate: reqModel.expiryDate || null,
             remarks: reqModel.remarks || null,

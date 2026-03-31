@@ -19,8 +19,8 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .leftJoin('device_configs', 'brand', 'asset.device_config_id = brand.id')
             .leftJoin('employees', 'pastUser', 'asset.previous_user_employee_id = pastUser.id')
             .leftJoin('employees', 'presentUser', 'asset.assigned_to_employee_id = presentUser.id')
-            .where('asset.company_id = :companyId', { companyId })
-            .andWhere('asset.asset_status_enum = :available', {
+            .where('asset.companyId = :companyId', { companyId })
+            .andWhere('asset.assetStatusEnum = :available', {
                 available: AssetStatusEnum.AVAILABLE
             })
             .select([
@@ -53,21 +53,21 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .leftJoin('employees', 'previousUser', 'asset.previous_user_employee_id = previousUser.id')
             .select([
                 'asset.id as "id"',
-                'asset.company_id as "companyId"',
-                'asset.device_id as "deviceId"',
-                'asset.device_config_id as "deviceConfigId"',
+                'asset.companyId as "companyId"',
+                'asset.deviceId as "deviceId"',
+                'asset.deviceConfigId as "deviceConfigId"',
                 'asset.model as "model"',
                 'asset.configuration as "configuration"',
-                'asset.serial_number as "serialNumber"',
-                'asset.purchase_date as "purchaseDate"',
-                'asset.warranty_expiry as "warrantyExpiry"',
-                'asset.user_assigned_date as "userAssignedDate"',
-                'asset.last_return_date as "lastReturnDate"',
-                'asset.assigned_to_employee_id as "assignedToEmployeeId"',
-                'asset.previous_user_employee_id as "previousUserEmployeeId"',
-                'asset.asset_status_enum as "assetStatusEnum"',
-                'asset.created_at as "createdAt"',
-                'asset.updated_at as "updatedAt"',
+                'asset.serialNumber as "serialNumber"',
+                'asset.purchaseDate as "purchaseDate"',
+                'asset.warrantyExpiry as "warrantyExpiry"',
+                'asset.userAssignedDate as "userAssignedDate"',
+                'asset.lastReturnDate as "lastReturnDate"',
+                'asset.assignedToEmployeeId as "assignedToEmployeeId"',
+                'asset.previousUserEmployeeId as "previousUserEmployeeId"',
+                'asset.assetStatusEnum as "assetStatusEnum"',
+                'asset.createdAt as "createdAt"',
+                'asset.updatedAt as "updatedAt"',
                 'device.name as "deviceName"'
             ])
             .addSelect('CONCAT(employee.first_name, \' \', employee.last_name)', 'assignedTo')
@@ -77,10 +77,12 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .addSelect('assignment.assigned_by_id', 'assignedById');
 
         if (companyId > 0) {
-            query.where('asset.company_id = :companyId', { companyId });
+            query.where('asset.companyId = :companyId', { companyId });
         }
 
-        return await query.orderBy('asset.created_at', 'DESC').getRawMany();
+        const results = await query.orderBy('asset.createdAt', 'DESC').getRawMany();
+        console.log(`[RAW-DEBUG-ASSIGN] results[0] configuration:`, results[0]?.configuration ? 'EXISTS' : 'EMPTY');
+        return results;
     }
 
     /**
@@ -110,20 +112,20 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .leftJoin('employees', 'previousUser', 'asset.previous_user_employee_id = previousUser.id')
             .select([
                 'asset.id as "id"',
-                'asset.company_id as "companyId"',
-                'asset.device_id as "deviceId"',
-                'asset.device_config_id as "deviceConfigId"',
+                'asset.companyId as "companyId"',
+                'asset.deviceId as "deviceId"',
+                'asset.deviceConfigId as "deviceConfigId"',
                 'asset.model as "model"',
                 'asset.configuration as "configuration"',
-                'asset.serial_number as "serialNumber"',
-                'asset.purchase_date as "purchaseDate"',
-                'asset.warranty_expiry as "warrantyExpiry"',
-                'asset.user_assigned_date as "userAssignedDate"',
-                'asset.last_return_date as "lastReturnDate"',
-                'asset.assigned_to_employee_id as "assignedToEmployeeId"',
-                'asset.previous_user_employee_id as "previousUserEmployeeId"',
-                'asset.asset_status_enum as "assetStatusEnum"',
-                'asset.created_at as "createdAt"',
+                'asset.serialNumber as "serialNumber"',
+                'asset.purchaseDate as "purchaseDate"',
+                'asset.warrantyExpiry as "warrantyExpiry"',
+                'asset.userAssignedDate as "userAssignedDate"',
+                'asset.lastReturnDate as "lastReturnDate"',
+                'asset.assignedToEmployeeId as "assignedToEmployeeId"',
+                'asset.previousUserEmployeeId as "previousUserEmployeeId"',
+                'asset.assetStatusEnum as "assetStatusEnum"',
+                'asset.createdAt as "createdAt"',
                 'device.name as "deviceName"'
             ])
             .addSelect('CONCAT(employee.first_name, \' \', employee.last_name)', 'assignedTo')
@@ -131,41 +133,43 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .addSelect('CONCAT(previousUser.first_name, \' \', previousUser.last_name)', 'previousUser');
 
         if (reqModel.companyId > 0) {
-            query.where('asset.company_id = :companyId', { companyId: reqModel.companyId });
+            query.where('asset.companyId = :companyId', { companyId: reqModel.companyId });
         }
 
         if (reqModel.searchQuery) {
             query.andWhere(
-                '(asset.serial_number ILIKE :search OR device.name ILIKE :search)',
+                '(asset.serialNumber ILIKE :search OR device.name ILIKE :search)',
                 { search: `%${reqModel.searchQuery}%` }
             );
         }
 
         if (reqModel.statusFilter && reqModel.statusFilter.length > 0) {
             const statuses = Array.isArray(reqModel.statusFilter) ? reqModel.statusFilter : [reqModel.statusFilter];
-            query.andWhere('asset.asset_status_enum IN (:...statuses)', { statuses });
+            query.andWhere('asset.assetStatusEnum IN (:...statuses)', { statuses });
         }
 
         if (reqModel.deviceConfigIds && reqModel.deviceConfigIds.length > 0) {
-            query.andWhere('asset.device_config_id IN (:...deviceConfigIds)', { deviceConfigIds: reqModel.deviceConfigIds });
+            query.andWhere('asset.deviceConfigId IN (:...deviceConfigIds)', { deviceConfigIds: reqModel.deviceConfigIds });
         }
 
         if (reqModel.assetTypeIds && reqModel.assetTypeIds.length > 0) {
-            query.andWhere('asset.device_id IN (:...assetTypeIds)', { assetTypeIds: reqModel.assetTypeIds });
+            query.andWhere('asset.deviceId IN (:...assetTypeIds)', { assetTypeIds: reqModel.assetTypeIds });
         }
 
         if (reqModel.employeeId) {
-            query.andWhere('asset.assigned_to_employee_id = :employeeId', { employeeId: reqModel.employeeId });
+            query.andWhere('asset.assignedToEmployeeId = :employeeId', { employeeId: reqModel.employeeId });
         }
 
         if (reqModel.purchaseDateFrom) {
-            query.andWhere('asset.purchase_date >= :purchaseDateFrom', { purchaseDateFrom: reqModel.purchaseDateFrom });
+            query.andWhere('asset.purchaseDate >= :purchaseDateFrom', { purchaseDateFrom: reqModel.purchaseDateFrom });
         }
 
         if (reqModel.purchaseDateTo) {
-            query.andWhere('asset.purchase_date <= :purchaseDateTo', { purchaseDateTo: reqModel.purchaseDateTo });
+            query.andWhere('asset.purchaseDate <= :purchaseDateTo', { purchaseDateTo: reqModel.purchaseDateTo });
         }
 
-        return await query.orderBy('asset.created_at', 'DESC').getRawMany();
+        const results = await query.orderBy('asset.createdAt', 'DESC').getRawMany();
+        console.log(`[RAW-DEBUG-SEARCH] results[0] configuration:`, results[0]?.configuration ? 'EXISTS' : 'EMPTY');
+        return results;
     }
 }

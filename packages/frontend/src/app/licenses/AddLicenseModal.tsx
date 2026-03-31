@@ -19,10 +19,10 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
     const [formData, setFormData] = useState({
         applicationId: '',
         companyId: '',
+        licenseKey: '',
         assignedDate: '',
         remarks: '',
         assignedEmployeeId: '',
-        seats: '1',
         costPerSeat: '0',
         billingCycle: 'MONTHLY'
     });
@@ -32,18 +32,19 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
             setFormData({
                 applicationId: initialLicense.applicationId?.toString() || '',
                 companyId: initialLicense.companyId?.toString() || '',
+                licenseKey: initialLicense.licenseKey || '',
                 assignedDate: initialLicense.assignedDate ? new Date(initialLicense.assignedDate).toISOString().split('T')[0] : '',
                 remarks: initialLicense.remarks || '',
                 assignedEmployeeId: initialLicense.assignedEmployeeId?.toString() || '',
-                seats: initialLicense.totalSeats?.toString() || '1',
                 costPerSeat: initialLicense.costPerSeat?.toString() || '0',
                 billingCycle: initialLicense.billingCycle || 'MONTHLY'
             });
         } else if (!isOpen) {
             setFormData({
-                applicationId: '', companyId: '',
-                assignedDate: '', remarks: '', assignedEmployeeId: '',
-                seats: '1', costPerSeat: '0', billingCycle: 'MONTHLY'
+                applicationId: '', companyId: '', licenseKey: '',
+                assignedDate: '',
+                remarks: '', assignedEmployeeId: '',
+                costPerSeat: '0', billingCycle: 'MONTHLY'
             });
         }
     }, [isOpen, initialLicense]);
@@ -56,19 +57,20 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                 ...formData,
                 companyId: Number(formData.companyId),
                 applicationId: Number(formData.applicationId),
+                licenseKey: formData.licenseKey || null,
                 assignedDate: formData.assignedDate || null,
                 remarks: formData.remarks || null,
                 assignedEmployeeId: formData.assignedEmployeeId ? Number(formData.assignedEmployeeId) : null,
-                seats: Number(formData.seats),
                 costPerSeat: Number(formData.costPerSeat),
                 billingCycle: formData.billingCycle
             });
 
             if (success) {
                 setFormData({
-                    applicationId: '', companyId: '',
-                    assignedDate: '', remarks: '', assignedEmployeeId: '',
-                    seats: '1', costPerSeat: '0', billingCycle: 'MONTHLY'
+                    applicationId: '', companyId: '', licenseKey: '',
+                    assignedDate: '',
+                    remarks: '', assignedEmployeeId: '',
+                    costPerSeat: '0', billingCycle: 'MONTHLY'
                 });
                 onClose();
             }
@@ -93,7 +95,7 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
             }
         >
             <form className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Select
                         label="Company"
                         value={formData.companyId}
@@ -115,22 +117,36 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                             ...applications.map(app => ({ label: app.name, value: app.id }))
                         ]}
                     />
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Select
                         label="Assign To Employee"
                         value={formData.assignedEmployeeId}
                         onChange={e => setFormData({ ...formData, assignedEmployeeId: e.target.value })}
                         disabled={!formData.companyId}
                         options={[
-                            { label: formData.companyId ? 'Leave blank for company-wide license' : 'Select a company first', value: '' },
+                            { label: formData.companyId ? 'Select Employee' : 'Select a company first', value: '' },
                             ...employees
                                 .filter(emp => !formData.companyId || Number(emp.companyId) === Number(formData.companyId))
                                 .map(emp => ({ label: `${emp.firstName} ${emp.lastName}`, value: emp.id }))
                         ]}
                     />
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                        label="License / Product Key"
+                        value={formData.licenseKey}
+                        onChange={e => setFormData({ ...formData, licenseKey: e.target.value })}
+                    />
+                    <Input
+                        label="Allocation Date"
+                        type="date"
+                        value={formData.assignedDate}
+                        onChange={e => setFormData({ ...formData, assignedDate: e.target.value })}
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Select
                         label="Billing Cycle"
                         value={formData.billingCycle}
@@ -141,20 +157,8 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                             { label: 'One-time', value: 'ONE_TIME' }
                         ]}
                     />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                        label="Allocation Date"
-                        type="date"
-                        value={formData.assignedDate}
-                        onChange={e => setFormData({ ...formData, assignedDate: e.target.value })}
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                        label="License Cost ($)"
+                        label="Cost per Seat ($)"
                         type="number"
                         min="0"
                         step="0.01"

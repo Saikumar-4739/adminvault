@@ -22,7 +22,7 @@ const ACTIONS: Action[] = [
     { id: 'network', title: 'Network', description: 'Network monitoring', icon: Network, shortcut: 'N', category: 'Navigation', href: '/network' },
     { id: 'employees', title: 'Employees', description: 'Manage employees', icon: Users, shortcut: 'E', category: 'Navigation', href: '/employees' },
     { id: 'licenses', title: 'Licenses', description: 'Software licenses', icon: Key, shortcut: 'K', category: 'Security', href: '/licenses' },
-    { id: 'kb', title: 'Knowledge Base', description: 'Documentation & guides', icon: BookOpen, shortcut: 'H', category: 'Support', href: '/knowledge-base' },
+    { id: 'kb', title: 'Help Center', description: 'Documentation & guides', icon: BookOpen, shortcut: 'H', category: 'Support', href: '/knowledge-base' },
 ];
 
 export const CommandPalette: React.FC = () => {
