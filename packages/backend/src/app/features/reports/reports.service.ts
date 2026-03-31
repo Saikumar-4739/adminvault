@@ -174,23 +174,23 @@ export class ReportsService {
         // Use raw query with manual joins
         const query = `
             SELECT 
-                a.id AS assetId,
-                a.serial_number AS serialNumber,
+                a.id AS "assetId",
+                a.serial_number AS "serialNumber",
                 a.model,
                 a.configuration,
-                a.box_no AS boxNo,
-                a.asset_status_enum AS status,
-                a.purchase_date AS purchaseDate,
-                a.warranty_expiry AS warrantyExpiry,
-                a.user_assigned_date AS userAssignedDate,
-                a.last_return_date AS lastReturnDate,
-                a.created_at AS createdAt,
-                a.updated_at AS updatedAt,
-                d.device_name AS deviceName,
-                b.laptop_company AS brandName,
-                CONCAT(e1.first_name, ' ', e1.last_name) AS assignedTo,
-                e1.email AS assignedEmail,
-                CONCAT(e2.first_name, ' ', e2.last_name) AS previousUser
+                a.box_no AS "boxNo",
+                a.asset_status_enum AS "status",
+                a.purchase_date AS "purchaseDate",
+                a.warranty_expiry AS "warrantyExpiry",
+                a.user_assigned_date AS "userAssignedDate",
+                a.last_return_date AS "lastReturnDate",
+                a.created_at AS "createdAt",
+                a.updated_at AS "updatedAt",
+                d.name AS "deviceName",
+                b.laptop_company AS "brandName",
+                CONCAT(e1.first_name, ' ', e1.last_name) AS "assignedTo",
+                e1.email AS "assignedEmail",
+                CONCAT(e2.first_name, ' ', e2.last_name) AS "previousUser"
             FROM asset_info a
             LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
@@ -227,18 +227,18 @@ export class ReportsService {
     async getAssetAllocationReports(format = 'summary') {
         const query = `
             SELECT 
-                a.id AS assetId,
-                a.serial_number AS serialNumber,
+                a.id AS "assetId",
+                a.serial_number AS "serialNumber",
                 a.model,
                 a.configuration,
-                a.asset_status_enum AS status,
-                a.user_assigned_date AS userAssignedDate,
-                d.device_name AS deviceName,
-                b.laptop_company AS brandName,
-                CONCAT(e1.first_name, ' ', e1.last_name) AS assignedTo,
-                e1.email AS assignedEmail,
-                e1.ph_number AS assignedPhone,
-                dept.name AS assignedDepartment
+                a.asset_status_enum AS "status",
+                a.user_assigned_date AS "userAssignedDate",
+                d.name AS "deviceName",
+                b.laptop_company AS "brandName",
+                CONCAT(e1.first_name, ' ', e1.last_name) AS "assignedTo",
+                e1.email AS "assignedEmail",
+                e1.ph_number AS "assignedPhone",
+                dept.name AS "assignedDepartment"
             FROM asset_info a
             LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
@@ -276,14 +276,14 @@ export class ReportsService {
         const query = `
             SELECT 
                 e.id, 
-                e.first_name AS firstName, 
-                e.last_name AS lastName, 
+                e.first_name AS "firstName", 
+                e.last_name AS "lastName", 
                 e.email, 
-                e.ph_number AS phone, 
-                e.emp_status AS status,
-                e.created_at AS joinDate,
-                d.name AS departmentName,
-                c.company_name AS companyName
+                e.ph_number AS "phone", 
+                e.emp_status AS "status",
+                e.created_at AS "joinDate",
+                d.name AS "departmentName",
+                c.company_name AS "companyName"
             FROM employees e
             LEFT JOIN departments d ON e.department_id = d.id
             LEFT JOIN company_info c ON e.company_id = c.id
@@ -317,15 +317,15 @@ export class ReportsService {
 
         const query = `
             SELECT 
-                t.ticket_code AS ticketCode,
+                t.ticket_code AS "ticketCode",
                 t.subject,
-                t.priority_enum AS priority,
-                t.category_enum AS category,
-                t.ticket_status AS status,
-                t.created_at AS createdAt,
-                t.resolved_at AS resolvedAt,
-                CONCAT(e1.first_name, ' ', e1.last_name) AS raisedBy,
-                CONCAT(e2.first_name, ' ', e2.last_name) AS assignedTo
+                t.priority_enum AS "priority",
+                t.category_enum AS "category",
+                t.ticket_status AS "status",
+                t.created_at AS "createdAt",
+                t.resolved_at AS "resolvedAt",
+                CONCAT(e1.first_name, ' ', e1.last_name) AS "raisedBy",
+                CONCAT(e2.first_name, ' ', e2.last_name) AS "assignedTo"
             FROM tickets t
             LEFT JOIN employees e1 ON t.employee_id = e1.id
             LEFT JOIN employees e2 ON t.assign_admin_id = e2.id
@@ -351,15 +351,15 @@ export class ReportsService {
     async getAssetWarrantyExpiryReport(format = 'summary') {
         const query = `
             SELECT 
-                a.id AS assetId,
-                a.serial_number AS serialNumber,
+                a.id AS "assetId",
+                a.serial_number AS "serialNumber",
                 a.model,
-                a.warranty_expiry AS warrantyExpiry,
-                a.purchase_date AS purchaseDate,
-                d.name AS deviceName,
-                b.laptop_company AS brandName,
-                CONCAT(e1.first_name, ' ', e1.last_name) AS assignedTo,
-                (a.warranty_expiry - CURRENT_DATE) AS daysUntilExpiry
+                a.warranty_expiry AS "warrantyExpiry",
+                a.purchase_date AS "purchaseDate",
+                d.name AS "deviceName",
+                b.laptop_company AS "brandName",
+                CONCAT(e1.first_name, ' ', e1.last_name) AS "assignedTo",
+                (a.warranty_expiry - CURRENT_DATE) AS "daysUntilExpiry"
             FROM asset_info a
             LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
@@ -387,11 +387,11 @@ export class ReportsService {
     async getAssetByDepartmentReport(format = 'summary') {
         const query = `
             SELECT 
-                dept.name AS departmentName,
-                d.name AS deviceName,
-                b.laptop_company AS brandName,
-                COUNT(a.id) AS assetCount,
-                STRING_AGG(a.serial_number, ', ') AS serialNumbers
+                dept.name AS "departmentName",
+                d.name AS "deviceName",
+                b.laptop_company AS "brandName",
+                COUNT(a.id) AS "assetCount",
+                STRING_AGG(a.serial_number, ', ') AS "serialNumbers"
             FROM asset_info a
             INNER JOIN employees e ON a.assigned_to_employee_id = e.id
             INNER JOIN departments dept ON e.department_id = dept.id
@@ -399,7 +399,7 @@ export class ReportsService {
             LEFT JOIN device_configs b ON a.device_config_id = b.id
             WHERE a.assigned_to_employee_id IS NOT NULL
             GROUP BY dept.name, d.name, b.laptop_company
-            ORDER BY dept.name, assetCount DESC
+            ORDER BY dept.name, "assetCount" DESC
         `;
 
         const rawResults = await this.dataSource.query(query);
@@ -416,18 +416,18 @@ export class ReportsService {
     async getAssetByDeviceTypeReport(format = 'summary') {
         const query = `
             SELECT 
-                d.name AS deviceName,
-                b.laptop_company AS brandName,
+                d.name AS "deviceName",
+                b.laptop_company AS "brandName",
                 a.model,
-                a.asset_status_enum AS status,
-                COUNT(a.id) AS totalAssets,
-                SUM(CASE WHEN a.assigned_to_employee_id IS NOT NULL THEN 1 ELSE 0 END) AS assignedCount,
-                SUM(CASE WHEN a.assigned_to_employee_id IS NULL THEN 1 ELSE 0 END) AS unassignedCount
+                a.asset_status_enum AS "status",
+                COUNT(a.id) AS "totalAssets",
+                SUM(CASE WHEN a.assigned_to_employee_id IS NOT NULL THEN 1 ELSE 0 END) AS "assignedCount",
+                SUM(CASE WHEN a.assigned_to_employee_id IS NULL THEN 1 ELSE 0 END) AS "unassignedCount"
             FROM asset_info a
             LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
             GROUP BY d.name, b.laptop_company, a.model, a.asset_status_enum
-            ORDER BY d.name, totalAssets DESC
+            ORDER BY d.name, "totalAssets" DESC
         `;
 
         const rawResults = await this.dataSource.query(query);
@@ -446,14 +446,14 @@ export class ReportsService {
     async getUnassignedAssetsReport(format = 'summary') {
         const query = `
             SELECT 
-                a.id AS assetId,
-                a.serial_number AS serialNumber,
+                a.id AS "assetId",
+                a.serial_number AS "serialNumber",
                 a.model,
                 a.configuration,
-                a.asset_status_enum AS status,
-                a.purchase_date AS purchaseDate,
-                d.name AS deviceName,
-                b.laptop_company AS brandName
+                a.asset_status_enum AS "status",
+                a.purchase_date AS "purchaseDate",
+                d.name AS "deviceName",
+                b.laptop_company AS "brandName"
             FROM asset_info a
             LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
@@ -479,13 +479,13 @@ export class ReportsService {
     async getEmployeesByDepartmentReport(format = 'summary') {
         const query = `
             SELECT 
-                dept.name AS departmentName,
-                COUNT(e.id) AS employeeCount,
-                STRING_AGG(CONCAT(e.first_name, ' ', e.last_name), ', ') AS employees
+                dept.name AS "departmentName",
+                COUNT(e.id) AS "employeeCount",
+                STRING_AGG(CONCAT(e.first_name, ' ', e.last_name), ', ') AS "employees"
             FROM employees e
             LEFT JOIN departments dept ON e.department_id = dept.id
             GROUP BY dept.name
-            ORDER BY employeeCount DESC
+            ORDER BY "employeeCount" DESC
         `;
 
         const rawResults = await this.dataSource.query(query);
@@ -501,15 +501,15 @@ export class ReportsService {
     async getOpenTicketsReport(format = 'summary') {
         const query = `
             SELECT 
-                t.ticket_code AS ticketCode,
+                t.ticket_code AS "ticketCode",
                 t.subject,
-                t.priority_enum AS priority,
-                t.category_enum AS category,
-                t.ticket_status AS status,
-                t.created_at AS createdAt,
-                CONCAT(e1.first_name, ' ', e1.last_name) AS raisedBy,
-                CONCAT(e2.first_name, ' ', e2.last_name) AS assignedTo,
-                (CURRENT_DATE - t.created_at::date) AS daysOpen
+                t.priority_enum AS "priority",
+                t.category_enum AS "category",
+                t.ticket_status AS "status",
+                t.created_at AS "createdAt",
+                CONCAT(e1.first_name, ' ', e1.last_name) AS "raisedBy",
+                CONCAT(e2.first_name, ' ', e2.last_name) AS "assignedTo",
+                (CURRENT_DATE - t.created_at::date) AS "daysOpen"
             FROM tickets t
             LEFT JOIN employees e1 ON t.employee_id = e1.id
             LEFT JOIN employees e2 ON t.assign_admin_id = e2.id
@@ -535,15 +535,15 @@ export class ReportsService {
     async getResolvedTicketsReport(format = 'summary') {
         const query = `
             SELECT 
-                t.ticket_code AS ticketCode,
+                t.ticket_code AS "ticketCode",
                 t.subject,
-                t.priority_enum AS priority,
-                t.category_enum AS category,
-                t.created_at AS createdAt,
-                t.resolved_at AS resolvedAt,
-                CONCAT(e1.first_name, ' ', e1.last_name) AS raisedBy,
-                CONCAT(e2.first_name, ' ', e2.last_name) AS resolvedBy,
-                (t.resolved_at::date - t.created_at::date) AS resolutionDays
+                t.priority_enum AS "priority",
+                t.category_enum AS "category",
+                t.created_at AS "createdAt",
+                t.resolved_at AS "resolvedAt",
+                CONCAT(e1.first_name, ' ', e1.last_name) AS "raisedBy",
+                CONCAT(e2.first_name, ' ', e2.last_name) AS "resolvedBy",
+                (t.resolved_at::date - t.created_at::date) AS "resolutionDays"
             FROM tickets t
             LEFT JOIN employees e1 ON t.employee_id = e1.id
             LEFT JOIN employees e2 ON t.assign_admin_id = e2.id
@@ -569,10 +569,10 @@ export class ReportsService {
     async getTicketsByPriorityReport(format = 'summary') {
         const query = `
             SELECT 
-                t.priority_enum AS priority,
-                t.ticket_status AS status,
-                COUNT(t.id) AS ticketCount,
-                AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS avgResolutionDays
+                t.priority_enum AS "priority",
+                t.ticket_status AS "status",
+                COUNT(t.id) AS "ticketCount",
+                AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS "avgResolutionDays"
             FROM tickets t
             GROUP BY t.priority_enum, t.ticket_status
             ORDER BY 
@@ -599,13 +599,13 @@ export class ReportsService {
     async getTicketsByCategoryReport(format = 'summary') {
         const query = `
             SELECT 
-                t.category_enum AS category,
-                t.ticket_status AS status,
-                COUNT(t.id) AS ticketCount,
-                AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS avgResolutionDays
+                t.category_enum AS "category",
+                t.ticket_status AS "status",
+                COUNT(t.id) AS "ticketCount",
+                AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS "avgResolutionDays"
             FROM tickets t
             GROUP BY t.category_enum, t.ticket_status
-            ORDER BY ticketCount DESC
+            ORDER BY "ticketCount" DESC
         `;
 
         const rawResults = await this.dataSource.query(query);
@@ -622,14 +622,14 @@ export class ReportsService {
     async getDepartmentSummaryReport(format = 'summary') {
         const query = `
             SELECT 
-                d.name AS departmentName,
-                COUNT(DISTINCT e.id) AS employeeCount,
-                COUNT(DISTINCT a.id) AS assetCount
+                d.name AS "departmentName",
+                COUNT(DISTINCT e.id) AS "employeeCount",
+                COUNT(DISTINCT a.id) AS "assetCount"
             FROM departments d
             LEFT JOIN employees e ON d.id = e.department_id
             LEFT JOIN asset_info a ON e.id = a.assigned_to_employee_id
             GROUP BY d.name
-            ORDER BY employeeCount DESC
+            ORDER BY "employeeCount" DESC
         `;
 
         const rawResults = await this.dataSource.query(query);
@@ -645,14 +645,14 @@ export class ReportsService {
         const query = `
             SELECT 
                 l.id,
-                l.license_key AS licenseKey,
-                l.purchase_date AS purchaseDate,
-                l.assigned_date AS assignedDate,
-                l.expiry_date AS expiryDate,
+                l.license_key AS "licenseKey",
+                l.purchase_date AS "purchaseDate",
+                l.assigned_date AS "assignedDate",
+                l.expiry_date AS "expiryDate",
                 l.remarks,
-                c.company_name AS companyName,
-                a.name AS softwareName,
-                CONCAT(e.first_name, ' ', e.last_name) AS assignedEmployee
+                c.company_name AS "companyName",
+                a.name AS "softwareName",
+                CONCAT(e.first_name, ' ', e.last_name) AS "assignedEmployee"
             FROM licenses l
             LEFT JOIN company_info c ON l.company_id = c.id
             LEFT JOIN license_masters a ON l.application_id = a.id
@@ -678,14 +678,14 @@ export class ReportsService {
     async getDeviceConfigsReport(format = 'summary') {
         const query = `
             SELECT 
-                b.laptop_company AS brandName,
-                d.name AS deviceType,
-                COUNT(a.id) AS assetCount
+                b.laptop_company AS "brandName",
+                d.name AS "deviceType",
+                COUNT(a.id) AS "assetCount"
             FROM device_configs b
             LEFT JOIN asset_info a ON b.id = a.device_config_id
             LEFT JOIN asset_types d ON a.device_id = d.id
             GROUP BY b.laptop_company, d.name
-            ORDER BY assetCount DESC
+            ORDER BY "assetCount" DESC
         `;
 
         const rawResults = await this.dataSource.query(query);
