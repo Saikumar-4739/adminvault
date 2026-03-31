@@ -53,137 +53,116 @@ export class ReportsService {
         const timesRomanFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-        let page = pdfDoc.addPage([842, 595]); // A4 landscape
-        const { width, height } = page.getSize();
+        const createPage = () => {
+            const newPage = pdfDoc.addPage([842, 595]); // A4 landscape
+            const { width, height } = newPage.getSize();
+            return { page: newPage, width, height };
+        };
 
-        // Title
-        page.drawText(reportTitle, {
-            x: 50,
-            y: height - 50,
-            size: 16,
-            font: boldFont,
-            color: rgb(0.2, 0.2, 0.2),
-        });
+        let { page, width, height } = createPage();
 
-        // Date
-        page.drawText(`Generated: ${new Date().toLocaleString()}`, {
-            x: 50,
-            y: height - 70,
-            size: 10,
-            font: timesRomanFont,
-            color: rgb(0.4, 0.4, 0.4),
-        });
+        const drawHeader = (currentPage: any, currentY: number) => {
+            // Title
+            currentPage.drawText(reportTitle, {
+                x: 50,
+                y: height - 40,
+                size: 14,
+                font: boldFont,
+                color: rgb(0.1, 0.1, 0.1),
+            });
+
+            // Date
+            currentPage.drawText(`Generated: ${new Date().toLocaleString()}`, {
+                x: 50,
+                y: height - 55,
+                size: 8,
+                font: timesRomanFont,
+                color: rgb(0.4, 0.4, 0.4),
+            });
+
+            return height - 80;
+        };
+
+        let currentY = drawHeader(page, height);
 
         if (data && data.length > 0) {
             const headers = Object.keys(data[0]);
             const fontSize = 7;
-            const cellPadding = 3;
-            const startY = height - 100;
+            const cellPadding = 4;
             const startX = 50;
-            const columnWidth = Math.min(120, (width - 100) / headers.length);
-            const baseRowHeight = 18;
+            const availableWidth = width - 100;
+            const columnWidth = Math.min(150, availableWidth / headers.length);
+            const baseRowHeight = 20;
 
-            let currentY = startY;
-
-            // Calculate header height based on wrapped text
-            const headerLines = headers.map(h => this.wrapText(h, columnWidth - (cellPadding * 2), fontSize));
-            const maxHeaderLines = Math.max(...headerLines.map(lines => lines.length));
-            const headerRowHeight = Math.max(baseRowHeight, maxHeaderLines * 10 + 6);
-
-            // Draw header background
-            page.drawRectangle({
-                x: startX,
-                y: currentY - headerRowHeight + 5,
-                width: columnWidth * headers.length,
-                height: headerRowHeight,
-                color: rgb(0.95, 0.95, 0.97),
-            });
-
-            // Draw header borders and text
-            headers.forEach((header, i) => {
-                const x = startX + (i * columnWidth);
-
-                // Draw cell border
-                page.drawRectangle({
-                    x: x,
-                    y: currentY - headerRowHeight + 5,
-                    width: columnWidth,
-                    height: headerRowHeight,
-                    borderColor: rgb(0.7, 0.7, 0.7),
-                    borderWidth: 0.5,
+            const drawTableHeader = (currentPage: any, y: number) => {
+                // Background for header
+                currentPage.drawRectangle({
+                    x: startX,
+                    y: y - baseRowHeight + 5,
+                    width: columnWidth * headers.length,
+                    height: baseRowHeight,
+                    color: rgb(0.9, 0.9, 0.95),
                 });
 
-                // Draw header text (multi-line)
-                const lines = headerLines[i];
-                lines.forEach((line, lineIdx) => {
-                    page.drawText(line, {
+                headers.forEach((header, i) => {
+                    const x = startX + (i * columnWidth);
+                    currentPage.drawRectangle({
+                        x: x,
+                        y: y - baseRowHeight + 5,
+                        width: columnWidth,
+                        height: baseRowHeight,
+                        borderColor: rgb(0.6, 0.6, 0.6),
+                        borderWidth: 0.5,
+                    });
+
+                    const cleanHeader = header.replace(/([A-Z])/g, ' $1').trim().toUpperCase();
+                    const lines = this.wrapText(cleanHeader, columnWidth - (cellPadding * 2), fontSize);
+                    currentPage.drawText(lines[0] || '', {
                         x: x + cellPadding,
-                        y: currentY - headerRowHeight + headerRowHeight - 8 - (lineIdx * 10),
+                        y: y - baseRowHeight + 12,
                         size: fontSize,
                         font: boldFont,
-                        color: rgb(0.2, 0.2, 0.2),
+                        color: rgb(0.1, 0.1, 0.1),
                     });
                 });
-            });
 
-            currentY -= headerRowHeight;
+                return y - baseRowHeight;
+            };
 
-            // Draw data rows (limit to first 30 rows to fit on page)
-            const rowsToShow = Math.min(data.length, 30);
-            for (let rowIdx = 0; rowIdx < rowsToShow; rowIdx++) {
-                const row = data[rowIdx];
+            currentY = drawTableHeader(page, currentY);
 
-                if (currentY < 50) {
-                    // Add new page if needed
-                    page = pdfDoc.addPage([842, 595]);
-                    currentY = height - 50;
+            for (let i = 0; i < data.length; i++) {
+                if (currentY < 60) {
+                    const result = createPage();
+                    page = result.page;
+                    currentY = drawHeader(page, height);
+                    currentY = drawTableHeader(page, currentY);
                 }
 
+                const row = data[i];
                 headers.forEach((header, colIdx) => {
                     const x = startX + (colIdx * columnWidth);
-
-                    // Draw cell border
                     page.drawRectangle({
                         x: x,
                         y: currentY - baseRowHeight + 5,
                         width: columnWidth,
                         height: baseRowHeight,
                         borderColor: rgb(0.8, 0.8, 0.8),
-                        borderWidth: 0.5,
-                        color: rgb(1, 1, 1), // White background
+                        borderWidth: 0.3,
                     });
 
-                    const cellValue = row[header];
-                    const text = cellValue !== null && cellValue !== undefined
-                        ? String(cellValue)
-                        : '-';
-
-                    // Wrap text if needed
-                    const cellLines = this.wrapText(text, columnWidth - (cellPadding * 2), fontSize);
-                    const displayText = cellLines[0]; // Show only first line for data cells
-
-                    // Draw cell text
-                    page.drawText(displayText, {
+                    const text = String(row[header] ?? '-');
+                    const lines = this.wrapText(text, columnWidth - (cellPadding * 2), fontSize);
+                    page.drawText(lines[0] || '', {
                         x: x + cellPadding,
-                        y: currentY - baseRowHeight + 10,
-                        size: fontSize,
+                        y: currentY - baseRowHeight + 11,
+                        size: fontSize - 0.5,
                         font: timesRomanFont,
-                        color: rgb(0, 0, 0),
+                        color: rgb(0.2, 0.2, 0.2),
                     });
                 });
 
                 currentY -= baseRowHeight;
-            }
-
-            // Add footer if data was truncated
-            if (data.length > 30) {
-                page.drawText(`Showing first 30 of ${data.length} records. Download Excel for complete data.`, {
-                    x: 50,
-                    y: 30,
-                    size: 8,
-                    font: timesRomanFont,
-                    color: rgb(0.5, 0.5, 0.5),
-                });
             }
         }
 
@@ -213,7 +192,7 @@ export class ReportsService {
                 e1.email AS assignedEmail,
                 CONCAT(e2.first_name, ' ', e2.last_name) AS previousUser
             FROM asset_info a
-            LEFT JOIN device_info d ON a.device_id = d.id
+            LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
             LEFT JOIN employees e1 ON a.assigned_to_employee_id = e1.id
             LEFT JOIN employees e2 ON a.previous_user_employee_id = e2.id
@@ -226,7 +205,7 @@ export class ReportsService {
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
-            'Device Configuration': asset.brandName || 'N/A',
+            'Brand': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',
             'Configuration': asset.configuration || 'N/A',
             'Box Number': asset.boxNo || 'N/A',
@@ -246,63 +225,45 @@ export class ReportsService {
     }
 
     async getAssetAllocationReports(format = 'summary') {
-        // Query only for allocated assets (where assigned_to_employee_id is not null)
         const query = `
             SELECT 
                 a.id AS assetId,
                 a.serial_number AS serialNumber,
                 a.model,
                 a.configuration,
-                a.box_no AS boxNo,
                 a.asset_status_enum AS status,
-                a.purchase_date AS purchaseDate,
-                a.warranty_expiry AS warrantyExpiry,
                 a.user_assigned_date AS userAssignedDate,
-                a.last_return_date AS lastReturnDate,
-                a.created_at AS createdAt,
-                a.updated_at AS updatedAt,
                 d.device_name AS deviceName,
                 b.laptop_company AS brandName,
                 CONCAT(e1.first_name, ' ', e1.last_name) AS assignedTo,
                 e1.email AS assignedEmail,
                 e1.ph_number AS assignedPhone,
-                dept.name AS assignedDepartment,
-                CONCAT(e2.first_name, ' ', e2.last_name) AS previousUser
+                dept.name AS assignedDepartment
             FROM asset_info a
-            LEFT JOIN device_info d ON a.device_id = d.id
+            LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
             INNER JOIN employees e1 ON a.assigned_to_employee_id = e1.id
             LEFT JOIN departments dept ON e1.department_id = dept.id
-            LEFT JOIN employees e2 ON a.previous_user_employee_id = e2.id
             WHERE a.assigned_to_employee_id IS NOT NULL
             ORDER BY e1.first_name, e1.last_name, a.id DESC
         `;
 
         const rawResults = await this.dataSource.query(query);
 
-        const formattedAssets = rawResults.map((asset: any) => ({
+        return rawResults.map((asset: any) => ({
             'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
-            'Device Configuration': asset.brandName || 'N/A',
+            'Brand': asset.brandName || 'N/A',
             'Model': asset.model || 'N/A',
             'Configuration': asset.configuration || 'N/A',
-            'Box Number': asset.boxNo || 'N/A',
             'Status': asset.status,
             'Assigned To': asset.assignedTo,
-            'Assigned Employee Email': asset.assignedEmail || 'N/A',
-            'Assigned Employee Phone': asset.assignedPhone || 'N/A',
+            'Email': asset.assignedEmail || 'N/A',
+            'Phone': asset.assignedPhone || 'N/A',
             'Department': asset.assignedDepartment || 'N/A',
-            'User Assigned Date': asset.userAssignedDate || 'N/A',
-            'Previous User': asset.previousUser || 'N/A',
-            'Purchase Date': asset.purchaseDate || 'N/A',
-            'Warranty Expiry': asset.warrantyExpiry || 'N/A',
-            'Last Return Date': asset.lastReturnDate || 'N/A',
-            'Created At': asset.createdAt,
-            'Updated At': asset.updatedAt,
+            'Assigned Date': asset.userAssignedDate || 'N/A'
         }));
-
-        return formattedAssets;
     }
 
     async getEmployeeReports(format = 'summary') {
@@ -395,12 +356,12 @@ export class ReportsService {
                 a.model,
                 a.warranty_expiry AS warrantyExpiry,
                 a.purchase_date AS purchaseDate,
-                d.device_name AS deviceName,
+                d.name AS deviceName,
                 b.laptop_company AS brandName,
                 CONCAT(e1.first_name, ' ', e1.last_name) AS assignedTo,
                 (a.warranty_expiry - CURRENT_DATE) AS daysUntilExpiry
             FROM asset_info a
-            LEFT JOIN device_info d ON a.device_id = d.id
+            LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
             LEFT JOIN employees e1 ON a.assigned_to_employee_id = e1.id
             WHERE a.warranty_expiry IS NOT NULL 
@@ -427,17 +388,17 @@ export class ReportsService {
         const query = `
             SELECT 
                 dept.name AS departmentName,
-                d.device_name AS deviceName,
+                d.name AS deviceName,
                 b.laptop_company AS brandName,
                 COUNT(a.id) AS assetCount,
                 STRING_AGG(a.serial_number, ', ') AS serialNumbers
             FROM asset_info a
             INNER JOIN employees e ON a.assigned_to_employee_id = e.id
             INNER JOIN departments dept ON e.department_id = dept.id
-            LEFT JOIN device_info d ON a.device_id = d.id
+            LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
             WHERE a.assigned_to_employee_id IS NOT NULL
-            GROUP BY dept.name, d.device_name, b.laptop_company
+            GROUP BY dept.name, d.name, b.laptop_company
             ORDER BY dept.name, assetCount DESC
         `;
 
@@ -455,7 +416,7 @@ export class ReportsService {
     async getAssetByDeviceTypeReport(format = 'summary') {
         const query = `
             SELECT 
-                d.device_name AS deviceName,
+                d.name AS deviceName,
                 b.laptop_company AS brandName,
                 a.model,
                 a.asset_status_enum AS status,
@@ -463,10 +424,10 @@ export class ReportsService {
                 SUM(CASE WHEN a.assigned_to_employee_id IS NOT NULL THEN 1 ELSE 0 END) AS assignedCount,
                 SUM(CASE WHEN a.assigned_to_employee_id IS NULL THEN 1 ELSE 0 END) AS unassignedCount
             FROM asset_info a
-            LEFT JOIN device_info d ON a.device_id = d.id
+            LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
-            GROUP BY d.device_name, b.laptop_company, a.model, a.asset_status_enum
-            ORDER BY d.device_name, totalAssets DESC
+            GROUP BY d.name, b.laptop_company, a.model, a.asset_status_enum
+            ORDER BY d.name, totalAssets DESC
         `;
 
         const rawResults = await this.dataSource.query(query);
@@ -491,10 +452,10 @@ export class ReportsService {
                 a.configuration,
                 a.asset_status_enum AS status,
                 a.purchase_date AS purchaseDate,
-                d.device_name AS deviceName,
+                d.name AS deviceName,
                 b.laptop_company AS brandName
             FROM asset_info a
-            LEFT JOIN device_info d ON a.device_id = d.id
+            LEFT JOIN asset_types d ON a.device_id = d.id
             LEFT JOIN device_configs b ON a.device_config_id = b.id
             WHERE a.assigned_to_employee_id IS NULL
             ORDER BY a.created_at DESC
@@ -684,6 +645,8 @@ export class ReportsService {
         const query = `
             SELECT 
                 l.id,
+                l.license_key AS licenseKey,
+                l.purchase_date AS purchaseDate,
                 l.assigned_date AS assignedDate,
                 l.expiry_date AS expiryDate,
                 l.remarks,
@@ -692,7 +655,7 @@ export class ReportsService {
                 CONCAT(e.first_name, ' ', e.last_name) AS assignedEmployee
             FROM licenses l
             LEFT JOIN company_info c ON l.company_id = c.id
-            LEFT JOIN applications a ON l.application_id = a.id
+            LEFT JOIN license_masters a ON l.application_id = a.id
             LEFT JOIN employees e ON l.assigned_employee_id = e.id
             ORDER BY l.created_at DESC
         `;
@@ -702,8 +665,10 @@ export class ReportsService {
         return rawResults.map((row: any) => ({
             'ID': row.id,
             'Software': row.softwareName || 'N/A',
+            'License Key': row.licenseKey || '---',
             'Company': row.companyName || 'N/A',
             'Assigned Employee': row.assignedEmployee || 'Unassigned',
+            'Purchase Date': row.purchaseDate || 'N/A',
             'Assigned Date': row.assignedDate || 'N/A',
             'Expiry Date': row.expiryDate || 'N/A',
             'Remarks': row.remarks || '---'
@@ -714,12 +679,12 @@ export class ReportsService {
         const query = `
             SELECT 
                 b.laptop_company AS brandName,
-                d.device_name AS deviceType,
+                d.name AS deviceType,
                 COUNT(a.id) AS assetCount
             FROM device_configs b
             LEFT JOIN asset_info a ON b.id = a.device_config_id
-            LEFT JOIN device_info d ON a.device_id = d.id
-            GROUP BY b.laptop_company, d.device_name
+            LEFT JOIN asset_types d ON a.device_id = d.id
+            GROUP BY b.laptop_company, d.name
             ORDER BY assetCount DESC
         `;
 
@@ -787,6 +752,7 @@ export class ReportsService {
             case 'Department Summary Report':
                 data = await this.getDepartmentSummaryReport(fetchFormat);
                 break;
+            case 'Device Brands Report':
             case 'Device Configuration Report':
                 data = await this.getDeviceConfigsReport(fetchFormat);
                 break;
