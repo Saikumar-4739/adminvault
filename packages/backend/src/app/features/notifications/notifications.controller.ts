@@ -1,6 +1,5 @@
-import { Controller, Get, Post, Body, Param, Delete, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Param, Delete, Query, Request } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { NotificationType, GlobalResponse } from '@adminvault/shared-models';
 
 @Controller('notifications')
 export class NotificationsController {

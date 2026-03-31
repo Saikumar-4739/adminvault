@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request, UploadedFile, UseInterceptors, Get, Param, Res } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, UploadedFile, UseInterceptors, Get, Param, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import express from 'express';
 import { ApiTags, ApiBody, ApiConsumes } from '@nestjs/swagger';

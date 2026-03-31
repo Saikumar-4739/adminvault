@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { CreateLicenseModel, UpdateLicenseModel, DeleteLicenseModel, GetAllLicensesResponseModel, GlobalResponse, IdRequestModel } from '@adminvault/shared-models';
+import { CreateLicenseModel, UpdateLicenseModel, GetAllLicensesResponseModel, GlobalResponse, IdRequestModel } from '@adminvault/shared-models';
 
 export class LicensesService extends CommonAxiosService {
     private baseUrl = '/licenses';

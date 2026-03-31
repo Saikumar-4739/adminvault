@@ -7,7 +7,6 @@ import {
     DashboardUpdatePayload,
     TicketEventPayload,
     AssetEventPayload,
-    UserStatusPayload,
     SystemAlertPayload,
 } from '@adminvault/shared-models';
 

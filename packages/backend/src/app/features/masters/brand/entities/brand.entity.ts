@@ -22,4 +22,7 @@ export class DeviceConfigEntity extends MasterBaseEntity {
 
     @Column('varchar', { name: 'storage', length: 100, nullable: true, comment: 'Storage' })
     storage: string;
+
+    @Column('varchar', { name: 'asset_type', length: 255, nullable: true, comment: 'Asset Type (Laptop, Desktop, etc)' })
+    assetType: string;
 }

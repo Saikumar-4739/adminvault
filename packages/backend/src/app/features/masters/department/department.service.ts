@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Not } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { DepartmentRepository } from './repositories/department.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateDepartmentModel, UpdateDepartmentModel, GetAllDepartmentsResponseModel, CreateDepartmentResponseModel, DepartmentDropdownModel, DepartmentDropdownResponse, IdRequestModel } from '@adminvault/shared-models';

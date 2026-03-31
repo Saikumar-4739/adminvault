@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Not } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { LicenseRepository } from './repositories/license.repository';
 import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateLicenseMasterModel, UpdateLicenseMasterModel, GetAllLicenseMastersResponseModel, IdRequestModel } from '@adminvault/shared-models';

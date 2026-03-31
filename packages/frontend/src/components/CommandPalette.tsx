@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Command, Search, ArrowRight, Activity, BookOpen, Plus, FileText, LayoutGrid, Users, Package, Key, ShieldCheck, Network } from 'lucide-react';
+import { Command, Search, ArrowRight, Activity, BookOpen, Plus, LayoutGrid, Users, Package, Key, Network } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Action {

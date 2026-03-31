@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import Link from 'react-router-dom'; // Note: In Next.js we use next/link but the sidebar uses next/navigation. 
+// Note: In Next.js we use next/link but the sidebar uses next/navigation. 
 // Wait, the existing not-found.tsx used next/link.
 
 import LinkNext from 'next/link';
-import { Home, ArrowLeft, Construction, Sparkles, Shield, Rocket } from 'lucide-react';
+import { Home, ArrowLeft, Construction, Sparkles, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/contexts/ThemeContext';
 

@@ -6,7 +6,7 @@ import { getSocket } from '@/lib/socket';
  * NOT exported - used internally by other hooks
  * @param namespace The namespace to connect to
  */
-const useWebSocket = (namespace: string = '/ws') => {
+const useWebSocket = (namespace = '/ws') => {
     const [isConnected, setIsConnected] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting' | 'error'>('disconnected');
     const [error, setError] = useState<string | null>(null);
@@ -79,7 +79,7 @@ export const useWebSocketEvent = (
     event: string,
     handler: (...args: any[]) => void,
     dependencies: any[] = [],
-    namespace: string = '/ws'
+    namespace = '/ws'
 ) => {
     const { subscribe, unsubscribe, isConnected } = useWebSocket(namespace);
     const handlerRef = useRef(handler);
@@ -109,7 +109,7 @@ export const useWebSocketEvent = (
 /**
  * Hook for emitting WebSocket events
  */
-export const useWebSocketEmit = (namespace: string = '/ws') => {
+export const useWebSocketEmit = (namespace = '/ws') => {
     const { emit, isConnected } = useWebSocket(namespace);
 
     const safeEmit = useCallback((event: string, data?: any) => {
@@ -127,7 +127,7 @@ export const useWebSocketEmit = (namespace: string = '/ws') => {
 /**
  * Hook for WebSocket connection status
  */
-export const useWebSocketStatus = (namespace: string = '/ws') => {
+export const useWebSocketStatus = (namespace = '/ws') => {
     const { isConnected, connectionStatus, error } = useWebSocket(namespace);
 
     return {

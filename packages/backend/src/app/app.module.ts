@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CompanyInfoModule } from './features/masters/company-info/company-info.module';
@@ -21,13 +21,12 @@ import { NotificationsModule } from './features/notifications/notifications.modu
 import { OnboardingModule } from './features/onboarding/onboarding.module';
 import { ContractModule } from './features/contracts/contract.module';
 import configuration from '../config/configuration';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { WebSocketModule } from './features/websocket/websocket.module';
 import { NetworkModule } from './features/network/network.module';
 import { SecurityModule } from './features/security/security.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
 
 @Module({

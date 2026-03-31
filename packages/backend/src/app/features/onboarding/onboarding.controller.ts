@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { OnboardingService } from './onboarding.service';
-import { CreateWorkflowRequest, CompleteStepRequest, GlobalResponse, OnboardingWorkflowModel } from '@adminvault/shared-models';
+import { CreateWorkflowRequest, GlobalResponse, OnboardingWorkflowModel } from '@adminvault/shared-models';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
 @Controller('onboarding')

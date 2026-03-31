@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AssetInfoEntity } from './entities/asset-info.entity';
 import { AssetReturnHistoryEntity } from './entities/asset-return-history.entity';

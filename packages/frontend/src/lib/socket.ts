@@ -12,7 +12,7 @@ const baseUrl = configVariables.APP_AVS_SERVICE_URL.replace(/\/api$/, '');
  * Get or create a socket instance for a specific namespace
  * @param namespace The namespace to connect to (e.g., '/ws', '/tickets')
  */
-export function getSocket(namespace: string = '/ws'): any {
+export function getSocket(namespace = '/ws'): any {
   // Normalize namespace
   const ns = namespace.startsWith('/') ? namespace : `/${namespace}`;
   const socketKey = `${baseUrl}${ns}`;

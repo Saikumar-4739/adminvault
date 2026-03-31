@@ -103,13 +103,7 @@ export class DeleteLicenseModel {
 /**
  * Request model for getting a specific license
  */
-export class GetLicenseModel {
-    id: number;
 
-    constructor(id: number) {
-        this.id = id;
-    }
-}
 
 /**
  * Response model for a single license
@@ -175,13 +169,7 @@ export class LicenseResponseModel {
     }
 }
 
-export class GlobalLicenseResponseModel extends GlobalResponse<LicenseResponseModel> {
-    license!: LicenseResponseModel;
-    constructor(status: boolean, code: number, message: string, data: LicenseResponseModel) {
-        super(status, code, message, data);
-        this.license = data;
-    }
-}
+
 
 export class GetAllLicensesResponseModel extends GlobalResponse<LicenseResponseModel[]> {
     licenses!: LicenseResponseModel[];
@@ -191,7 +179,7 @@ export class GetAllLicensesResponseModel extends GlobalResponse<LicenseResponseM
     }
 }
 
-export class GetLicenseResponseModel extends GlobalLicenseResponseModel { }
+
 
 /**
  * Response model for license statistics

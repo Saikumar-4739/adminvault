@@ -30,6 +30,7 @@ export class DeviceConfigService {
             saveEnti.configuration = reqModel.configuration;
             saveEnti.ram = reqModel.ram;
             saveEnti.storage = reqModel.storage;
+            saveEnti.assetType = reqModel.assetType;
             saveEnti.userId = reqModel.userId;
             await transManager.getRepository(DeviceConfigEntity).save(saveEnti);
             await transManager.completeTransaction();
@@ -55,7 +56,8 @@ export class DeviceConfigService {
                 model: config.model,
                 configuration: config.configuration,
                 ram: config.ram,
-                storage: config.storage
+                storage: config.storage,
+                assetType: config.assetType
             }));
             return new GetAllDeviceConfigsResponseModel(true, 200, 'Device configurations retrieved successfully', mappedConfigs);
         } catch (error) {
@@ -79,7 +81,8 @@ export class DeviceConfigService {
                 isActive: reqModel.isActive,
                 configuration: reqModel.configuration,
                 ram: reqModel.ram,
-                storage: reqModel.storage
+                storage: reqModel.storage,
+                assetType: reqModel.assetType
             });
             await transManager.completeTransaction();
             return new GlobalResponse(true, 200, 'Device configuration updated successfully');

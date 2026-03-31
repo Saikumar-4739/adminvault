@@ -6,7 +6,7 @@
  * @param separator The separator to use (default: '-')
  * @returns The formatted date string, or '-' if the date is invalid/empty
  */
-export const formatDate = (date: Date | string | undefined | null, separator: string = '-'): string => {
+export const formatDate = (date: Date | string | undefined | null, separator = '-'): string => {
     if (!date) return '-';
 
     try {

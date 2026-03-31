@@ -229,7 +229,7 @@ const TicketsPage: React.FC = () => {
         const socket = getSocket('/tickets');
         socket.emit('joinAdmins');
 
-        socket.on('ticketCreated', (newTicket: any) => {
+        socket.on('ticketCreated', () => {
             fetchTickets();
             AlertMessages.getSuccessMessage('New ticket received!');
         });

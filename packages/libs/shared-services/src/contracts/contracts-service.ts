@@ -8,7 +8,7 @@ export class ContractsService extends CommonAxiosService {
         return this.axiosGetCall(`${this.baseUrl}/getAllContracts`);
     }
 
-    async getExpiringContracts(days: number = 30): Promise<GlobalResponse> {
+    async getExpiringContracts(days = 30): Promise<GlobalResponse> {
         return this.axiosGetCall(`${this.baseUrl}/getExpiringContracts?days=${days}`);
     }
 

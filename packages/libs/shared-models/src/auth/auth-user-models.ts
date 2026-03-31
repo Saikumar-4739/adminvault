@@ -87,12 +87,7 @@ export class ResetPasswordModel {
     }
 }
 
-export class VerifyEmailModel {
-    token: string;
-    constructor(token: string) {
-        this.token = token;
-    }
-}
+
 
 export class RefreshTokenModel {
     refreshToken: string;
@@ -101,14 +96,7 @@ export class RefreshTokenModel {
     }
 }
 
-export class RefreshTokenResponseModel {
-    accessToken: string;
-    refreshToken: string;
-    constructor(accessToken: string, refreshToken: string) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-    }
-}
+
 
 export class UserResponseModel {
     id: number;

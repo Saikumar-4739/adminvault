@@ -183,7 +183,7 @@ export class SendAssetAssignedEmailModel {
         assetName: string,
         assignedBy: string,
         assignedDate: Date,
-        isReassignment: boolean = false,
+        isReassignment = false,
         remarks?: string,
         assignedToName?: string,
         recipientRole: 'ASSIGNEE' | 'MANAGER' | 'ADMIN' = 'ASSIGNEE'
@@ -216,13 +216,7 @@ export class SendTicketStatusUpdateEmailModel {
     }
 }
 
-export class GetAllAccessRequestsModel extends GlobalResponse {
-    override data: any[];
-    constructor(status: boolean, code: number, message: string, data: any[]) {
-        super(status, code, message);
-        this.data = data;
-    }
-}
+
 
 export class SendPOApprovalEmailModel {
     recipientEmail: string;

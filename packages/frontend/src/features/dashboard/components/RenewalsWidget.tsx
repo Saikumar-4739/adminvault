@@ -1,16 +1,11 @@
 'use client';
 
-import { Calendar, AlertTriangle, ArrowRight, CheckCircle } from 'lucide-react';
+import { Calendar, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { DashboardStats } from '@adminvault/shared-models';
-import Link from 'next/link';
 
 interface RenewalsWidgetProps {
     stats: DashboardStats | null;
-}
-
-interface RenewalsWidgetProps {
     children?: React.ReactNode;
 }
 
@@ -71,20 +66,13 @@ export const RenewalsWidget: React.FC<RenewalsWidgetProps> = ({ stats }: Renewal
                                     <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{item.applicationName}</p>
                                     <p className={`text-[10px] font-medium ${isUrgent ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'
                                         }`}>
-                                        {formatDaysRemaining(days)} • {item.assignedTo}
+                                        {formatDaysRemaining(days)}
                                     </p>
                                 </div>
                             </div>
                         );
                     })
                 )}
-            </div>
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <Link href="/licenses">
-                    <Button variant="ghost" size="sm" className="w-full text-xs" rightIcon={<ArrowRight className="h-3 w-3" />}>
-                        View All Licenses
-                    </Button>
-                </Link>
             </div>
         </Card>
     );

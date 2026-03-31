@@ -41,7 +41,7 @@ export class ContractService {
         }
     }
 
-    async getExpiringContracts(days: number = 30): Promise<GlobalResponse> {
+    async getExpiringContracts(days = 30): Promise<GlobalResponse> {
         try {
             const expiryDateLimit = new Date();
             expiryDateLimit.setDate(expiryDateLimit.getDate() + days);

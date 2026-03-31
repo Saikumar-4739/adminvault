@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreateDeviceConfigModel, UpdateDeviceConfigModel, DeviceConfig } from '@adminvault/shared-models';
+import { CreateDeviceConfigModel, UpdateDeviceConfigModel, DeviceConfig, AssetType } from '@adminvault/shared-models';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
-import { DeviceConfigService } from '@adminvault/shared-services';
+import { DeviceConfigService, AssetTypeService } from '@adminvault/shared-services';
 
 
 interface DeviceConfigsMasterViewProps {
@@ -28,19 +29,34 @@ export const DeviceConfigsMasterView: React.FC<DeviceConfigsMasterViewProps> = (
         model: '',
         configuration: '',
         ram: '',
-        storage: ''
+        storage: '',
+        assetType: ''
     });
+    const [assetTypes, setAssetTypes] = useState<AssetType[]>([]);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const lastFetchedCompanyId = useRef<number | null>(null);
     const deviceConfigService = new DeviceConfigService();
+    const assetTypeService = new AssetTypeService();
 
     useEffect(() => {
         if (user?.companyId && lastFetchedCompanyId.current !== user.companyId) {
             lastFetchedCompanyId.current = user.companyId;
             getAllConfigs();
+            getAssetTypes();
         }
     }, [user?.companyId]);
+
+    const getAssetTypes = async (): Promise<void> => {
+        try {
+            const response = await assetTypeService.getAllAssetTypes();
+            if (response.status) {
+                setAssetTypes(response.assetTypes || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch asset types', error);
+        }
+    };
 
     const getAllConfigs = async (): Promise<void> => {
         try {
@@ -69,7 +85,8 @@ export const DeviceConfigsMasterView: React.FC<DeviceConfigsMasterViewProps> = (
                     formData.model,
                     formData.configuration,
                     formData.ram,
-                    formData.storage
+                    formData.storage,
+                    formData.assetType
                 );
                 const response = await deviceConfigService.updateDeviceConfig(model);
                 if (response.status) {
@@ -90,7 +107,9 @@ export const DeviceConfigsMasterView: React.FC<DeviceConfigsMasterViewProps> = (
                     formData.model,
                     formData.configuration,
                     formData.ram,
-                    formData.storage
+                    formData.storage,
+                    undefined,
+                    formData.assetType
                 );
                 const response = await deviceConfigService.createDeviceConfig(model);
                 if (response.status) {
@@ -115,6 +134,7 @@ export const DeviceConfigsMasterView: React.FC<DeviceConfigsMasterViewProps> = (
             configuration: item.configuration || '',
             ram: item.ram || '',
             storage: item.storage || '',
+            assetType: item.assetType || ''
         });
         setIsModalOpen(true);
     };
@@ -144,7 +164,7 @@ export const DeviceConfigsMasterView: React.FC<DeviceConfigsMasterViewProps> = (
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ laptopCompany: '', model: '', configuration: '', ram: '', storage: '' });
+        setFormData({ laptopCompany: '', model: '', configuration: '', ram: '', storage: '', assetType: '' });
     };
 
     return (
@@ -170,6 +190,7 @@ export const DeviceConfigsMasterView: React.FC<DeviceConfigsMasterViewProps> = (
                                 <tr>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Laptop Company</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Model</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Asset Type</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Configuration</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">RAM</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Storage</th>
@@ -184,6 +205,7 @@ export const DeviceConfigsMasterView: React.FC<DeviceConfigsMasterViewProps> = (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.laptopCompany}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.model || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.assetType || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.configuration || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.ram || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.storage || '-'}</td>
@@ -211,6 +233,17 @@ export const DeviceConfigsMasterView: React.FC<DeviceConfigsMasterViewProps> = (
                     <Input label="Laptop Company" value={formData.laptopCompany} onChange={(e) => setFormData({ ...formData, laptopCompany: e.target.value })} className="h-14" required />
 
                     <Input label="Model" value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} className="h-14" required />
+
+                    <Select
+                        label="Asset Type"
+                        value={formData.assetType}
+                        onChange={(e) => setFormData({ ...formData, assetType: e.target.value })}
+                        options={[
+                            { value: '', label: 'Select Asset Type' },
+                            ...assetTypes.map(at => ({ value: at.name, label: at.name }))
+                        ]}
+                        className="h-14"
+                    />
 
                     <Input label="Configuration" value={formData.configuration} onChange={(e) => setFormData({ ...formData, configuration: e.target.value })} className="h-14" />
 

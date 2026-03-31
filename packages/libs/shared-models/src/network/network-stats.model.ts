@@ -108,30 +108,7 @@ export class NetworkHealthStatus {
 /**
  * Real-time Network Metrics
  */
-export class NetworkMetricsPayload {
-    timestamp: Date;
-    activeConnections: number;
-    latency: number;
-    throughput: number;
-    cpuUsage?: number;
-    memoryUsage?: number;
 
-    constructor(
-        timestamp: Date,
-        activeConnections: number,
-        latency: number,
-        throughput: number,
-        cpuUsage?: number,
-        memoryUsage?: number
-    ) {
-        this.timestamp = timestamp;
-        this.activeConnections = activeConnections;
-        this.latency = latency;
-        this.throughput = throughput;
-        this.cpuUsage = cpuUsage;
-        this.memoryUsage = memoryUsage;
-    }
-}
 
 /**
  * Connection Event Payload

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle }
 import { CreateCredentialVaultModel, UpdateCredentialVaultModel, CredentialVaultModel, IdRequestModel } from '@adminvault/shared-models';
 import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Pencil, Trash2, Key, Eye, EyeOff, Copy, User, Calendar, ExternalLink } from 'lucide-react';
+import { Pencil, Trash2, Key, Eye, EyeOff, Copy, ExternalLink } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/Input';
@@ -190,83 +190,68 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 pb-12">
                     {filteredVaults.map((item) => (
                         <div
                             key={item.id}
-                            className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[1.25rem] shadow-sm hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5 transition-all duration-300 p-4 overflow-hidden"
+                            className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[1rem] shadow-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 p-3 overflow-hidden"
                         >
                             {/* Card Background Decoration */}
                             <div className="absolute top-0 right-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] group-hover:scale-110 transition-all duration-500">
                                 <Key className="h-16 w-16 text-blue-500 rotate-12" />
                             </div>
 
-                            <div className="relative z-10 flex flex-col h-full space-y-3">
+                            <div className="relative z-10 flex flex-col h-full space-y-2">
                                 <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center border border-blue-500/20">
-                                            <span className="text-sm font-black text-blue-600 uppercase">{item.appName?.charAt(0)}</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="h-6 w-6 rounded bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center border border-blue-500/20">
+                                            <span className="text-[9px] font-black text-blue-600 uppercase">{item.appName?.charAt(0)}</span>
                                         </div>
                                         <div className="min-w-0">
-                                            <h3 className="text-xs font-black text-slate-900 dark:text-white tracking-tight truncate uppercase leading-none">{item.appName}</h3>
-                                            <p className="text-[9px] font-bold text-slate-400 truncate max-w-[120px] mt-1 italic">{item.description || 'System Secret'}</p>
+                                            <h3 className="text-[9px] font-black text-slate-900 dark:text-white tracking-tight truncate uppercase leading-none">{item.appName}</h3>
+                                            <p className="text-[7px] font-bold text-slate-400 truncate max-w-[80px] mt-0.5 italic">{item.description || 'Secret'}</p>
                                         </div>
                                     </div>
-                                    <div className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${item.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
+                                    <div className={`px-1 py-0 rounded text-[7px] font-black uppercase tracking-wider border ${item.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
                                         {item.isActive ? 'active' : 'inactive'}
                                     </div>
                                 </div>
 
-                                <div className="bg-slate-50/50 dark:bg-white/5 rounded-lg p-2.5 space-y-2 border border-slate-100 dark:border-white/5">
+                                <div className="bg-slate-50/50 dark:bg-white/5 rounded p-1.5 space-y-1 border border-slate-100 dark:border-white/5">
                                     <div className="flex items-center justify-between group/pw">
-                                        <div className="space-y-0.5">
-                                            <p className="text-[8px] uppercase tracking-widest font-black text-slate-400">Secret</p>
-                                            <p className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 tracking-wider">
-                                                {revealedPasswords[item.id] ? item.password : '••••••••'}
-                                            </p>
+                                        <div className="space-y-0 text-[9px] font-mono font-bold text-slate-700 dark:text-slate-200 tracking-wider">
+                                            {revealedPasswords[item.id] ? item.password : '••••••••'}
                                         </div>
                                         <div className="flex items-center opacity-0 group-hover/pw:opacity-100 transition-opacity">
-                                            <button onClick={(e) => toggleReveal(item.id, e)} className="p-1.5 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-all">
-                                                {revealedPasswords[item.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                            <button onClick={(e) => toggleReveal(item.id, e)} className="p-0.5 hover:bg-white dark:hover:bg-slate-800 rounded text-slate-400 hover:text-blue-500 transition-all">
+                                                {revealedPasswords[item.id] ? <EyeOff className="h-2 w-2" /> : <Eye className="h-2 w-2" />}
                                             </button>
-                                            <button onClick={(e) => copyToClipboard(item.password, e)} className="p-1.5 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-all">
-                                                <Copy className="h-3 w-3" />
+                                            <button onClick={(e) => copyToClipboard(item.password, e)} className="p-0.5 hover:bg-white dark:hover:bg-slate-800 rounded text-slate-400 hover:text-blue-500 transition-all">
+                                                <Copy className="h-2 w-2" />
                                             </button>
                                         </div>
                                     </div>
 
                                     <div className="h-px bg-slate-200/50 dark:bg-white/5" />
 
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="space-y-0.5">
-                                            <div className="flex items-center gap-1 text-[8px] uppercase tracking-widest font-black text-slate-400">
-                                                <User className="h-2.5 w-2.5" />
-                                                Owner
-                                            </div>
-                                            <p className="text-[9px] font-bold text-slate-600 dark:text-slate-300 truncate tracking-tight">{item.owner || '-'}</p>
-                                        </div>
-                                        <div className="space-y-0.5 text-right">
-                                            <div className="flex items-center justify-end gap-1 text-[8px] uppercase tracking-widest font-black text-slate-400">
-                                                <Calendar className="h-2.5 w-2.5" />
-                                                Expiry
-                                            </div>
-                                            <p className="text-[9px] font-bold text-slate-600 dark:text-slate-300 tracking-tight">{formatDate(item.expireDate)}</p>
-                                        </div>
+                                    <div className="flex items-center justify-between gap-1 text-[7px] font-bold text-slate-500">
+                                        <p className="truncate">{item.owner || '-'}</p>
+                                        <p className="flex-shrink-0">{formatDate(item.expireDate)}</p>
                                     </div>
                                 </div>
 
-                                <div className="mt-auto pt-1 flex items-center justify-between">
+                                <div className="mt-auto flex items-center justify-between pt-0.5">
                                     <div className="flex items-center gap-0.5">
-                                        <button onClick={(e) => handleEdit(item, e)} className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-slate-400 hover:text-blue-600 transition-all">
-                                            <Pencil className="h-3.5 w-3.5" />
+                                        <button onClick={(e) => handleEdit(item, e)} className="p-0.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded text-slate-400 hover:text-blue-600 transition-all">
+                                            <Pencil className="h-2.5 w-2.5" />
                                         </button>
-                                        <button onClick={(e) => handleDeleteClick(item.id, e)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg text-slate-400 hover:text-rose-600 transition-all">
-                                            <Trash2 className="h-3.5 w-3.5" />
+                                        <button onClick={(e) => handleDeleteClick(item.id, e)} className="p-0.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded text-slate-400 hover:text-rose-600 transition-all">
+                                            <Trash2 className="h-2.5 w-2.5" />
                                         </button>
                                     </div>
                                     {item.description?.includes('http') && (
-                                        <a href={item.description} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-blue-500 hover:text-blue-600 transition-colors">
-                                            <ExternalLink className="h-3.5 w-3.5" />
+                                        <a href={item.description} target="_blank" rel="noopener noreferrer" className="p-0.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded text-blue-500 hover:text-blue-600 transition-colors">
+                                            <ExternalLink className="h-2.5 w-2.5" />
                                         </a>
                                     )}
                                 </div>

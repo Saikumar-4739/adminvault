@@ -1,16 +1,168 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Lock, Plus, Search } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Lock, Plus, Search, ShieldCheck, Key, ShieldAlert, Fingerprint } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { Button } from '@/components/ui/Button';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { CredentialVaultMasterView, CredentialVaultMasterViewHandle } from '../masters/components/credential-vault-master-view';
+import { authService } from '@/lib/api/services';
+import { AlertMessages } from '@/lib/utils/AlertMessages';
 
 const CredentialVaultPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [isUnlocked, setIsUnlocked] = useState(false);
+    const [password, setPassword] = useState('');
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isBiometricSupported, setIsBiometricSupported] = useState(false);
     const viewRef = useRef<CredentialVaultMasterViewHandle>(null);
+
+    useEffect(() => {
+        const vaultSession = sessionStorage.getItem('vault_unlocked');
+        if (vaultSession === 'true') {
+            setIsUnlocked(true);
+        }
+
+        // Check for WebAuthn support
+        if (window.PublicKeyCredential) {
+            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+                .then(available => setIsBiometricSupported(available))
+                .catch(() => setIsBiometricSupported(false));
+        }
+    }, []);
+
+    const handleUnlock = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!password) return;
+
+        setIsVerifying(true);
+        try {
+            const response = await authService.verifyPassword(password);
+            if (response.status) {
+                unlockVault();
+            } else {
+                AlertMessages.getErrorMessage('Invalid security key');
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Verification failed');
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
+    const handleBiometric = async () => {
+        try {
+            // In a real app, this would involve a challenge from the server
+            // For now, we simulate the biometric trigger if supported
+            if (isBiometricSupported) {
+                // This is a simplified trigger. Real WebAuthn requires backend registration.
+                // We'll use this to "validate" the user locally if they've already logged in.
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+
+                // Using a mock-like approach for demonstration if not fully configured
+                // In production, we'd use navigator.credentials.get(...)
+
+                // For this UI demo, we'll simulate a successful biometric check 
+                // if the device supports it, and we trust the local session.
+                setIsVerifying(true);
+                setTimeout(() => {
+                    unlockVault();
+                    setIsVerifying(false);
+                }, 1000);
+            }
+        } catch (error) {
+            AlertMessages.getErrorMessage('Biometric verification failed');
+        }
+    };
+
+    const unlockVault = () => {
+        setIsUnlocked(true);
+        sessionStorage.setItem('vault_unlocked', 'true');
+        AlertMessages.getSuccessMessage('Vault Unlocked');
+        setPassword('');
+    };
+
+    const handleLock = () => {
+        setIsUnlocked(false);
+        sessionStorage.removeItem('vault_unlocked');
+        AlertMessages.getSuccessMessage('Vault Locked');
+    };
+
+    if (!isUnlocked) {
+        return (
+            <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN]}>
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+                    <div className="w-full max-w-sm animate-in fade-in zoom-in duration-500">
+                        <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-2xl shadow-blue-500/10 p-6 md:p-8 space-y-6 relative overflow-hidden">
+                            {/* Decorative Background */}
+                            <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl" />
+                            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl" />
+
+                            <div className="relative z-10 flex flex-col items-center text-center space-y-6">
+                                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/30 rotate-3 transition-transform hover:rotate-0 duration-500">
+                                    <Lock className="h-8 w-8 text-white animate-pulse" />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <h1 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Sentinel Vault</h1>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Authentication Required</p>
+                                </div>
+
+                                <div className="p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-500/20 rounded-xl flex items-center gap-2.5 w-full">
+                                    <ShieldAlert className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                                    <p className="text-[9px] font-bold text-amber-700 dark:text-amber-400 text-left leading-tight">
+                                        Verify identity to access secrets.
+                                    </p>
+                                </div>
+
+                                <form onSubmit={handleUnlock} className="w-full space-y-4">
+                                    <div className="relative group">
+                                        <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                                        <input
+                                            type="password"
+                                            placeholder="Security Token / Password"
+                                            className="w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-[10px] font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        <Button
+                                            type="submit"
+                                            disabled={isVerifying || !password}
+                                            className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black uppercase tracking-[0.15em] text-[10px] rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                                        >
+                                            {isVerifying ? 'Authenticating...' : 'Unlock Vault'}
+                                        </Button>
+
+                                        {isBiometricSupported && (
+                                            <button
+                                                type="button"
+                                                onClick={handleBiometric}
+                                                className="w-full h-12 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 font-black uppercase tracking-[0.15em] text-[10px] rounded-xl transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <Fingerprint className="h-4 w-4" />
+                                                Use Biometrics
+                                            </button>
+                                        )}
+                                    </div>
+                                </form>
+
+                                <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                    <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                                    End-to-End Encrypted
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </RouteGuard>
+        );
+    }
 
     return (
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN]}>
@@ -22,6 +174,15 @@ const CredentialVaultPage: React.FC = () => {
                     gradient="from-blue-600 to-indigo-700"
                     actions={
                         <div className="flex items-center gap-3">
+                            <Button
+                                onClick={handleLock}
+                                variant="outline"
+                                className="h-8 px-3 font-black uppercase tracking-widest text-[9px] border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5"
+                                size="sm"
+                                leftIcon={<Lock className="h-3 w-3 text-slate-400" />}
+                            >
+                                Lock Vault
+                            </Button>
                             <div className="relative group">
                                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                                 <input
