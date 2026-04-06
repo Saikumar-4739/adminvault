@@ -17,7 +17,7 @@ import { BulkActionBar } from '@/components/common/BulkActionBar';
 import { exportToCSV } from '@/lib/csv-utils';
 import dynamic from 'next/dynamic';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, IdRequestModel, CreateEmployeeModel, UpdateEmployeeModel, EmployeeStatusEnum } from '@adminvault/shared-models';
+import { UserRoleEnum, CreateEmployeeModel, UpdateEmployeeModel, EmployeeStatusEnum, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -37,6 +37,11 @@ interface Employee {
     remarks?: string;
     managerId?: number | null;
     managerName?: string;
+    joiningDate?: string;
+    emailCreatedDate?: string;
+    lastWorkingDay?: string;
+    emailDeletionDate?: string;
+    groupEmails?: string[];
     createdAt?: string;
 }
 
@@ -58,13 +63,29 @@ const EmployeesPage: React.FC = () => {
     const [departments, setDepartments] = useState<Department[]>([]);
     const [selectedOrg, setSelectedOrg] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('active');
     const EmployeeBulkImportModal = dynamic(() => import('./bulk-import').then(mod => mod.EmployeeBulkImportModal), { ssr: false });
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<any>(null);
-    const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', companyId: '', departmentId: '', accountStatus: EmployeeStatusEnum.ACTIVE as string, billingAmount: '', remarks: '', managerId: '' });
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        companyId: '',
+        departmentId: '',
+        accountStatus: EmployeeStatusEnum.ACTIVE as string,
+        billingAmount: '',
+        remarks: '',
+        managerId: '',
+        joiningDate: '',
+        emailCreatedDate: '',
+        lastWorkingDay: '',
+        emailDeletionDate: '',
+        groupEmails: [] as string[]
+    });
     const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(new Set());
     const [isLoading, setIsLoading] = useState(false);
 
@@ -72,8 +93,9 @@ const EmployeesPage: React.FC = () => {
     const fetchEmployees = useCallback(async () => {
         try {
             setIsLoading(true);
-            // If selectedOrg is empty or 0, it fetches all employees
-            const req = new IdRequestModel(Number(selectedOrg) || 0);
+            const companyId = Number(selectedOrg) || 0;
+            const includeDeactivated = statusFilter === 'deactivated' || statusFilter === 'all';
+            const req = new GetAllEmployeesRequestModel(companyId, includeDeactivated);
             const response = await employeeService.getAllEmployees(req);
             if (response.status) {
                 const data = response.data || [];
@@ -91,6 +113,11 @@ const EmployeesPage: React.FC = () => {
                     remarks: item.remarks,
                     managerId: item.managerId,
                     managerName: item.managerName,
+                    joiningDate: item.joiningDate,
+                    emailCreatedDate: item.emailCreatedDate,
+                    lastWorkingDay: item.lastWorkingDay,
+                    emailDeletionDate: item.emailDeletionDate,
+                    groupEmails: item.groupEmails,
                     createdAt: item.createdAt || new Date().toISOString()
                 }));
                 setEmployees(mappedEmployees);
@@ -102,7 +129,7 @@ const EmployeesPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedOrg]);
+    }, [selectedOrg, statusFilter]);
 
     const fetchCompanies = useCallback(async () => {
         try {
@@ -169,7 +196,12 @@ const EmployeesPage: React.FC = () => {
                     Number(formData.billingAmount),
                     formData.remarks,
                     undefined, undefined, undefined, undefined,
-                    managerIdValue
+                    managerIdValue,
+                    formData.joiningDate ? new Date(formData.joiningDate) : undefined,
+                    formData.emailCreatedDate ? new Date(formData.emailCreatedDate) : undefined,
+                    formData.lastWorkingDay ? new Date(formData.lastWorkingDay) : undefined,
+                    formData.emailDeletionDate ? new Date(formData.emailDeletionDate) : undefined,
+                    formData.groupEmails
                 );
                 const response = await employeeService.updateEmployee(model);
                 if (response.status) {
@@ -192,7 +224,12 @@ const EmployeesPage: React.FC = () => {
                     Number(formData.billingAmount),
                     formData.remarks,
                     undefined, undefined, undefined, undefined,
-                    managerIdValue
+                    managerIdValue,
+                    formData.joiningDate ? new Date(formData.joiningDate) : undefined,
+                    formData.emailCreatedDate ? new Date(formData.emailCreatedDate) : undefined,
+                    formData.lastWorkingDay ? new Date(formData.lastWorkingDay) : undefined,
+                    formData.emailDeletionDate ? new Date(formData.emailDeletionDate) : undefined,
+                    formData.groupEmails
                 );
                 const response = await employeeService.createEmployee(model);
                 if (response.status) {
@@ -220,7 +257,12 @@ const EmployeesPage: React.FC = () => {
             accountStatus: employee.empStatus || EmployeeStatusEnum.ACTIVE,
             billingAmount: (employee.billingAmount !== undefined && employee.billingAmount !== null) ? String(employee.billingAmount) : '',
             remarks: employee.remarks || '',
-            managerId: employee.managerId ? String(employee.managerId) : ''
+            managerId: employee.managerId ? String(employee.managerId) : '',
+            joiningDate: employee.joiningDate ? new Date(employee.joiningDate).toISOString().split('T')[0] : '',
+            emailCreatedDate: employee.emailCreatedDate ? new Date(employee.emailCreatedDate).toISOString().split('T')[0] : '',
+            lastWorkingDay: employee.lastWorkingDay ? new Date(employee.lastWorkingDay).toISOString().split('T')[0] : '',
+            emailDeletionDate: employee.emailDeletionDate ? new Date(employee.emailDeletionDate).toISOString().split('T')[0] : '',
+            groupEmails: employee.groupEmails || []
         });
         setIsModalOpen(true);
     };
@@ -274,7 +316,8 @@ const EmployeesPage: React.FC = () => {
         setEditingEmployee(null);
         setFormData({
             firstName: '', lastName: '', email: '', phone: '', companyId: '', departmentId: '',
-            accountStatus: EmployeeStatusEnum.ACTIVE, billingAmount: '', remarks: '', managerId: ''
+            accountStatus: EmployeeStatusEnum.ACTIVE, billingAmount: '', remarks: '', managerId: '',
+            joiningDate: '', emailCreatedDate: '', lastWorkingDay: '', emailDeletionDate: '', groupEmails: []
         });
     };
 
@@ -324,7 +367,8 @@ const EmployeesPage: React.FC = () => {
 
         const matchesStatus = statusFilter === 'all' ||
             (statusFilter === 'active' && emp.empStatus?.toLowerCase() === 'active') ||
-            (statusFilter === 'inactive' && emp.empStatus?.toLowerCase() !== 'active');
+            (statusFilter === 'inactive' && emp.empStatus?.toLowerCase() === 'inactive') ||
+            (statusFilter === 'deactivated' && emp.empStatus?.toLowerCase() === 'deactivated');
 
         return matchesSearch && matchesStatus;
     });
@@ -332,7 +376,8 @@ const EmployeesPage: React.FC = () => {
     const stats = {
         total: employees.length,
         active: employees.filter(e => e.empStatus?.toLowerCase() === 'active').length,
-        inactive: employees.filter(e => e.empStatus?.toLowerCase() !== 'active').length,
+        inactive: employees.filter(e => e.empStatus?.toLowerCase() === 'inactive').length,
+        deactivated: employees.filter(e => e.empStatus?.toLowerCase() === 'deactivated').length,
     };
 
     const containerVariants = {
@@ -381,7 +426,8 @@ const EmployeesPage: React.FC = () => {
                         {[
                             { label: 'Total', value: stats.total, color: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' },
                             { label: 'Active', value: stats.active, color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
-                            { label: 'Inactive', value: stats.inactive, color: 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' },
+                            { label: 'Inactive', value: stats.inactive, color: 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' },
+                            { label: 'Deactivated', value: stats.deactivated, color: 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' },
                         ].map(s => (
                             <span key={s.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${s.color}`}>
                                 <span className="text-[10px] font-medium opacity-70">{s.label}</span> {s.value}
@@ -426,6 +472,7 @@ const EmployeesPage: React.FC = () => {
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
+                            <option value="deactivated">Deactivated</option>
                         </select>
                         <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
                             <button
@@ -468,13 +515,16 @@ const EmployeesPage: React.FC = () => {
                             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3"
                         >
                             {filteredEmployees.map((emp) => {
-                                const isInactive = emp.empStatus?.toLowerCase() !== 'active';
+                                const isInactive = emp.empStatus?.toLowerCase() === 'inactive';
+                                const isDeactivated = emp.empStatus?.toLowerCase() === 'deactivated';
                                 return (
                                     <motion.div
                                         key={emp.id}
                                         className={`group relative rounded-xl border transition-all duration-200 overflow-hidden hover:shadow-md ${isInactive
-                                            ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-80 hover:opacity-100 hover:border-rose-200 dark:hover:border-rose-900/50'
-                                            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700/60'
+                                            ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-80 hover:opacity-100 hover:border-amber-200 dark:hover:border-amber-900/50'
+                                            : isDeactivated
+                                                ? 'bg-rose-50/30 dark:bg-rose-900/10 border-rose-100 dark:border-rose-900/30 opacity-70 hover:opacity-100 hover:border-rose-300'
+                                                : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700/60'
                                             }`}
                                     >
                                         {/* Checkbox Overlay */}
@@ -501,7 +551,7 @@ const EmployeesPage: React.FC = () => {
                                                         <h3 className="font-semibold text-slate-900 dark:text-white text-xs leading-tight truncate">
                                                             {emp.firstName} {emp.lastName}
                                                         </h3>
-                                                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                                                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : emp.empStatus?.toLowerCase() === 'inactive' ? 'bg-amber-400' : 'bg-rose-500'}`} />
                                                     </div>
                                                     <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate block mt-0.5">
                                                         {getDepartmentName(emp)}
@@ -526,7 +576,7 @@ const EmployeesPage: React.FC = () => {
                                         </div>
 
                                         <div className="px-3 py-1.5 border-t border-slate-50 dark:border-slate-700/70 flex items-center justify-between bg-slate-50/60 dark:bg-slate-800/60">
-                                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${emp.empStatus?.toLowerCase() === 'active' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400' : 'text-slate-500 bg-slate-100 dark:bg-slate-700'}`}>
+                                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${emp.empStatus?.toLowerCase() === 'active' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400' : emp.empStatus?.toLowerCase() === 'inactive' ? 'text-amber-600 bg-amber-50 dark:bg-amber-900/20' : 'text-rose-600 bg-rose-50 dark:bg-rose-900/20'}`}>
                                                 {emp.empStatus}
                                             </span>
                                             <div className="flex gap-1">
@@ -618,7 +668,7 @@ const EmployeesPage: React.FC = () => {
                                                     ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
                                                     : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
                                                     }`}>
-                                                    <span className={`w-1 h-1 rounded-full ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                                    <span className={`w-1 h-1 rounded-full ${emp.empStatus?.toLowerCase() === 'active' ? 'bg-emerald-500' : emp.empStatus?.toLowerCase() === 'inactive' ? 'bg-amber-400' : 'bg-rose-500'}`} />
                                                     {emp.empStatus}
                                                 </span>
                                             </td>
@@ -685,9 +735,73 @@ const EmployeesPage: React.FC = () => {
                                 label="Account Status"
                                 value={formData.accountStatus}
                                 onChange={(e) => setFormData({ ...formData, accountStatus: e.target.value })}
-                                options={[{ value: EmployeeStatusEnum.ACTIVE, label: 'Active' }, { value: EmployeeStatusEnum.INACTIVE, label: 'Inactive' }]}
+                                options={[
+                                    { value: EmployeeStatusEnum.ACTIVE, label: 'Active' },
+                                    { value: EmployeeStatusEnum.INACTIVE, label: 'Inactive' },
+                                    { value: EmployeeStatusEnum.DEACTIVATED, label: 'Deactivated' }
+                                ]}
                             />
                             <Input label="Billing Amount ($)" type="number" step="0.01" value={formData.billingAmount} onChange={(e) => setFormData({ ...formData, billingAmount: e.target.value })} />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label="Joining Date"
+                                type="date"
+                                value={formData.joiningDate}
+                                onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
+                            />
+                            <Input
+                                label="Email Created Date"
+                                type="date"
+                                value={formData.emailCreatedDate}
+                                onChange={(e) => setFormData({ ...formData, emailCreatedDate: e.target.value })}
+                            />
+                        </div>
+
+                        {formData.accountStatus === EmployeeStatusEnum.DEACTIVATED && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-rose-50/50 dark:bg-rose-900/10 rounded-xl border border-rose-100 dark:border-rose-900/30"
+                            >
+                                <Input
+                                    label="Last Working Day"
+                                    type="date"
+                                    value={formData.lastWorkingDay}
+                                    onChange={(e) => setFormData({ ...formData, lastWorkingDay: e.target.value })}
+                                    required
+                                />
+                                <Input
+                                    label="Email Deletion Date"
+                                    type="date"
+                                    value={formData.emailDeletionDate}
+                                    onChange={(e) => setFormData({ ...formData, emailDeletionDate: e.target.value })}
+                                    required
+                                />
+                            </motion.div>
+                        )}
+
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Group Emails</label>
+                            <div className="flex flex-wrap gap-2 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                                {['HR Team', 'Engineering', 'Marketing', 'Finance', 'All Staff'].map(group => (
+                                    <label key={group} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-500 transition-all">
+                                        <input
+                                            type="checkbox"
+                                            className="accent-indigo-500"
+                                            checked={formData.groupEmails?.includes(group)}
+                                            onChange={(e) => {
+                                                const next = e.target.checked
+                                                    ? [...(formData.groupEmails || []), group]
+                                                    : (formData.groupEmails || []).filter(g => g !== group);
+                                                setFormData({ ...formData, groupEmails: next });
+                                            }}
+                                        />
+                                        <span className="text-xs font-medium">{group}</span>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Additional Remarks</label>

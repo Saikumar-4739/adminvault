@@ -24,7 +24,8 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
         remarks: '',
         assignedEmployeeId: '',
         costPerSeat: '0',
-        billingCycle: 'MONTHLY'
+        billingCycle: 'MONTHLY',
+        role: 'Member'
     });
 
     useEffect(() => {
@@ -37,14 +38,16 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                 remarks: initialLicense.remarks || '',
                 assignedEmployeeId: initialLicense.assignedEmployeeId?.toString() || '',
                 costPerSeat: initialLicense.costPerSeat?.toString() || '0',
-                billingCycle: initialLicense.billingCycle || 'MONTHLY'
+                billingCycle: initialLicense.billingCycle || 'MONTHLY',
+                role: initialLicense.role || 'Member'
             });
         } else if (!isOpen) {
             setFormData({
                 applicationId: '', companyId: '', licenseKey: '',
                 assignedDate: '',
                 remarks: '', assignedEmployeeId: '',
-                costPerSeat: '0', billingCycle: 'MONTHLY'
+                costPerSeat: '0', billingCycle: 'MONTHLY',
+                role: 'Member'
             });
         }
     }, [isOpen, initialLicense]);
@@ -62,7 +65,8 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                 remarks: formData.remarks || null,
                 assignedEmployeeId: formData.assignedEmployeeId ? Number(formData.assignedEmployeeId) : null,
                 costPerSeat: Number(formData.costPerSeat),
-                billingCycle: formData.billingCycle
+                billingCycle: formData.billingCycle,
+                role: formData.role
             });
 
             if (success) {
@@ -70,7 +74,8 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                     applicationId: '', companyId: '', licenseKey: '',
                     assignedDate: '',
                     remarks: '', assignedEmployeeId: '',
-                    costPerSeat: '0', billingCycle: 'MONTHLY'
+                    costPerSeat: '0', billingCycle: 'MONTHLY',
+                    role: 'Member'
                 });
                 onClose();
             }
@@ -164,6 +169,17 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({ isOpen, onClos
                         step="0.01"
                         value={formData.costPerSeat}
                         onChange={e => setFormData({ ...formData, costPerSeat: e.target.value })}
+                    />
+
+                    <Select
+                        label="Role"
+                        value={formData.role}
+                        onChange={e => setFormData({ ...formData, role: e.target.value })}
+                        options={[
+                            { label: 'Owner', value: 'Owner' },
+                            { label: 'Member', value: 'Member' },
+                            { label: 'Others', value: 'Others' }
+                        ]}
                     />
                 </div>
 

@@ -50,6 +50,12 @@ export class EmailInfoService {
       newEmailInfo.email = reqModel.email;
       newEmailInfo.employeeId = reqModel.employeeId;
       newEmailInfo.status = EmailStatusEnum.ACTIVE;
+      newEmailInfo.memberIds = reqModel.memberIds;
+      newEmailInfo.name = reqModel.name;
+      newEmailInfo.billing = reqModel.billing;
+      newEmailInfo.createdDate = reqModel.createdDate;
+      newEmailInfo.description = reqModel.description;
+
       await transManager.getRepository(EmailInfoEntity).save(newEmailInfo);
       await transManager.completeTransaction();
       return new GlobalResponse(true, 201, "Email info created successfully");
@@ -59,38 +65,68 @@ export class EmailInfoService {
     }
   }
 
-  async updateEmailInfo(reqModel: UpdateEmailInfoModel): Promise<GlobalResponse> {
-    const transManager = new GenericTransactionManager(this.dataSource);
+  async updateEmailInfo(data: UpdateEmailInfoModel): Promise<GlobalResponse> {
     try {
-      const existingEmailInfo = await this.emailInfoRepo.findOne({ where: { id: reqModel.companyId } });
-      if (!existingEmailInfo) throw new ErrorResponse(404, "Email info not found");
-      await transManager.startTransaction();
-      const updateData: Partial<EmailInfoEntity> = {
-        companyId: reqModel.companyId,
-        emailType: reqModel.emailType,
-        department: reqModel.department,
-        email: reqModel.email,
-        employeeId: reqModel.employeeId
-      };
-      await transManager.getRepository(EmailInfoEntity).update(reqModel.companyId, updateData);
-      await transManager.completeTransaction();
-      return new GlobalResponse(true, 200, "Email info updated successfully");
-    } catch (error) {
-      await transManager.releaseTransaction();
-      throw error;
+      const emailInfo = await this.emailInfoRepo.findOne({ where: { id: data.id } });
+      if (!emailInfo) {
+        return new GlobalResponse(false, 404, 'Email info record not found');
+      }
+
+      emailInfo.email = data.email;
+      emailInfo.emailType = data.emailType;
+      emailInfo.department = data.department;
+      emailInfo.employeeId = data.employeeId;
+      emailInfo.memberIds = data.memberIds;
+      emailInfo.name = data.name;
+      emailInfo.billing = data.billing;
+      emailInfo.createdDate = data.createdDate;
+      emailInfo.description = data.description;
+
+      await this.emailInfoRepo.save(emailInfo);
+      return new GlobalResponse(true, 200, 'Email info record updated successfully');
+    } catch (err: any) {
+      return new GlobalResponse(false, 500, err.message);
     }
   }
 
   async getEmailInfo(reqModel: GetEmailInfoModel): Promise<GetEmailInfoByIdModel> {
     const emailInfo = await this.emailInfoRepo.findOne({ where: { id: reqModel.id } });
     if (!emailInfo) throw new ErrorResponse(404, "Email info not found");
-    const response = new EmailInfoResponseModel(emailInfo.id, emailInfo.companyId, emailInfo.emailType, emailInfo.department, emailInfo.email, emailInfo.employeeId);
+    const response = new EmailInfoResponseModel(
+      emailInfo.id,
+      emailInfo.companyId,
+      emailInfo.emailType,
+      emailInfo.department,
+      emailInfo.email,
+      emailInfo.employeeId,
+      undefined,
+      undefined,
+      emailInfo.memberIds,
+      emailInfo.name,
+      emailInfo.billing,
+      emailInfo.createdDate,
+      emailInfo.description
+    );
     return new GetEmailInfoByIdModel(true, 200, "Email info retrieved successfully", response);
   }
 
   async getAllEmailInfo(reqModel: IdRequestModel): Promise<GetAllEmailInfoModel> {
     const data = await this.emailInfoRepo.getEmailsWithEmployee(reqModel.id);
-    const responses = data.map(info => new EmailInfoResponseModel(info.id, info.company_id, info.email_type, info.department, info.email, info.employee_id, info.employee_name));
+    const responses = data.map(result => new EmailInfoResponseModel(
+      result.id,
+      result.company_id,
+      result.email_type,
+      result.department,
+      result.email,
+      result.employee_id,
+      result.employee_name,
+      result.employee_status,
+      result.member_ids,
+      result.name,
+      Number(result.billing),
+      result.created_date,
+      result.description
+    ));
     return new GetAllEmailInfoModel(true, 200, "Email info retrieved successfully", responses);
   }
 

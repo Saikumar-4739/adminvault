@@ -207,8 +207,10 @@ export class DocumentsService {
      */
     async downloadDocument(reqModel: DownloadDocumentRequestModel): Promise<DownloadDocumentResponseModel> {
         try {
+            console.log(`[SERVICE-DEBUG-DOC] Finding document with ID: ${reqModel.id} (${typeof reqModel.id})`);
             const document = await this.documentRepo.findOne({ where: { id: reqModel.id } });
             if (!document) {
+                console.error(`[SERVICE-DEBUG-DOC] Document not found for ID: ${reqModel.id}`);
                 throw new ErrorResponse(404, 'Document not found');
             }
 
@@ -225,17 +227,21 @@ export class DocumentsService {
 
             // Construct path dynamically to enforce root uploads directory usage
             let downloadPath = path.join(this.uploadPath, document.fileName);
+            console.log(`[SERVICE-DEBUG-DOC] Checking file existence at: ${downloadPath}`);
 
             if (!fs.existsSync(downloadPath)) {
+                console.warn(`[SERVICE-DEBUG-DOC] File not found at primary path, trying legacy...`);
                 // Try legacy path if new path fails
                 if (document.filePath && fs.existsSync(document.filePath)) {
+                    console.log(`[SERVICE-DEBUG-DOC] Found file at legacy path: ${document.filePath}`);
                     downloadPath = document.filePath;
                 } else {
+                    console.error(`[SERVICE-DEBUG-DOC] File missing on disk for ID: ${reqModel.id}`);
                     throw new ErrorResponse(404, 'File not found on disk');
                 }
             }
 
-            return new DownloadDocumentResponseModel(true, 200, 'Document ready for download', downloadPath, document.originalName);
+            return new DownloadDocumentResponseModel(true, 200, 'Document ready for download', downloadPath, document.originalName, document.mimeType);
         } catch (error) {
             throw error;
         }

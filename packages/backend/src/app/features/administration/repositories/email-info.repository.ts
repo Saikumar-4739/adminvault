@@ -18,11 +18,18 @@ export class EmailInfoRepository extends Repository<EmailInfoEntity> {
                 'email.department as department',
                 'email.email as email',
                 'email.employee_id as employee_id',
-                "CONCAT(emp.first_name, ' ', emp.last_name) as employee_name"
-            ]);
+                "CONCAT(emp.first_name, ' ', emp.last_name) as employee_name",
+                'emp.emp_status as employee_status',
+                'email.member_ids as member_ids',
+                'email.name as name',
+                'email.billing as billing',
+                'email.created_date as created_date',
+                'email.description as description'
+            ])
+            .where('(emp.id IS NULL OR emp.emp_status != :deactivatedStatus)', { deactivatedStatus: 'deactivated' });
 
         if (companyId) {
-            query.where('email.company_id = :companyId', { companyId });
+            query.andWhere('email.company_id = :companyId', { companyId });
         }
 
         return await query.getRawMany();

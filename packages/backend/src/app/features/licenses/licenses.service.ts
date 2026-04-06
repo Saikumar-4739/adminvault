@@ -81,6 +81,7 @@ export class LicensesService {
                 Number(l.costPerSeat),
                 l.billingCycle,
                 l.remarks,
+                l.role,
                 company ? { id: company.id, companyName: company.companyName } : undefined,
                 app ? { id: app.id, name: app.name, logo: '' } : undefined,
                 emp ? { id: emp.id, firstName: emp.firstName, lastName: emp.lastName, avatar: emp.slackAvatar } : undefined
@@ -205,7 +206,8 @@ export class LicensesService {
             remarks: reqModel.remarks || null,
             totalSeats: reqModel.seats || 1,
             costPerSeat: (reqModel as any).costPerSeat || 0,
-            billingCycle: (reqModel as any).billingCycle || 'MONTHLY'
+            billingCycle: (reqModel as any).billingCycle || 'MONTHLY',
+            role: reqModel.role || null
         };
 
         const license = this.repo.create(licenseData);
@@ -249,7 +251,8 @@ export class LicensesService {
             expiryDate: reqModel.expiryDate || null,
             remarks: reqModel.remarks || null,
             costPerSeat: reqModel.costPerSeat || 0,
-            billingCycle: reqModel.billingCycle || 'MONTHLY'
+            billingCycle: reqModel.billingCycle || 'MONTHLY',
+            role: reqModel.role || null
         };
 
         await this.repo.update(reqModel.id, updateData);

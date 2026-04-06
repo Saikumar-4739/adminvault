@@ -40,6 +40,11 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
     const [secureDocId, setSecureDocId] = useState<number | null>(null);
     const [securePassword, setSecurePassword] = useState('');
 
+    // Preview state
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewDoc, setPreviewDoc] = useState<DocumentModel | null>(null);
+
     const fetchDocuments = useCallback(async () => {
         if (!user) return;
         try {
@@ -60,6 +65,12 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
             fetchDocuments();
         }
     }, [fetchDocuments, user]);
+
+    useEffect(() => {
+        return () => {
+            if (previewUrl) window.URL.revokeObjectURL(previewUrl);
+        };
+    }, [previewUrl]);
 
     const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -153,7 +164,9 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
             }
 
             const blob = await documentsService.downloadFile(id);
-            const url = window.URL.createObjectURL(blob);
+            // Create a new blob with the correct mime type from our record
+            const downloadBlob = new Blob([blob], { type: doc?.mimeType || blob.type });
+            const url = window.URL.createObjectURL(downloadBlob);
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', doc ? doc.originalName : `document-${id}`);
@@ -178,10 +191,14 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
             }
 
             const blob = await documentsService.downloadFile(id);
-            const url = window.URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            // We don't revoke immediately because the new tab needs it
-            // window.URL.revokeObjectURL(url); 
+            // Create a new blob with the correct mime type from our record
+            const viewBlob = new Blob([blob], { type: doc?.mimeType || blob.type });
+            const url = window.URL.createObjectURL(viewBlob);
+
+            setPreviewUrl(url);
+            setPreviewDoc(doc || null);
+            setIsPreviewModalOpen(true);
+
         } catch (error) {
             console.error('View failed:', error);
             AlertMessages.getErrorMessage('Failed to open document preview.');
@@ -490,6 +507,76 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                     </div>
                 </div>
             </Modal>
+
+            {/* Preview Modal */}
+            <Modal
+                isOpen={isPreviewModalOpen}
+                onClose={() => setIsPreviewModalOpen(false)}
+                title={`Preview: ${previewDoc?.originalName}`}
+                size="xl"
+            >
+                <div className="flex flex-col h-[70vh]">
+                    {previewUrl && previewDoc && (
+                        <>
+                            {previewDoc.mimeType.toLowerCase().includes('pdf') ? (
+                                <object
+                                    data={previewUrl}
+                                    type="application/pdf"
+                                    className="w-full h-full rounded-lg border border-slate-200 dark:border-slate-700"
+                                >
+                                    <iframe
+                                        src={previewUrl}
+                                        className="w-full h-full rounded-lg border border-slate-200 dark:border-slate-700"
+                                        title="PDF Preview"
+                                    />
+                                </object>
+                            ) : previewDoc.mimeType.toLowerCase().includes('image') ? (
+                                <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                                    <img
+                                        src={previewUrl}
+                                        alt={previewDoc.originalName}
+                                        className="max-w-full max-h-full object-contain"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                                    <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl shadow-sm flex items-center justify-center mb-4 border border-slate-200 dark:border-slate-700">
+                                        {getFileIcon(previewDoc.mimeType)}
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Preview not available</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-xs">
+                                        We can't preview this file type directly in the browser. Please download it to view the full content.
+                                    </p>
+                                    <Button
+                                        variant="primary"
+                                        leftIcon={<Download className="h-4 w-4" />}
+                                        onClick={() => handleDownload(previewDoc.id)}
+                                    >
+                                        Download Now
+                                    </Button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                    <div className="flex justify-end gap-3 pt-4 mt-auto border-t border-slate-100 dark:border-slate-700">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsPreviewModalOpen(false)}
+                        >
+                            Close
+                        </Button>
+                        {previewDoc && (
+                            <Button
+                                variant="success"
+                                leftIcon={<Download className="h-4 w-4" />}
+                                onClick={() => handleDownload(previewDoc.id)}
+                            >
+                                Download
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </Modal>
         </>
     );
-}
+};

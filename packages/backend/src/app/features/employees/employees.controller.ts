@@ -4,7 +4,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { EmployeesService } from './employees.service';
 import { EmployeesBulkService } from './employees-bulk.service';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, BulkImportResponseModel, IdRequestModel, BulkImportRequestModel } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, BulkImportResponseModel, IdRequestModel, BulkImportRequestModel, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
 
 @ApiTags('Employees')
 @Controller('employees')
@@ -73,8 +73,8 @@ export class EmployeesController {
     }
 
     @Post('getAllEmployees')
-    @ApiBody({ type: IdRequestModel })
-    async getAllEmployees(@Body() reqModel: IdRequestModel): Promise<GetAllEmployeesResponseModel> {
+    @ApiBody({ type: GetAllEmployeesRequestModel })
+    async getAllEmployees(@Body() reqModel: GetAllEmployeesRequestModel): Promise<GetAllEmployeesResponseModel> {
         try {
             return await this.service.getAllEmployees(reqModel);
         } catch (error) {

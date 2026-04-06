@@ -75,9 +75,11 @@ export class UploadDocumentResponseModel extends GlobalDocumentResponseModel { }
 export class DownloadDocumentResponseModel extends GlobalResponse {
     filePath!: string;
     originalName!: string;
-    constructor(status: boolean, code: number, message: string, filePath: string, originalName: string) {
+    mimeType!: string;
+    constructor(status: boolean, code: number, message: string, filePath: string, originalName: string, mimeType: string) {
         super(status, code, message);
         this.filePath = filePath;
         this.originalName = originalName;
+        this.mimeType = mimeType;
     }
 }

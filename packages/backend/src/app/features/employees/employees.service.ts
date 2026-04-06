@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, In } from 'typeorm';
+import { DataSource, In, Not } from 'typeorm';
 import { EmployeesRepository } from './repositories/employees.repository';
 import { EmployeesEntity } from './entities/employees.entity';
 import { CompanyInfoEntity } from '../masters/company-info/entities/company-info.entity';
 import { DepartmentsMasterEntity } from '../masters/department/entities/department.entity';
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
-import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, IdRequestModel, CreateEmailInfoModel, EmailTypeEnum } from '@adminvault/shared-models';
+import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, IdRequestModel, CreateEmailInfoModel, EmailTypeEnum, GetAllEmployeesRequestModel, EmployeeStatusEnum } from '@adminvault/shared-models';
 import { EmailInfoService } from '../administration/email-info.service';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -67,6 +67,11 @@ export class EmployeesService {
             newEmployee.departmentId = reqModel.departmentId;
             newEmployee.remarks = reqModel.remarks;
             newEmployee.managerId = reqModel.managerId;
+            newEmployee.joiningDate = reqModel.joiningDate;
+            newEmployee.emailCreatedDate = reqModel.emailCreatedDate;
+            newEmployee.lastWorkingDay = reqModel.lastWorkingDay;
+            newEmployee.emailDeletionDate = reqModel.emailDeletionDate;
+            newEmployee.groupEmails = reqModel.groupEmails;
             const savedEmployee = await transManager.getRepository(EmployeesEntity).save(newEmployee);
 
             // Log activity
@@ -144,6 +149,11 @@ export class EmployeesService {
             updateData.departmentId = reqModel.departmentId;
             updateData.remarks = reqModel.remarks;
             updateData.managerId = reqModel.managerId;
+            updateData.joiningDate = reqModel.joiningDate;
+            updateData.emailCreatedDate = reqModel.emailCreatedDate;
+            updateData.lastWorkingDay = reqModel.lastWorkingDay;
+            updateData.emailDeletionDate = reqModel.emailDeletionDate;
+            updateData.groupEmails = reqModel.groupEmails;
             await transManager.getRepository(EmployeesEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
 
@@ -205,23 +215,57 @@ export class EmployeesService {
                 }
             }
 
-            const employeeResponse = new EmployeeResponseModel(employee.id, employee.companyId, employee.firstName, employee.lastName, employee.email, employee.departmentId, employee.empStatus, employee.phNumber, employee.billingAmount, employee.remarks, deptName, employee.slackUserId, employee.slackDisplayName, employee.slackAvatar, employee.isSlackActive, employee.managerId, managerName, undefined, employee.userId);
+            const employeeResponse = new EmployeeResponseModel(
+                employee.id,
+                employee.companyId,
+                employee.firstName,
+                employee.lastName,
+                employee.email,
+                employee.departmentId,
+                employee.empStatus,
+                employee.phNumber,
+                employee.billingAmount,
+                employee.remarks,
+                deptName,
+                employee.slackUserId,
+                employee.slackDisplayName,
+                employee.slackAvatar,
+                employee.isSlackActive,
+                employee.managerId,
+                managerName,
+                undefined,
+                employee.userId,
+                employee.joiningDate,
+                employee.emailCreatedDate,
+                employee.lastWorkingDay,
+                employee.emailDeletionDate,
+                employee.groupEmails
+            );
             return new GetEmployeeResponseModel(true, 0, "Employee retrieved successfully", employeeResponse);
         } catch (error) {
             throw error;
         }
     }
 
-    async getAllEmployees(reqModel: IdRequestModel): Promise<GetAllEmployeesResponseModel> {
-        try {
-            let employees: EmployeesEntity[];
-            const companyId = Number(reqModel.id);
+    async getAllEmployees(reqModel: GetAllEmployeesRequestModel): Promise<GetAllEmployeesResponseModel> {
+        let employees: EmployeesEntity[];
+        const companyId = Number(reqModel.companyId);
+        const includeDeactivated = reqModel.includeDeactivated === true;
 
+        try {
+            const whereClause: any = {};
             if (companyId) {
-                employees = await this.employeesRepo.find({ where: { companyId } });
-            } else {
-                employees = await this.employeesRepo.find();
+                whereClause.companyId = companyId;
             }
+
+            if (!includeDeactivated) {
+                whereClause.empStatus = Not(EmployeeStatusEnum.DEACTIVATED);
+            }
+
+            employees = await this.employeesRepo.find({
+                where: whereClause,
+                order: { createdAt: 'DESC' }
+            });
 
             const deptIds = [...new Set(employees.filter(e => e.departmentId && Number(e.departmentId) > 0).map(e => Number(e.departmentId)))];
             const deptMap = new Map<number, string>();
@@ -247,7 +291,32 @@ export class EmployeesService {
                 users.forEach(u => userRoleMap.set(Number(u.id), u.userRole));
             }
 
-            const employeeResponses = employees.map(emp => new EmployeeResponseModel(emp.id, emp.companyId, emp.firstName, emp.lastName, emp.email, emp.departmentId, emp.empStatus, emp.phNumber, emp.billingAmount, emp.remarks, deptMap.get(Number(emp.departmentId)), emp.slackUserId, emp.slackDisplayName, emp.slackAvatar, emp.isSlackActive, emp.managerId, managerMap.get(Number(emp.managerId)) || '', userRoleMap.get(Number(emp.userId)), emp.userId));
+            const employeeResponses = employees.map(emp => new EmployeeResponseModel(
+                emp.id,
+                emp.companyId,
+                emp.firstName,
+                emp.lastName,
+                emp.email,
+                emp.departmentId,
+                emp.empStatus,
+                emp.phNumber,
+                emp.billingAmount,
+                emp.remarks,
+                deptMap.get(Number(emp.departmentId)),
+                emp.slackUserId,
+                emp.slackDisplayName,
+                emp.slackAvatar,
+                emp.isSlackActive,
+                emp.managerId,
+                managerMap.get(Number(emp.managerId)) || '',
+                userRoleMap.get(Number(emp.userId)),
+                emp.userId,
+                emp.joiningDate,
+                emp.emailCreatedDate,
+                emp.lastWorkingDay,
+                emp.emailDeletionDate,
+                emp.groupEmails
+            ));
             return new GetAllEmployeesResponseModel(true, 0, "Employees retrieved successfully", employeeResponses);
         } catch (error) {
             throw error;

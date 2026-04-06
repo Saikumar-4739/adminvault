@@ -3,4 +3,5 @@ export enum EmployeeStatusEnum {
   INACTIVE = 'inactive',
   ON_LEAVE = 'on_leave',
   TERMINATED = 'terminated',
+  DEACTIVATED = 'deactivated',
 }

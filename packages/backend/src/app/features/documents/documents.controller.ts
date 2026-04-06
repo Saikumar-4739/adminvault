@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Param, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Post, Get, Param, Res, UploadedFile, UseInterceptors, ParseIntPipe } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiTags, ApiConsumes } from '@nestjs/swagger';
 import express from 'express';
@@ -53,14 +53,18 @@ export class DocumentsController {
     }
 
     @Get('downloadDocument/:id')
-    async downloadDocumentGet(@Param('id') id: number, @Res() res: express.Response) {
+    async downloadDocumentGet(@Param('id', ParseIntPipe) id: number, @Res() res: express.Response) {
         try {
+            console.log(`[DEBUG-DOC] Attempting download for ID: ${id}`);
             const reqModel: DownloadDocumentRequestModel = { id };
             const response = await this.service.downloadDocument(reqModel);
-            res.download(response.filePath, response.originalName);
+            console.log(`[DEBUG-DOC] Serving file: ${response.filePath} as ${response.mimeType}`);
+
+            res.setHeader('Content-Type', response.mimeType);
+            res.setHeader('Content-Disposition', `inline; filename="${response.originalName}"`);
+            res.sendFile(response.filePath);
         } catch (error) {
-            // If error is 403 (Password required), we can't easily handle it in GET for browser download.
-            // But this endpoint is for non-secure or direct downloads.
+            console.error(`[DEBUG-DOC] Download failed for ID: ${id}`, error);
             res.status(500).json(returnException(GlobalResponse, error));
         }
     }

@@ -20,6 +20,13 @@ export class CreateEmployeeModel {
 
     userId: number;
 
+    // New Fields
+    joiningDate?: Date;
+    emailCreatedDate?: Date;
+    lastWorkingDay?: Date;
+    emailDeletionDate?: Date;
+    groupEmails?: string[];
+
     constructor(
         userId: number,
         companyId: number,
@@ -35,7 +42,12 @@ export class CreateEmployeeModel {
         slackDisplayName?: string,
         slackAvatar?: string,
         isSlackActive?: boolean,
-        managerId?: number | null
+        managerId?: number | null,
+        joiningDate?: Date,
+        emailCreatedDate?: Date,
+        lastWorkingDay?: Date,
+        emailDeletionDate?: Date,
+        groupEmails?: string[]
     ) {
         this.userId = userId;
         this.companyId = companyId;
@@ -52,6 +64,11 @@ export class CreateEmployeeModel {
         this.slackAvatar = slackAvatar;
         this.isSlackActive = isSlackActive;
         this.managerId = managerId;
+        this.joiningDate = joiningDate;
+        this.emailCreatedDate = emailCreatedDate;
+        this.lastWorkingDay = lastWorkingDay;
+        this.emailDeletionDate = emailDeletionDate;
+        this.groupEmails = groupEmails;
     }
 }
 
@@ -74,9 +91,14 @@ export class UpdateEmployeeModel extends CreateEmployeeModel {
         slackDisplayName?: string,
         slackAvatar?: string,
         isSlackActive?: boolean,
-        managerId?: number | null
+        managerId?: number | null,
+        joiningDate?: Date,
+        emailCreatedDate?: Date,
+        lastWorkingDay?: Date,
+        emailDeletionDate?: Date,
+        groupEmails?: string[]
     ) {
-        super(userId, companyId, firstName, lastName, email, departmentId, empStatus, phNumber, billingAmount, remarks, slackUserId, slackDisplayName, slackAvatar, isSlackActive, managerId);
+        super(userId, companyId, firstName, lastName, email, departmentId, empStatus, phNumber, billingAmount, remarks, slackUserId, slackDisplayName, slackAvatar, isSlackActive, managerId, joiningDate, emailCreatedDate, lastWorkingDay, emailDeletionDate, groupEmails);
         this.id = id;
     }
 }
@@ -118,6 +140,13 @@ export class EmployeeResponseModel {
     userRole?: string;
     userId?: number;
 
+    // New Fields
+    joiningDate?: Date;
+    emailCreatedDate?: Date;
+    lastWorkingDay?: Date;
+    emailDeletionDate?: Date;
+    groupEmails?: string[];
+
     constructor(
         id: number,
         companyId: number,
@@ -137,7 +166,12 @@ export class EmployeeResponseModel {
         managerId?: number | null,
         managerName?: string,
         userRole?: string,
-        userId?: number
+        userId?: number,
+        joiningDate?: Date,
+        emailCreatedDate?: Date,
+        lastWorkingDay?: Date,
+        emailDeletionDate?: Date,
+        groupEmails?: string[]
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -158,6 +192,11 @@ export class EmployeeResponseModel {
         this.managerName = managerName;
         this.userRole = userRole;
         this.userId = userId;
+        this.joiningDate = joiningDate;
+        this.emailCreatedDate = emailCreatedDate;
+        this.lastWorkingDay = lastWorkingDay;
+        this.emailDeletionDate = emailDeletionDate;
+        this.groupEmails = groupEmails;
     }
 }
 
@@ -170,6 +209,15 @@ export class GlobalEmployeeResponseModel extends GlobalResponse<EmployeeResponse
 export class GetAllEmployeesResponseModel extends GlobalResponse<EmployeeResponseModel[]> {
     constructor(status: boolean, code: number, message: string, employees: EmployeeResponseModel[]) {
         super(status, code, message, employees);
+    }
+}
+
+export class GetAllEmployeesRequestModel {
+    companyId: number;
+    includeDeactivated?: boolean;
+    constructor(companyId: number, includeDeactivated?: boolean) {
+        this.companyId = companyId;
+        this.includeDeactivated = includeDeactivated;
     }
 }
 

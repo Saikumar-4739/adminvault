@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Plus, Trash2, ShoppingCart } from 'lucide-react';
-import { CreatePOModel, UpdatePOModel, POItemModel, Vendor, IdRequestModel } from '@adminvault/shared-models';
+import { CreatePOModel, UpdatePOModel, POItemModel, Vendor, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
 import { vendorService, procurementService, employeeService, companyService, assetTypeService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,7 +50,12 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
     const fetchMasters = async () => {
         if (!user?.companyId) return;
         try {
-            const [vRes, eRes, cRes, atRes] = await Promise.all([vendorService.getAllVendors(), employeeService.getAllEmployees(new IdRequestModel(user.companyId)), companyService.getAllCompaniesDropdown(), assetTypeService.getAllAssetTypesDropdown()]);
+            const [vRes, eRes, cRes, atRes] = await Promise.all([
+                vendorService.getAllVendors(),
+                employeeService.getAllEmployees(new GetAllEmployeesRequestModel(user.companyId)),
+                companyService.getAllCompaniesDropdown(),
+                assetTypeService.getAllAssetTypesDropdown()
+            ]);
             setVendors(vRes.vendors || []);
             const employeeList = (eRes as any)?.data || (eRes as any)?.employees || (Array.isArray(eRes) ? eRes : []);
             setApprovers(employeeList);

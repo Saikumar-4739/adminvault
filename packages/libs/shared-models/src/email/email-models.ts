@@ -1,5 +1,6 @@
 import { GlobalResponse } from '../common/global-response';
-import { EmailTypeEnum } from '../enums';
+import { EmailTypeEnum, EmployeeStatusEnum } from '../enums';
+import { IsOptional, IsArray, IsString, IsEnum, IsNumber } from 'class-validator';
 
 export class CreateEmailInfoModel {
     companyId: number;
@@ -8,18 +9,48 @@ export class CreateEmailInfoModel {
     email: string;
     employeeId?: number;
 
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    memberIds?: string[];
+
+    @IsOptional()
+    @IsString()
+    name?: string;
+
+    @IsOptional()
+    @IsNumber()
+    billing?: number;
+
+    @IsOptional()
+    createdDate?: Date;
+
+    @IsOptional()
+    @IsString()
+    description?: string;
+
     constructor(
         companyId: number,
         emailType: EmailTypeEnum,
         department: string,
         email: string,
-        employeeId?: number
+        employeeId?: number,
+        memberIds?: string[],
+        name?: string,
+        billing?: number,
+        createdDate?: Date,
+        description?: string
     ) {
         this.companyId = companyId;
         this.emailType = emailType;
         this.department = department;
         this.email = email;
         this.employeeId = employeeId;
+        this.memberIds = memberIds;
+        this.name = name;
+        this.billing = billing;
+        this.createdDate = createdDate;
+        this.description = description;
     }
 }
 
@@ -32,9 +63,14 @@ export class UpdateEmailInfoModel extends CreateEmailInfoModel {
         emailType: EmailTypeEnum,
         department: string,
         email: string,
-        employeeId?: number
+        employeeId?: number,
+        memberIds?: string[],
+        name?: string,
+        billing?: number,
+        createdDate?: Date,
+        description?: string
     ) {
-        super(companyId, emailType, department, email, employeeId);
+        super(companyId, emailType, department, email, employeeId, memberIds, name, billing, createdDate, description);
         this.id = id;
     }
 }
@@ -63,6 +99,12 @@ export class EmailInfoResponseModel {
     email: string;
     employeeId?: number;
     employeeName?: string;
+    employeeStatus?: EmployeeStatusEnum;
+    memberIds?: string[];
+    name?: string;
+    billing?: number;
+    createdDate?: Date;
+    description?: string;
 
     constructor(
         id: number,
@@ -71,7 +113,13 @@ export class EmailInfoResponseModel {
         department: string,
         email: string,
         employeeId?: number,
-        employeeName?: string
+        employeeName?: string,
+        employeeStatus?: EmployeeStatusEnum,
+        memberIds?: string[],
+        name?: string,
+        billing?: number,
+        createdDate?: Date,
+        description?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -80,6 +128,12 @@ export class EmailInfoResponseModel {
         this.email = email;
         this.employeeId = employeeId;
         this.employeeName = employeeName;
+        this.employeeStatus = employeeStatus;
+        this.memberIds = memberIds;
+        this.name = name;
+        this.billing = billing;
+        this.createdDate = createdDate;
+        this.description = description;
     }
 }
 

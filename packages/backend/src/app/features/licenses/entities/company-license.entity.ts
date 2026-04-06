@@ -34,4 +34,7 @@ export class CompanyLicenseEntity extends CommonBaseEntity {
 
     @Column({ name: 'billing_cycle', length: 50, default: 'MONTHLY' })
     billingCycle: string;
+
+    @Column({ name: 'role', type: 'varchar', length: 100, nullable: true, comment: 'Role of the employee for this license (Owner, Member, etc.)' })
+    role: string | null;
 }

@@ -45,6 +45,21 @@ export class EmployeesEntity extends CommonBaseEntity {
   @Column('int', { name: 'manager_id', nullable: true, comment: 'Manager ID (Self Reference)' })
   managerId: number;
 
+  @Column('timestamp', { name: 'joining_date', nullable: true, comment: 'Employee joining date' })
+  joiningDate: Date;
+
+  @Column('timestamp', { name: 'email_created_date', nullable: true, comment: 'Employee email creation date' })
+  emailCreatedDate: Date;
+
+  @Column('timestamp', { name: 'last_working_day', nullable: true, comment: 'Employee last working day' })
+  lastWorkingDay: Date;
+
+  @Column('timestamp', { name: 'email_deletion_date', nullable: true, comment: 'Employee email deletion date' })
+  emailDeletionDate: Date;
+
+  @Column('simple-array', { name: 'group_emails', nullable: true, comment: 'List of group emails employee belongs to' })
+  groupEmails: string[];
+
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt: Date;
 }

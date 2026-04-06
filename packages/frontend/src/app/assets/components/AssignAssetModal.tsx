@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { assetService, employeeService } from '@/lib/api/services';
-import { IdRequestModel, AssignAssetOpRequestModel, ReturnAssetOpRequestModel, AssetStatusEnum } from '@adminvault/shared-models';
+import { AssignAssetOpRequestModel, ReturnAssetOpRequestModel, AssetStatusEnum, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -32,16 +32,14 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({ isOpen, onCl
     });
 
     const fetchEmployees = useCallback(async () => {
-        const targetCompanyId = asset?.companyId ?? user?.companyId;
-        if (targetCompanyId === undefined) return;
+        const targetCompanyId = Number(asset?.companyId ?? user?.companyId);
         try {
-            const req = new IdRequestModel(targetCompanyId);
-            const response = await employeeService.getAllEmployees(req as any);
+            const response = await employeeService.getAllEmployees(new GetAllEmployeesRequestModel(targetCompanyId));
             if (response.status) {
                 setEmployees(response.data || []);
             }
-        } catch (error: any) {
-            AlertMessages.getErrorMessage(error.message || 'Failed to fetch employees');
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to fetch employees');
         }
     }, [user?.companyId, asset?.companyId]);
 

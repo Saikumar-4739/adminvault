@@ -50,6 +50,7 @@ interface License {
         lastName: string;
         avatar?: string;
     };
+    role?: string;
     createdAt: string;
 }
 
@@ -370,6 +371,7 @@ export default function LicensesPage() {
 
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Company</th>
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Assigned Employee</th>
+                                                                    <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Role</th>
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Allocation Date</th>
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Cost</th>
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
@@ -410,6 +412,13 @@ export default function LicensesPage() {
                                                                                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Unassigned</span>
                                                                                     </div>
                                                                                 )}
+                                                                            </td>
+                                                                            <td className="p-4">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${license.role === 'Owner' ? 'bg-amber-50 text-amber-600 border-amber-200' : (license.role === 'Member' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-slate-50 text-slate-600 border-slate-200')}`}>
+                                                                                        {license.role || 'Member'}
+                                                                                    </span>
+                                                                                </div>
                                                                             </td>
                                                                             <td className="p-4">
                                                                                 <div className="flex items-center gap-2">
@@ -481,7 +490,8 @@ export default function LicensesPage() {
                                     undefined, // seats
                                     data.remarks || undefined,
                                     Number(data.costPerSeat),
-                                    data.billingCycle
+                                    data.billingCycle,
+                                    data.role
                                 );
                                 const response: any = await licensesService.updateLicense(model);
                                 if (response.status) {
@@ -504,7 +514,8 @@ export default function LicensesPage() {
                                     undefined, // seats
                                     data.remarks || undefined,
                                     Number(data.costPerSeat),
-                                    data.billingCycle
+                                    data.billingCycle,
+                                    data.role
                                 );
 
                                 const response: any = await licensesService.createLicense(model);

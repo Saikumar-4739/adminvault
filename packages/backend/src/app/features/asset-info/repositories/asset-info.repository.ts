@@ -30,7 +30,7 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'asset.serialNumber as "serialNumber"',
                 'asset.boxNo as "boxNo"',
                 'asset.assetStatusEnum as "assetStatusEnum"',
-                'brand.name as "brandName"',
+                'brand.laptop_company as "brandName"',
                 'asset.model as "model"',
                 'asset.warrantyExpiry as "warrantyExpiry"'
             ])
@@ -51,13 +51,14 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .leftJoin('employees', 'employee', 'assignment.employee_id = employee.id')
             .leftJoin('employees', 'manager', 'employee.manager_id = manager.id')
             .leftJoin('employees', 'previousUser', 'asset.previous_user_employee_id = previousUser.id')
+            .leftJoin('device_configs', 'brand', 'asset.device_config_id = brand.id')
             .select([
                 'asset.id as "id"',
                 'asset.companyId as "companyId"',
                 'asset.deviceId as "deviceId"',
                 'asset.deviceConfigId as "deviceConfigId"',
                 'asset.model as "model"',
-                'asset.configuration as "configuration"',
+                'COALESCE(asset.configuration, brand.configuration) as "configuration"',
                 'asset.serialNumber as "serialNumber"',
                 'asset.purchaseDate as "purchaseDate"',
                 'asset.warrantyExpiry as "warrantyExpiry"',
@@ -68,7 +69,8 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'asset.assetStatusEnum as "assetStatusEnum"',
                 'asset.createdAt as "createdAt"',
                 'asset.updatedAt as "updatedAt"',
-                'device.name as "deviceName"'
+                'device.name as "deviceName"',
+                'brand.laptop_company as "brandName"'
             ])
             .addSelect('CONCAT(employee.first_name, \' \', employee.last_name)', 'assignedTo')
             .addSelect('CONCAT(manager.first_name, \' \', manager.last_name)', 'managerName')
@@ -81,8 +83,19 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
         }
 
         const results = await query.orderBy('asset.createdAt', 'DESC').getRawMany();
-        console.log(`[RAW-DEBUG-ASSIGN] results[0] configuration:`, results[0]?.configuration ? 'EXISTS' : 'EMPTY');
-        return results;
+
+        // Deduplicate results by asset ID to prevent UI crashes if multiple assignments exist
+        const uniqueResults = [];
+        const seenIds = new Set();
+        for (const row of results) {
+            if (!seenIds.has(row.id)) {
+                uniqueResults.push(row);
+                seenIds.add(row.id);
+            }
+        }
+
+        console.log(`[RAW-DEBUG-ASSIGN] results[0] configuration:`, uniqueResults[0]?.configuration ? 'EXISTS' : 'EMPTY');
+        return uniqueResults;
     }
 
     /**
@@ -110,13 +123,14 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .leftJoin('employees', 'employee', 'asset.assigned_to_employee_id = employee.id')
             .leftJoin('employees', 'manager', 'employee.manager_id = manager.id')
             .leftJoin('employees', 'previousUser', 'asset.previous_user_employee_id = previousUser.id')
+            .leftJoin('device_configs', 'brand', 'asset.device_config_id = brand.id')
             .select([
                 'asset.id as "id"',
                 'asset.companyId as "companyId"',
                 'asset.deviceId as "deviceId"',
                 'asset.deviceConfigId as "deviceConfigId"',
                 'asset.model as "model"',
-                'asset.configuration as "configuration"',
+                'COALESCE(asset.configuration, brand.configuration) as "configuration"',
                 'asset.serialNumber as "serialNumber"',
                 'asset.purchaseDate as "purchaseDate"',
                 'asset.warrantyExpiry as "warrantyExpiry"',
@@ -126,7 +140,8 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
                 'asset.previousUserEmployeeId as "previousUserEmployeeId"',
                 'asset.assetStatusEnum as "assetStatusEnum"',
                 'asset.createdAt as "createdAt"',
-                'device.name as "deviceName"'
+                'device.name as "deviceName"',
+                'brand.laptop_company as "brandName"'
             ])
             .addSelect('CONCAT(employee.first_name, \' \', employee.last_name)', 'assignedTo')
             .addSelect('CONCAT(manager.first_name, \' \', manager.last_name)', 'managerName')

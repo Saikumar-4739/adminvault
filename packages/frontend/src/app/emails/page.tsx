@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { companyService, emailService, departmentService } from '@/lib/api/services';
+import { motion, AnimatePresence } from 'framer-motion';
+import { companyService, emailService, departmentService, employeeService } from '@/lib/api/services';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, DepartmentEnum, EmailTypeEnum, EmailInfoResponseModel, CreateEmailInfoModel, DeleteEmailInfoModel, IdRequestModel } from '@adminvault/shared-models';
+import { EmailInfoResponseModel, EmailTypeEnum, IdRequestModel, EmployeeStatusEnum, UserRoleEnum, DepartmentEnum, DeleteEmailInfoModel, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
 import {
     Mail, Building2, Plus, Trash2, Search,
     Headphones, ShieldCheck, Landmark, Settings,
@@ -53,16 +54,144 @@ const DeptConfig: Record<string, { icon: any, color: string, bg: string, border:
     'Default': { icon: Building2, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950/40', border: 'border-indigo-100 dark:border-indigo-900/30', label: 'Department' },
 };
 
+const EmailRow: React.FC<{
+    acc: EmailInfoResponseModel;
+    idx: number;
+    employees: any[];
+    onDelete: (id: number) => void;
+    onEdit: (data: EmailInfoResponseModel) => void;
+}> = ({ acc, idx, employees, onDelete, onEdit }) => {
+    const [isMembersOpen, setIsMembersOpen] = useState(false);
+    const memberNames = useMemo(() => {
+        if (!acc.memberIds) return [];
+        return acc.memberIds.map(id => {
+            const emp = employees.find(e => String(e.id) === String(id));
+            return emp ? `${emp.firstName} ${emp.lastName}` : `Unknown (${id})`;
+        });
+    }, [acc.memberIds, employees]);
+
+    const isGroup = acc.emailType === EmailTypeEnum.GROUP;
+    const isCompany = acc.emailType === EmailTypeEnum.COMPANY ||
+        acc.emailType === EmailTypeEnum.SUPPORT ||
+        acc.emailType === EmailTypeEnum.BILLING ||
+        acc.emailType === EmailTypeEnum.GENERAL;
+
+    return (
+        <>
+            <tr className={`group/row border-b last:border-0 border-slate-50 dark:border-white/[0.02] hover:bg-slate-50/50 dark:hover:bg-indigo-500/[0.02] transition-colors ${idx % 2 === 0 ? '' : 'bg-slate-50/[0.01]'}`}>
+                <td className="p-4">
+                    <div className="flex items-center gap-2">
+                        <span className="px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/10 text-[8px] font-black text-slate-500 uppercase tracking-widest">
+                            {acc.emailType}
+                        </span>
+                        {(isCompany || isGroup) && acc.name && (
+                            <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tight truncate max-w-[120px]">
+                                {acc.name}
+                            </span>
+                        )}
+                        {!isCompany && !isGroup && acc.employeeName && (
+                            <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tight truncate max-w-[100px]">
+                                {acc.employeeName}
+                            </span>
+                        )}
+                    </div>
+                </td>
+                <td className="p-4">
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover/row:text-indigo-600 dark:group-hover/row:text-indigo-400 transition-colors uppercase tracking-tight">
+                            {acc.email}
+                        </span>
+                        {isGroup && memberNames.length > 0 && (
+                            <button
+                                onClick={() => setIsMembersOpen(!isMembersOpen)}
+                                className="flex items-center gap-1 mt-1 text-[9px] font-bold text-slate-400 hover:text-indigo-500 uppercase tracking-widest transition-colors"
+                            >
+                                {isMembersOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                {memberNames.length} Members
+                            </button>
+                        )}
+                    </div>
+                </td>
+                <td className="p-4">
+                    <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${acc.employeeStatus === EmployeeStatusEnum.INACTIVE ? 'bg-amber-400' : 'bg-emerald-500'} shadow-sm`} />
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                            {acc.employeeStatus || 'Active'}
+                        </span>
+                    </div>
+                </td>
+                <td className="p-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                        <button
+                            onClick={() => onEdit(acc)}
+                            className="h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all shadow-sm"
+                        >
+                            <Settings className="h-4 w-4" />
+                        </button>
+                        <button
+                            onClick={() => onDelete(acc.id)}
+                            className="h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all shadow-sm"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <AnimatePresence>
+                {isMembersOpen && (
+                    <tr>
+                        <td colSpan={4} className="p-0 border-0">
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden bg-slate-50/50 dark:bg-white/[0.01]"
+                            >
+                                <div className="p-4 pl-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    {memberNames.map((name, i) => (
+                                        <div key={i} className="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-white/5">
+                                            <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-[10px] font-bold text-indigo-600">
+                                                {name.charAt(0)}
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-tight truncate">
+                                                {name}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </td>
+                    </tr>
+                )}
+            </AnimatePresence>
+        </>
+    );
+};
+
 const InfoEmailsPage: React.FC = () => {
     const [companies, setCompanies] = useState<any[]>([]);
     const [departments, setDepartments] = useState<any[]>([]);
+    const [employees, setEmployees] = useState<any[]>([]);
     const [emailInfoList, setEmailInfoList] = useState<EmailInfoResponseModel[]>([]);
     const [selectedOrg, setSelectedOrg] = useState<string>('');
     const [activeTab, setActiveTab] = useState<EmailCategory>('USER');
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editData, setEditData] = useState<EmailInfoResponseModel | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<any>(null);
+
+    const fetchEmployeesForLookup = useCallback(async () => {
+        try {
+            const req = new GetAllEmployeesRequestModel(Number(selectedOrg) || 0);
+            const response = await employeeService.getAllEmployees(req);
+            if (response.status) {
+                setEmployees(response.data || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch employees for lookup:', err);
+        }
+    }, [selectedOrg]);
 
     const fetchCompanies = useCallback(async () => {
         try {
@@ -110,11 +239,13 @@ const InfoEmailsPage: React.FC = () => {
         if (selectedOrg) {
             fetchEmailInfo();
             fetchDepartments();
+            fetchEmployeesForLookup();
         } else {
             setEmailInfoList([]);
             setDepartments([]);
+            setEmployees([]);
         }
-    }, [selectedOrg, fetchEmailInfo, fetchDepartments]);
+    }, [selectedOrg, fetchEmailInfo, fetchDepartments, fetchEmployeesForLookup]);
 
     // Auto-select first organization if none selected
     useEffect(() => {
@@ -123,21 +254,29 @@ const InfoEmailsPage: React.FC = () => {
         }
     }, [companies, selectedOrg]);
 
-    const handleCreateEmailInfo = async (data: CreateEmailInfoModel) => {
+    const handleUpsertEmailInfo = async (data: any) => {
         try {
-            const response = await emailService.createEmailInfo(data);
+            const response = data.id
+                ? await emailService.updateEmailInfo(data)
+                : await emailService.createEmailInfo(data);
             if (response.status) {
-                AlertMessages.getSuccessMessage(response.message || 'Email info record created successfully');
+                AlertMessages.getSuccessMessage(response.message || `Email info record ${data.id ? 'updated' : 'created'} successfully`);
                 await fetchEmailInfo();
+                setEditData(null);
                 return true;
             } else {
-                AlertMessages.getErrorMessage(response.message || 'Failed to create email info');
+                AlertMessages.getErrorMessage(response.message || `Failed to ${data.id ? 'update' : 'create'} email info`);
                 return false;
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'Failed to create email info');
+            AlertMessages.getErrorMessage(err.message || `Failed to ${data.id ? 'update' : 'create'} email info`);
             return false;
         }
+    };
+
+    const handleEdit = (data: EmailInfoResponseModel) => {
+        setEditData(data);
+        setIsModalOpen(true);
     };
 
     const handleDeleteEmailInfo = (id: number) => {
@@ -371,39 +510,14 @@ const InfoEmailsPage: React.FC = () => {
                                                             </thead>
                                                             <tbody>
                                                                 {emails.map((acc, idx) => (
-                                                                    <tr key={acc.id} className={`group/row border-b last:border-0 border-slate-50 dark:border-white/[0.02] hover:bg-slate-50/50 dark:hover:bg-indigo-500/[0.02] transition-colors ${idx % 2 === 0 ? '' : 'bg-slate-50/[0.01]'}`}>
-                                                                        <td className="p-4">
-                                                                            <div className="flex items-center gap-2">
-                                                                                <span className="px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/10 text-[8px] font-black text-slate-500 uppercase tracking-widest">
-                                                                                    {acc.emailType}
-                                                                                </span>
-                                                                                {acc.emailType === EmailTypeEnum.USER && acc.employeeName && (
-                                                                                    <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tight truncate max-w-[100px]">
-                                                                                        {acc.employeeName}
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="p-4">
-                                                                            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover/row:text-indigo-600 dark:group-hover/row:text-indigo-400 transition-colors uppercase tracking-tight">
-                                                                                {acc.email}
-                                                                            </span>
-                                                                        </td>
-                                                                        <td className="p-4">
-                                                                            <div className="flex items-center gap-1.5">
-                                                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Active</span>
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="p-4 text-right">
-                                                                            <button
-                                                                                onClick={() => handleDeleteEmailInfo(acc.id)}
-                                                                                className="h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all shadow-sm"
-                                                                            >
-                                                                                <Trash2 className="h-4 w-4" />
-                                                                            </button>
-                                                                        </td>
-                                                                    </tr>
+                                                                    <EmailRow
+                                                                        key={acc.id}
+                                                                        acc={acc}
+                                                                        idx={idx}
+                                                                        employees={employees}
+                                                                        onDelete={handleDeleteEmailInfo}
+                                                                        onEdit={handleEdit}
+                                                                    />
                                                                 ))}
                                                             </tbody>
                                                         </table>
@@ -420,10 +534,14 @@ const InfoEmailsPage: React.FC = () => {
 
                 <AddEmailModal
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setEditData(null);
+                    }}
                     companyId={Number(selectedOrg)}
-                    onSuccess={handleCreateEmailInfo}
+                    onSuccess={handleUpsertEmailInfo}
                     initialTab={activeTab}
+                    editData={editData}
                 />
                 <DeleteConfirmationModal
                     isOpen={isDeleteModalOpen}

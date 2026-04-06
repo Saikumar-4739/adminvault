@@ -85,8 +85,8 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, o
                     <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3 min-w-0">
                             {/* Icon with Gradient Background */}
-                            <div className={`relative p-2.5 rounded-xl bg-gradient-to-br ${statusConfig.gradient} border border-slate-200/50 dark:border-slate-700/50 shadow-sm`}>
-                                <AssetIcon className={`h-6 w-6 ${statusConfig.color}`} />
+                            <div className={`relative p-2 rounded-xl bg-gradient-to-br ${statusConfig.gradient} border border-slate-200/50 dark:border-slate-700/50 shadow-sm`}>
+                                <AssetIcon className={`h-5 w-5 ${statusConfig.color}`} />
                                 <div className="absolute -top-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-0.5 shadow-sm">
                                     <StatusIcon className={`h-3 w-3 ${statusConfig.color}`} />
                                 </div>

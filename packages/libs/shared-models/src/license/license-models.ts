@@ -15,6 +15,7 @@ export class CreateLicenseModel {
     remarks?: string;
     costPerSeat?: number;
     billingCycle?: string;
+    role?: string;
 
     constructor(
         companyId: number,
@@ -27,7 +28,8 @@ export class CreateLicenseModel {
         seats?: number,
         remarks?: string,
         costPerSeat?: number,
-        billingCycle?: string
+        billingCycle?: string,
+        role?: string
     ) {
         this.companyId = companyId;
         this.applicationId = applicationId;
@@ -40,6 +42,7 @@ export class CreateLicenseModel {
         this.remarks = remarks;
         this.costPerSeat = costPerSeat;
         this.billingCycle = billingCycle;
+        this.role = role;
     }
 }
 
@@ -59,6 +62,7 @@ export class UpdateLicenseModel {
     remarks?: string;
     costPerSeat?: number;
     billingCycle?: string;
+    role?: string;
 
     constructor(
         id: number,
@@ -72,7 +76,8 @@ export class UpdateLicenseModel {
         seats?: number,
         remarks?: string,
         costPerSeat?: number,
-        billingCycle?: string
+        billingCycle?: string,
+        role?: string
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -86,6 +91,7 @@ export class UpdateLicenseModel {
         this.remarks = remarks;
         this.costPerSeat = costPerSeat;
         this.billingCycle = billingCycle;
+        this.role = role;
     }
 }
 
@@ -122,6 +128,7 @@ export class LicenseResponseModel {
     costPerSeat?: number | null;
     billingCycle?: string | null;
     remarks?: string | null;
+    role?: string | null;
     createdAt: Date;
     updatedAt: Date;
     company?: any;
@@ -144,6 +151,7 @@ export class LicenseResponseModel {
         costPerSeat?: number | null,
         billingCycle?: string | null,
         remarks?: string | null,
+        role?: string | null,
         company?: any,
         application?: any,
         assignedEmployee?: any
@@ -161,6 +169,7 @@ export class LicenseResponseModel {
         this.costPerSeat = costPerSeat;
         this.billingCycle = billingCycle;
         this.remarks = remarks;
+        this.role = role;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.company = company;

@@ -18,4 +18,19 @@ export class EmailInfoEntity extends CommonBaseEntity {
 
     @Column('enum', { name: 'status', enum: EmailStatusEnum, default: EmailStatusEnum.ACTIVE, nullable: false, comment: 'Email account status' })
     status: EmailStatusEnum;
+
+    @Column('simple-array', { name: 'member_ids', nullable: true, comment: 'Member employee IDs for group emails' })
+    memberIds: string[];
+
+    @Column('varchar', { name: 'name', length: 255, nullable: true, comment: 'Name/Title of the email account' })
+    name: string;
+
+    @Column('decimal', { name: 'billing', precision: 10, scale: 2, nullable: true, comment: 'Billing amount associated' })
+    billing: number;
+
+    @Column('timestamp', { name: 'created_date', nullable: true, comment: 'Date the email was created' })
+    createdDate: Date;
+
+    @Column('text', { name: 'description', nullable: true, comment: 'Account description' })
+    description: string;
 }
