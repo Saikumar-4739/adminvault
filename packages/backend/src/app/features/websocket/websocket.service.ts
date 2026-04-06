@@ -1,23 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppWebSocketGateway } from './websocket.gateway';
-import {
-    WebSocketEvent,
-    WebSocketRoomHelper,
-    NotificationPayload,
-    DashboardUpdatePayload,
-    TicketEventPayload,
-    AssetEventPayload,
-    SystemAlertPayload,
-} from '@adminvault/shared-models';
+import { WebSocketEvent, WebSocketRoomHelper, NotificationPayload, DashboardUpdatePayload, TicketEventPayload, AssetEventPayload, SystemAlertPayload, } from '@adminvault/shared-models';
 
-/**
- * WebSocket Service
- * Provides methods for other modules to emit real-time events
- */
+
 @Injectable()
 export class WebSocketService {
     private readonly logger = new Logger(WebSocketService.name);
-
     constructor(private readonly gateway: AppWebSocketGateway) { }
 
     /**
@@ -73,10 +61,7 @@ export class WebSocketService {
      */
     emitGlobal(event: WebSocketEvent | string, data: any): void {
         try {
-            this.gateway.server.emit(event, {
-                ...data,
-                timestamp: new Date(),
-            });
+            this.gateway.server.emit(event, { ...data, timestamp: new Date(), });
             this.logger.debug(`Emitted ${event} globally`);
         } catch (error) {
             this.logger.error(`Failed to emit globally: ${error.message}`);
@@ -145,8 +130,6 @@ export class WebSocketService {
     broadcastSystemAlertToCompany(companyId: number, alert: Omit<SystemAlertPayload, 'timestamp'>): void {
         this.emitToCompany(companyId, WebSocketEvent.SYSTEM_ALERT, alert);
     }
-
-
 
     /**
      * Check if user is online

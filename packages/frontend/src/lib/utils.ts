@@ -82,3 +82,18 @@ export function getInitials(name: string): string {
         .toUpperCase()
         .slice(0, 2);
 }
+
+/**
+ * Format phone number with country code (+91 by default)
+ */
+export function formatPhoneNumberWithCountryCode(phone: string | undefined | null): string {
+    if (!phone) return '';
+    const clean = phone.replace(/\D/g, '');
+    if (clean.length === 10) {
+        return `+91 ${clean}`;
+    }
+    if (clean.length > 10 && clean.startsWith('91')) {
+        return `+${clean.slice(0, 2)} ${clean.slice(2)}`;
+    }
+    return phone;
+}

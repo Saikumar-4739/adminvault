@@ -240,7 +240,7 @@ const ProcurementPage: React.FC = () => {
                     </table>
                     <div class="total">Total: $${(Number(po.totalAmount) || 0).toFixed(2)}</div>
                     <div style="margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 10px; color: #94a3b8; text-align: center;">
-                        Generated via AdminVault Procurement System
+                        Generated via BOS Vault Procurement System
                     </div>
                 </body>
             </html>

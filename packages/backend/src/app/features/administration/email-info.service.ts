@@ -213,9 +213,7 @@ export class EmailInfoService {
     }
   }
 
-  async sendTicketCreatedEmail(
-    reqModel: SendTicketCreatedEmailModel
-  ): Promise<boolean> {
+  async sendTicketCreatedEmail(reqModel: SendTicketCreatedEmailModel): Promise<boolean> {
     const { ticket, recipientEmail, roleName } = reqModel;
     const frontendUrl =
       this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';

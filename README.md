@@ -1,4 +1,4 @@
-# AdminVault
+# BOS Vault
 
 ## 🚀 Quick Start
 

@@ -3,8 +3,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { EmailTypeEnum, EmailStatusEnum } from '@adminvault/shared-models';
 
 @Entity('email_info')
-@Index('idx_email_info_dept', ['department'])
-@Index('idx_email_info_employee', ['employeeId'])
 export class EmailInfoEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'email', length: 255, nullable: false, unique: true, comment: 'Email address' })
     email: string;

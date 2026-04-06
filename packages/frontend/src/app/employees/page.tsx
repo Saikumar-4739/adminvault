@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { employeeService, companyService, departmentService } from '@/lib/api/services';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import {
@@ -20,6 +21,7 @@ import { UserRoleEnum, IdRequestModel, CreateEmployeeModel, UpdateEmployeeModel,
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { formatPhoneNumberWithCountryCode } from '@/lib/utils';
 
 interface Employee {
     id: number;
@@ -514,7 +516,7 @@ const EmployeesPage: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
                                                     <Phone className="h-2.5 w-2.5 shrink-0 opacity-60" />
-                                                    <span>{emp.phNumber}</span>
+                                                    <span>{formatPhoneNumberWithCountryCode(emp.phNumber)}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-indigo-500 dark:text-indigo-400">
                                                     <Users className="h-2.5 w-2.5 shrink-0 opacity-70" />
@@ -600,7 +602,7 @@ const EmployeesPage: React.FC = () => {
                                             <td className="px-3 py-2 hidden md:table-cell">
                                                 <div className="text-[10px] text-slate-500 space-y-0.5">
                                                     <div className="flex items-center gap-1"><Mail className="h-2.5 w-2.5" />{emp.email}</div>
-                                                    <div className="flex items-center gap-1"><Phone className="h-2.5 w-2.5" />{emp.phNumber || '-'}</div>
+                                                    <div className="flex items-center gap-1"><Phone className="h-2.5 w-2.5" />{formatPhoneNumberWithCountryCode(emp.phNumber) || '-'}</div>
                                                 </div>
                                             </td>
                                             <td className="px-3 py-2 hidden lg:table-cell">
@@ -657,18 +659,10 @@ const EmployeesPage: React.FC = () => {
                                 required
                                 disabled={!!editingEmployee}
                             />
-                            <Input
+                            <PhoneInput
                                 label="Phone Number"
-                                type="tel"
-                                inputMode="tel"
-                                pattern="[0-9+\-\s]*"
                                 value={formData.phone}
-                                onKeyDown={(e) => {
-                                    if (!/[0-9+\-\s]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(e.key)) {
-                                        e.preventDefault();
-                                    }
-                                }}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9+\-\s]/g, '') })}
+                                onChange={(val) => setFormData({ ...formData, phone: val })}
                             />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

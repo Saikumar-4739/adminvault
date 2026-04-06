@@ -36,6 +36,7 @@ export class CreateTicketModel {
     closureRemarks?: string;
     userRating?: number;
     userFeedback?: string;
+    userEmail?: string;
 
     constructor(
         ticketCode: string,
@@ -67,7 +68,8 @@ export class CreateTicketModel {
         resolvedBy?: number,
         closureRemarks?: string,
         userRating?: number,
-        userFeedback?: string
+        userFeedback?: string,
+        userEmail?: string
     ) {
         this.ticketCode = ticketCode;
         this.employeeId = employeeId;
@@ -99,6 +101,7 @@ export class CreateTicketModel {
         this.closureRemarks = closureRemarks;
         this.userRating = userRating;
         this.userFeedback = userFeedback;
+        this.userEmail = userEmail;
     }
 }
 
@@ -140,9 +143,10 @@ export class UpdateTicketModel extends CreateTicketModel {
         resolvedBy?: number,
         closureRemarks?: string,
         userRating?: number,
-        userFeedback?: string
+        userFeedback?: string,
+        userEmail?: string
     ) {
-        super(ticketCode, categoryEnum, priorityEnum, subject, ticketStatus, employeeId, assignAdminId, expectedCompletionDate, resolvedAt, timeSpentMinutes, description, subCategory, severityEnum, department, contactNumber, location, contactEmail, assignedGroup, slaType, responseDueTime, escalationLevel, adminComments, userComments, internalNotes, rootCause, resolutionSummary, resolvedBy, closureRemarks, userRating, userFeedback);
+        super(ticketCode, categoryEnum, priorityEnum, subject, ticketStatus, employeeId, assignAdminId, expectedCompletionDate, resolvedAt, timeSpentMinutes, description, subCategory, severityEnum, department, contactNumber, location, contactEmail, assignedGroup, slaType, responseDueTime, escalationLevel, adminComments, userComments, internalNotes, rootCause, resolutionSummary, resolvedBy, closureRemarks, userRating, userFeedback, userEmail);
         this.id = id;
     }
 }

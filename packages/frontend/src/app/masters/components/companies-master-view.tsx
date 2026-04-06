@@ -5,12 +5,14 @@ import { CreateCompanyModel, UpdateCompanyModel, DeleteCompanyModel, CompanyResp
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { CompanyService, formatDate } from '@adminvault/shared-services';
+import { formatPhoneNumberWithCountryCode } from '@/lib/utils';
 
 
 interface CompaniesMasterViewProps {
@@ -163,7 +165,7 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
                                                 {company.email || '-'}
                                             </td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
-                                                {company.phone || '-'}
+                                                {formatPhoneNumberWithCountryCode(company.phone) || '-'}
                                             </td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">
                                                 {formatDate(company.estDate)}
@@ -192,7 +194,7 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
                     <Input label="Company Name" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} className="h-14" required />
                     <Input label="Location" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="h-14" required />
                     <Input label="Contact Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-14" required />
-                    <Input label="Contact Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} className="h-14" required />
+                    <PhoneInput label="Contact Phone" value={formData.phone} onChange={(val) => setFormData({ ...formData, phone: val })} required />
                     <Input label="Establishment Date" type="date" max="2026-12-31" value={formData.estDate} onChange={(e) => setFormData({ ...formData, estDate: e.target.value })} className="h-14" required />
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>

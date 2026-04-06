@@ -27,7 +27,7 @@ export class TicketsService {
         private auditLogService: AuditLogService
     ) { }
 
-    async createTicket(reqModel: CreateTicketModel, userEmail: string, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+    async createTicket(reqModel: CreateTicketModel, userId?: number, userEmail?: string, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
 
@@ -41,10 +41,15 @@ export class TicketsService {
                 throw new ErrorResponse(400, 'Subject is required');
             }
 
-            const employee = await this.employeesRepo.findOne({ where: { email: userEmail } });
+            const emailToUse = userEmail || reqModel.userEmail;
+            if (!emailToUse) {
+                throw new ErrorResponse(400, 'User email is required');
+            }
+
+            const employee = await this.employeesRepo.findOne({ where: { email: emailToUse } });
 
             if (!employee) {
-                throw new ErrorResponse(404, `No Employee profile found for ${userEmail}. Tickets must be linked to an employee. Please contact your Admin.`);
+                throw new ErrorResponse(404, `No Employee profile found for ${emailToUse}. Tickets must be linked to an employee. Please contact your Admin.`);
             }
 
             if (!reqModel.ticketCode) {
@@ -88,7 +93,7 @@ export class TicketsService {
                 savedTicket.ticketCode,
                 userId,
                 employee.firstName + ' ' + employee.lastName,
-                userEmail,
+                emailToUse,
                 { subject: savedTicket.subject, priority: savedTicket.priorityEnum },
                 ipAddress,
                 'Support'
@@ -100,7 +105,7 @@ export class TicketsService {
 
             // Send Emails
             // 1. To User
-            await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, userEmail, 'User'));
+            await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, emailToUse, 'User'));
 
             // 2. To Admins & Managers
 
@@ -108,7 +113,7 @@ export class TicketsService {
             // 2. To Specific Manager (if exists)
             if (employee.managerId) {
                 const manager = await this.employeesRepo.findOne({ where: { id: employee.managerId } });
-                if (manager && manager.email && manager.email !== userEmail) {
+                if (manager && manager.email && manager.email !== emailToUse) {
                     await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, manager.email, 'Manager'));
                 }
             }
@@ -120,7 +125,7 @@ export class TicketsService {
             });
 
             for (const admin of admins) {
-                if (admin.email !== userEmail) {
+                if (admin.email !== emailToUse) {
                     await this.emailInfoService.sendTicketCreatedEmail(new SendTicketCreatedEmailModel(savedTicket, admin.email, admin.userRole));
                 }
             }

@@ -6,62 +6,44 @@ import { TicketsEntity } from './entities/tickets.entity';
 import { TicketMessageEntity } from './entities/ticket-messages.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
-
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '@adminvault/shared-models';
 
-@WebSocketGateway({
-    cors: {
-        origin: '*',
-        credentials: true,
-    },
-    namespace: 'tickets',
-    transports: ['polling', 'websocket'],
-})
+@WebSocketGateway({ cors: { origin: '*', credentials: true }, namespace: 'tickets', transports: ['polling', 'websocket'] })
 @Injectable()
 export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server;
-
     constructor(
         private dataSource: DataSource,
         private readonly notificationsService: NotificationsService
     ) { }
 
     handleConnection(client: Socket) {
-        console.log(`Client connected: ${client.id}`);
     }
 
     handleDisconnect(client: Socket) {
-        console.log(`Client disconnected: ${client.id}`);
     }
 
     @SubscribeMessage('joinUser')
-    handleJoinUser(
-        @ConnectedSocket() client: Socket,
-        @MessageBody() data: { userId: number },
-    ) {
+    handleJoinUser(@ConnectedSocket() client: Socket, @MessageBody() data: { userId: number },) {
         const room = `user_${data.userId}`;
         client.join(room);
-        console.log(`User ${client.id} joined notification room ${room}`);
     }
 
     @SubscribeMessage('joinAdmins')
     handleJoinAdmins(@ConnectedSocket() client: Socket) {
         client.join('admin_room');
-        console.log(`Admin ${client.id} joined admin_room`);
     }
 
     async emitTicketCreated(ticket: any) {
         this.server.to('admin_room').emit('ticketCreated', ticket);
-
         // Notify admins with a persistent notification
         // Note: In real app, we'd loop through admins. For now, we often use a specific ID or broadcast.
         // If we want to persist for all admins, we need a list.
         // The implementation_plan says: "userId" in notification entity.
         // Let's assume we target the first Super Admin or similar, or just broadcast for now if that's the pattern.
         // Existing code just did this.server.to('admin_room').emit('notification', ...) which is real-time only.
-
         // For persistence, we need to know WHICH admin user to save for.
         // If there are multiple admins, we should create multiple notifications if they all need persistence.
         // For now, I will stick to targeting the specific users involved.
@@ -70,10 +52,7 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
     async emitTicketUpdated(ticket: any) {
         const room = `ticket_${ticket.id}`;
         this.server.to(room).emit('ticketUpdated', ticket);
-        // Also notify admins
         this.server.to('admin_room').emit('ticketCreated', ticket);
-
-        // Resolve userId for targeting notification
         const userId = await this.resolveUserId(ticket);
 
         if (userId) {
@@ -88,14 +67,9 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
     }
 
     @SubscribeMessage('joinTicket')
-    async handleJoinTicket(
-        @ConnectedSocket() client: Socket,
-        @MessageBody() data: { ticketId: number },
-    ) {
+    async handleJoinTicket(@ConnectedSocket() client: Socket, @MessageBody() data: { ticketId: number },) {
         const room = `ticket_${data.ticketId}`;
         client.join(room);
-        console.log(`Client ${client.id} joined room ${room}`);
-
         // Fetch existing messages and send to client
         const messages = await this.dataSource.getRepository(TicketMessageEntity).find({
             where: { ticketId: data.ticketId },
@@ -106,25 +80,12 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
     }
 
     @SubscribeMessage('sendMessage')
-    async handleMessage(
-        @ConnectedSocket() client: Socket,
-        @MessageBody() data: { ticketId: number; senderId: number; senderType: string; message: string },
-    ) {
+    async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() data: { ticketId: number; senderId: number; senderType: string; message: string },) {
         const room = `ticket_${data.ticketId}`;
-
         // Save message to database
         const messageRepo = this.dataSource.getRepository(TicketMessageEntity);
-        const newMessage = messageRepo.create({
-            ticketId: data.ticketId,
-            senderId: data.senderId,
-            senderType: data.senderType,
-            message: data.message,
-        });
+        const newMessage = messageRepo.create({ ticketId: data.ticketId, senderId: data.senderId, senderType: data.senderType, message: data.message, });
         const savedMessage = await messageRepo.save(newMessage);
-
-        // Broadcast message to everyone in the room
-        console.log(`Broadcasting newMessage to room ${room}. Message: ${data.message}`);
-
         // Convert to plain object to ensure clean serialization
         const messageToEmit = {
             id: savedMessage.id,
@@ -137,11 +98,9 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
         };
 
         this.server.to(room).emit('newMessage', messageToEmit);
-
         // Also emit a general notification for the recipient
         // If sender is user, notify admins
         if (data.senderType === 'user') {
-            console.log(`Sending notification to admins for ticket ${data.ticketId}`);
             // TODO: Persist for admins if needed. For now, keep as real-time broadcast to admin room 
             // OR find admins and persist. Let's stick to real-time for broadcast for now, 
             // but we really should persist. I'll add a TODO or find admin list.
@@ -154,7 +113,6 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
                 link: `/support?ticketId=${data.ticketId}`
             });
         } else {
-            // Find the ticket to know who the user is
             const ticket = await this.dataSource.getRepository(TicketsEntity).findOne({ where: { id: data.ticketId } });
             if (ticket) {
                 const userId = await this.resolveUserId(ticket);
@@ -169,8 +127,6 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
                 }
             }
         }
-
-        console.log(`Successfully processed sendMessage for ticket ${data.ticketId}`);
     }
 
     /**
@@ -198,7 +154,7 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
                     }
                 }
             } catch (error) {
-                console.error("Error resolving userId from ticket:", error);
+                throw error;
             }
         }
         return null;

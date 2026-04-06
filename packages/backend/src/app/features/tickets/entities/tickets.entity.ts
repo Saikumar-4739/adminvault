@@ -3,8 +3,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { TicketCategoryEnum, TicketPriorityEnum, TicketStatusEnum, TicketSeverityEnum } from '@adminvault/shared-models';
 
 @Entity('tickets')
-@Index('idx_ticket_emp', ['employeeId'])
-@Index('idx_ticket_status', ['ticketStatus'])
 export class TicketsEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'ticket_code', length: 50, nullable: false, unique: true, comment: 'Unique ticket code' })
     ticketCode: string;
@@ -45,15 +43,12 @@ export class TicketsEntity extends CommonBaseEntity {
     @Column('timestamp', { name: 'expected_completion_date', nullable: true, comment: 'Expected completion date' })
     expectedCompletionDate: Date;
 
-    // === NEW FIELDS ===
-
     @Column('varchar', { name: 'sub_category', nullable: true, length: 100, comment: 'Ticket sub-category' })
     subCategory: string;
 
     @Column('enum', { name: 'severity_enum', enum: TicketSeverityEnum, nullable: true, comment: 'Ticket severity level' })
     severityEnum: TicketSeverityEnum;
 
-    // User Details
     @Column('varchar', { name: 'department', nullable: true, length: 100, comment: 'User department' })
     department: string;
 
@@ -66,11 +61,9 @@ export class TicketsEntity extends CommonBaseEntity {
     @Column('varchar', { name: 'contact_email', nullable: true, length: 100, comment: 'User contact email' })
     contactEmail: string;
 
-    // Admin / Assignment
     @Column('varchar', { name: 'assigned_group', nullable: true, length: 100, comment: 'Assigned group/team' })
     assignedGroup: string;
 
-    // SLA & Tracking
     @Column('varchar', { name: 'sla_type', nullable: true, length: 50, comment: 'SLA type' })
     slaType: string;
 
@@ -80,7 +73,6 @@ export class TicketsEntity extends CommonBaseEntity {
     @Column('int', { name: 'escalation_level', default: 0, comment: 'Escalation level' })
     escalationLevel: number;
 
-    // Attachments & Comments
     @Column('text', { name: 'admin_comments', nullable: true, comment: 'Admin comments' })
     adminComments: string;
 
@@ -90,7 +82,6 @@ export class TicketsEntity extends CommonBaseEntity {
     @Column('text', { name: 'internal_notes', nullable: true, comment: 'Internal notes (admin only)' })
     internalNotes: string;
 
-    // Resolution
     @Column('text', { name: 'root_cause', nullable: true, comment: 'Root cause analysis' })
     rootCause: string;
 
@@ -103,7 +94,6 @@ export class TicketsEntity extends CommonBaseEntity {
     @Column('text', { name: 'closure_remarks', nullable: true, comment: 'Closure remarks' })
     closureRemarks: string;
 
-    // Feedback
     @Column('int', { name: 'user_rating', nullable: true, comment: 'User rating (1-5)' })
     userRating: number;
 

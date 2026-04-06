@@ -3,8 +3,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { CommentByEnum } from '@adminvault/shared-models';
 
 @Entity('ticket_comments')
-@Index('idx_comment_ticket', ['ticketId'])
-@Index('idx_comment_by_id', ['commentedById'])
 export class TicketCommentsEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'ticket_id', nullable: false, comment: 'Reference to tickets table' })
     ticketId: number;

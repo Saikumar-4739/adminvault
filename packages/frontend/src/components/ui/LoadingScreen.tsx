@@ -23,7 +23,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = () => {
                     <div className="relative flex items-center gap-3">
                         <div className="flex flex-col">
                             <h1 className="text-3xl font-black tracking-tighter text-white italic leading-none">
-                                ADMIN<span className="text-blue-500">VAULT</span>
+                                BOS<span className="text-blue-500">VAULT</span>
                             </h1>
                             <div className="h-1 w-full bg-slate-800 mt-2 rounded-full overflow-hidden">
                                 <div className="h-full bg-blue-500 w-1/3 animate-[loading-bar_1.5s_infinite_ease-in-out]"></div>

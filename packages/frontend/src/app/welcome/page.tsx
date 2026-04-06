@@ -12,7 +12,7 @@ const WelcomePage: React.FC = () => {
         <div className="flex flex-col items-center justify-center min-h-[85vh] p-8 -mt-8 animate-slide-up">
             <div className="max-w-2xl text-center space-y-4">
                 <h1 className="text-2xl md:text-3xl font-black tracking-tight">
-                    Welcome to <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent animate-gradient">AdminVault</span>
+                    Welcome to <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent animate-gradient">BOS Vault</span>
                     {user?.fullName ? `,  ${user.fullName}` : ''}
                 </h1>
                 <p className={`text-sm leading-relaxed font-medium ${isDarkMode ? 'text-gray-400' : 'text-slate-600'}`}>

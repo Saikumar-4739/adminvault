@@ -5,6 +5,7 @@ import { slackUserService, departmentService } from '@/lib/api/services';
 import { SlackUserModel, UpdateSlackUserModel, Department } from '@adminvault/shared-models';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Modal } from '@/components/ui/Modal';
 import {
     Search, MessageSquare, Pencil, Trash2, Download,
@@ -17,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Spinner } from '@/components/ui/Spinner';
+import { formatPhoneNumberWithCountryCode } from '@/lib/utils';
 
 const openSlackChat = (slackUserId: string, teamId: string) => {
     if (!slackUserId) return;
@@ -191,6 +193,7 @@ const SlackUsersPage: React.FC = () => {
                                     {/* Details */}
                                     <div className="space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
                                         {u.email && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3 shrink-0" /><span className="truncate">{u.email}</span></div>}
+                                        {u.phone && <div className="flex items-center gap-1.5"><Building2 className="h-3 w-3 shrink-0" /><span className="truncate">{formatPhoneNumberWithCountryCode(u.phone)}</span></div>}
                                         {u.role && <div className="flex items-center gap-1.5"><Building2 className="h-3 w-3 shrink-0" /><span className="truncate">{u.role}{u.department && ` · ${u.department}`}</span></div>}
                                         {a.timezoneLabel && <div className="flex items-center gap-1.5"><Clock className="h-3 w-3 shrink-0" /><span className="truncate">{a.timezoneLabel}</span></div>}
                                     </div>
@@ -237,7 +240,7 @@ const SlackUsersPage: React.FC = () => {
                                 </select>
                             </div>
                         </div>
-                        <Input label="Phone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                        <PhoneInput label="Phone" value={formData.phone} onChange={(val) => setFormData({ ...formData, phone: val })} />
                         <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
                             <Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button>
                             <Button variant="primary" type="submit">Update Member</Button>

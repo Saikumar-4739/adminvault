@@ -80,7 +80,7 @@ export default function NetworkPage() {
                     <PageHeader
                         icon={<Network />}
                         title="Network Monitoring"
-                        description="Real-time visualization and management of the AdminVault global substrate connectivity and node health."
+                        description="Real-time visualization and management of the BOS Vault global substrate connectivity and node health."
                         actions={[
                             {
                                 label: `${stats?.status || 'Loading...'}`.toUpperCase(),

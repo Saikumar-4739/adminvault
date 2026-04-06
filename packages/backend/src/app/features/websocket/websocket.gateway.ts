@@ -1,13 +1,4 @@
-import {
-    WebSocketGateway,
-    WebSocketServer,
-    SubscribeMessage,
-    OnGatewayConnection,
-    OnGatewayDisconnect,
-    OnGatewayInit,
-    MessageBody,
-    ConnectedSocket,
-} from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, MessageBody, ConnectedSocket, } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -19,10 +10,7 @@ import { WebSocketEvent, WebSocketRoomHelper } from '@adminvault/shared-models';
  * Handles connections, authentication, and event broadcasting
  */
 @WebSocketGateway({
-    cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-        credentials: true,
-    },
+    cors: { origin: process.env.FRONTEND_URL || 'http://localhost:3000', credentials: true, },
     namespace: '/ws',
 })
 export class AppWebSocketGateway

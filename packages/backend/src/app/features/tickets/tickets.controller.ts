@@ -15,14 +15,11 @@ export class TicketsController {
     @ApiBody({ type: CreateTicketModel })
     async createTicket(@Body() reqModel: CreateTicketModel, @Req() req: any): Promise<GlobalResponse> {
         try {
-            const userEmail = req.user?.email;
             const userId = req.user?.id || req.user?.userId;
+            const userEmail = req.user?.email;
             const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-            if (!userEmail) {
-                throw new Error('User email not found in token');
-            }
-            return await this.service.createTicket(reqModel, userEmail, userId, ipAddress);
+            return await this.service.createTicket(reqModel, userId, userEmail, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -34,6 +31,7 @@ export class TicketsController {
         try {
             const userId = req.user?.id || req.user?.userId;
             const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
             return await this.service.updateTicket(reqModel, userId, ipAddress);
         } catch (error) {
             return returnException(GlobalResponse, error);
@@ -62,11 +60,9 @@ export class TicketsController {
 
     @Post('deleteTicket')
     @ApiBody({ type: DeleteTicketModel })
-    async deleteTicket(@Body() reqModel: DeleteTicketModel, @Req() req: any): Promise<GlobalResponse> {
+    async deleteTicket(@Body() reqModel: DeleteTicketModel): Promise<GlobalResponse> {
         try {
-            const userId = req.user?.id || req.user?.userId;
-            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            return await this.service.deleteTicket(reqModel, userId, ipAddress);
+            return await this.service.deleteTicket(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }
@@ -75,11 +71,7 @@ export class TicketsController {
     @Post('getMyTickets')
     async getMyTickets(@Req() req: any): Promise<GetAllTicketsModel> {
         try {
-            const userEmail = req.user?.email;
-            if (!userEmail) {
-                throw new Error('User email not found in token');
-            }
-            return await this.service.getTicketsByUser(userEmail);
+            return await this.service.getTicketsByUser(req.user?.email);
         } catch (error) {
             return returnException(GetAllTicketsModel, error);
         }

@@ -5,12 +5,14 @@ import { CreateSlackUserModel, UpdateSlackUserModel, SlackUserModel, IdRequestMo
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Plus, Pencil, Trash2, ArrowLeft, User, Search } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { DepartmentService, EmployeesService, SlackUserService, CompanyService } from '@adminvault/shared-services';
+import { formatPhoneNumberWithCountryCode } from '@/lib/utils';
 
 interface EmployeeOption {
     id: number;
@@ -259,6 +261,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                 <tr>
                                     <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">User Details</th>
                                     <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Company</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Phone</th>
                                     <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Slack ID</th>
                                     <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Role & Dept</th>
                                     <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border border-slate-200 dark:border-slate-700">Status</th>
@@ -267,7 +270,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                             </thead>
                             <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
                                 {filteredUsers.length === 0 ? (
-                                    <tr><td colSpan={6} className="p-8 text-center text-slate-500">No users found</td></tr>
+                                    <tr><td colSpan={7} className="p-8 text-center text-slate-500">No users found</td></tr>
                                 ) : (
                                     filteredUsers.map((item, index) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
@@ -284,6 +287,9 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                             </td>
                                             <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
                                                 <div className="text-sm text-slate-700 dark:text-slate-300 font-medium">{item.companyName || '-'}</div>
+                                            </td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400 truncate max-w-[150px]" title={item.phone}>
+                                                {formatPhoneNumberWithCountryCode(item.phone) || '-'}
                                             </td>
                                             <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
                                                 {item.slackUserId ? (
@@ -387,7 +393,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input label="Role" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="h-14" />
-                        <Input label="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="h-14" />
+                        <PhoneInput label="Phone" value={formData.phone} onChange={(val) => setFormData({ ...formData, phone: val })} />
                     </div>
 
                     <Input label="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="h-14" />

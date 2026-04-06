@@ -1,5 +1,6 @@
 import { AccessRequestStatus } from '@adminvault/shared-models';
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+
 @Entity('access_requests')
 export class AccessRequestEntity {
 
