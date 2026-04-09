@@ -66,7 +66,7 @@ export class DocumentsService {
             document.uploadedBy = Number(reqModel.userId);
             document.description = reqModel.description;
             document.tags = reqModel.tags;
-            // Handle potentially undefined or string companyId gracefully
+            // Handle potentially undefined or string companyId gracefully - Default to 0 for global vault
             document.companyId = reqModel.companyId ? Number(reqModel.companyId) : 0;
             document.userId = Number(reqModel.userId);
 
@@ -169,12 +169,13 @@ export class DocumentsService {
             // If strict filtering is causing empty results, relax it for now OR verify what frontend sends.
             // If companyId is not provided, maybe show all (for admin) or none?
             // Assuming if reqModel.companyId is present, we filter.
-            if (reqModel.companyId) {
-                const cId = Number(reqModel.companyId);
-                if (!isNaN(cId) && cId > 0) {
-                    where.companyId = cId;
-                }
-            }
+            // Global Vault: We no longer filter by companyId to ensure visibility across all companies
+            // if (reqModel.companyId) {
+            //     const cId = Number(reqModel.companyId);
+            //     if (!isNaN(cId) && cId > 0) {
+            //         where.companyId = cId;
+            //     }
+            // }
 
             if (reqModel.category) where.category = reqModel.category;
 

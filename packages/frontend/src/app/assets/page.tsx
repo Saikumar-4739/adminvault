@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Package, Warehouse, History, Plus, FileUp, Filter, Activity, CheckCircle2, User, RefreshCw, Building2, Search } from 'lucide-react';
+import { Package, Warehouse, History, Plus, Filter, Activity, CheckCircle2, User, RefreshCw, Building2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Download } from 'lucide-react';
-import { exportToCSV } from '@/lib/csv-utils';
 import { ModernTabs } from './components/ModernTabs';
 import { AllAssetsTab } from './components/AllAssetsTab';
 import dynamic from 'next/dynamic';
@@ -317,21 +315,9 @@ const AssetsPage: React.FC = () => {
                     gradient="from-blue-600 to-indigo-700"
                     actions={[
                         {
-                            label: 'Export CSV',
-                            onClick: () => exportToCSV(assets, 'assets_inventory'),
-                            icon: <Download className="h-3.5 w-3.5" />,
-                            variant: 'outline'
-                        },
-                        {
                             label: 'Filter',
                             onClick: () => setIsFilterModalOpen(true),
                             icon: <Filter className="h-3.5 w-3.5" />,
-                            variant: 'outline'
-                        },
-                        {
-                            label: 'Bulk Import',
-                            onClick: () => setIsBulkImportOpen(true),
-                            icon: <FileUp className="h-3.5 w-3.5" />,
                             variant: 'outline'
                         },
                         {

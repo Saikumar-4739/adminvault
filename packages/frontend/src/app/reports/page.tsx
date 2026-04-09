@@ -260,14 +260,14 @@ const ReportsPage: React.FC = () => {
                             title="Reports"
                             description="Real-time operational reporting and data synthesis"
                             icon={<BarChart3 />}
-                            gradient="from-indigo-600 to-indigo-800"
+                            gradient="from-indigo-600 via-indigo-700 to-violet-800"
                         >
                             <div className="relative max-w-xs ml-auto group">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                                 <input
                                     type="text"
                                     placeholder="Search Report Matrix..."
-                                    className="pl-11 pr-4 py-3 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
+                                    className="pl-10 pr-4 h-9 w-full bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-[11px] font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />

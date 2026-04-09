@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { documentsService } from '@/lib/api/services';
 import { DocumentModel, UploadDocumentModel } from '@adminvault/shared-models';
 import { Button } from '@/components/ui/Button';
-import { FileText, Upload, Download, Trash2, Search, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Plus, File as FileIcon, Lock } from 'lucide-react';
+import { FileText, Upload, Download, Trash2, Search, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Plus, File as FileIcon, Lock, Eye } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
@@ -25,7 +25,7 @@ const DocumentsPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState<string>('All');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [documentToDelete, setDocumentToDelete] = useState<any>(null);
+    const [documentToDelete, setDocumentToDelete] = useState<DocumentModel | null>(null);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [secureDocId, setSecureDocId] = useState<number | null>(null);
     const [securePassword, setSecurePassword] = useState('');
@@ -33,7 +33,8 @@ const DocumentsPage: React.FC = () => {
     const fetchDocuments = useCallback(async () => {
         if (!user) return;
         try {
-            const req: GetAllDocumentsRequestModel = { companyId: user.companyId };
+            // Global Vault: We removed companyId requirement to allow global document access
+            const req: GetAllDocumentsRequestModel = {};
             const response = await documentsService.getAllDocuments(req);
             if (response.status) {
                 setDocuments(response.documents || []);
@@ -42,8 +43,6 @@ const DocumentsPage: React.FC = () => {
             }
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message || 'Failed to fetch documents');
-        } finally {
-            // No local loading for initial fetch
         }
     }, [user]);
 
@@ -61,7 +60,7 @@ const DocumentsPage: React.FC = () => {
 
     const handleUpload = useCallback(async () => {
         if (!selectedFile || !user) return;
-        // setIsLoading(true);
+        setIsLoading(true);
 
         try {
             const uploadModel: UploadDocumentModel = {
@@ -137,52 +136,103 @@ const DocumentsPage: React.FC = () => {
         }
     }, [documentToDelete, fetchDocuments, user]);
 
-    const handleDownload = useCallback(async (id: number) => {
+    const handleDownload = async (id: number) => {
         try {
-            const doc = documents.find(d => d.id === id);
+            const response = await documentsService.getDocument({ id });
+            if (!response.status) throw new Error(response.message);
 
-            if (doc?.isSecure) {
+            const doc = response.document as DocumentModel;
+            if (doc.isSecure) {
                 setSecureDocId(id);
                 setIsPasswordModalOpen(true);
                 return;
             }
 
-            const blob = await documentsService.downloadFile(id);
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', doc ? doc.originalName : `document-${id}`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode?.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Download failed:', error);
-            AlertMessages.getErrorMessage('Failed to download document. Please try again.');
+            // Normal download flow
+            const dlResponse = await documentsService.downloadDocument({ id });
+            if (dlResponse.status && dlResponse.downloadPath) {
+                const url = documentsService.getDownloadUrl(dlResponse.downloadPath, dlResponse.originalName);
+                const fetchRes = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    }
+                });
+                const blob = await fetchRes.blob();
+                const dlUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = dlUrl;
+                link.setAttribute('download', dlResponse.originalName);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(dlUrl);
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message);
         }
-    }, [documents]);
+    };
 
-    const handleSecureDownload = async () => {
+    const handleView = async (id: number) => {
+        try {
+            const response = await documentsService.getDocument({ id });
+            if (!response.status) throw new Error(response.message);
+
+            const doc = response.document as DocumentModel;
+            if (doc.isSecure) {
+                // Secure documents require password even for viewing
+                setSecureDocId(id);
+                setIsPasswordModalOpen(true);
+                return;
+            }
+
+            const dlResponse = await documentsService.downloadDocument({ id });
+            if (dlResponse.status && dlResponse.downloadPath) {
+                const url = documentsService.getDownloadUrl(dlResponse.downloadPath, dlResponse.originalName);
+                const fetchRes = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    }
+                });
+                const blob = await fetchRes.blob();
+                const viewUrl = window.URL.createObjectURL(blob);
+                window.open(viewUrl, '_blank');
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message);
+        }
+    };
+
+    const handleSecureDownloadOrView = async () => {
         if (!secureDocId || !securePassword) return;
         setIsLoading(true);
         try {
             const doc = documents.find(d => d.id === secureDocId);
-            const blob = await documentsService.downloadSecureDocument({ id: secureDocId, password: securePassword });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', doc ? doc.originalName : `document-${secureDocId}`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode?.removeChild(link);
-            window.URL.revokeObjectURL(url);
+            const dlResponse = await documentsService.downloadDocument({ id: secureDocId, password: securePassword });
+            if (dlResponse.status && dlResponse.downloadPath) {
+                const url = documentsService.getDownloadUrl(dlResponse.downloadPath, dlResponse.originalName);
+                const fetchRes = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    }
+                });
+                const blob = await fetchRes.blob();
+                const dlUrl = window.URL.createObjectURL(blob);
 
-            setIsPasswordModalOpen(false);
-            setSecurePassword('');
-            setSecureDocId(null);
+                // For secure, we just allow download for now as it's "Unlock & Download" in UI
+                const link = document.createElement('a');
+                link.href = dlUrl;
+                link.setAttribute('download', dlResponse.originalName);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(dlUrl);
+
+                setIsPasswordModalOpen(false);
+                setSecurePassword('');
+                setSecureDocId(null);
+            }
         } catch (error: any) {
-            console.error('Secure download failed:', error);
-            AlertMessages.getErrorMessage(error?.response?.data?.message || 'Invalid password or download failed.');
+            AlertMessages.getErrorMessage(error.message || 'Invalid password or download failed.');
         } finally {
             setIsLoading(false);
         }
@@ -256,12 +306,12 @@ const DocumentsPage: React.FC = () => {
                                 key={cat}
                                 onClick={() => setActiveCategory(cat || 'General')}
                                 className={`
-                                    px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap border
-                                    ${activeCategory === cat
+                                        px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap border
+                                        ${activeCategory === cat
                                         ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-sm'
                                         : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800 hover:border-indigo-500/50'
                                     }
-                                `}
+                                    `}
                             >
                                 {cat || 'General'}
                             </button>
@@ -337,6 +387,13 @@ const DocumentsPage: React.FC = () => {
                                             </td>
                                             <td className="px-4 py-5 text-right pr-8">
                                                 <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleView(doc.id)}
+                                                        className="p-2 hover:bg-indigo-50 dark:hover:bg-indigo-950 rounded-xl text-indigo-500 transition-all hover:scale-110 active:scale-95"
+                                                        title="View Integrity"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
                                                     <button
                                                         onClick={() => handleDownload(doc.id)}
                                                         className="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950 rounded-xl text-emerald-500 transition-all hover:scale-110 active:scale-95"
@@ -510,7 +567,7 @@ const DocumentsPage: React.FC = () => {
                             </Button>
                             <Button
                                 variant="primary"
-                                onClick={handleSecureDownload}
+                                onClick={handleSecureDownloadOrView}
                                 isLoading={isLoading}
                                 disabled={!securePassword}
                             >
@@ -523,8 +580,5 @@ const DocumentsPage: React.FC = () => {
         </RouteGuard>
     );
 };
-
-
-
 
 export default DocumentsPage;

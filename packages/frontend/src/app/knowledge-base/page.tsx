@@ -5,8 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Book, Search, Plus, BookOpen, ChevronRight, FileText, Lock, Shield, Users, Download, Paperclip } from 'lucide-react';
-import { KnowledgeCategoryEnum, CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, IdRequestModel } from '@adminvault/shared-models';
+import { Book, Search, Plus, BookOpen, ChevronRight, FileText, Lock, Shield, Users, Download, Paperclip, Eye } from 'lucide-react';
+import { KnowledgeCategoryEnum, CreateArticleRequestModel, UpdateArticleRequestModel, SearchArticleRequestModel, IdRequestModel, UserRoleEnum } from '@adminvault/shared-models';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
@@ -26,17 +26,18 @@ const KnowledgeBasePage: React.FC = () => {
     const [editArticleId, setEditArticleId] = useState<number | null>(null);
     const [newArticle, setNewArticle] = useState<any>({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true, file: null as File | null });
     const kbService = new KnowledgeBaseService();
+    const canManage = user && [UserRoleEnum.SUPER_ADMIN, UserRoleEnum.ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN].includes(user.role as any);
 
     useEffect(() => {
-        if (user?.companyId) {
+        if (user) {
             fetchStats();
             searchArticles();
         }
-    }, [user?.companyId]);
+    }, [user]);
 
     const fetchStats = async () => {
         try {
-            const req = new IdRequestModel(user!.id);
+            const req = new IdRequestModel(0); // Passing 0 or dummy as we removed companyId filter in backend repository
             const res: any = await kbService.getStats(req);
             if (res && res.byCategory) {
                 setStats(res);
@@ -54,8 +55,7 @@ const KnowledgeBasePage: React.FC = () => {
 
     const searchArticles = async () => {
         try {
-            const req = new SearchArticleRequestModel(user!.companyId, searchQuery
-            );
+            const req = new SearchArticleRequestModel(0, searchQuery); // Passing 0 as dummy
             const res: any = await kbService.searchArticles(req);
             if (Array.isArray(res)) {
                 setArticles(res);
@@ -66,6 +66,52 @@ const KnowledgeBasePage: React.FC = () => {
             } else {
                 setArticles([]);
             }
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message);
+        }
+    };
+
+    const handleDownload = async (article: any) => {
+        if (!article.fileUrl) return;
+        try {
+            const url = kbService.getAttachmentUrl(article.fileUrl);
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Download failed');
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.setAttribute('download', article.fileUrl.split('-').slice(1).join('-') || 'attachment');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message);
+        }
+    };
+
+    const handleView = async (article: any) => {
+        if (!article.fileUrl) return;
+        try {
+            const url = kbService.getAttachmentUrl(article.fileUrl);
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to load attachment');
+
+            const blob = await response.blob();
+            const viewUrl = window.URL.createObjectURL(blob);
+            window.open(viewUrl, '_blank');
         } catch (err: any) {
             AlertMessages.getErrorMessage(err.message);
         }
@@ -139,14 +185,14 @@ const KnowledgeBasePage: React.FC = () => {
                     description="Centralized repository for IT documentation, guides, and policies."
                     icon={<Book />}
                     gradient="from-cyan-500 to-blue-600"
-                    actions={[
+                    actions={canManage ? [
                         {
                             label: 'Write Article',
                             icon: <Plus className="w-4 h-4" />,
                             onClick: () => { setIsEditMode(false); setEditArticleId(null); setNewArticle({ title: '', category: KnowledgeCategoryEnum.OTHER, content: '', tags: '', isPublished: true, file: null }); setIsCreateOpen(true); },
                             variant: 'primary'
                         }
-                    ]}
+                    ] : []}
                 />
 
                 {/* Hero Search Section */}
@@ -382,14 +428,26 @@ const KnowledgeBasePage: React.FC = () => {
                                             <p className="text-xs text-slate-500 truncate max-w-[200px]">{selectedArticle.fileUrl.split('-').slice(1).join('-')}</p>
                                         </div>
                                     </div>
-                                    <Button
-                                        variant="primary"
-                                        size="xs"
-                                        leftIcon={<Download className="w-4 h-4" />}
-                                        onClick={() => window.open(kbService.getAttachmentUrl(selectedArticle.fileUrl), '_blank')}
-                                    >
-                                        Download
-                                    </Button>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-9 h-9 p-0 aspect-square"
+                                            onClick={() => handleView(selectedArticle)}
+                                            title="View Attachment"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            className="w-9 h-9 p-0 aspect-square"
+                                            onClick={() => handleDownload(selectedArticle)}
+                                            title="Download Attachment"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
 
@@ -407,7 +465,7 @@ const KnowledgeBasePage: React.FC = () => {
                             )}
 
                             <div className="flex justify-end gap-3 pt-4">
-                                {(Number(selectedArticle.authorId) === Number(user?.id) || Number(selectedArticle.userId) === Number(user?.id)) && (
+                                {canManage && (
                                     <Button variant="outline" onClick={() => openEditModal(selectedArticle)}>
                                         Edit Article
                                     </Button>

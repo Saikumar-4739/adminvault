@@ -21,7 +21,7 @@ export class KnowledgeBaseService {
 
     async createArticle(reqModel: CreateArticleRequestModel, file?: Express.Multer.File): Promise<GlobalResponse> {
         try {
-            await this.authService.getMe(reqModel.authorId);
+            await this.authService.getMe(Number(reqModel.authorId));
             let fileUrl = '';
             if (file) {
                 const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
@@ -30,7 +30,18 @@ export class KnowledgeBaseService {
                 fs.writeFileSync(filePath, file.buffer);
                 fileUrl = fileName; // We store just the filename, frontend can construct the download URL
             }
-            const entity = this.repo.create({ ...reqModel, userId: reqModel.authorId, viewCount: 0, fileUrl });
+
+            const { authorId, tags, isPublished, ...rest } = reqModel;
+            const parsedTags = Array.isArray(tags) ? tags : (typeof tags === 'string' ? (tags as string).split(',').filter(t => t.trim()) : []);
+            const entity = this.repo.create({
+                ...rest,
+                userId: authorId ? Number(authorId) : null,
+                companyId: reqModel.companyId ? Number(reqModel.companyId) : null,
+                isPublished: isPublished === undefined ? true : (String(isPublished) === 'true' || isPublished === true),
+                tags: parsedTags,
+                viewCount: 0,
+                fileUrl
+            });
             await this.repo.save(entity);
             return new GlobalResponse(true, 201, 'Article created successfully');
         } catch (error) {
@@ -57,7 +68,12 @@ export class KnowledgeBaseService {
                 fs.writeFileSync(filePath, file.buffer);
                 fileUrl = fileName;
             }
-            await this.repo.update(reqModel.id, { ...reqModel, fileUrl });
+
+            const { editorId, id, ...rest } = reqModel;
+            await this.repo.update(id, {
+                ...rest,
+                fileUrl
+            });
             return new GlobalResponse(true, 200, 'Article updated successfully');
         } catch (error) {
             throw error;

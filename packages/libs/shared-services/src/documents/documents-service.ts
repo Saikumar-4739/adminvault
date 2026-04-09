@@ -20,10 +20,7 @@ export class DocumentsService extends CommonAxiosService {
         if (reqModel.description) formData.append('description', reqModel.description);
         if (reqModel.tags) formData.append('tags', reqModel.tags);
 
-        return await this.axiosPostCall(this.getURLwithMainEndPoint('uploadDocument'), formData, {
-            ...config,
-            headers: { ...config?.headers, 'Content-Type': 'multipart/form-data' }
-        });
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('uploadDocument'), formData, config);
     }
 
     async deleteDocument(reqObj: DeleteDocumentModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {

@@ -19,10 +19,7 @@ export class KnowledgeBaseService extends CommonAxiosService {
                     formData.append(key, value.toString());
                 }
             });
-            return await this.axiosPostCall(this.getURLwithMainEndPoint('createArticle'), formData, {
-                ...config,
-                headers: { ...config?.headers, 'Content-Type': 'multipart/form-data' }
-            });
+            return await this.axiosPostCall(this.getURLwithMainEndPoint('createArticle'), formData, config);
         }
         return await this.axiosPostCall(this.getURLwithMainEndPoint('createArticle'), reqObj, config);
     }
@@ -39,10 +36,7 @@ export class KnowledgeBaseService extends CommonAxiosService {
                     formData.append(key, value.toString());
                 }
             });
-            return await this.axiosPostCall(this.getURLwithMainEndPoint('updateArticle'), formData, {
-                ...config,
-                headers: { ...config?.headers, 'Content-Type': 'multipart/form-data' }
-            });
+            return await this.axiosPostCall(this.getURLwithMainEndPoint('updateArticle'), formData, config);
         }
         return await this.axiosPostCall(this.getURLwithMainEndPoint('updateArticle'), reqObj, config);
     }

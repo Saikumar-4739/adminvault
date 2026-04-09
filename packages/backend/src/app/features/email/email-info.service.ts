@@ -121,7 +121,7 @@ export class EmailInfoService {
       result.employee_id,
       result.employee_name,
       result.employee_status,
-      result.member_ids,
+      typeof result.member_ids === 'string' ? result.member_ids.split(',').filter(Boolean) : result.member_ids,
       result.name,
       Number(result.billing),
       result.created_date,

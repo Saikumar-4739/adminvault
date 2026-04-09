@@ -25,13 +25,13 @@ const CategoryConfig: Record<EmailCategory, { label: string, icon: any, color: s
         label: 'Company Emails',
         icon: Globe,
         color: 'indigo',
-        types: [EmailTypeEnum.COMPANY, EmailTypeEnum.SUPPORT, EmailTypeEnum.BILLING, EmailTypeEnum.GENERAL]
+        types: [EmailTypeEnum.COMPANY]
     },
     USER: {
         label: 'Employee Emails',
         icon: User,
         color: 'emerald',
-        types: [EmailTypeEnum.USER, EmailTypeEnum.WORK, EmailTypeEnum.PERSONAL]
+        types: [EmailTypeEnum.USER]
     },
     GROUP: {
         label: 'Group Emails',
@@ -71,10 +71,7 @@ const EmailRow: React.FC<{
     }, [acc.memberIds, employees]);
 
     const isGroup = acc.emailType === EmailTypeEnum.GROUP;
-    const isCompany = acc.emailType === EmailTypeEnum.COMPANY ||
-        acc.emailType === EmailTypeEnum.SUPPORT ||
-        acc.emailType === EmailTypeEnum.BILLING ||
-        acc.emailType === EmailTypeEnum.GENERAL;
+    const isCompany = acc.emailType === EmailTypeEnum.COMPANY;
 
     return (
         <>
@@ -310,15 +307,17 @@ const InfoEmailsPage: React.FC = () => {
         setExpandedDepts(prev => ({ ...prev, [dept]: !prev[dept] }));
     };
 
-    const filteredEmails = useMemo(() => {
+    const categoryEmails = useMemo(() => {
         const categoryTypes = CategoryConfig[activeTab].types;
-        return emailInfoList.filter(acc =>
-            categoryTypes.includes(acc.emailType) && (
-                acc.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (acc.department?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-            )
+        return emailInfoList.filter(acc => categoryTypes.includes(acc.emailType));
+    }, [emailInfoList, activeTab]);
+
+    const filteredEmails = useMemo(() => {
+        return categoryEmails.filter(acc =>
+            acc.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (acc.department?.toLowerCase() || '').includes(searchQuery.toLowerCase())
         );
-    }, [emailInfoList, searchQuery, activeTab]);
+    }, [categoryEmails, searchQuery]);
 
     const groupedData = useMemo(() => {
         const groups: Record<string, typeof emailInfoList> = {};
@@ -370,33 +369,35 @@ const InfoEmailsPage: React.FC = () => {
                         }
                     ]}
                 >
-                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-end max-w-2xl ml-auto">
-                        <div className="relative w-full sm:w-48 group">
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500 group-focus-within:scale-110 transition-transform" />
-                            <select
-                                value={selectedOrg}
-                                onChange={(e) => setSelectedOrg(e.target.value)}
-                                className="w-full pl-9 pr-8 h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-[10px] appearance-none outline-none shadow-sm cursor-pointer uppercase tracking-widest"
-                            >
-                                <option value="">All Companies</option>
-                                {companies.map(c => (
-                                    <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
-                                ))}
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                <Search className="h-3 w-3" />
+                    <div className="flex flex-col lg:flex-row items-center gap-4 w-full justify-end">
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                            <div className="relative w-full sm:w-64 group">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-9 pr-4 h-8 bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-[11px] outline-none"
+                                />
                             </div>
-                        </div>
 
-                        <div className="relative w-full sm:w-72 group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search emails..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-4 h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-xs outline-none shadow-sm"
-                            />
+                            <div className="relative w-full sm:w-48 group">
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-500 group-focus-within:scale-110 transition-transform" />
+                                <select
+                                    value={selectedOrg}
+                                    onChange={(e) => setSelectedOrg(e.target.value)}
+                                    className="w-full pl-9 pr-8 h-8 bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-[10px] appearance-none outline-none cursor-pointer uppercase tracking-widest"
+                                >
+                                    <option value="">All Companies</option>
+                                    {companies.map(c => (
+                                        <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <ChevronDown className="h-3.5 w-3.5" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </PageHeader>
@@ -438,15 +439,9 @@ const InfoEmailsPage: React.FC = () => {
                             })}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
-                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Hubs</div>
-                                <div className="text-2xl font-black text-slate-900 dark:text-white">{emailInfoList.length}</div>
-                            </div>
-                            <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
-                                <div className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-1">Active Records</div>
-                                <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{filteredEmails.length}</div>
-                            </div>
+                        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-1">Active Records</div>
+                            <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{filteredEmails.length}</div>
                         </div>
                     </div>
 
@@ -479,8 +474,7 @@ const InfoEmailsPage: React.FC = () => {
                                                     <Icon className="w-4 h-4" />
                                                 </div>
                                                 <div className="text-left">
-                                                    <h3 className="font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white leading-none mb-1">{dept}</h3>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{config.label}</p>
+                                                    <h3 className="font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white leading-none">{dept}</h3>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
