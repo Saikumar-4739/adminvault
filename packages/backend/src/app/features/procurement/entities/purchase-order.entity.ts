@@ -38,4 +38,10 @@ export class PurchaseOrderEntity extends CommonBaseEntity {
 
     @Column('varchar', { name: 'invoice_url', length: 500, nullable: true })
     invoiceUrl: string;
+
+    @Column('varchar', { name: 'currency', length: 10, default: 'USD' })
+    currency: string;
+
+    @Column('varchar', { name: 'vendor_name', length: 255, nullable: true })
+    vendorName: string;
 }

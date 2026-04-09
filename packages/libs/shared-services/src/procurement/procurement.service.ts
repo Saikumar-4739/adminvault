@@ -30,4 +30,8 @@ export class ProcurementService extends CommonAxiosService {
     async updatePOStatus(reqModel: UpdatePOStatusRequestModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURL('updatePOStatus'), reqModel, config);
     }
+
+    async deletePurchaseOrder(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURL('deletePurchaseOrder'), { id }, config);
+    }
 }

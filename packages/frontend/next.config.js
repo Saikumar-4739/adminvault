@@ -2,6 +2,11 @@
 
 
 const { composePlugins, withNx } = require('@nx/next');
+const dotenv = require('dotenv');
+const path = require('path');
+
+const envName = process.env.NODE_ENV === 'production' ? 'live' : 'dev';
+dotenv.config({ path: path.resolve(__dirname, `../../documents/environments/${envName}.env`), override: true });
 
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}

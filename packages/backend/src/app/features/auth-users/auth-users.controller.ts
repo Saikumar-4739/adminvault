@@ -157,6 +157,36 @@ export class AuthUsersController {
         }
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Post('set-vault-password')
+    async setVaultPassword(@Req() req: any, @Body() body: { password: string }): Promise<GlobalResponse> {
+        try {
+            await this.service.setVaultPassword(req.user.userId, body.password);
+            return new GlobalResponse(true, 0, "Vault password set successfully");
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('verify-vault-password')
+    async verifyVaultPassword(@Req() req: any, @Body() body: { password: string }): Promise<GlobalResponse> {
+        try {
+            const user = await this.service.getUserById(req.user.userId); // Need to make sure getUserById exists or use authUsersRepo
+            if (!user.vaultPasswordHash) {
+                return new GlobalResponse(false, 2, "Vault password not set");
+            }
+            const isValid = await this.service.verifyVaultPassword(req.user.userId, body.password);
+            if (isValid) {
+                return new GlobalResponse(true, 0, "Vault password verified");
+            } else {
+                return new GlobalResponse(false, 1, "Invalid vault password");
+            }
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
     @Get('getMe')
     async getMe(@Req() req: any): Promise<LoginResponseModel> {
         try {
@@ -180,7 +210,7 @@ export class AuthUsersController {
             const googleProfile = req.user;
             const user = await this.service.validateGoogleUser(googleProfile);
             const response = await this.service.loginUserFromOAuth(user);
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            const frontendUrl = process.env.FRONTEND_URL;
             res.redirect(`${frontendUrl}/auth/callback?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`);
         } catch (error) {
             res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);

@@ -26,6 +26,9 @@ export class AuthUsersEntity {
   @Column('text', { name: 'password_hash', nullable: true, comment: 'Hashed password' })
   passwordHash: string;
 
+  @Column('text', { name: 'vault_password_hash', nullable: true, comment: 'Hashed vault password' })
+  vaultPasswordHash: string;
+
   @Column('varchar', { name: 'google_id', length: 255, nullable: true, comment: 'Google ID for OAuth' })
   googleId: string;
 

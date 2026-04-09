@@ -13,11 +13,20 @@ export class CredentialVaultEntity extends MasterBaseEntity {
     @Column('varchar', { name: 'password', length: 255, nullable: false, comment: 'Password' })
     password: string;
 
-    @Column('date', { name: 'expire_date', nullable: true, comment: 'Expire Date' })
+    @Column('varchar', { name: 'expire_date', nullable: true, comment: 'Expire Date' })
     expireDate: Date;
 
-    @Column('varchar', { name: 'owner', length: 100, nullable: false, comment: 'Owner' })
+    @Column('varchar', { name: 'owner', length: 100, nullable: false, comment: 'Owner / Username' })
     owner: string;
+
+    @Column('varchar', { name: 'device_serial_number', length: 255, nullable: true, comment: 'Device Serial Number' })
+    deviceSerialNumber: string;
+
+    @Column('varchar', { name: 'ip_address', length: 50, nullable: true, comment: 'IP Address' })
+    ipAddress: string;
+
+    @Column('varchar', { name: 'recovery_email', length: 255, nullable: true, comment: 'Recovery Email' })
+    recoveryEmail: string;
 
     @Column('boolean', { name: 'is_active', nullable: false, default: true, comment: 'Active Logic' })
     isActive: boolean;

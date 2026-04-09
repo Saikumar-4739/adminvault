@@ -24,7 +24,17 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ appName: '', description: '', password: '', expireDate: '', owner: '', isActive: true });
+    const [formData, setFormData] = useState({
+        appName: '',
+        description: '',
+        password: '',
+        expireDate: '',
+        owner: '',
+        deviceSerialNumber: '',
+        ipAddress: '',
+        recoveryEmail: '',
+        isActive: true
+    });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [revealedPasswords, setRevealedPasswords] = useState<Record<number, boolean>>({});
@@ -61,7 +71,10 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
         return vaults.filter(v =>
             v.appName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             v.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            v.owner?.toLowerCase().includes(searchTerm.toLowerCase())
+            v.owner?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            v.deviceSerialNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            v.ipAddress?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            v.recoveryEmail?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [vaults, searchTerm]);
 
@@ -77,7 +90,10 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
                     formData.password,
                     formData.expireDate ? new Date(formData.expireDate) : undefined,
                     formData.owner,
-                    formData.isActive
+                    formData.isActive,
+                    formData.deviceSerialNumber,
+                    formData.ipAddress,
+                    formData.recoveryEmail
                 );
                 const response = await vaultService.updateCredentialVault(model);
                 if (response.status) {
@@ -96,7 +112,10 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
                     formData.password,
                     formData.expireDate ? new Date(formData.expireDate) : undefined,
                     formData.owner,
-                    formData.isActive ?? true
+                    formData.isActive ?? true,
+                    formData.deviceSerialNumber,
+                    formData.ipAddress,
+                    formData.recoveryEmail
                 );
                 const response = await vaultService.createCredentialVault(model);
                 if (response.status) {
@@ -125,6 +144,9 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
             description: item.description || '',
             password: item.password || '',
             owner: item.owner || '',
+            deviceSerialNumber: item.deviceSerialNumber || '',
+            ipAddress: item.ipAddress || '',
+            recoveryEmail: item.recoveryEmail || '',
             expireDate: expireDateStr,
             isActive: item.isActive ?? true
         });
@@ -157,7 +179,17 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ appName: '', description: '', password: '', expireDate: '', owner: '', isActive: true });
+        setFormData({
+            appName: '',
+            description: '',
+            password: '',
+            expireDate: '',
+            owner: '',
+            deviceSerialNumber: '',
+            ipAddress: '',
+            recoveryEmail: '',
+            isActive: true
+        });
     };
 
     const toggleReveal = (id: number, e: React.MouseEvent) => {
@@ -203,23 +235,23 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
 
                             <div className="relative z-10 flex flex-col h-full space-y-2">
                                 <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="h-6 w-6 rounded bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center border border-blue-500/20">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <div className="h-6 w-6 rounded bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center border border-blue-500/20 flex-shrink-0">
                                             <span className="text-[9px] font-black text-blue-600 uppercase">{item.appName?.charAt(0)}</span>
                                         </div>
                                         <div className="min-w-0">
                                             <h3 className="text-[9px] font-black text-slate-900 dark:text-white tracking-tight truncate uppercase leading-none">{item.appName}</h3>
-                                            <p className="text-[7px] font-bold text-slate-400 truncate max-w-[80px] mt-0.5 italic">{item.description || 'Secret'}</p>
+                                            <p className="text-[7px] font-bold text-slate-400 truncate mt-0.5 italic">{item.description || 'Secret'}</p>
                                         </div>
                                     </div>
-                                    <div className={`px-1 py-0 rounded text-[7px] font-black uppercase tracking-wider border ${item.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
+                                    <div className={`px-1 py-0 rounded text-[7px] font-black uppercase tracking-wider border flex-shrink-0 ${item.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
                                         {item.isActive ? 'active' : 'inactive'}
                                     </div>
                                 </div>
 
-                                <div className="bg-slate-50/50 dark:bg-white/5 rounded p-1.5 space-y-1 border border-slate-100 dark:border-white/5">
+                                <div className="bg-slate-50/50 dark:bg-white/5 rounded p-2 space-y-1.5 border border-slate-100 dark:border-white/5">
                                     <div className="flex items-center justify-between group/pw">
-                                        <div className="space-y-0 text-[9px] font-mono font-bold text-slate-700 dark:text-slate-200 tracking-wider">
+                                        <div className="space-y-0 text-[9px] font-mono font-bold text-slate-700 dark:text-slate-200 tracking-wider truncate mr-2">
                                             {revealedPasswords[item.id] ? item.password : '••••••••'}
                                         </div>
                                         <div className="flex items-center opacity-0 group-hover/pw:opacity-100 transition-opacity">
@@ -234,9 +266,30 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
 
                                     <div className="h-px bg-slate-200/50 dark:bg-white/5" />
 
-                                    <div className="flex items-center justify-between gap-1 text-[7px] font-bold text-slate-500">
-                                        <p className="truncate">{item.owner || '-'}</p>
-                                        <p className="flex-shrink-0">{formatDate(item.expireDate)}</p>
+                                    <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[7px] font-bold text-slate-500 leading-tight">
+                                        <div className="flex flex-col">
+                                            <span className="text-[6px] text-slate-400 uppercase tracking-tighter">Username</span>
+                                            <span className="truncate text-slate-600 dark:text-slate-300">{item.owner || '-'}</span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[6px] text-slate-400 uppercase tracking-tighter">Recovery Email</span>
+                                            <span className="truncate text-slate-600 dark:text-slate-300">{item.recoveryEmail || '-'}</span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[6px] text-slate-400 uppercase tracking-tighter">Serial Number</span>
+                                            <span className="truncate text-slate-600 dark:text-slate-300">{item.deviceSerialNumber || '-'}</span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[6px] text-slate-400 uppercase tracking-tighter">IP Address</span>
+                                            <span className="truncate text-slate-600 dark:text-slate-300">{item.ipAddress || '-'}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-px bg-slate-200/50 dark:bg-white/5" />
+
+                                    <div className="flex items-center justify-between text-[7px] font-bold text-slate-400">
+                                        <p>Expiry</p>
+                                        <p>{formatDate(item.expireDate)}</p>
                                     </div>
                                 </div>
 
@@ -264,13 +317,21 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={isEditMode ? "Update Sentinel Secret" : "Seal New Credential"}>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Application Name" value={formData.appName} onChange={(e) => setFormData({ ...formData, appName: e.target.value })} className="h-14" required />
-                        <Input label="Owner / Dept" value={formData.owner} onChange={(e) => setFormData({ ...formData, owner: e.target.value })} className="h-14" />
+                        <Input label="Device / Application" value={formData.appName} onChange={(e) => setFormData({ ...formData, appName: e.target.value })} className="h-14" required />
+                        <Input label="Username" value={formData.owner} onChange={(e) => setFormData({ ...formData, owner: e.target.value })} className="h-14" />
                     </div>
 
-                    <div className="space-y-1">
-                        <Input label="Secret Content / Password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-14" required />
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Encrypted at rest with AES-256</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <Input label="Password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-14" required />
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Encrypted at rest</p>
+                        </div>
+                        <Input label="Recovery Email" value={formData.recoveryEmail} onChange={(e) => setFormData({ ...formData, recoveryEmail: e.target.value })} className="h-14" />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input label="Device Serial Number" value={formData.deviceSerialNumber} onChange={(e) => setFormData({ ...formData, deviceSerialNumber: e.target.value })} className="h-14" />
+                        <Input label="IP Address" value={formData.ipAddress} onChange={(e) => setFormData({ ...formData, ipAddress: e.target.value })} className="h-14" />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,9 +349,9 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
                         </div>
                     </div>
 
-                    <Input label="Security Notes / URL" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="h-20" />
+                    <Input label="Description / Security Notes" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="h-20" />
 
-                    <div className="flex justify-end gap-3 pt-4 pt-6 border-t border-slate-100 dark:border-white/5">
+                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-white/5">
                         <Button variant="outline" type="button" onClick={handleCloseModal} className="rounded-xl px-8 h-12 uppercase tracking-widest text-[10px] font-black">Cancel</Button>
                         <Button variant="primary" type="submit" className="rounded-xl px-8 h-12 bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/20 uppercase tracking-widest text-[10px] font-black">
                             {isEditMode ? 'Commit Changes' : 'Secure Credential'}

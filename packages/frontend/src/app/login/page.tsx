@@ -269,7 +269,7 @@ const LoginPage: React.FC = () => {
                                 <div className="text-center mb-4">
                                     <div className="inline-flex items-center justify-center gap-2 mb-2">
                                         <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
-                                            <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
+                                            <img src="/logo.jpeg" alt="Logo" className="h-8 w-8 object-contain" />
                                         </div>
                                         <h1 className={`text-lg font-black bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent`}>BOS Vault</h1>
                                     </div>

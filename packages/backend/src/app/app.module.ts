@@ -33,7 +33,9 @@ import { SecurityModule } from './features/security/security.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', 'packages/backend/.env'],
+      envFilePath: [
+        `documents/environments/${process.env.NODE_ENV === 'production' ? 'live' : 'dev'}.env`,
+      ],
       load: [configuration],
     }),
     DatabaseModule,

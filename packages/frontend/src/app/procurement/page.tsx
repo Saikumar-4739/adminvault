@@ -68,6 +68,22 @@ const ProcurementPage: React.FC = () => {
         }
     }, [user?.companyId]);
 
+    const handleDeletePO = async (poId: number) => {
+        if (!window.confirm('Are you sure you want to delete this Purchase Order? This action cannot be undone.')) return;
+
+        try {
+            const response = await procurementService.deletePurchaseOrder(poId);
+            if (response.status) {
+                AlertMessages.getSuccessMessage('Purchase Order deleted successfully');
+                fetchPOs();
+            } else {
+                AlertMessages.getErrorMessage(response.message);
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to delete Purchase Order');
+        }
+    };
+
     const handleStatusUpdate = async (poId: number, status: POStatusEnum) => {
         try {
             const response = await procurementService.updatePOStatus(new UpdatePOStatusRequestModel(poId, status));
@@ -232,13 +248,13 @@ const ProcurementPage: React.FC = () => {
                                     <td>${item.itemName}</td>
                                     <td>${item.assetTypeName || 'N/A'}</td>
                                     <td style="text-align: right">${Number(item.quantity) || 0}</td>
-                                    <td style="text-align: right">$${(Number(item.unitPrice) || 0).toFixed(2)}</td>
-                                    <td style="text-align: right">$${((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)).toFixed(2)}</td>
+                                    <td style="text-align: right">${po.currency === 'INR' ? '₹' : '$'}${(Number(item.unitPrice) || 0).toFixed(2)}</td>
+                                    <td style="text-align: right">${po.currency === 'INR' ? '₹' : '$'}${((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)).toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
-                    <div class="total">Total: $${(Number(po.totalAmount) || 0).toFixed(2)}</div>
+                    <div class="total">Total: ${po.currency === 'INR' ? '₹' : '$'}${(Number(po.totalAmount) || 0).toFixed(2)}</div>
                     <div style="margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 10px; color: #94a3b8; text-align: center;">
                         Generated via BOS Vault Procurement System
                     </div>
@@ -464,7 +480,7 @@ const ProcurementPage: React.FC = () => {
                                                 {po.orderDate ? new Date(po.orderDate).toLocaleDateString() : 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap font-bold text-sm text-slate-900 dark:text-white">
-                                                ${(Number(po.totalAmount) || 0).toFixed(2)}
+                                                {po.currency === 'INR' ? '₹' : '$'}{(Number(po.totalAmount) || 0).toFixed(2)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border ${getStatusStyle(po.status)}`}>
@@ -487,6 +503,13 @@ const ProcurementPage: React.FC = () => {
                                                         title="Edit PO"
                                                     >
                                                         <Pen size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeletePO(po.id)}
+                                                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                                                        title="Delete PO"
+                                                    >
+                                                        <Trash2 size={18} />
                                                     </button>
                                                 </div>
                                             </td>
@@ -600,8 +623,8 @@ const ProcurementPage: React.FC = () => {
                                                     <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{item.itemName}</td>
                                                     <td className="px-4 py-3 text-sm text-slate-500">{item.assetTypeName || 'N/A'}</td>
                                                     <td className="px-4 py-3 text-sm text-slate-500 text-center">{Number(item.quantity) || 0}</td>
-                                                    <td className="px-4 py-3 text-sm text-slate-500 text-right">${(Number(item.unitPrice) || 0).toFixed(2)}</td>
-                                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 text-right">${((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)).toFixed(2)}</td>
+                                                    <td className="px-4 py-3 text-sm text-slate-500 text-right">{selectedPO.currency === 'INR' ? '₹' : '$'}{(Number(item.unitPrice) || 0).toFixed(2)}</td>
+                                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 text-right">{selectedPO.currency === 'INR' ? '₹' : '$'}{((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)).toFixed(2)}</td>
                                                 </tr>
                                             )) : (
                                                 <tr>
@@ -612,7 +635,7 @@ const ProcurementPage: React.FC = () => {
                                         <tfoot className="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
                                             <tr>
                                                 <td colSpan={3} className="px-4 py-3 text-xs font-black text-slate-500 uppercase tracking-wider text-right">Total Amount:</td>
-                                                <td className="px-4 py-3 text-lg font-black text-indigo-600 dark:text-indigo-400 text-right">${(Number(selectedPO.totalAmount) || 0).toFixed(2)}</td>
+                                                <td className="px-4 py-3 text-lg font-black text-indigo-600 dark:text-indigo-400 text-right">{selectedPO.currency === 'INR' ? '₹' : '$'}{(Number(selectedPO.totalAmount) || 0).toFixed(2)}</td>
                                             </tr>
                                         </tfoot>
                                     </table>

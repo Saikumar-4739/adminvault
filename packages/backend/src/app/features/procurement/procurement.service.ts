@@ -30,7 +30,7 @@ export class ProcurementService {
     async createPurchaseOrder(reqModel: CreatePOModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const { userId, username, companyId, vendorId, approverId, orderDate, items, notes, timeSpentMinutes, expectedDeliveryDate, invoiceUrl } = reqModel;
+            const { userId, username, companyId, vendorId, approverId, orderDate, items, notes, timeSpentMinutes, expectedDeliveryDate, invoiceUrl, currency, vendorName } = reqModel;
             const requesterEmployee = await this.employeeRepo.findOne({ where: { userId: userId } });
             if (!requesterEmployee) {
                 throw new ErrorResponse(404, 'Employee profile not found for current user');
@@ -55,6 +55,8 @@ export class ProcurementService {
             poEntity.notes = notes;
             poEntity.timeSpentMinutes = timeSpentMinutes;
             poEntity.invoiceUrl = invoiceUrl;
+            poEntity.currency = currency || 'USD';
+            poEntity.vendorName = vendorName;
 
             const savedPO = await transManager.getRepository(PurchaseOrderEntity).save(poEntity);
             const itemEntities = items.map(i => {
@@ -67,6 +69,7 @@ export class ProcurementService {
                 item.unitPrice = i.unitPrice;
                 item.purchaseOrderId = savedPO.id;
                 item.assetTypeId = i.assetTypeId;
+                item.assetTypeName = i.assetTypeName;
                 return item;
             });
             await transManager.getRepository(PurchaseOrderItemEntity).save(itemEntities);
@@ -99,7 +102,7 @@ export class ProcurementService {
     async updatePurchaseOrder(reqModel: UpdatePOModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
-            const { id, userId, username, companyId, items, vendorId, approverId, orderDate, expectedDeliveryDate, notes, timeSpentMinutes, invoiceUrl } = reqModel;
+            const { id, userId, username, companyId, items, vendorId, approverId, orderDate, expectedDeliveryDate, notes, timeSpentMinutes, invoiceUrl, currency, vendorName } = reqModel;
             const employee = await this.employeeRepo.findOne({ where: { userId: userId } });
             if (!employee) {
                 throw new ErrorResponse(404, 'Employee profile not found for current user');
@@ -125,6 +128,8 @@ export class ProcurementService {
             existingPO.notes = notes;
             existingPO.timeSpentMinutes = timeSpentMinutes;
             existingPO.invoiceUrl = invoiceUrl || existingPO.invoiceUrl;
+            existingPO.currency = currency || existingPO.currency;
+            existingPO.vendorName = vendorName;
 
             await transRepo.save(existingPO);
 
@@ -140,6 +145,7 @@ export class ProcurementService {
                 item.quantity = i.quantity;
                 item.unitPrice = i.unitPrice;
                 item.assetTypeId = i.assetTypeId;
+                item.assetTypeName = i.assetTypeName;
                 return item;
             });
             await itemRepo.save(itemEntities);
@@ -221,14 +227,14 @@ export class ProcurementService {
             const items = itemsByPo.get(Number(p.id)) || [];
             const poItems = items.map(i => new POItemModel(
                 i.itemName, i.quantity, i.unitPrice, i.assetTypeId,
-                i.assetTypeId ? assetTypeMap.get(Number(i.assetTypeId)) : undefined
+                i.assetTypeName || (i.assetTypeId ? assetTypeMap.get(Number(i.assetTypeId)) : undefined)
             ));
 
             responses.push(new PurchaseOrderModel(
                 p.id, p.poNumber, p.vendorId, p.requesterId, p.orderDate, p.status, p.totalAmount, p.createdAt,
-                poItems, vendorMap.get(Number(p.vendorId)), userMap.get(Number(p.requesterId)) || userMap.get(Number(p.userId)),
+                poItems, p.vendorName || vendorMap.get(Number(p.vendorId)), userMap.get(Number(p.requesterId)) || userMap.get(Number(p.userId)),
                 p.expectedDeliveryDate, p.notes, p.timeSpentMinutes, p.approverId,
-                userMap.get(Number(p.approverId)), companyMap.get(Number(p.companyId)), p.invoiceUrl
+                userMap.get(Number(p.approverId)), companyMap.get(Number(p.companyId)), p.invoiceUrl, p.currency
             ));
         }
         return responses;
@@ -261,14 +267,14 @@ export class ProcurementService {
             for (const i of items) {
                 poItems.push(new POItemModel(
                     i.itemName, i.quantity, i.unitPrice, i.assetTypeId,
-                    i.assetTypeId ? assetTypeMap.get(Number(i.assetTypeId)) : undefined
+                    i.assetTypeName || (i.assetTypeId ? assetTypeMap.get(Number(i.assetTypeId)) : undefined)
                 ));
             }
 
             const requesterName = requester?.fullName || user?.fullName;
             const approverName = approver?.fullName;
 
-            const response = new PurchaseOrderModel(p.id, p.poNumber, p.vendorId, p.requesterId, p.orderDate, p.status, p.totalAmount, p.createdAt, poItems, vendor?.name, requesterName, p.expectedDeliveryDate, p.notes, p.timeSpentMinutes, p.approverId, approverName, company?.companyName, p.invoiceUrl);
+            const response = new PurchaseOrderModel(p.id, p.poNumber, p.vendorId, p.requesterId, p.orderDate, p.status, p.totalAmount, p.createdAt, poItems, p.vendorName || vendor?.name, requesterName, p.expectedDeliveryDate, p.notes, p.timeSpentMinutes, p.approverId, approverName, company?.companyName, p.invoiceUrl, p.currency);
             return new GetPOByIdModel(true, 200, 'Purchase Order retrieved successfully', response);
         } catch (error) {
             throw error;
@@ -280,6 +286,24 @@ export class ProcurementService {
             await this.poRepo.update(reqModel.id, { status: reqModel.status });
             return new GlobalResponse(true, 200, 'Purchase Order status updated successfully');
         } catch (error) {
+            throw error;
+        }
+    }
+
+    async deletePurchaseOrder(id: number): Promise<GlobalResponse> {
+        const transManager = new GenericTransactionManager(this.dataSource);
+        try {
+            await transManager.startTransaction();
+            const poItemRepo = transManager.getRepository(PurchaseOrderItemEntity);
+            const poRepo = transManager.getRepository(PurchaseOrderEntity);
+
+            await poItemRepo.delete({ purchaseOrderId: id });
+            await poRepo.delete(id);
+
+            await transManager.completeTransaction();
+            return new GlobalResponse(true, 200, 'Purchase Order deleted successfully');
+        } catch (error) {
+            await transManager.releaseTransaction();
             throw error;
         }
     }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ticketService, authService } from '@/lib/api/services';
+import { ticketService, authService, departmentService } from '@/lib/api/services';
 import { Button } from '@/components/ui/Button';
 import { StatCard } from '@/components/ui/StatCard';
 import { Modal } from '@/components/ui/Modal';
@@ -65,6 +65,16 @@ const CategoryConfig: Record<string, { icon: any, color: string, bg: string, gra
     },
 };
 
+export const SUB_CATEGORY_MAP: Record<TicketCategoryEnum, string[]> = {
+    [TicketCategoryEnum.HARDWARE]: ['desktop', 'laptop', 'printer', 'mobile', 'monitor', 'server', 'other'],
+    [TicketCategoryEnum.SOFTWARE]: ['os', 'office', 'erp', 'antivirus', 'browser', 'crm', 'other'],
+    [TicketCategoryEnum.NETWORK]: ['internet', 'vpn', 'wifi', 'lan', 'firewall', 'other'],
+    [TicketCategoryEnum.EMAIL]: ['outlook', 'webmail', 'smtp', 'password_reset', 'other'],
+    [TicketCategoryEnum.ACCESS]: ['folder_access', 'vpn_access', 'erp_access', 'database', 'other'],
+    [TicketCategoryEnum.REAL_ESTATE]: ['cleaning', 'repair', 'furniture', 'lighting', 'other'],
+    [TicketCategoryEnum.OTHER]: ['other'],
+};
+
 interface TicketData {
     id: number;
     subject: string;
@@ -78,6 +88,9 @@ interface TicketData {
     createdAt?: string;
     updatedAt?: string;
     slaDeadline?: string;
+    location: string;
+    assignedGroup: string;
+    assignAdminId: string;
     timeSpentMinutes?: number;
 }
 
@@ -110,6 +123,7 @@ const TicketsPage: React.FC = () => {
     // Default to 'my' for non-admins
     const [viewMode, setViewMode] = useState<'all' | 'my'>('my');
     const [showFilters, setShowFilters] = useState(false);
+    const [departments, setDepartments] = useState<any[]>([]);
 
     // Update viewMode when user role is known
     useEffect(() => {
@@ -135,7 +149,6 @@ const TicketsPage: React.FC = () => {
         department: '',
         contactNumber: '',
         location: '',
-        contactEmail: '',
 
         // Admin / Assignment
         assignedGroup: '',
@@ -217,10 +230,22 @@ const TicketsPage: React.FC = () => {
         }
     }, [viewMode, getCompanyId, isAdmin]);
 
+    const fetchDepartments = useCallback(async () => {
+        try {
+            const response = await departmentService.getAllDepartmentsDropdown();
+            if (response.status && response.data) {
+                setDepartments(response.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch departments:', error);
+        }
+    }, []);
+
     useEffect(() => {
         fetchTickets();
         fetchAdmins();
-    }, [fetchTickets, fetchAdmins]);
+        fetchDepartments();
+    }, [fetchTickets, fetchAdmins, fetchDepartments]);
 
     // WebSocket for real-time ticket updates (Admins only)
     useEffect(() => {
@@ -255,37 +280,37 @@ const TicketsPage: React.FC = () => {
         try {
             if (editingTicket) {
                 const req = new UpdateTicketModel(
-                    editingTicket.id,
-                    formData.ticketCode,
-                    formData.categoryEnum,
-                    formData.priorityEnum,
-                    formData.subject,
-                    formData.ticketStatus,
-                    undefined, // employeeId
-                    formData.assignAdminId ? Number(formData.assignAdminId) : undefined,
-                    formData.responseDueTime ? new Date(formData.responseDueTime) : undefined, // expectedCompletionDate
-                    undefined, // resolvedAt
-                    formData.timeSpentMinutes, // timeSpentMinutes
-                    formData.description,
-                    formData.subCategory,
-                    formData.severityEnum,
-                    formData.department,
-                    formData.contactNumber,
-                    formData.location,
-                    formData.contactEmail,
-                    formData.assignedGroup,
-                    formData.slaType,
-                    formData.responseDueTime ? new Date(formData.responseDueTime) : undefined, // responseDueTime (this seems duplicated in model? check later, but aligning with existing usage)
-                    formData.escalationLevel,
-                    formData.adminComments,
-                    formData.userComments,
-                    formData.internalNotes,
-                    formData.rootCause,
-                    formData.resolutionSummary,
-                    undefined, // resolvedBy
-                    formData.closureRemarks,
-                    formData.userRating,
-                    formData.userFeedback
+                    editingTicket.id, // 1: id
+                    formData.ticketCode, // 2: ticketCode
+                    formData.categoryEnum, // 3: categoryEnum
+                    formData.priorityEnum, // 4: priorityEnum
+                    formData.subject, // 5: subject
+                    formData.ticketStatus, // 6: ticketStatus
+                    undefined, // 7: employeeId
+                    formData.assignAdminId ? Number(formData.assignAdminId) : undefined, // 8: assignAdminId
+                    formData.responseDueTime ? (new Date(formData.responseDueTime) as any) : undefined, // 9: expectedCompletionDate
+                    undefined, // 10: resolvedAt
+                    formData.timeSpentMinutes ? Number(formData.timeSpentMinutes) : undefined, // 11: timeSpentMinutes
+                    formData.description, // 12: description
+                    formData.subCategory, // 13: subCategory
+                    formData.severityEnum, // 14: severityEnum
+                    formData.department, // 15: department
+                    formData.contactNumber, // 16: contactNumber
+                    formData.location, // 17: location
+                    undefined, // 18: contactEmail
+                    formData.assignedGroup, // 19: assignedGroup
+                    formData.slaType, // 20: slaType
+                    formData.responseDueTime ? (new Date(formData.responseDueTime) as any) : undefined, // 21: responseDueTime
+                    formData.escalationLevel ? Number(formData.escalationLevel) : undefined, // 22: escalationLevel
+                    formData.adminComments, // 23: adminComments
+                    formData.userComments, // 24: userComments
+                    formData.internalNotes, // 25: internalNotes
+                    formData.rootCause, // 26: rootCause
+                    formData.resolutionSummary, // 27: resolutionSummary
+                    undefined, // 28: resolvedBy
+                    formData.closureRemarks, // 29: closureRemarks
+                    formData.userRating ? Number(formData.userRating) : undefined, // 30: userRating
+                    formData.userFeedback // 31: userFeedback
                 );
                 const response = await ticketService.updateTicket(req);
                 if (response.status) {
@@ -296,38 +321,37 @@ const TicketsPage: React.FC = () => {
                     AlertMessages.getErrorMessage(response.message || 'Operation failed');
                 }
             } else {
-                // Creation is now handled on a separate page, but keeping this as backup or if needed
                 const req = new CreateTicketModel(
-                    '', // ticketCode - backend will generate
-                    formData.categoryEnum,
-                    formData.priorityEnum,
-                    formData.subject,
-                    TicketStatusEnum.OPEN,
-                    undefined, // employeeId
-                    formData.assignAdminId ? Number(formData.assignAdminId) : undefined,
-                    formData.responseDueTime ? new Date(formData.responseDueTime) : undefined, // expectedCompletionDate
-                    undefined, // resolvedAt
-                    formData.timeSpentMinutes, // timeSpentMinutes
-                    formData.description,
-                    formData.subCategory,
-                    formData.severityEnum,
-                    formData.department,
-                    formData.contactNumber,
-                    formData.location,
-                    formData.contactEmail,
-                    formData.assignedGroup,
-                    formData.slaType,
-                    formData.responseDueTime ? new Date(formData.responseDueTime) : undefined, // responseDueTime
-                    formData.escalationLevel,
-                    formData.adminComments,
-                    formData.userComments,
-                    formData.internalNotes,
-                    formData.rootCause,
-                    formData.resolutionSummary,
-                    undefined, // resolvedBy
-                    formData.closureRemarks,
-                    formData.userRating,
-                    formData.userFeedback
+                    '', // 1: ticketCode
+                    formData.categoryEnum, // 2: categoryEnum
+                    formData.priorityEnum, // 3: priorityEnum
+                    formData.subject, // 4: subject
+                    TicketStatusEnum.OPEN, // 5: ticketStatus
+                    undefined, // 6: employeeId
+                    formData.assignAdminId ? Number(formData.assignAdminId) : undefined, // 7: assignAdminId
+                    formData.responseDueTime ? (new Date(formData.responseDueTime) as any) : undefined, // 8: expectedCompletionDate
+                    undefined, // 9: resolvedAt
+                    formData.timeSpentMinutes ? Number(formData.timeSpentMinutes) : undefined, // 10: timeSpentMinutes
+                    formData.description, // 11: description
+                    formData.subCategory, // 12: subCategory
+                    formData.severityEnum, // 13: severityEnum
+                    formData.department, // 14: department
+                    formData.contactNumber, // 15: contactNumber
+                    formData.location, // 16: location
+                    undefined, // 17: contactEmail
+                    formData.assignedGroup, // 18: assignedGroup
+                    formData.slaType, // 19: slaType
+                    formData.responseDueTime ? (new Date(formData.responseDueTime) as any) : undefined, // 20: responseDueTime
+                    formData.escalationLevel ? Number(formData.escalationLevel) : undefined, // 21: escalationLevel
+                    formData.adminComments, // 22: adminComments
+                    formData.userComments, // 23: userComments
+                    formData.internalNotes, // 24: internalNotes
+                    formData.rootCause, // 25: rootCause
+                    formData.resolutionSummary, // 26: resolutionSummary
+                    undefined, // 27: resolvedBy
+                    formData.closureRemarks, // 28: closureRemarks
+                    formData.userRating ? Number(formData.userRating) : undefined, // 29: userRating
+                    formData.userFeedback // 30: userFeedback
                 );
                 const response = await ticketService.createTicket(req);
 
@@ -361,7 +385,6 @@ const TicketsPage: React.FC = () => {
             department: ticket.department || '',
             contactNumber: ticket.contactNumber || '',
             location: ticket.location || '',
-            contactEmail: ticket.contactEmail || '',
 
             assignedGroup: ticket.assignedGroup || '',
             assignedTo: ticket.assignAdminId ? String(ticket.assignAdminId) : '',
@@ -427,7 +450,6 @@ const TicketsPage: React.FC = () => {
             department: '',
             contactNumber: '',
             location: '',
-            contactEmail: '',
             assignedGroup: '',
             assignedTo: '',
             slaType: '',
@@ -498,7 +520,6 @@ const TicketsPage: React.FC = () => {
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="Search by subject or code..."
                                 className="w-full pl-10 pr-4 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-inner"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -693,7 +714,7 @@ const TicketsPage: React.FC = () => {
                                                 <td className="py-4 px-6 border border-slate-200 dark:border-slate-700 text-center">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
-                                                            {ticket.ticketCode || 'TKT-000'}
+                                                            {ticket.ticketCode}
                                                         </span>
                                                     </div>
                                                 </td>
@@ -829,7 +850,6 @@ const TicketsPage: React.FC = () => {
                                             label="Subject"
                                             value={formData.subject}
                                             onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                                            placeholder="Ticket subject"
                                             required
                                             className="font-bold text-lg"
                                             disabled={!!editingTicket}
@@ -843,7 +863,6 @@ const TicketsPage: React.FC = () => {
                                         <textarea
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                            placeholder="Detailed description..."
                                             className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm min-h-[120px] resize-y disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:text-slate-500"
                                             disabled={!!editingTicket}
                                         />
@@ -861,6 +880,15 @@ const TicketsPage: React.FC = () => {
                                                 <option key={cat} value={cat}>{cat.toUpperCase()}</option>
                                             ))}
                                         </select>
+                                    </div>
+
+                                    <div>
+                                        <Input
+                                            label="Sub-Category"
+                                            value={formData.subCategory}
+                                            onChange={(e) => setFormData({ ...formData, subCategory: e.target.value })}
+                                            disabled={!!editingTicket}
+                                        />
                                     </div>
 
                                     <div>
@@ -889,6 +917,39 @@ const TicketsPage: React.FC = () => {
                                                 <option key={sev} value={sev}>{sev.toUpperCase()}</option>
                                             ))}
                                         </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2">Department</label>
+                                        <select
+                                            className="w-full px-4 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                                            value={formData.department}
+                                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                            disabled={!!editingTicket}
+                                        >
+                                            <option value="">Select Department</option>
+                                            {departments.map((dept) => (
+                                                <option key={dept.id} value={dept.name}>{dept.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <Input
+                                            label="Location"
+                                            value={formData.location}
+                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                            disabled={!!editingTicket}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Input
+                                            label="Contact Number"
+                                            value={formData.contactNumber}
+                                            onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                                            disabled={!!editingTicket}
+                                        />
                                     </div>
 
                                     <div>
@@ -923,7 +984,6 @@ const TicketsPage: React.FC = () => {
                                         <textarea
                                             value={formData.adminComments}
                                             onChange={(e) => setFormData({ ...formData, adminComments: e.target.value })}
-                                            placeholder="Add remarks or internal notes..."
                                             className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium shadow-sm min-h-[100px] resize-y"
                                         />
                                     </div>

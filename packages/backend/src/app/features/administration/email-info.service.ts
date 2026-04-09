@@ -224,21 +224,7 @@ export class EmailInfoService {
     };
 
     try {
-      // Store request in database first
-      const newRequest = new AccessRequestEntity();
-      newRequest.name = request.name;
-      newRequest.email = request.email;
-      newRequest.description = request.description;
-
-      try {
-        await this.accessRequestRepo.save(newRequest);
-        this.logger.log(`Access request saved to DB for ${request.email}`);
-      } catch (dbError) {
-        this.logger.error('Failed to save access request to database', dbError);
-        // We might still want to try sending the email even if DB save fails, 
-        // but usually, if DB fails, it's a sign of a larger issue.
-        // For now, let's continue to email part but log it.
-      }
+      this.logger.log(`Access request email info generated for ${request.email}`);
 
       const info = await this.transporter.sendMail(mailOptions);
       this.logger.log(`Access request email sent: ${info.messageId}`);

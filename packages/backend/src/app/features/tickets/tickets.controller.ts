@@ -1,9 +1,12 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, Param, Res, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import express from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GlobalResponse, returnException } from '@adminvault/backend-utils';
 import { TicketsService } from './tickets.service';
 import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, IdRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel, GetTicketStatisticsRequestModel } from '@adminvault/shared-models';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { Public } from '../../decorators/public.decorator';
 
 @ApiTags('Tickets')
 @Controller('tickets')
@@ -114,6 +117,30 @@ export class TicketsController {
             return await this.service.addResponse(reqModel);
         } catch (error) {
             return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Post('upload-attachment')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadAttachment(
+        @UploadedFile() file: Express.Multer.File,
+        @Req() req: any
+    ): Promise<GlobalResponse> {
+        try {
+            return await this.service.uploadAttachment(file, req.user?.userId || req.user?.id);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @Public()
+    @Get('attachment/:filename')
+    async getAttachment(@Param('filename') filename: string, @Res() res: express.Response) {
+        try {
+            const filePath = this.service.getAttachment(filename);
+            res.sendFile(filePath);
+        } catch (error) {
+            res.status(500).json(returnException(GlobalResponse, error));
         }
     }
 }

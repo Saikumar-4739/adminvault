@@ -68,3 +68,6 @@ web-build/
 cache/
 
 packages/backend/.env
+
+# Centralized Environments
+documents/environments/*.env

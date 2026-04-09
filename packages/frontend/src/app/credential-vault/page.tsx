@@ -14,8 +14,9 @@ const CredentialVaultPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isUnlocked, setIsUnlocked] = useState(false);
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
-    const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+    const [isFirstTime, setIsFirstTime] = useState(false);
     const viewRef = useRef<CredentialVaultMasterViewHandle>(null);
 
     useEffect(() => {
@@ -23,14 +24,20 @@ const CredentialVaultPage: React.FC = () => {
         if (vaultSession === 'true') {
             setIsUnlocked(true);
         }
-
-        // Check for WebAuthn support
-        if (window.PublicKeyCredential) {
-            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
-                .then(available => setIsBiometricSupported(available))
-                .catch(() => setIsBiometricSupported(false));
-        }
+        checkVaultStatus();
     }, []);
+
+    const checkVaultStatus = async () => {
+        try {
+            // We'll use a dummy verify with empty password to check if it's set
+            const response = await authService.verifyVaultPassword('');
+            if (response.code === 2) {
+                setIsFirstTime(true);
+            }
+        } catch (error) {
+            // Error might happen if it's not set
+        }
+    };
 
     const handleUnlock = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -38,11 +45,14 @@ const CredentialVaultPage: React.FC = () => {
 
         setIsVerifying(true);
         try {
-            const response = await authService.verifyPassword(password);
+            const response = await authService.verifyVaultPassword(password);
             if (response.status) {
                 unlockVault();
+            } else if (response.code === 2) {
+                setIsFirstTime(true);
+                AlertMessages.getErrorMessage('Vault password not set. Please set it first.');
             } else {
-                AlertMessages.getErrorMessage('Invalid security key');
+                AlertMessages.getErrorMessage('Invalid vault password');
             }
         } catch (error: any) {
             AlertMessages.getErrorMessage(error.message || 'Verification failed');
@@ -51,29 +61,28 @@ const CredentialVaultPage: React.FC = () => {
         }
     };
 
-    const handleBiometric = async () => {
+    const handleSetPassword = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!password) return;
+        if (password !== confirmPassword) {
+            AlertMessages.getErrorMessage('Passwords do not match');
+            return;
+        }
+
+        setIsVerifying(true);
         try {
-            // In a real app, this would involve a challenge from the server
-            // For now, we simulate the biometric trigger if supported
-            if (isBiometricSupported) {
-                // This is a simplified trigger. Real WebAuthn requires backend registration.
-                // We'll use this to "validate" the user locally if they've already logged in.
-                const challenge = new Uint8Array(32);
-                window.crypto.getRandomValues(challenge);
-
-                // Using a mock-like approach for demonstration if not fully configured
-                // In production, we'd use navigator.credentials.get(...)
-
-                // For this UI demo, we'll simulate a successful biometric check 
-                // if the device supports it, and we trust the local session.
-                setIsVerifying(true);
-                setTimeout(() => {
-                    unlockVault();
-                    setIsVerifying(false);
-                }, 1000);
+            const response = await authService.setVaultPassword(password);
+            if (response.status) {
+                AlertMessages.getSuccessMessage('Vault password set successfully');
+                setIsFirstTime(false);
+                unlockVault();
+            } else {
+                AlertMessages.getErrorMessage(response.message);
             }
-        } catch (error) {
-            AlertMessages.getErrorMessage('Biometric verification failed');
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message || 'Failed to set vault password');
+        } finally {
+            setIsVerifying(false);
         }
     };
 
@@ -82,6 +91,7 @@ const CredentialVaultPage: React.FC = () => {
         sessionStorage.setItem('vault_unlocked', 'true');
         AlertMessages.getSuccessMessage('Vault Unlocked');
         setPassword('');
+        setConfirmPassword('');
     };
 
     const handleLock = () => {
@@ -107,22 +117,24 @@ const CredentialVaultPage: React.FC = () => {
 
                                 <div className="space-y-1">
                                     <h1 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Sentinel Vault</h1>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Authentication Required</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                                        {isFirstTime ? 'Setup Security Key' : 'Authentication Required'}
+                                    </p>
                                 </div>
 
                                 <div className="p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-500/20 rounded-xl flex items-center gap-2.5 w-full">
                                     <ShieldAlert className="h-4 w-4 text-amber-500 flex-shrink-0" />
                                     <p className="text-[9px] font-bold text-amber-700 dark:text-amber-400 text-left leading-tight">
-                                        Verify identity to access secrets.
+                                        {isFirstTime ? 'Set a strong vault security key. This is separate from your login password.' : 'Verify your separate vault security key to access secrets.'}
                                     </p>
                                 </div>
 
-                                <form onSubmit={handleUnlock} className="w-full space-y-4">
+                                <form onSubmit={isFirstTime ? handleSetPassword : handleUnlock} className="w-full space-y-4">
                                     <div className="relative group">
                                         <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                                         <input
                                             type="password"
-                                            placeholder="Security Token / Password"
+                                            placeholder={isFirstTime ? "Create Vault Security Key" : "Vault Security Key"}
                                             className="w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-[10px] font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-400"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
@@ -130,25 +142,27 @@ const CredentialVaultPage: React.FC = () => {
                                         />
                                     </div>
 
+                                    {isFirstTime && (
+                                        <div className="relative group">
+                                            <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                                            <input
+                                                type="password"
+                                                placeholder="Confirm Security Key"
+                                                className="w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-[10px] font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-emerald-500 transition-all placeholder:text-slate-400"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                            />
+                                        </div>
+                                    )}
+
                                     <div className="flex flex-col gap-2">
                                         <Button
                                             type="submit"
-                                            disabled={isVerifying || !password}
+                                            disabled={isVerifying || !password || (isFirstTime && !confirmPassword)}
                                             className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black uppercase tracking-[0.15em] text-[10px] rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
                                         >
-                                            {isVerifying ? 'Authenticating...' : 'Unlock Vault'}
+                                            {isVerifying ? 'Authenticating...' : isFirstTime ? 'Set and Unlock' : 'Unlock Vault'}
                                         </Button>
-
-                                        {isBiometricSupported && (
-                                            <button
-                                                type="button"
-                                                onClick={handleBiometric}
-                                                className="w-full h-12 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 font-black uppercase tracking-[0.15em] text-[10px] rounded-xl transition-all flex items-center justify-center gap-2"
-                                            >
-                                                <Fingerprint className="h-4 w-4" />
-                                                Use Biometrics
-                                            </button>
-                                        )}
                                     </div>
                                 </form>
 

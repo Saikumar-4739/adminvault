@@ -19,3 +19,4 @@ export * from './contract-status.enum';
 export * from './access-request-enum';
 export * from './threat-gravity.enum';
 export * from './protocol-status.enum';
+export * from './ticket-sub-category.enum';

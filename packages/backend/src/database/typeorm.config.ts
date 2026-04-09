@@ -1,6 +1,10 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleAsyncOptions, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+const envName = process.env.NODE_ENV === 'production' ? 'live' : 'dev';
+dotenv.config({ path: path.resolve(process.cwd(), `documents/environments/${envName}.env`), override: true });
 
 export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
     inject: [ConfigService],

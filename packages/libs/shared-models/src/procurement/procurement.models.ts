@@ -11,6 +11,8 @@ export class CreatePOModel extends CommonRequestModel {
     timeSpentMinutes?: number;
     approverId?: number;
     invoiceUrl?: string;
+    currency?: string;
+    vendorName?: string;
 
     constructor(
         username: string,
@@ -24,7 +26,9 @@ export class CreatePOModel extends CommonRequestModel {
         notes?: string,
         timeSpentMinutes?: number,
         approverId?: number,
-        invoiceUrl?: string
+        invoiceUrl?: string,
+        currency?: string,
+        vendorName?: string
     ) {
         super(username, userId, ipAddress, companyId);
         this.vendorId = vendorId;
@@ -35,6 +39,8 @@ export class CreatePOModel extends CommonRequestModel {
         this.timeSpentMinutes = timeSpentMinutes;
         this.approverId = approverId;
         this.invoiceUrl = invoiceUrl;
+        this.currency = currency || 'USD';
+        this.vendorName = vendorName;
     }
 }
 
@@ -79,8 +85,10 @@ export class UpdatePOModel extends CreatePOModel {
         timeSpentMinutes?: number,
         approverId?: number,
         invoiceUrl?: string,
+        currency?: string,
+        vendorName?: string,
     ) {
-        super(username, userId, ipAddress, companyId, vendorId, orderDate, items, expectedDeliveryDate, notes, timeSpentMinutes, approverId, invoiceUrl);
+        super(username, userId, ipAddress, companyId, vendorId, orderDate, items, expectedDeliveryDate, notes, timeSpentMinutes, approverId, invoiceUrl, currency, vendorName);
         this.id = id;
     }
 }
@@ -133,6 +141,7 @@ export class PurchaseOrderModel {
     approverName?: string;
     companyName?: string;
     invoiceUrl?: string;
+    currency?: string;
 
     constructor(
         id: number,
@@ -152,7 +161,8 @@ export class PurchaseOrderModel {
         approverId?: number,
         approverName?: string,
         companyName?: string,
-        invoiceUrl?: string
+        invoiceUrl?: string,
+        currency?: string
     ) {
         this.id = id;
         this.poNumber = poNumber;
@@ -172,6 +182,7 @@ export class PurchaseOrderModel {
         this.approverName = approverName;
         this.companyName = companyName;
         this.invoiceUrl = invoiceUrl;
+        this.currency = currency || 'USD';
     }
 }
 

@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import * as path from 'path';
+import * as fs from 'fs';
 import { DataSource } from 'typeorm';
 import { TicketsRepository } from './repositories/tickets.repository';
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
@@ -16,6 +18,8 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 
 @Injectable()
 export class TicketsService {
+    private readonly uploadPath = path.resolve(__dirname, '../../../../../../uploads/tickets');
+
     constructor(
         private dataSource: DataSource,
         private ticketsRepo: TicketsRepository,
@@ -25,7 +29,46 @@ export class TicketsService {
         private gateway: TicketsGateway,
         private emailInfoService: EmailInfoService,
         private auditLogService: AuditLogService
-    ) { }
+    ) {
+        if (!fs.existsSync(this.uploadPath)) {
+            fs.mkdirSync(this.uploadPath, { recursive: true });
+        }
+    }
+
+    async uploadAttachment(file: Express.Multer.File, userId: number): Promise<GlobalResponse> {
+        try {
+            if (!file) {
+                throw new ErrorResponse(400, 'No file uploaded');
+            }
+
+            const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+            const fileName = `${Date.now()}-${sanitizedOriginalName}`;
+            const filePath = path.join(this.uploadPath, fileName);
+
+            // Save file to disk
+            fs.writeFileSync(filePath, file.buffer);
+
+            const fileUrl = `/uploads/tickets/${fileName}`; // Assuming a static file server or similar routing
+
+            return new GlobalResponse(true, 201, 'File uploaded successfully', {
+                name: file.originalname,
+                url: fileUrl,
+                type: file.mimetype,
+                size: file.size,
+                fileName: fileName
+            });
+        } catch (error) {
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to upload attachment');
+        }
+    }
+
+    getAttachment(filename: string): string {
+        const filePath = path.join(this.uploadPath, filename);
+        if (!fs.existsSync(filePath)) {
+            throw new ErrorResponse(404, 'File not found');
+        }
+        return filePath;
+    }
 
     async createTicket(reqModel: CreateTicketModel, userId?: number, userEmail?: string, ipAddress?: string): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
@@ -227,16 +270,34 @@ export class TicketsService {
             if (!reqModel.id) {
                 throw new ErrorResponse(400, 'Ticket ID is required');
             }
-            const ticket = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
+            const ticket: any = await this.ticketsRepo
+                .createQueryBuilder('ticket')
+                .leftJoinAndMapOne('ticket.employee', 'employees', 'emp', 'emp.id = ticket.employeeId')
+                .where('ticket.id = :id', { id: reqModel.id })
+                .getOne();
+
             if (!ticket) {
                 throw new ErrorResponse(404, 'Ticket not found');
             }
 
             const response = new TicketResponseModel(
-                ticket.id, ticket.ticketCode, ticket.employeeId, ticket.categoryEnum, ticket.priorityEnum, ticket.subject, ticket.ticketStatus, ticket.assignAdminId, ticket.expectedCompletionDate, ticket.resolvedAt,
-                undefined, undefined,
-                ticket.createdAt, ticket.updatedAt, ticket.slaDeadline,
-                ticket.timeSpentMinutes
+                ticket.id,
+                ticket.ticketCode,
+                ticket.employeeId,
+                ticket.categoryEnum,
+                ticket.priorityEnum,
+                ticket.subject,
+                ticket.ticketStatus,
+                ticket.assignAdminId,
+                ticket.expectedCompletionDate,
+                ticket.resolvedAt,
+                ticket.employee ? `${ticket.employee.firstName} ${ticket.employee.lastName}` : `User ID: ${ticket.employeeId}`,
+                ticket.employee ? ticket.employee.email : undefined,
+                ticket.createdAt,
+                ticket.updatedAt,
+                ticket.slaDeadline,
+                ticket.timeSpentMinutes,
+                ticket.description
             );
             return new GetTicketByIdModel(true, 200, 'Ticket retrieved successfully', response);
         } catch (error) {

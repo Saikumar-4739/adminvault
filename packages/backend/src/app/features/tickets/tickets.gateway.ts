@@ -80,11 +80,17 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
     }
 
     @SubscribeMessage('sendMessage')
-    async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() data: { ticketId: number; senderId: number; senderType: string; message: string },) {
+    async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() data: { ticketId: number; senderId: number; senderType: string; message: string; attachments?: any[] },) {
         const room = `ticket_${data.ticketId}`;
         // Save message to database
         const messageRepo = this.dataSource.getRepository(TicketMessageEntity);
-        const newMessage = messageRepo.create({ ticketId: data.ticketId, senderId: data.senderId, senderType: data.senderType, message: data.message, });
+        const newMessage = messageRepo.create({
+            ticketId: data.ticketId,
+            senderId: data.senderId,
+            senderType: data.senderType,
+            message: data.message,
+            attachments: data.attachments || null
+        });
         const savedMessage = await messageRepo.save(newMessage);
         // Convert to plain object to ensure clean serialization
         const messageToEmit = {
@@ -93,6 +99,7 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
             senderId: savedMessage.senderId,
             senderType: savedMessage.senderType,
             message: savedMessage.message,
+            attachments: savedMessage.attachments,
             createdAt: savedMessage.createdAt,
             updatedAt: savedMessage.updatedAt
         };

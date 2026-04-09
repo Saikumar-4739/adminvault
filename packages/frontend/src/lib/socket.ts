@@ -6,7 +6,7 @@ import { configVariables } from '@adminvault/shared-services';
 const socketInstances: Record<string, any> = {};
 
 // Use standardized base URL from config
-const baseUrl = configVariables.APP_AVS_SERVICE_URL.replace(/\/api$/, '');
+const baseUrl = configVariables.APP_AVS_SERVICE_URL ? configVariables.APP_AVS_SERVICE_URL.replace(/\/api$/, '') : '';
 
 /**
  * Get or create a socket instance for a specific namespace

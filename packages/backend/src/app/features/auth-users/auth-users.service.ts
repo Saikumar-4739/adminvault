@@ -88,16 +88,12 @@ const DEFAULT_MENUS = [
     }
 ];
 
-const REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY || (() => {
-    if (process.env.NODE_ENV === 'production') {
-        throw new Error('JWT_REFRESH_SECRET_KEY must be set in production environment');
-    }
-    return "d9f8a1ec2d6826db2f24ea9f8a1d9bda26f054de88bb90b63934561f7225ab";
-})();
-
-
 @Injectable()
 export class AuthUsersService {
+    private readonly REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY || (() => {
+        throw new Error('JWT_REFRESH_SECRET_KEY must be set in the environment');
+    })();
+
     constructor(
         private dataSource: DataSource,
         private authUsersRepo: AuthUsersRepository,
@@ -122,13 +118,29 @@ export class AuthUsersService {
             }
 
             // Look up the employees table to find a matching employee by email
-            let employeeId = "";
             const empRecord = await this.dataSource.query(
                 `SELECT id FROM employees WHERE email = $1 AND company_id = $2 AND deleted_at IS NULL LIMIT 1`,
                 [reqModel.email, reqModel.companyId]
             );
-            if (empRecord && empRecord.length > 0) {
-                employeeId = String(empRecord[0].id);
+
+            if (!empRecord || empRecord.length === 0) {
+                // If it's not a site admin/super admin, we must enforce email presence in employees table
+                const isSuperAdmin = reqModel.role === UserRoleEnum.SUPER_ADMIN || reqModel.role === UserRoleEnum.SITE_ADMIN;
+                if (!isSuperAdmin) {
+                    throw new ErrorResponse(0, "Email not found in employee master list. Access denied.")
+                }
+            }
+
+            const employeeId = empRecord && empRecord.length > 0 ? String(empRecord[0].id) : "";
+
+            // Phone Number Validation (10 Digits)
+            if (reqModel.phNumber) {
+                const cleanNumber = reqModel.phNumber.replace(/\D/g, '');
+                if (cleanNumber.length !== 10) {
+                    throw new ErrorResponse(0, "Phone number must be exactly 10 digits")
+                }
+                // Optional: Force a standardized format +91XXXXXXXXXX if requested, 
+                // but for now just ensure 10 digits are present.
             }
 
             await transManager.startTransaction()
@@ -158,7 +170,7 @@ export class AuthUsersService {
     }
 
     private generateRefreshToken(payload: IUserPayload | object): string {
-        return this.jwtService.sign(payload, { secret: REFRESH_SECRET_KEY, expiresIn: '7d' });
+        return this.jwtService.sign(payload, { secret: this.REFRESH_SECRET_KEY, expiresIn: '7d' });
     }
 
     async loginUser(reqModel: LoginUserModel, req?: Request): Promise<LoginResponseModel> {
@@ -206,7 +218,7 @@ export class AuthUsersService {
             // Verify refresh token signature and expiration
             let decoded: any;
             try {
-                decoded = this.jwtService.verify(reqModel.refreshToken, { secret: REFRESH_SECRET_KEY });
+                decoded = this.jwtService.verify(reqModel.refreshToken, { secret: this.REFRESH_SECRET_KEY });
             } catch (err) {
                 throw new ErrorResponse(401, "Invalid or expired refresh token");
             }
@@ -248,6 +260,37 @@ export class AuthUsersService {
                 throw new ErrorResponse(0, "User not found");
             }
             const isMatch = await bcrypt.compare(password, user.passwordHash);
+            return isMatch;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async setVaultPassword(userId: number, password: string): Promise<void> {
+        try {
+            const user = await this.authUsersRepo.findOne({ where: { id: userId } });
+            if (!user) {
+                throw new ErrorResponse(0, "User not found");
+            }
+            user.vaultPasswordHash = await bcrypt.hash(password, 10);
+            await this.authUsersRepo.save(user);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async verifyVaultPassword(userId: number, password: string): Promise<boolean> {
+        try {
+            const user = await this.authUsersRepo.findOne({ where: { id: userId } });
+            if (!user) {
+                throw new ErrorResponse(0, "User not found");
+            }
+            if (!user.vaultPasswordHash) {
+                // If no vault password is set, we return false or maybe check if there's a fallback.
+                // The user said "Need to have another password not a login password".
+                return false;
+            }
+            const isMatch = await bcrypt.compare(password, user.vaultPasswordHash);
             return isMatch;
         } catch (error) {
             throw error;
@@ -336,9 +379,13 @@ export class AuthUsersService {
             if (reqModel.role) updateData.userRole = reqModel.role as any;
             if (reqModel.companyId) updateData.companyId = reqModel.companyId;
 
-            if (Object.keys(updateData).length > 0) {
-                await this.authUsersRepo.update({ id: existingUser.id }, updateData);
+            if (reqModel.phNumber) {
+                const cleanNumber = reqModel.phNumber.replace(/\D/g, '');
+                if (cleanNumber.length !== 10) {
+                    throw new ErrorResponse(0, "Phone number must be exactly 10 digits")
+                }
             }
+            await this.authUsersRepo.update({ id: existingUser.id }, updateData);
 
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "User Updated Successfully");
@@ -494,6 +541,10 @@ export class AuthUsersService {
         const menus = this.getMenusForRole(user.userRole);
         const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
         return new LoginResponseModel(true, 0, "User Logged In via OAuth Successfully", userInfo, accessToken, refreshToken, menus);
+    }
+
+    async getUserById(userId: number): Promise<AuthUsersEntity> {
+        return await this.authUsersRepo.findOne({ where: { id: userId } });
     }
 
     async getMe(userId: number): Promise<LoginResponseModel> {

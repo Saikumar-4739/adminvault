@@ -29,6 +29,9 @@ export class CredentialVaultService {
             newVault.description = reqModel.description || '';
             newVault.password = reqModel.password;
             newVault.owner = reqModel.owner || '';
+            newVault.deviceSerialNumber = reqModel.deviceSerialNumber || '';
+            newVault.ipAddress = reqModel.ipAddress || '';
+            newVault.recoveryEmail = reqModel.recoveryEmail || '';
             newVault.isActive = reqModel.isActive ?? true;
 
             if (reqModel.expireDate) {
@@ -66,6 +69,9 @@ export class CredentialVaultService {
                 password: vault.password,
                 expireDate: vault.expireDate,
                 owner: vault.owner,
+                deviceSerialNumber: vault.deviceSerialNumber,
+                ipAddress: vault.ipAddress,
+                recoveryEmail: vault.recoveryEmail,
                 isActive: vault.isActive,
                 createdBy: vault.userId,
                 createdAt: vault.createdAt,
@@ -94,6 +100,9 @@ export class CredentialVaultService {
             if (reqModel.description !== undefined) updateData.description = reqModel.description;
             if (reqModel.password !== undefined) updateData.password = reqModel.password;
             if (reqModel.owner !== undefined) updateData.owner = reqModel.owner;
+            if (reqModel.deviceSerialNumber !== undefined) updateData.deviceSerialNumber = reqModel.deviceSerialNumber;
+            if (reqModel.ipAddress !== undefined) updateData.ipAddress = reqModel.ipAddress;
+            if (reqModel.recoveryEmail !== undefined) updateData.recoveryEmail = reqModel.recoveryEmail;
             if (reqModel.isActive !== undefined) updateData.isActive = reqModel.isActive;
             if (reqModel.expireDate) updateData.expireDate = new Date(reqModel.expireDate);
 

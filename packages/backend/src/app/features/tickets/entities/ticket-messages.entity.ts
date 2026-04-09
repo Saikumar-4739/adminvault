@@ -14,4 +14,7 @@ export class TicketMessageEntity extends CommonBaseEntity {
 
     @Column('text', { name: 'message', nullable: false })
     message: string;
+
+    @Column('json', { name: 'attachments', nullable: true, comment: 'Array of attachment metadata [{name, url, type, size}]' })
+    attachments: any;
 }

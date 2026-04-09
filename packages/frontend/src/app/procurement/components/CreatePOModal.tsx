@@ -25,7 +25,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
     const [approvers, setApprovers] = useState<any[]>([]);
     const [companies, setCompanies] = useState<any[]>([]);
     const [assetTypes, setAssetTypes] = useState<any[]>([]);
-    const defaultForm = { vendorId: 0, orderDate: new Date().toISOString().split('T')[0], expectedDeliveryDate: '', notes: '', approverId: 0, companyId: user?.companyId || 0, items: [{ itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }] };
+    const defaultForm = { vendorId: 0, vendorName: '', currency: 'USD', orderDate: new Date().toISOString().split('T')[0], expectedDeliveryDate: '', notes: '', approverId: 0, companyId: user?.companyId || 0, items: [{ itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined, assetTypeName: '' }] };
     const [formData, setFormData] = useState<any>(defaultForm);
 
     useEffect(() => {
@@ -39,7 +39,9 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                     notes: initialPO.notes || '',
                     approverId: initialPO.approverId || 0,
                     companyId: initialPO.companyId || user?.companyId || 0,
-                    items: initialPO.items?.length > 0 ? initialPO.items : [{ itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }]
+                    currency: initialPO.currency || 'USD',
+                    vendorName: initialPO.vendorName || '',
+                    items: initialPO.items?.length > 0 ? initialPO.items.map((i: any) => ({ ...i, assetTypeName: i.assetTypeName || '' })) : [{ itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined, assetTypeName: '' }]
                 });
             } else {
                 setFormData(defaultForm);
@@ -67,7 +69,7 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
     };
 
     const addItem = () => {
-        setFormData({ ...formData, items: [...formData.items, { itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined }] });
+        setFormData({ ...formData, items: [...formData.items, { itemName: '', quantity: '', unitPrice: '', assetTypeId: undefined, assetTypeName: '' }] });
     };
 
     const removeItem = (index: number) => {
@@ -88,8 +90,8 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.vendorId === 0) {
-            AlertMessages.getErrorMessage("Please select a vendor");
+        if (formData.vendorId === 0 && !formData.vendorName) {
+            AlertMessages.getErrorMessage("Please select a vendor or specify other");
             return;
         }
 
@@ -104,7 +106,8 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                 i.itemName,
                 Number(i.quantity || 0),
                 Number(i.unitPrice || 0),
-                Number(i.assetTypeId) || undefined
+                Number(i.assetTypeId) || undefined,
+                i.assetTypeName
             ));
 
             const orderDate = new Date(formData.orderDate);
@@ -112,10 +115,10 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
 
             let res;
             if (initialPO) {
-                const model = new UpdatePOModel(initialPO.id, user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined, initialPO.invoiceUrl);
+                const model = new UpdatePOModel(initialPO.id, user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined, initialPO.invoiceUrl, formData.currency, formData.vendorName);
                 res = await procurementService.updatePurchaseOrder(model);
             } else {
-                const model = new CreatePOModel(user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined, undefined);
+                const model = new CreatePOModel(user?.fullName || 'User', user?.id || 0, '', formData.companyId, formData.vendorId, orderDate, items, expectedDeliveryDate, formData.notes, undefined, formData.approverId || undefined, undefined, formData.currency, formData.vendorName);
                 res = await procurementService.createPurchaseOrder(model);
             }
 
@@ -146,7 +149,8 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                     <div className="flex-1 flex items-center px-4">
                         <span className="text-sm font-bold text-slate-500 mr-2">Total Amount:</span>
                         <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">
-                            ${calculateTotal().toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            {formData.currency === 'INR' ? '₹' : '$'}
+                            {calculateTotal().toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </span>
                     </div>
                     <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
@@ -169,16 +173,29 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                         ]}
                     />
 
-                    <Select
-                        label="Vendor"
-                        value={formData.vendorId}
-                        onChange={(e) => setFormData({ ...formData, vendorId: Number(e.target.value) })}
-                        required
-                        options={[
-                            { label: 'Select Vendor', value: 0 },
-                            ...vendors.map(v => ({ label: v.name, value: v.id }))
-                        ]}
-                    />
+                    <div className="space-y-2">
+                        <Select
+                            label="Vendor"
+                            value={formData.vendorId}
+                            onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setFormData({ ...formData, vendorId: val, vendorName: val !== -1 ? '' : formData.vendorName });
+                            }}
+                            required
+                            options={[
+                                { label: 'Select Vendor', value: 0 },
+                                ...vendors.map(v => ({ label: v.name, value: v.id })),
+                                { label: 'Other (Online/Manual)', value: -1 }
+                            ]}
+                        />
+                        {formData.vendorId === -1 && (
+                            <Input
+                                placeholder="Enter Vendor Name / Website"
+                                value={formData.vendorName}
+                                onChange={(e) => setFormData({ ...formData, vendorName: e.target.value })}
+                            />
+                        )}
+                    </div>
 
                     <Input
                         label="Order Date"
@@ -206,6 +223,17 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                             ...approvers.filter(a => a.userId).map(a => ({ label: `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.email, value: Number(a.userId) }))
                         ]}
                     />
+
+                    <Select
+                        label="Currency"
+                        value={formData.currency}
+                        onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                        required
+                        options={[
+                            { label: 'USD ($)', value: 'USD' },
+                            { label: 'INR (₹)', value: 'INR' }
+                        ]}
+                    />
                 </div>
 
                 <div className="space-y-4">
@@ -231,15 +259,30 @@ export function CreatePOModal({ isOpen, onClose, onSuccess, initialPO }: CreateP
                                     />
                                 </div>
                                 <div className="col-span-12 md:col-span-3">
-                                    <Select
-                                        label="Asset Type"
-                                        value={item.assetTypeId}
-                                        onChange={(e) => updateItem(index, 'assetTypeId', e.target.value)}
-                                        options={[
-                                            { label: 'Select Type', value: 0 },
-                                            ...assetTypes.map(at => ({ label: at.name, value: Number(at.id) }))
-                                        ]}
-                                    />
+                                    <div className="space-y-1">
+                                        <Select
+                                            label="Asset Type"
+                                            value={item.assetTypeId}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                updateItem(index, 'assetTypeId', val);
+                                                if (val !== -1) updateItem(index, 'assetTypeName', '');
+                                            }}
+                                            options={[
+                                                { label: 'Select Type', value: 0 },
+                                                ...assetTypes.map(at => ({ label: at.name, value: Number(at.id) })),
+                                                { label: 'Other', value: -1 }
+                                            ]}
+                                        />
+                                        {item.assetTypeId === -1 && (
+                                            <Input
+                                                placeholder="Specify Type"
+                                                value={item.assetTypeName}
+                                                onChange={(e) => updateItem(index, 'assetTypeName', e.target.value)}
+                                                className="h-8 py-1 text-xs"
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="col-span-5 md:col-span-2">
                                     <Input

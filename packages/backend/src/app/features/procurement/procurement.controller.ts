@@ -69,4 +69,14 @@ export class ProcurementController {
             return returnException(GlobalResponse, error);
         }
     }
+
+    @Post('deletePurchaseOrder')
+    @ApiBody({ type: GetPORequestModel })
+    async deletePurchaseOrder(@Body() reqModel: GetPORequestModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.deletePurchaseOrder(reqModel.id);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
 }

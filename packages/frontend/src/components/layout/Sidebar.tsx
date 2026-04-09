@@ -172,7 +172,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
             <div className={`h-16 flex items-center px-6 border-b border-slate-900`}>
                 <div className="flex items-center gap-3 w-full">
                     <div className="w-8 h-8 flex items-center justify-center text-white shrink-0 overflow-hidden">
-                        <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
+                        <img src="/logo.jpeg" alt="Logo" className="h-8 w-8 object-contain" />
                     </div>
                     <h1 className="text-lg font-black text-white tracking-tight flex-1">
                         BOS Vault

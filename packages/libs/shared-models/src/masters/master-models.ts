@@ -738,6 +738,9 @@ export class CredentialVaultModel {
     password!: string;
     expireDate?: Date | string;
     owner!: string;
+    deviceSerialNumber?: string;
+    ipAddress?: string;
+    recoveryEmail?: string;
     isActive?: boolean;
     createdBy!: number;
     updatedBy?: number;
@@ -753,6 +756,9 @@ export class CreateCredentialVaultModel {
     password!: string;
     expireDate?: Date | string;
     owner!: string;
+    deviceSerialNumber?: string;
+    ipAddress?: string;
+    recoveryEmail?: string;
     isActive?: boolean;
 
     constructor(
@@ -763,7 +769,10 @@ export class CreateCredentialVaultModel {
         password?: string,
         expireDate?: Date | string,
         owner?: string,
-        isActive?: boolean
+        isActive?: boolean,
+        deviceSerialNumber?: string,
+        ipAddress?: string,
+        recoveryEmail?: string
     ) {
         this.createdBy = createdBy;
         this.companyId = companyId;
@@ -773,6 +782,9 @@ export class CreateCredentialVaultModel {
         this.expireDate = expireDate;
         this.owner = owner || '';
         this.isActive = isActive;
+        this.deviceSerialNumber = deviceSerialNumber;
+        this.ipAddress = ipAddress;
+        this.recoveryEmail = recoveryEmail;
     }
 }
 
@@ -783,6 +795,9 @@ export class UpdateCredentialVaultModel {
     password?: string;
     expireDate?: Date | string;
     owner?: string;
+    deviceSerialNumber?: string;
+    ipAddress?: string;
+    recoveryEmail?: string;
     isActive?: boolean;
 
     constructor(
@@ -792,7 +807,10 @@ export class UpdateCredentialVaultModel {
         password?: string,
         expireDate?: Date | string,
         owner?: string,
-        isActive?: boolean
+        isActive?: boolean,
+        deviceSerialNumber?: string,
+        ipAddress?: string,
+        recoveryEmail?: string
     ) {
         this.id = id;
         this.appName = appName;
@@ -801,6 +819,9 @@ export class UpdateCredentialVaultModel {
         this.expireDate = expireDate;
         this.owner = owner;
         this.isActive = isActive;
+        this.deviceSerialNumber = deviceSerialNumber;
+        this.ipAddress = ipAddress;
+        this.recoveryEmail = recoveryEmail;
     }
 }
 

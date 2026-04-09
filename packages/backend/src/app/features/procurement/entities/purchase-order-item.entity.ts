@@ -17,4 +17,7 @@ export class PurchaseOrderItemEntity extends CommonBaseEntity {
 
     @Column('int', { name: 'asset_type_id', nullable: true, comment: 'Links to Asset Type for auto-creation' })
     assetTypeId: number;
+
+    @Column('varchar', { name: 'asset_type_name', length: 255, nullable: true })
+    assetTypeName: string;
 }

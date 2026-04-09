@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, UserPlus, ShieldCheck, Plus, Search, CheckCircle, Clock, Mail, Eye, EyeOff, Trash2, AlertTriangle } from 'lucide-react';
+import { Users, UserPlus, ShieldCheck, Plus, Search, CheckCircle, Clock, Mail, Eye, EyeOff, Trash2, AlertTriangle, Edit2 } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum, IdRequestModel, RegisterUserModel, DeleteUserModel } from '@adminvault/shared-models';
+import { UserRoleEnum, IdRequestModel, RegisterUserModel, DeleteUserModel, UpdateUserModel } from '@adminvault/shared-models';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -73,10 +73,14 @@ export default function UsersManagementPage() {
     const [formData, setFormData] = useState({ ...defaultForm });
     const [submitting, setSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    // When creating user from an access request, track the request id to close it
     const [fromRequestId, setFromRequestId] = useState<number | null>(null);
     const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
     const [deleteTargetUser, setDeleteTargetUser] = useState<UserRow | null>(null);
+
+    // Edit state
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingUserId, setEditingUserId] = useState<number | null>(null);
+    const [countryCode, setCountryCode] = useState('+91');
 
     const fetchUsers = useCallback(async () => {
         if (!user?.companyId) return;
@@ -120,6 +124,8 @@ export default function UsersManagementPage() {
         setFormData({ ...defaultForm });
         setFromRequestId(null);
         setShowPassword(false);
+        setIsEditMode(false);
+        setEditingUserId(null);
         setIsModalOpen(true);
     };
 
@@ -127,6 +133,8 @@ export default function UsersManagementPage() {
         setFormData({ ...defaultForm, fullName: req.name, email: req.email });
         setFromRequestId(req.id);
         setShowPassword(false);
+        setIsEditMode(false);
+        setEditingUserId(null);
         setIsModalOpen(true);
     };
 
@@ -134,6 +142,38 @@ export default function UsersManagementPage() {
         setIsModalOpen(false);
         setFormData({ ...defaultForm });
         setFromRequestId(null);
+        setIsEditMode(false);
+        setEditingUserId(null);
+    };
+
+    const openEditModal = (u: UserRow) => {
+        setIsEditMode(true);
+        setEditingUserId(u.id);
+        const phone = u.phNumber || '';
+        let cleanPhone = phone;
+        if (phone.startsWith('+')) {
+            // Simple logic: if it starts with + and is >10 chars, the first part is country code
+            // But for now, we'll just check if it ends with 10 digits
+            const match = phone.match(/(\+\d+)(\d{10})$/);
+            if (match) {
+                setCountryCode(match[1]);
+                cleanPhone = match[2];
+            } else {
+                // Fallback
+                cleanPhone = phone.replace(/\D/g, '').slice(-10);
+            }
+        } else {
+            cleanPhone = phone.replace(/\D/g, '').slice(-10);
+        }
+
+        setFormData({
+            fullName: u.fullName,
+            email: u.email,
+            password: '',
+            phNumber: cleanPhone,
+            role: u.userRole as UserRoleEnum,
+        });
+        setIsModalOpen(true);
     };
 
     const handleDeleteUser = async (u: UserRow) => {
@@ -160,49 +200,65 @@ export default function UsersManagementPage() {
         }
     };
 
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.password) {
-            AlertMessages.getErrorMessage('Password is required');
-            return;
-        }
-        // Capture fromRequestId before closing modal
         const requestId = fromRequestId;
         setSubmitting(true);
+        const fullPhNumber = `${countryCode}${formData.phNumber.replace(/\D/g, '')}`;
+
         try {
-            const model = new RegisterUserModel(
-                formData.fullName,
-                user?.companyId || 0,
-                formData.email,
-                formData.phNumber,
-                formData.password,
-                formData.role as UserRoleEnum,
-            );
-            const res = await authService.registerUser(model);
-            if (res.status) {
-                // Close modal first so UI updates immediately
-                handleCloseModal();
-                AlertMessages.getSuccessMessage(res.message || 'User created successfully!');
-                fetchUsers();
-                // If we came from an access request, mark it as Completed
-                if (requestId !== null) {
-                    // Optimistic update — show 'Completed' immediately
-                    setAccessRequests(prev =>
-                        prev.map(r => r.id === requestId ? { ...r, status: 'COMPLETED' } : r)
-                    );
-                    // Switch to access-requests tab so status change is visible
-                    setActiveTab('access-requests');
-                    // Also sync with server in background
-                    authService.closeAccessRequest(requestId)
-                        .then(() => fetchAccessRequests())
-                        .catch(() => fetchAccessRequests());
+            if (isEditMode && editingUserId) {
+                const model = new UpdateUserModel(
+                    editingUserId,
+                    formData.fullName,
+                    user?.companyId || 0,
+                    formData.email,
+                    fullPhNumber,
+                    formData.password || undefined,
+                    formData.role as UserRoleEnum
+                );
+                const res = await authService.updateUser(model);
+                if (res.status) {
+                    handleCloseModal();
+                    AlertMessages.getSuccessMessage('User updated successfully!');
+                    fetchUsers();
+                } else {
+                    AlertMessages.getErrorMessage(res.message || 'Failed to update user');
                 }
             } else {
-                AlertMessages.getErrorMessage(res.message || 'Failed to create user');
+                if (!formData.password) {
+                    AlertMessages.getErrorMessage('Password is required');
+                    setSubmitting(false);
+                    return;
+                }
+                const model = new RegisterUserModel(
+                    formData.fullName,
+                    user?.companyId || 0,
+                    formData.email,
+                    fullPhNumber,
+                    formData.password,
+                    formData.role as UserRoleEnum,
+                );
+                const res = await authService.registerUser(model);
+                if (res.status) {
+                    handleCloseModal();
+                    AlertMessages.getSuccessMessage(res.message || 'User created successfully!');
+                    fetchUsers();
+                    if (requestId !== null) {
+                        setAccessRequests(prev =>
+                            prev.map(r => r.id === requestId ? { ...r, status: 'COMPLETED' } : r)
+                        );
+                        setActiveTab('access-requests');
+                        authService.closeAccessRequest(requestId)
+                            .then(() => fetchAccessRequests())
+                            .catch(() => fetchAccessRequests());
+                    }
+                } else {
+                    AlertMessages.getErrorMessage(res.message || 'Failed to create user');
+                }
             }
         } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'Failed to create user');
+            AlertMessages.getErrorMessage(err.message || 'Failed to process request');
         } finally {
             setSubmitting(false);
         }
@@ -359,16 +415,25 @@ export default function UsersManagementPage() {
                                                     {formatDate(u.createdAt)}
                                                 </td>
                                                 <td className="px-4 py-2.5 text-right">
-                                                    <button
-                                                        onClick={() => handleDeleteUser(u)}
-                                                        disabled={deletingUserId === u.id}
-                                                        title="Delete user"
-                                                        className="inline-flex items-center justify-center w-6 h-6 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
-                                                    >
-                                                        {deletingUserId === u.id
-                                                            ? <span className="animate-spin rounded-full h-3 w-3 border-2 border-red-400 border-t-transparent" />
-                                                            : <Trash2 className="h-3.5 w-3.5" />}
-                                                    </button>
+                                                    <div className="flex justify-end gap-1">
+                                                        <button
+                                                            onClick={() => openEditModal(u)}
+                                                            title="Edit user"
+                                                            className="inline-flex items-center justify-center w-6 h-6 rounded-md text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                                                        >
+                                                            <Edit2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteUser(u)}
+                                                            disabled={deletingUserId === u.id}
+                                                            title="Delete user"
+                                                            className="inline-flex items-center justify-center w-6 h-6 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
+                                                        >
+                                                            {deletingUserId === u.id
+                                                                ? <span className="animate-spin rounded-full h-3 w-3 border-2 border-red-400 border-t-transparent" />
+                                                                : <Trash2 className="h-3.5 w-3.5" />}
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -414,94 +479,79 @@ export default function UsersManagementPage() {
                                     <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-full mb-3">
                                         <ShieldCheck className="h-6 w-6 text-slate-300" />
                                     </div>
-                                    <p className="text-sm font-semibold text-slate-700 dark:text-white">No access requests</p>
-                                    <p className="text-xs text-slate-400 mt-1">Requests submitted via the login page will appear here</p>
+                                    <p className="text-sm font-semibold text-slate-700 dark:text-white">No requests found</p>
                                 </div>
                             ) : (
-                                <table className="w-full text-left">
-                                    <thead className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-100 dark:border-slate-700">
-                                        <tr>
-                                            <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Requester</th>
-                                            <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Email</th>
-                                            <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Reason</th>
-                                            <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Date</th>
-                                            <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                                            <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                                        {filteredRequests.map(req => (
-                                            <tr key={req.id} className="group hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className="w-7 h-7 rounded-md bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                                                            {getInitials(req.name)}
-                                                        </div>
-                                                        <span className="text-xs font-semibold text-slate-800 dark:text-white">{req.name}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3 hidden md:table-cell">
-                                                    <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                                                        <Mail className="h-3 w-3 opacity-60" />
-                                                        {req.email}
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3 hidden lg:table-cell">
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[200px] truncate">
-                                                        {req.description || '—'}
-                                                    </p>
-                                                </td>
-                                                <td className="px-4 py-3 hidden sm:table-cell text-xs text-slate-400">
-                                                    {formatDate(req.createdAt)}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    {req.status?.toUpperCase() === 'COMPLETED' ? (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
-                                                            <CheckCircle className="h-2.5 w-2.5" />
-                                                            Completed
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
-                                                            <Clock className="h-2.5 w-2.5" />
-                                                            Pending
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <button
-                                                        onClick={() => openCreateFromRequest(req)}
-                                                        disabled={req.status?.toUpperCase() === 'COMPLETED'}
-                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-indigo-50 dark:disabled:hover:bg-indigo-900/20"
-                                                    >
-                                                        <UserPlus className="h-3 w-3" />
-                                                        Create User
-                                                    </button>
-                                                </td>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-100 dark:border-slate-700">
+                                            <tr>
+                                                <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Name</th>
+                                                <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Email</th>
+                                                <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                                                <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Requested On</th>
+                                                <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                                            {filteredRequests.map(r => (
+                                                <tr key={r.id} className="group hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                                                    <td className="px-4 py-2.5">
+                                                        <span className="text-xs font-semibold text-slate-800 dark:text-white">{r.name}</span>
+                                                    </td>
+                                                    <td className="px-4 py-2.5 hidden md:table-cell">
+                                                        <span className="text-xs text-slate-500 dark:text-slate-400">{r.email}</span>
+                                                    </td>
+                                                    <td className="px-4 py-2.5">
+                                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${r.status?.toUpperCase() === 'COMPLETED'
+                                                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
+                                                            : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+                                                            }`}>
+                                                            {r.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-2.5 hidden lg:table-cell text-xs text-slate-400">
+                                                        {formatDate(r.createdAt)}
+                                                    </td>
+                                                    <td className="px-4 py-2.5 text-right">
+                                                        {r.status?.toUpperCase() !== 'COMPLETED' && (
+                                                            <button
+                                                                onClick={() => openCreateFromRequest(r)}
+                                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+                                                            >
+                                                                <UserPlus className="h-3 w-3" />
+                                                                Approve
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
                         </div>
                     )}
                 </div>
 
-                {/* ── Create / Register User Modal ── */}
+                {/* ── Add/Edit User Modal ── */}
                 <Modal
                     isOpen={isModalOpen}
                     onClose={handleCloseModal}
-                    title={fromRequestId ? 'Register User from Access Request' : 'Create Login User'}
+                    title={isEditMode ? 'Edit User' : (fromRequestId ? 'Register User from Access Request' : 'Create Login User')}
                     size="sm"
                 >
                     {fromRequestId && (
-                        <div className="mb-3 flex items-start gap-1.5 px-2.5 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/40">
-                            <ShieldCheck className="h-3.5 w-3.5 text-indigo-500 shrink-0 mt-0.5" />
-                            <p className="text-[11px] text-indigo-700 dark:text-indigo-300">
-                                Pre-filled from access request. Set a password — request will be marked as <strong>Completed</strong>.
-                            </p>
+                        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex items-start gap-2.5">
+                            <Clock className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                            <div>
+                                <p className="text-[11px] font-semibold text-blue-800 dark:text-blue-300">Approving Request</p>
+                                <p className="text-[10px] text-blue-600 dark:text-blue-400">Creating login credentials for this request will automatically notify the user.</p>
+                            </div>
                         </div>
                     )}
-                    <form onSubmit={handleSubmit} className="space-y-2.5">
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <Input
                             label="Full Name"
                             value={formData.fullName}
@@ -515,39 +565,57 @@ export default function UsersManagementPage() {
                             value={formData.email}
                             onChange={e => setFormData({ ...formData, email: e.target.value })}
                             required
-                            disabled={submitting}
+                            disabled={submitting || isEditMode}
                         />
                         {/* Password with show/hide toggle */}
                         <div>
                             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                                Password <span className="text-red-500">*</span>
+                                Password {!isEditMode && <span className="text-red-500">*</span>}
                             </label>
                             <div className="relative">
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={formData.password}
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                    required
+                                    required={!isEditMode}
                                     disabled={submitting}
-                                    placeholder="Set a strong password"
+                                    placeholder={isEditMode ? "Leave blank to keep current" : "Set a strong password"}
                                     className="w-full px-2.5 py-1.5 pr-8 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all disabled:opacity-50"
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword(p => !p)}
-                                    className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                 </button>
                             </div>
                         </div>
-                        <Input
-                            label="Phone Number"
-                            type="tel"
-                            value={formData.phNumber}
-                            onChange={e => setFormData({ ...formData, phNumber: e.target.value.replace(/[^0-9+\-\s]/g, '') })}
-                            disabled={submitting}
-                        />
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                Phone Number <span className="text-red-500">*</span>
+                            </label>
+                            <div className="flex gap-2">
+                                <select
+                                    value={countryCode}
+                                    onChange={e => setCountryCode(e.target.value)}
+                                    className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                >
+                                    <option value="+91">+91 (IN)</option>
+                                    <option value="+1">+1 (US)</option>
+                                    <option value="+44">+44 (UK)</option>
+                                    <option value="+971">+971 (UAE)</option>
+                                </select>
+                                <input
+                                    type="tel"
+                                    value={formData.phNumber}
+                                    onChange={e => setFormData({ ...formData, phNumber: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                    required
+                                    placeholder="10 digit number"
+                                    className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                />
+                            </div>
+                        </div>
                         <Select
                             label="Role"
                             value={formData.role}
@@ -563,9 +631,9 @@ export default function UsersManagementPage() {
                                 {submitting ? (
                                     <span className="flex items-center gap-1.5">
                                         <span className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
-                                        Creating...
+                                        {isEditMode ? 'Updating...' : 'Creating...'}
                                     </span>
-                                ) : 'Create User'}
+                                ) : (isEditMode ? 'Update User' : 'Create User')}
                             </Button>
                         </div>
                     </form>

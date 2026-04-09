@@ -6,14 +6,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getSocket } from '@/lib/socket';
 import { ticketService } from '@/lib/api/services';
 import { TicketStatusEnum } from '@adminvault/shared-models';
-import { MessageSquare, Send, User, Bot, Ticket, PlusCircle, Lock, Globe } from 'lucide-react';
+import { configVariables } from '@adminvault/shared-services';
+import { Bot, PlusCircle, Lock, ArrowLeft, Send, Eye, FileText } from 'lucide-react';
 
 interface Message {
     id: number;
     senderId: number;
     senderType: 'user' | 'support';
+    sender?: {
+        firstName: string;
+    };
     message: string;
     commentType?: 'public' | 'internal';
+    attachments?: any[];
     createdAt: string;
 }
 
@@ -25,9 +30,10 @@ const SupportChatPage: React.FC = () => {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputMessage, setInputMessage] = useState('');
-    const [commentType, setCommentType] = useState<'public' | 'internal'>('public');
     const [ticket, setTicket] = useState<any>(null);
+    const [isUploading, setIsUploading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!ticketId) return;
@@ -36,7 +42,7 @@ const SupportChatPage: React.FC = () => {
             try {
                 const response = await ticketService.getTicket({ id: Number(ticketId) });
                 if (response.status) {
-                    setTicket(response.data);
+                    setTicket(response.ticket);
                 }
             } catch (error) {
                 console.error('Error fetching ticket:', error);
@@ -46,48 +52,25 @@ const SupportChatPage: React.FC = () => {
         fetchTicket();
 
         const socket = getSocket('/tickets');
-        console.log(`[SupportChat] Connecting to ticket room: ${ticketId}`);
-
-        const handleJoin = () => {
-            console.log(`[SupportChat] Joining room ticket_${ticketId}`);
-            socket.emit('joinTicket', { ticketId: Number(ticketId) });
-        };
-
-        const handleHistory = (history: Message[]) => {
-            console.log(`[SupportChat] Received ${history.length} previous messages`);
-            setMessages(history);
-        };
-
+        const handleJoin = () => socket.emit('joinTicket', { ticketId: Number(ticketId) });
+        const handleHistory = (history: Message[]) => setMessages(history);
         const handleNewMessage = (message: Message) => {
-            console.log(`[SupportChat] Received new message from ${message.senderType}:`, message.message);
             setMessages((prev) => {
-                // Check if message already exists (prevent duplicates if history/live lists overlap)
-                if (prev.some(m => String(m.id) === String(message.id))) {
-                    console.log(`[SupportChat] Skipping duplicate message id: ${message.id}`);
-                    return prev;
-                }
+                if (prev.some(m => String(m.id) === String(message.id))) return prev;
                 return [...prev, message];
             });
         };
-
         const handleStatusUpdate = (updatedTicket: any) => {
-            if (String(updatedTicket.id) === String(ticketId)) {
-                setTicket(updatedTicket);
-            }
+            if (String(updatedTicket.id) === String(ticketId)) setTicket(updatedTicket);
         };
 
-        // If already connected, join now. Otherwise the 'connect' listener will handle it.
-        if (socket.connected) {
-            handleJoin();
-        }
-
+        if (socket.connected) handleJoin();
         socket.on('connect', handleJoin);
         socket.on('previousMessages', handleHistory);
         socket.on('newMessage', handleNewMessage);
         socket.on('ticketUpdated', handleStatusUpdate);
 
         return () => {
-            console.log(`[SupportChat] Cleaning up listeners for ticket: ${ticketId}`);
             socket.off('connect', handleJoin);
             socket.off('previousMessages', handleHistory);
             socket.off('newMessage', handleNewMessage);
@@ -101,221 +84,320 @@ const SupportChatPage: React.FC = () => {
         }
     }, [messages]);
 
-    const handleSendMessage = () => {
-        if (!inputMessage.trim() || !ticketId || !user) {
-            console.warn('[SupportChat] Cannot send: missing data', { ticketId, user, hasInput: !!inputMessage.trim() });
-            return;
-        }
+    const handleSendMessage = (attachments?: any[]) => {
+        if ((!inputMessage.trim() && (!attachments || attachments.length === 0)) || !ticketId || !user) return;
 
         const socket = getSocket('/tickets');
-
-        // Determine sender type more robustly
         const isAdmin = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'super_admin';
         const senderType = isAdmin ? 'support' : 'user';
 
-        console.log(`[SupportChat] Emitting sendMessage for ticket ${ticketId}`);
         socket.emit('sendMessage', {
             ticketId: Number(ticketId),
             senderId: user.id,
             senderType: senderType,
             message: inputMessage,
-            commentType: commentType,
+            attachments: attachments
         });
 
         setInputMessage('');
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !ticketId) return;
+
+        setIsUploading(true);
+        try {
+            const result = await ticketService.uploadAttachment(file);
+            if (result.status) {
+                handleSendMessage([result.data]);
+            }
+        } catch (error) {
+            console.error('Upload failed:', error);
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     const isClosed = ticket?.ticketStatus === TicketStatusEnum.CLOSED || ticket?.ticketStatus === TicketStatusEnum.RESOLVED;
 
     const getStatusColor = (status: TicketStatusEnum) => {
         switch (status) {
-            case TicketStatusEnum.OPEN:
-                return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800';
-            case TicketStatusEnum.IN_PROGRESS:
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-            case TicketStatusEnum.RESOLVED:
-                return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800';
-            case TicketStatusEnum.CLOSED:
-                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800';
-            default:
-                return 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300 border-slate-200 dark:border-slate-800';
+            case TicketStatusEnum.OPEN: return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+            case TicketStatusEnum.IN_PROGRESS: return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+            case TicketStatusEnum.RESOLVED: return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
+            case TicketStatusEnum.CLOSED: return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+            default: return 'bg-slate-100 text-slate-700';
         }
     };
 
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800">
-            {/* Header */}
-            <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                            <MessageSquare className="h-4 w-4 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">Support Architecture</h1>
-                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-0.5">Live Diagnostic Stream</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
-                            <Ticket className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-tight">
-                                ID: #{ticketId?.slice(0, 8) || ticketId}
-                            </span>
-                        </div>
-                        {ticket?.ticketStatus && (
-                            <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border ${getStatusColor(ticket.ticketStatus)}`}>
-                                {ticket.ticketStatus.replace('_', ' ')}
-                            </span>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Messages Container */}
-            <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-slate-50/30 dark:bg-slate-950/30"
-            >
-                {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-2">
-                        <Bot className="h-12 w-12 opacity-20" />
-                        <p className="text-sm font-medium uppercase tracking-wide">No messages yet</p>
-                    </div>
-                ) : (
-                    messages.map((message) => {
-                        const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'super_admin';
-                        const currentSenderType = isAdmin ? 'support' : 'user';
-                        const isMine = message.senderType === currentSenderType;
-
-                        return (
-                            <div
-                                key={message.id}
-                                className={`flex items-start gap-3 ${isMine ? 'flex-row-reverse' : ''}`}
-                            >
-                                {/* Avatar */}
-                                <div
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isMine
-                                        ? 'bg-indigo-600 shadow-lg shadow-indigo-900/20'
-                                        : 'bg-gradient-to-tr from-violet-600 to-purple-600 shadow-lg shadow-purple-900/20'
-                                        }`}
-                                >
-                                    {message.senderType === 'user' ? (
-                                        <User className="h-4 w-4 text-white" />
-                                    ) : (
-                                        <Bot className="h-4 w-4 text-white" />
-                                    )}
-                                </div>
-
-                                {/* Message Bubble */}
-                                <div
-                                    className={`max-w-md flex flex-col ${isMine ? 'items-end' : 'items-start'}`}
-                                >
-                                    <div
-                                        className={`px-4 py-2.5 rounded-2xl shadow-sm ${isMine
-                                            ? commentType === 'internal' && message.commentType === 'internal'
-                                                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white'
-                                                : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white'
-                                            : message.commentType === 'internal'
-                                                ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-100 border border-amber-200 dark:border-amber-700'
-                                                : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
-                                            }`}
-                                    >
-                                        {message.commentType === 'internal' && (
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <Lock className="h-2.5 w-2.5 opacity-70" />
-                                                <span className="text-[9px] font-bold uppercase tracking-widest opacity-70">Internal Note</span>
-                                            </div>
-                                        )}
-                                        <p className="text-sm leading-relaxed">{message.message}</p>
+        <div className="px-4 pt-1 pb-12 bg-transparent h-[calc(100vh-80px)] overflow-hidden transition-colors duration-500">
+            <div className="flex h-full bg-white dark:bg-slate-900 overflow-hidden border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl">
+                {/* Main Chat Area (70%) */}
+                <div className="flex-1 flex flex-col min-w-0 bg-transparent border-r border-slate-200 dark:border-slate-800 shadow-sm relative z-10 transition-all duration-300">
+                    {/* Header - More Compact */}
+                    <div className="h-12 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between bg-white dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20">
+                        <div className="flex items-center gap-3">
+                            <div className="min-w-0">
+                                {ticket ? (
+                                    <>
+                                        <h1 className="text-sm md:text-base font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[250px] md:max-w-xl">
+                                            {ticket.subject}
+                                        </h1>
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 tracking-wider">
+                                                {ticket.ticketCode}
+                                            </span>
+                                            <span className="w-0.5 h-0.5 rounded-full bg-slate-300"></span>
+                                            <span className="text-[10px] font-medium text-slate-400 truncate">Activity Stream</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="space-y-1.5">
+                                        <div className="h-4 w-32 md:w-64 bg-slate-100 dark:bg-slate-800 animate-pulse rounded" />
+                                        <div className="h-2 w-16 bg-slate-100 dark:bg-slate-800 animate-pulse rounded" />
                                     </div>
-                                    <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1.5 px-2">
-                                        {new Date(message.createdAt).toLocaleTimeString([], {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        })}
-                                    </p>
-                                </div>
+                                )}
                             </div>
-                        );
-                    })
-                )}
-            </div>
-
-            {/* Input Area / Status Indicator */}
-            <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-3">
-                {isClosed ? (
-                    <div className="flex flex-col items-center justify-center py-6 space-y-4 max-w-5xl mx-auto text-center">
-                        <div className="bg-rose-50 dark:bg-rose-900/20 px-4 py-2 rounded-lg border border-rose-100 dark:border-rose-800/50">
-                            <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wide">
-                                SESSION TERMINATED: ARCHIVE ONLY
-                            </p>
                         </div>
+
                         <button
-                            onClick={() => router.push('/create-ticket')}
-                            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
+                            onClick={() => router.push('/tickets')}
+                            className="group flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 shadow-sm"
                         >
-                            <PlusCircle className="h-4 w-4" />
-                            Initialize New Protocol
+                            <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
+                            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Back to Tickets</span>
                         </button>
                     </div>
-                ) : (
-                    <div className="flex flex-col gap-2 max-w-5xl mx-auto w-full">
-                        {/* Comment type toggle */}
-                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 self-start">
+
+                    {/* Messages Stream - Jira-Style */}
+                    <div
+                        ref={scrollRef}
+                        className="flex-1 overflow-y-auto p-4 space-y-8 bg-white dark:bg-slate-900 select-text custom-scrollbar transition-colors duration-500"
+                    >
+                        {isClosed && (
+                            <div className="mb-4 p-3 bg-rose-50 border border-rose-100 rounded-lg flex items-center gap-3">
+                                <Lock size={16} className="text-rose-500" />
+                                <span className="text-xs font-bold text-rose-600">This ticket is closed</span>
+                            </div>
+                        )}
+                        {messages.length === 0 ? (
+                            <div className="flex-1 flex flex-col items-center justify-center opacity-40">
+                                <Bot size={48} className="mb-2 text-slate-400" />
+                                <p className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">No messages yet</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                                {messages.map((message) => {
+                                    const isMe = message.senderId === user?.id;
+                                    const isInternal = message.commentType === 'internal';
+
+                                    return (
+                                        <div
+                                            key={message.id}
+                                            className={`py-4 first:pt-0 last:pb-0 flex gap-4 ${isInternal ? 'bg-amber-50/30 dark:bg-amber-900/10 -mx-4 px-4' : ''}`}
+                                        >
+                                            {/* Avatar/Icon Column */}
+                                            <div className="flex-shrink-0 pt-1">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isMe ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600'
+                                                    }`}>
+                                                    <span className="text-xs font-bold uppercase">
+                                                        {(message.sender?.firstName?.[0] || message.senderType?.[0] || 'U')}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Content Column */}
+                                            <div className="flex-1 min-w-0">
+                                                {/* Meta Header */}
+                                                <div className="flex items-center gap-2 mb-1.5 wrap">
+                                                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                                                        {message.sender?.firstName || (message.senderType === 'support' ? 'Support' : 'Reporter')}
+                                                    </span>
+                                                    {isInternal && (
+                                                        <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1">
+                                                            <Lock size={8} />
+                                                            Internal
+                                                        </span>
+                                                    )}
+                                                    <span className="text-xs text-slate-400">
+                                                        {new Date(message.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                                    </span>
+                                                </div>
+
+                                                {/* Text Content */}
+                                                <div className="text-[13.5px] leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap break-words">
+                                                    {message.message}
+                                                </div>
+
+                                                {/* Attachments */}
+                                                {message.attachments && message.attachments.length > 0 && (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-4">
+                                                        {message.attachments.map((file, idx) => {
+                                                            const attachmentUrl = `${configVariables.APP_AVS_SERVICE_URL}/tickets/attachment/${file.fileName || file.url?.split('/').pop()}`;
+                                                            return (
+                                                                <a
+                                                                    key={idx}
+                                                                    href={attachmentUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="flex items-center gap-3 p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/10 transition-all cursor-pointer group/file"
+                                                                >
+                                                                    <div className="w-10 h-10 rounded border border-slate-100 dark:border-slate-700 overflow-hidden flex-shrink-0">
+                                                                        {file.type.startsWith('image/') ? (
+                                                                            <img src={attachmentUrl} alt="" className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            <div className="w-full h-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover/file:text-blue-500">
+                                                                                <FileText size={20} />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <p className="text-[11px] font-bold truncate text-slate-700 dark:text-slate-200 group-hover/file:text-blue-600">{file.name}</p>
+                                                                        <p className="text-[9px] opacity-60">{(file.size / 1024).toFixed(0)}kb</p>
+                                                                    </div>
+                                                                    <Eye size={14} className="text-slate-300 group-hover/file:text-blue-500 mr-1" />
+                                                                </a>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-[#f0f2f5] dark:bg-slate-950 backdrop-blur-xl">
+                        <div className="w-full flex items-end gap-2">
+                            <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col px-3 py-2">
+                                <div className="flex items-end gap-2">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileUpload}
+                                        className="hidden"
+                                        accept="image/*,.pdf"
+                                    />
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isUploading}
+                                        className="p-1 text-slate-400 hover:text-blue-600 transition-colors mb-1"
+                                    >
+                                        <PlusCircle size={20} />
+                                    </button>
+
+                                    <textarea
+                                        value={inputMessage}
+                                        onChange={(e) => setInputMessage(e.target.value)}
+                                        className="flex-1 bg-transparent py-1 text-sm focus:outline-none resize-none max-h-32 min-h-[32px] text-slate-700 dark:text-slate-200"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleSendMessage();
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
                             <button
-                                onClick={() => setCommentType('public')}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${commentType === 'public'
-                                        ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                                    }`}
+                                onClick={() => handleSendMessage()}
+                                disabled={!inputMessage.trim() || isUploading}
+                                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all shadow-md active:scale-90 disabled:opacity-50 bg-[#00a884] text-white"
                             >
-                                <Globe className="h-3 w-3" />
-                                Public Reply
-                            </button>
-                            <button
-                                onClick={() => setCommentType('internal')}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${commentType === 'internal'
-                                        ? 'bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                                    }`}
-                            >
-                                <Lock className="h-3 w-3" />
-                                Internal Note
+                                {isUploading ? (
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <Send size={18} strokeWidth={2.5} className="ml-0.5" />
+                                )}
                             </button>
                         </div>
-                        {/* Input row */}
-                        <div className={`flex items-center gap-2 w-full rounded-xl border-2 transition-colors ${commentType === 'internal'
-                                ? 'border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/10'
-                                : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'
-                            } px-1 py-1`}>
-                            <input
-                                type="text"
-                                value={inputMessage}
-                                onChange={(e) => setInputMessage(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                                placeholder={commentType === 'internal' ? 'Add internal note (only visible to agents)...' : 'Type your reply...'}
-                                className="flex-1 bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 px-3 py-2 focus:outline-none text-sm"
-                            />
-                            <button
-                                onClick={handleSendMessage}
-                                disabled={!inputMessage.trim()}
-                                className={`text-white w-10 h-10 flex items-center justify-center rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0 shadow-md ${commentType === 'internal'
-                                        ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20'
-                                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
-                                    }`}
-                            >
-                                <Send className="h-4 w-4" />
-                            </button>
+                        <p className="w-full mt-2 text-center text-[9px] text-slate-400 font-medium">
+                            Press <span className="text-slate-500 px-1 py-0.5 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">Enter</span> to send
+                        </p>
+                    </div>
+                </div>
+
+                {/* Sidebar Details - Reduced Width & Tighter Padding */}
+                <div className="w-[260px] flex-shrink-0 bg-white dark:bg-slate-900 overflow-y-auto border-l border-slate-200 dark:border-slate-800 hidden lg:flex flex-col">
+                    <div className="p-4 space-y-6">
+                        <section>
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Details</h3>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <span className="text-[11px] font-bold text-slate-500">Status</span>
+                                    <div>
+                                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${getStatusColor(ticket?.ticketStatus)}`}>
+                                            {ticket?.ticketStatus?.replace('_', ' ') || 'OPEN'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <span className="text-[11px] font-bold text-slate-500">Priority</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${ticket?.priorityEnum === 'URGENT' ? 'bg-red-500 animate-pulse' : 'bg-amber-500'}`}></div>
+                                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{ticket?.priorityEnum || 'MEDIUM'}</span>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <span className="text-[11px] font-bold text-slate-500">Category</span>
+                                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">{ticket?.categoryEnum?.replace('_', ' ') || '-'}</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">People</h3>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <span className="text-[11px] font-bold text-slate-500">Assignee</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-5 h-5 rounded bg-emerald-100 flex items-center justify-center text-[9px] font-bold text-emerald-600">SA</div>
+                                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Agent</span>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <span className="text-[11px] font-bold text-slate-500">Reporter</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-5 h-5 rounded bg-indigo-100 flex items-center justify-center text-[9px] font-bold text-indigo-600">
+                                            {ticket?.employeeName?.split(' ').map((n: any) => n[0]).join('') || 'RP'}
+                                        </div>
+                                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate" title={ticket?.employeeEmail}>
+                                            {ticket?.employeeName || 'Reporter'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Dates</h3>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <span className="text-[11px] font-bold text-slate-500">Created</span>
+                                    <span className="text-[11px] font-medium text-slate-500">{new Date(ticket?.createdAt).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div className="mt-auto p-5 border-t border-slate-100 dark:border-slate-800">
+                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Diagnostic Context</p>
+                            <p className="text-[10px] leading-tight text-slate-500 italic">
+                                Stream active. Monitoring node infrastructure.
+                            </p>
                         </div>
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );
 };
-
-
-
 
 export default SupportChatPage;
