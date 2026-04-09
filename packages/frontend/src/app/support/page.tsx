@@ -8,6 +8,7 @@ import { ticketService } from '@/lib/api/services';
 import { TicketStatusEnum } from '@adminvault/shared-models';
 import { configVariables } from '@adminvault/shared-services';
 import { Bot, PlusCircle, Lock, ArrowLeft, Send, Eye, FileText } from 'lucide-react';
+import { UserRoleEnum } from '@adminvault/shared-models';
 
 interface Message {
     id: number;
@@ -88,7 +89,12 @@ const SupportChatPage: React.FC = () => {
         if ((!inputMessage.trim() && (!attachments || attachments.length === 0)) || !ticketId || !user) return;
 
         const socket = getSocket('/tickets');
-        const isAdmin = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'super_admin';
+        const isAdmin = user && (
+            user.role === UserRoleEnum.ADMIN ||
+            user.role === UserRoleEnum.SUPER_ADMIN ||
+            user.role === UserRoleEnum.SUPPORT_ADMIN ||
+            user.role === UserRoleEnum.MANAGER
+        );
         const senderType = isAdmin ? 'support' : 'user';
 
         socket.emit('sendMessage', {
@@ -164,7 +170,15 @@ const SupportChatPage: React.FC = () => {
                         </div>
 
                         <button
-                            onClick={() => router.push('/tickets')}
+                            onClick={() => {
+                                const isAdmin = user && (
+                                    user.role === UserRoleEnum.ADMIN ||
+                                    user.role === UserRoleEnum.SUPER_ADMIN ||
+                                    user.role === UserRoleEnum.SUPPORT_ADMIN ||
+                                    user.role === UserRoleEnum.MANAGER
+                                );
+                                router.push(isAdmin ? '/tickets' : '/create-ticket');
+                            }}
                             className="group flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 shadow-sm"
                         >
                             <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
@@ -214,7 +228,7 @@ const SupportChatPage: React.FC = () => {
                                                 {/* Meta Header */}
                                                 <div className="flex items-center gap-2 mb-1.5 wrap">
                                                     <span className="text-sm font-bold text-slate-900 dark:text-white">
-                                                        {message.sender?.firstName || (message.senderType === 'support' ? 'Support' : 'Reporter')}
+                                                        {isMe ? 'You' : (message.sender?.firstName || (message.senderType === 'support' ? 'Support' : 'Reporter'))}
                                                     </span>
                                                     {isInternal && (
                                                         <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1">

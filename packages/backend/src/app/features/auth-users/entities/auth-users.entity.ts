@@ -2,8 +2,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
 import { UserRoleEnum } from '@adminvault/shared-models';
 
 @Entity('auth_users')
-@Index('idx_auth_email', ['email'])
-@Index('idx_auth_company', ['companyId'])
 export class AuthUsersEntity {
   @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for auth users' })
   id: number;
@@ -14,7 +12,7 @@ export class AuthUsersEntity {
   @Column('bigint', { name: 'company_id', nullable: false, comment: 'Reference to company_info table' })
   companyId: number;
 
-  @Column('varchar', { name: 'employee_id', length: 255, nullable: false, unique: true, comment: 'User employee id' })
+  @Column('varchar', { name: 'employee_id', length: 255, nullable: true, unique: true, comment: 'User employee id' })
   employeeId: string;
 
   @Column('varchar', { name: 'email', length: 255, nullable: false, unique: true, comment: 'User email address' })

@@ -259,8 +259,14 @@ const TicketsPage: React.FC = () => {
             AlertMessages.getSuccessMessage('New ticket received!');
         });
 
+        socket.on('notification', (notif: any) => {
+            fetchTickets();
+            AlertMessages.getSuccessMessage(`New Message: ${notif.title || 'Support'}`);
+        });
+
         return () => {
             socket.off('ticketCreated');
+            socket.off('notification');
         };
     }, [isAdmin, fetchTickets]);
 
@@ -468,6 +474,15 @@ const TicketsPage: React.FC = () => {
         });
     };
 
+    const formatDate = (dateString?: string | Date) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+
     const statusCounts = {
         all: tickets.length,
         open: tickets.filter(t => t.ticketStatus === TicketStatusEnum.OPEN).length,
@@ -476,21 +491,7 @@ const TicketsPage: React.FC = () => {
         closed: tickets.filter(t => t.ticketStatus === TicketStatusEnum.CLOSED).length,
     };
 
-    const getTimeAgo = (dateString?: string) => {
-        if (!dateString) return 'Recently';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
 
-        if (diffHours < 1) return 'Just now';
-        if (diffHours < 24) return `${diffHours}h ago`;
-        if (diffDays === 1) return 'Yesterday';
-        if (diffDays < 7) return `${diffDays}d ago`;
-        if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-        return `${Math.floor(diffDays / 30)}mo ago`;
-    };
 
     const getSLAStatus = (deadline?: string, status?: TicketStatusEnum) => {
         if (!deadline) return null;
@@ -774,7 +775,7 @@ const TicketsPage: React.FC = () => {
                                                     <div className="flex flex-col items-center gap-1.5">
                                                         <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                                                             <Clock className="h-3.5 w-3.5" />
-                                                            {getTimeAgo(ticket.createdAt)}
+                                                            {formatDate(ticket.createdAt)}
                                                         </div>
                                                         {getSLAStatus(ticket.slaDeadline, ticket.ticketStatus) && (
                                                             <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${getSLAStatus(ticket.slaDeadline, ticket.ticketStatus)?.color}`}>

@@ -27,24 +27,10 @@ export class AppWebSocketGateway
     ) { }
 
     /**
-     * Set network service (injected after module initialization)
-     */
-    setNetworkService(networkService: any) {
-        this.networkService = networkService;
-    }
-
-    private networkService: any;
-
-    /**
      * Gateway initialization
      */
     afterInit(server: Server) {
         this.logger.log('WebSocket Gateway initialized');
-
-        // Start broadcasting network metrics every 5 seconds
-        setInterval(() => {
-            this.broadcastNetworkMetrics();
-        }, 5000);
     }
 
     /**
@@ -106,21 +92,6 @@ export class AppWebSocketGateway
                 timestamp: new Date(),
             });
 
-            // Register connection with network service
-            if (this.networkService) {
-                this.networkService.registerConnection({
-                    userId: payload.sub,
-                    username: payload.email.split('@')[0],
-                    email: payload.email,
-                    companyId: payload.companyId,
-                    roleId: payload.roleId,
-                    socketId: client.id,
-                    connectedAt: new Date(),
-                    latency: 0,
-                    status: 'online',
-                });
-            }
-
             // Broadcast connection event
             this.server.emit(WebSocketEvent.CONNECTION_EVENT, {
                 userId: payload.sub,
@@ -159,11 +130,6 @@ export class AppWebSocketGateway
                         timestamp: new Date(),
                     });
                 }
-            }
-
-            // Unregister from network service
-            if (this.networkService) {
-                this.networkService.unregisterConnection(client.id);
             }
 
             // Broadcast disconnection event
@@ -226,13 +192,6 @@ export class AppWebSocketGateway
         @MessageBody() data: { sentAt: number },
         @ConnectedSocket() client: Socket,
     ) {
-        const latency = Date.now() - data.sentAt;
-
-        // Update latency in network service
-        if (this.networkService) {
-            this.networkService.updateLatency(client.id, latency);
-        }
-
         return { event: 'pong', data: { timestamp: new Date(), sentAt: data.sentAt } };
     }
 
@@ -282,29 +241,5 @@ export class AppWebSocketGateway
      */
     getConnectedUsersCount(): number {
         return this.connectedUsers.size;
-    }
-
-    /**
-     * Broadcast network metrics to all connected clients
-     */
-    private async broadcastNetworkMetrics() {
-        if (!this.networkService) return;
-
-        try {
-            const stats = await this.networkService.getNetworkStats();
-
-            // Broadcast to all connected clients
-            this.server.emit(WebSocketEvent.NETWORK_STATS_UPDATE, stats);
-
-            // Also broadcast detailed metrics
-            this.server.emit(WebSocketEvent.NETWORK_METRICS, {
-                timestamp: new Date(),
-                activeConnections: this.connectedUsers.size,
-                latency: stats.averageLatency,
-                throughput: stats.throughput,
-            });
-        } catch (error) {
-            this.logger.error(`Failed to broadcast network metrics: ${error.message}`);
-        }
     }
 }

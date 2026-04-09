@@ -15,6 +15,6 @@ export * from './config';
 export * from './knowledge-base';
 export * from './procurement';
 export * from './contracts';
-export * from './network/network.service';
+export * from './email'
 export * from './security';
 export * from './utils/date-utils';

@@ -11,12 +11,12 @@ import { IdRequestModel, DeleteUserModel, GetAllUsersModel, LoginResponseModel, 
 import { UserRoleEnum } from '@adminvault/shared-models';
 import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
-import { EmailInfoService } from '../administration/email-info.service';
+import { EmailInfoService } from '../email/email-info.service';
 import { ForgotPasswordModel, ResetPasswordModel, RequestAccessModel, SendPasswordResetEmailModel } from '@adminvault/shared-models';
 import { Request } from 'express';
 import { IUserPayload } from '../../interfaces/auth.interface';
 import { ErrorResponse } from '@adminvault/backend-utils';
-import { AccessRequestEntity } from '../administration/entities/access-request.entity';
+import { AccessRequestEntity } from '../email/entities/access-request.entity';
 
 const DEFAULT_MENUS = [
     {
@@ -39,6 +39,7 @@ const DEFAULT_MENUS = [
         children: [
             { key: 'employees', label: 'Employees', icon: 'Contact', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'slack-users', label: 'Slack Users', icon: 'Slack', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SUPPORT_ADMIN, UserRoleEnum.SITE_ADMIN] },
+            { key: 'email-management', label: 'Email System', icon: 'Mail', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
         ]
     },
     {
@@ -50,16 +51,6 @@ const DEFAULT_MENUS = [
             { key: 'assets', label: 'Hardware Assets', icon: 'Monitor', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'licenses', label: 'Software Licenses', icon: 'Key', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'procurement', label: 'Procurement', icon: 'ShoppingCart', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] }
-        ]
-    },
-    {
-        key: 'operations',
-        label: 'Operations',
-        icon: 'Server',
-        roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN],
-        children: [
-            { key: 'emails', label: 'Email Systems', icon: 'Mail', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
-            { key: 'network', label: 'Network Mesh', icon: 'Network', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] }
         ]
     },
     {
@@ -123,26 +114,8 @@ export class AuthUsersService {
                 [reqModel.email, reqModel.companyId]
             );
 
-            if (!empRecord || empRecord.length === 0) {
-                // If it's not a site admin/super admin, we must enforce email presence in employees table
-                const isSuperAdmin = reqModel.role === UserRoleEnum.SUPER_ADMIN || reqModel.role === UserRoleEnum.SITE_ADMIN;
-                if (!isSuperAdmin) {
-                    throw new ErrorResponse(0, "Email not found in employee master list. Access denied.")
-                }
-            }
 
-            const employeeId = empRecord && empRecord.length > 0 ? String(empRecord[0].id) : "";
-
-            // Phone Number Validation (10 Digits)
-            if (reqModel.phNumber) {
-                const cleanNumber = reqModel.phNumber.replace(/\D/g, '');
-                if (cleanNumber.length !== 10) {
-                    throw new ErrorResponse(0, "Phone number must be exactly 10 digits")
-                }
-                // Optional: Force a standardized format +91XXXXXXXXXX if requested, 
-                // but for now just ensure 10 digits are present.
-            }
-
+            const employeeId = empRecord && empRecord.length > 0 ? String(empRecord[0].id) : null;
             await transManager.startTransaction()
             const passwordHash = await bcrypt.hash(reqModel.password, 10)
             const newUser = new AuthUsersEntity()

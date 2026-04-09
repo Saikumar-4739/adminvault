@@ -9,11 +9,12 @@ interface Action {
     onClick: () => void;
     icon?: React.ReactNode;
     variant?: 'primary' | 'outline' | 'ghost';
+    className?: string;
 }
 
 interface PageHeaderProps {
-    title: string;
-    description?: string;
+    title: React.ReactNode;
+    description?: React.ReactNode;
     icon?: React.ReactNode | React.ElementType;
     gradient?: string;
     actions?: Action[] | React.ReactNode;

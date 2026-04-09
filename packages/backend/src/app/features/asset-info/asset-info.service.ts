@@ -9,7 +9,7 @@ import { AssetAssignRepository } from './repositories/asset-assign.repository';
 import { LessThan, IsNull } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { GetAllAssetAssignsModel, GetAssetAssignByIdModel, SendAssetAssignedEmailModel, UserRoleEnum } from '@adminvault/shared-models';
-import { EmailInfoService } from '../administration/email-info.service';
+import { EmailInfoService } from '../email/email-info.service';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { AssetReturnHistoryEntity } from './entities/asset-return-history.entity';

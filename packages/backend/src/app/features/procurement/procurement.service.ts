@@ -13,7 +13,7 @@ import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { CompanyInfoEntity } from '../masters/company-info/entities/company-info.entity';
 import { AssetTypeMasterEntity } from '../masters/asset-type/entities/asset-type.entity';
 import { SendPOApprovalEmailModel } from '@adminvault/shared-models';
-import { EmailInfoService } from '../administration/email-info.service';
+import { EmailInfoService } from '../email/email-info.service';
 import { VendorRepository } from '../masters/vendor/repositories/vendor.repository';
 @Injectable()
 export class ProcurementService {

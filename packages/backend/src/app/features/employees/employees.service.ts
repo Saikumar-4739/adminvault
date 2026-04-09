@@ -7,7 +7,7 @@ import { DepartmentsMasterEntity } from '../masters/department/entities/departme
 import { GenericTransactionManager } from '../../../database/typeorm-transactions';
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, IdRequestModel, CreateEmailInfoModel, EmailTypeEnum, GetAllEmployeesRequestModel, EmployeeStatusEnum } from '@adminvault/shared-models';
-import { EmailInfoService } from '../administration/email-info.service';
+import { EmailInfoService } from '../email/email-info.service';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType, WorkflowType } from '@adminvault/shared-models';

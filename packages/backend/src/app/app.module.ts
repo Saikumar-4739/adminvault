@@ -25,7 +25,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { WebSocketModule } from './features/websocket/websocket.module';
-import { NetworkModule } from './features/network/network.module';
+import { EmailModule } from './features/email/email.module';
 import { SecurityModule } from './features/security/security.module';
 
 
@@ -58,7 +58,7 @@ import { SecurityModule } from './features/security/security.module';
     ContractModule,
     EventEmitterModule.forRoot(),
     WebSocketModule,
-    NetworkModule,
+    EmailModule,
     SecurityModule,
   ],
   controllers: [AppController],

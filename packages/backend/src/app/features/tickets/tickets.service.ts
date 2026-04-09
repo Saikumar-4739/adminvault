@@ -9,7 +9,7 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateTicketModel, UpdateTicketModel, DeleteTicketModel, GetTicketModel, GetAllTicketsModel, GetTicketByIdModel, TicketResponseModel, TicketStatusEnum, TicketPriorityEnum, TicketCategoryEnum, UserRoleEnum, SendTicketCreatedEmailModel, GetTicketStatisticsRequestModel, UpdateTicketStatusRequestModel, AssignTicketRequestModel, AddTicketResponseRequestModel, SendTicketStatusUpdateEmailModel } from '@adminvault/shared-models';
 import { TicketsGateway } from './tickets.gateway';
-import { EmailInfoService } from '../administration/email-info.service';
+import { EmailInfoService } from '../email/email-info.service';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { TicketWorkLogEntity } from './entities/ticket-work-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -297,7 +297,26 @@ export class TicketsService {
                 ticket.updatedAt,
                 ticket.slaDeadline,
                 ticket.timeSpentMinutes,
-                ticket.description
+                ticket.description,
+                ticket.subCategory,
+                ticket.severityEnum,
+                ticket.department,
+                ticket.contactNumber,
+                ticket.location,
+                ticket.contactEmail,
+                ticket.assignedGroup,
+                ticket.slaType,
+                ticket.responseDueTime,
+                ticket.escalationLevel,
+                ticket.adminComments,
+                ticket.userComments,
+                ticket.internalNotes,
+                ticket.rootCause,
+                ticket.resolutionSummary,
+                ticket.resolvedBy,
+                ticket.closureRemarks,
+                ticket.userRating,
+                ticket.userFeedback
             );
             return new GetTicketByIdModel(true, 200, 'Ticket retrieved successfully', response);
         } catch (error) {
@@ -334,7 +353,27 @@ export class TicketsService {
                 t.createdAt,
                 t.updatedAt,
                 t.slaDeadline,
-                t.timeSpentMinutes
+                t.timeSpentMinutes,
+                t.description,
+                t.subCategory,
+                t.severityEnum,
+                t.department,
+                t.contactNumber,
+                t.location,
+                t.contactEmail,
+                t.assignedGroup,
+                t.slaType,
+                t.responseDueTime,
+                t.escalationLevel,
+                t.adminComments,
+                t.userComments,
+                t.internalNotes,
+                t.rootCause,
+                t.resolutionSummary,
+                t.resolvedBy,
+                t.closureRemarks,
+                t.userRating,
+                t.userFeedback
             ));
             return new GetAllTicketsModel(true, 200, 'Tickets retrieved successfully', responses);
         } catch (error) {
@@ -399,7 +438,27 @@ export class TicketsService {
                 t.createdAt,
                 t.updatedAt,
                 t.slaDeadline,
-                t.timeSpentMinutes
+                t.timeSpentMinutes,
+                t.description,
+                t.subCategory,
+                t.severityEnum,
+                t.department,
+                t.contactNumber,
+                t.location,
+                t.contactEmail,
+                t.assignedGroup,
+                t.slaType,
+                t.responseDueTime,
+                t.escalationLevel,
+                t.adminComments,
+                t.userComments,
+                t.internalNotes,
+                t.rootCause,
+                t.resolutionSummary,
+                t.resolvedBy,
+                t.closureRemarks,
+                t.userRating,
+                t.userFeedback
             ));
             return new GetAllTicketsModel(true, 200, 'User tickets retrieved successfully', responses);
         } catch (error) {

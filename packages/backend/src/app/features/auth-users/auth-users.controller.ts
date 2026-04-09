@@ -187,6 +187,7 @@ export class AuthUsersController {
         }
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get('getMe')
     async getMe(@Req() req: any): Promise<LoginResponseModel> {
         try {

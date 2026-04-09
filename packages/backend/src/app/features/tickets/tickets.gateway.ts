@@ -7,9 +7,9 @@ import { TicketMessageEntity } from './entities/ticket-messages.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { NotificationsService } from '../notifications/notifications.service';
-import { NotificationType } from '@adminvault/shared-models';
+import { NotificationType, UserRoleEnum } from '@adminvault/shared-models';
 
-@WebSocketGateway({ cors: { origin: '*', credentials: true }, namespace: 'tickets', transports: ['polling', 'websocket'] })
+@WebSocketGateway({ cors: { origin: process.env.FRONTEND_URL || 'http://localhost:3000', credentials: true }, namespace: 'tickets', transports: ['polling', 'websocket'] })
 @Injectable()
 export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
@@ -76,7 +76,19 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
             order: { createdAt: 'ASC' },
         });
 
-        client.emit('previousMessages', messages);
+        // Attach sender info to each message
+        const messagesWithSender = await Promise.all(messages.map(async (msg) => {
+            const sender = await this.dataSource.getRepository(AuthUsersEntity).findOne({ where: { id: msg.senderId } });
+            return {
+                ...msg,
+                sender: {
+                    firstName: sender ? sender.fullName.split(' ')[0] : (msg.senderType === 'support' ? 'Support' : 'Reporter'),
+                    fullName: sender ? sender.fullName : (msg.senderType === 'support' ? 'Support' : 'Reporter')
+                }
+            };
+        }));
+
+        client.emit('previousMessages', messagesWithSender);
     }
 
     @SubscribeMessage('sendMessage')
@@ -92,6 +104,16 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
             attachments: data.attachments || null
         });
         const savedMessage = await messageRepo.save(newMessage);
+
+        // Fetch sender details
+        let senderName = 'Unknown';
+        if (data.senderType === 'user' || data.senderType === 'support') {
+            const sender = await this.dataSource.getRepository(AuthUsersEntity).findOne({ where: { id: data.senderId } });
+            if (sender) {
+                senderName = sender.fullName;
+            }
+        }
+
         // Convert to plain object to ensure clean serialization
         const messageToEmit = {
             id: savedMessage.id,
@@ -101,16 +123,32 @@ export class TicketsGateway implements OnGatewayConnection, OnGatewayDisconnect 
             message: savedMessage.message,
             attachments: savedMessage.attachments,
             createdAt: savedMessage.createdAt,
-            updatedAt: savedMessage.updatedAt
+            updatedAt: savedMessage.updatedAt,
+            sender: {
+                firstName: senderName.split(' ')[0],
+                fullName: senderName
+            }
         };
 
         this.server.to(room).emit('newMessage', messageToEmit);
         // Also emit a general notification for the recipient
         // If sender is user, notify admins
         if (data.senderType === 'user') {
-            // TODO: Persist for admins if needed. For now, keep as real-time broadcast to admin room 
-            // OR find admins and persist. Let's stick to real-time for broadcast for now, 
-            // but we really should persist. I'll add a TODO or find admin list.
+            // Find all Super Admins to send persistent notifications
+            const superAdmins = await this.dataSource.getRepository(AuthUsersEntity).find({
+                where: { userRole: UserRoleEnum.SUPER_ADMIN }
+            });
+
+            for (const admin of superAdmins) {
+                await this.notificationsService.createNotification(admin.id, {
+                    title: 'New Support Message',
+                    message: `New message from user on ticket #${data.ticketId}: ${data.message.substring(0, 50)}${data.message.length > 50 ? '...' : ''}`,
+                    type: NotificationType.INFO,
+                    category: 'message',
+                    link: `/support?ticketId=${data.ticketId}`
+                });
+            }
+
             this.server.to('admin_room').emit('notification', {
                 id: Date.now().toString(),
                 title: 'New Message',

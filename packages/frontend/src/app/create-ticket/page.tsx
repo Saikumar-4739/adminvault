@@ -162,6 +162,15 @@ const SupportHubPage: React.FC = () => {
         }
     }, []);
 
+    const formatDate = (dateString?: string | Date) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+
     useEffect(() => {
         fetchTickets();
         fetchAdmins();
@@ -423,7 +432,7 @@ const SupportHubPage: React.FC = () => {
                                                     <div className="flex flex-col items-center gap-1.5">
                                                         <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                                                             <Clock className="h-3.5 w-3.5" />
-                                                            {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : 'Just now'}
+                                                            {formatDate(ticket.createdAt)}
                                                         </div>
                                                     </div>
                                                 </td>
