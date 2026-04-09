@@ -142,8 +142,8 @@ const MastersPage: React.FC = () => {
         <RouteGuard requiredRoles={[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN]}>
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50 p-4 lg:p-8 space-y-8 overflow-y-auto">
                 <PageHeader
-                    title="System Configuration"
-                    description="General settings and organization masters"
+                    title="System Masters"
+                    description="Manage master data and system configuration"
                     icon={<Settings2 />}
                     gradient="from-slate-700 to-slate-900"
                 >

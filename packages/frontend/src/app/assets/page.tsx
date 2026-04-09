@@ -10,15 +10,12 @@ import { AllAssetsTab } from './components/AllAssetsTab';
 import dynamic from 'next/dynamic';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { UserRoleEnum } from '@adminvault/shared-models';
-import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
+import { UserRoleEnum, AssetSearchRequestModel, IdRequestModel } from '@adminvault/shared-models';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { assetService, companyService } from '@/lib/api/services';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
-import { AssetSearchRequestModel, IdRequestModel } from '@adminvault/shared-models';
-import { BulkActionBar } from '@/components/common/BulkActionBar';
-import { Trash2 } from 'lucide-react';
+import { DeleteConfirmationModal } from '@/components/ui/DeleteConfirmationModal';
 
 const AssetQRModal = dynamic(() => import('./components/AssetQRModal').then(mod => mod.AssetQRModal), { ssr: false });
 const AssetTimelineModal = dynamic(() => import('./components/AssetTimelineModal').then(mod => mod.AssetTimelineModal), { ssr: false });
@@ -79,7 +76,6 @@ const AssetsPage: React.FC = () => {
     const [statistics, setStatistics] = useState<AssetStatistics | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
-    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
     const fetchCompanies = React.useCallback(async () => {
         try {
@@ -93,7 +89,6 @@ const AssetsPage: React.FC = () => {
     }, []);
 
     const fetchAssets = React.useCallback(async () => {
-        // if (!selectedCompanyId) return; // Allow 0
         setIsLoading(true);
         try {
             const req = new IdRequestModel(selectedCompanyId);
@@ -135,7 +130,6 @@ const AssetsPage: React.FC = () => {
     }, [selectedCompanyId]);
 
     const fetchStatistics = React.useCallback(async () => {
-        // if (!selectedCompanyId) return; // Allow 0
         try {
             const req = new IdRequestModel(selectedCompanyId);
             const response = await assetService.getAssetStatistics(req);
@@ -146,50 +140,6 @@ const AssetsPage: React.FC = () => {
             AlertMessages.getErrorMessage(err.message || 'Failed to fetch statistics');
         }
     }, [selectedCompanyId]);
-
-
-    const handleToggleSelect = (id: number) => {
-        const next = new Set(selectedIds);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        setSelectedIds(next);
-    };
-
-    const handleBulkDelete = async () => {
-        if (!window.confirm(`Are you sure you want to delete ${selectedIds.size} assets?`)) return;
-        try {
-            setIsLoading(true);
-            const ids = Array.from(selectedIds);
-            for (const id of ids) {
-                await assetService.deleteAsset(new IdRequestModel(id));
-            }
-            AlertMessages.getSuccessMessage(`Successfully deleted ${selectedIds.size} assets`);
-            setSelectedIds(new Set());
-            refresh();
-        } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'Failed to perform bulk delete');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleBulkStatusUpdate = async (status: string) => {
-        try {
-            setIsLoading(true);
-            const ids = Array.from(selectedIds);
-            for (const id of ids) {
-                // Assuming updateAsset is available and status is part of it
-                await assetService.updateAsset({ id, assetStatusEnum: status } as any);
-            }
-            AlertMessages.getSuccessMessage(`Successfully updated ${selectedIds.size} assets to ${status}`);
-            setSelectedIds(new Set());
-            refresh();
-        } catch (err: any) {
-            AlertMessages.getErrorMessage(err.message || 'Failed to perform bulk status update');
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
 
     const refresh = React.useCallback(() => {
@@ -211,8 +161,6 @@ const AssetsPage: React.FC = () => {
             setFetchError(null);
         }
     }, [fetchError]);
-
-    // WebSocket listeners for real-time updates
 
     const searchAssets = React.useCallback(async (filters: any) => {
         setIsLoading(true);
@@ -459,8 +407,6 @@ const AssetsPage: React.FC = () => {
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
                                 onView={handleView}
-                                selectedIds={selectedIds}
-                                onToggleSelect={handleToggleSelect}
                             />
                         )}
                         {activeTab === 'assigned' && (
@@ -474,8 +420,6 @@ const AssetsPage: React.FC = () => {
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
                                 onView={handleView}
-                                selectedIds={selectedIds}
-                                onToggleSelect={handleToggleSelect}
                             />
                         )}
                         {activeTab === 'maintenance' && (
@@ -489,8 +433,6 @@ const AssetsPage: React.FC = () => {
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
                                 onView={handleView}
-                                selectedIds={selectedIds}
-                                onToggleSelect={handleToggleSelect}
                             />
                         )}
                         {activeTab === 'not_used' && (
@@ -504,35 +446,11 @@ const AssetsPage: React.FC = () => {
                                 onHistory={handleHistory}
                                 onAssign={handleAssign}
                                 onView={handleView}
-                                selectedIds={selectedIds}
-                                onToggleSelect={handleToggleSelect}
                             />
                         )}
                     </div>
                 </ModernTabs>
 
-                <BulkActionBar
-                    selectedCount={selectedIds.size}
-                    onClear={() => setSelectedIds(new Set())}
-                    actions={[
-                        {
-                            label: 'Mark Available',
-                            icon: <CheckCircle2 className="h-4 w-4" />,
-                            onClick: () => handleBulkStatusUpdate('available')
-                        },
-                        {
-                            label: 'Maintenance',
-                            icon: <Activity className="h-4 w-4" />,
-                            onClick: () => handleBulkStatusUpdate('maintenance')
-                        },
-                        {
-                            label: 'Delete',
-                            icon: <Trash2 className="h-4 w-4" />,
-                            onClick: handleBulkDelete,
-                            variant: 'danger'
-                        }
-                    ]}
-                />
 
                 {/* Modals */}
                 {isQRModalOpen && (
@@ -628,6 +546,5 @@ const AssetsPage: React.FC = () => {
         </RouteGuard>
     );
 }
-
 
 export default AssetsPage;

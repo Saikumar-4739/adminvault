@@ -10,8 +10,6 @@ interface AssetCardProps {
     onHistory: (asset: any) => void;
     onAssign: (asset: any) => void;
     onView: (asset: any) => void;
-    isSelected?: boolean;
-    onToggleSelect?: (id: number) => void;
 }
 
 const getAssetIcon = (name?: string) => {
@@ -50,7 +48,7 @@ const getStatusConfig = (status?: string) => {
     return configs[statusUpper] || configs['AVAILABLE'];
 };
 
-export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onQRCode, onHistory, onAssign, onView, isSelected, onToggleSelect }: AssetCardProps) => {
+export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onQRCode, onHistory, onAssign, onView }: AssetCardProps) => {
     const assetName = asset.assetName || 'Unnamed Asset';
     const AssetIcon = getAssetIcon(asset.assetName);
     const statusConfig = getStatusConfig(asset.status);
@@ -62,20 +60,8 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, o
     return (
         <div className="group relative h-full">
             {/* Solid Card */}
-            <div className={`relative bg-white dark:bg-slate-900 rounded-2xl border ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700'} shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden h-full flex flex-col`}>
+            <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden h-full flex flex-col">
 
-                {/* Multi-select Checkbox
-                {onToggleSelect && (
-                    <div
-                        onClick={() => onToggleSelect(asset.id)}
-                        className={`absolute top-3 right-3 z-20 w-5 h-5 rounded-md border-2 cursor-pointer flex items-center justify-center transition-all ${isSelected
-                                ? 'bg-indigo-500 border-indigo-500 text-white'
-                                : 'bg-white/50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 group-hover:border-indigo-400'
-                            }`}
-                    >
-                        {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
-                    </div>
-                )} */}
 
                 {/* Status Accent Bar */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${statusConfig.gradient.replace('/10', '')}`}></div>

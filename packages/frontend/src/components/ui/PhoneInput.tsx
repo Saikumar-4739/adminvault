@@ -36,7 +36,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     label,
     value = '',
     onChange,
-    placeholder = 'Enter phone number',
+    placeholder = '',
     className,
     error,
     required,
