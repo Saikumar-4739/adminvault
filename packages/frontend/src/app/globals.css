@@ -67,12 +67,39 @@
   @apply border-b border-slate-100 dark:border-slate-800/50;
 }
 
+/* Default scrollbar behavior: Clean/Hidden for modern look */
 body {
   font-family: var(--app-font, var(--font-outfit), 'Inter', system-ui, sans-serif);
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;    /* Firefox */
 }
 
 ::-webkit-scrollbar {
   display: none;
+}
+
+/* Override utility: When visibility is explicitly needed (e.g., Reports) */
+.custom-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 transparent !important;
+  -ms-overflow-style: auto !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 10px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
 }

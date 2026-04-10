@@ -202,7 +202,6 @@ export class ReportsService {
         const rawResults = await this.dataSource.query(query);
 
         const formattedAssets = rawResults.map((asset: any) => ({
-            'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
             'Brand': asset.brandName || 'N/A',
@@ -251,7 +250,6 @@ export class ReportsService {
         const rawResults = await this.dataSource.query(query);
 
         return rawResults.map((asset: any) => ({
-            'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
             'Brand': asset.brandName || 'N/A',
@@ -372,7 +370,6 @@ export class ReportsService {
         const rawResults = await this.dataSource.query(query);
 
         return rawResults.map((asset: any) => ({
-            'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
             'Device Configuration': asset.brandName || 'N/A',
@@ -464,7 +461,6 @@ export class ReportsService {
         const rawResults = await this.dataSource.query(query);
 
         return rawResults.map((asset: any) => ({
-            'Asset ID': asset.assetId,
             'Serial Number': asset.serialNumber,
             'Device Type': asset.deviceName || 'N/A',
             'Device Configuration': asset.brandName || 'N/A',

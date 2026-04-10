@@ -165,24 +165,24 @@ const ReportsPage: React.FC = () => {
                     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
                         {/* Navigation Actions */}
                         <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
+                            <div className="flex flex-col">
+                                <h1 className="text-[14px] font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">{selectedReport}</h1>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-1">
+                                    {reportCategories.find(c => c.reports.some(r => r.name === selectedReport))?.reports.find(r => r.name === selectedReport)?.description}
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => { setSelectedReport(null); setReportData(null); }}
-                                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-all bg-white dark:bg-slate-900 shadow-sm"
                                 >
                                     <ArrowLeft className="h-3.5 w-3.5" />
                                     Back To Reports
                                 </button>
-                                <div className="h-6 w-[1px] bg-slate-200 dark:bg-white/10 mx-1" />
-                                <div className="flex flex-col">
-                                    <h1 className="text-[11px] font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">{selectedReport}</h1>
-                                    <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5">
-                                        {reportCategories.find(c => c.reports.some(r => r.name === selectedReport))?.reports.find(r => r.name === selectedReport)?.description}
-                                    </p>
-                                </div>
-                            </div>
 
-                            <div className="flex items-center gap-3">
+                                <div className="h-4 w-[1px] bg-slate-200 dark:bg-white/10 mx-1" />
+
                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl shadow-sm">
                                     <Clock className="h-3 w-3 text-slate-400" />
                                     <input
@@ -252,29 +252,39 @@ const ReportsPage: React.FC = () => {
                             ) : (
                                 <div className="p-0">
                                     {Array.isArray(reportData) && reportData.length > 0 ? (
-                                        <div className="overflow-x-auto p-4">
-                                            <table className="w-full text-left border-collapse border border-slate-200 dark:border-white/10">
-                                                <thead className="bg-slate-50/50 dark:bg-white/[0.02]">
-                                                    <tr>
-                                                        {Object.keys(reportData[0]).map((header) => (
-                                                            <th key={header} className="px-4 py-3 font-black text-slate-500 uppercase tracking-widest text-[9px] whitespace-nowrap border border-slate-200 dark:border-white/10">
-                                                                {header.replace(/_/g, ' ')}
-                                                            </th>
-                                                        ))}
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-50 dark:divide-white/5">
-                                                    {reportData.slice(0, 500).map((row: any, idx: number) => (
-                                                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
-                                                            {Object.values(row).map((cell: any, cellIdx: number) => (
-                                                                <td key={cellIdx} className="px-4 py-2.5 text-[10px] font-bold text-slate-600 dark:text-slate-400 min-w-[120px] max-w-[300px] break-words group-hover:text-indigo-500 transition-colors leading-normal border border-slate-200 dark:border-white/10">
-                                                                    {cell === null || cell === undefined ? <span className="opacity-20">---</span> : String(cell)}
-                                                                </td>
+                                        <div className="p-4">
+                                            <div className="border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden bg-slate-50/30 dark:bg-white/[0.01]">
+                                                <div className="overflow-x-auto custom-scrollbar">
+                                                    <table className="w-full text-center border-collapse min-w-full">
+                                                        <thead className="bg-slate-100/50 dark:bg-white/[0.03]">
+                                                            <tr>
+                                                                {Object.keys(reportData[0]).map((header, hIdx) => (
+                                                                    <th
+                                                                        key={header}
+                                                                        className={`px-6 py-4 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap border-r border-slate-200 dark:border-white/10 ${hIdx === Object.keys(reportData[0]).length - 1 ? 'border-r-0' : ''}`}
+                                                                    >
+                                                                        {header.replace(/_/g, ' ')}
+                                                                    </th>
+                                                                ))}
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {reportData.slice(0, 500).map((row: any, idx: number) => (
+                                                                <tr key={idx} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5 transition-colors group border-b border-slate-50 dark:border-white/[0.02] last:border-0">
+                                                                    {Object.values(row).map((cell: any, cellIdx: number) => (
+                                                                        <td
+                                                                            key={cellIdx}
+                                                                            className={`px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 min-w-[150px] max-w-[400px] break-words group-hover:text-indigo-600 transition-colors leading-normal uppercase border-r border-slate-100 dark:border-white/5 ${cellIdx === Object.values(row).length - 1 ? 'border-r-0' : ''}`}
+                                                                        >
+                                                                            {cell === null || cell === undefined ? <span className="opacity-20">---</span> : String(cell)}
+                                                                        </td>
+                                                                    ))}
+                                                                </tr>
                                                             ))}
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center min-h-[500px] text-slate-500 space-y-4">
