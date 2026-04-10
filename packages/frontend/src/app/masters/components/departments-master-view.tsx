@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Plus, Pencil, Trash2, ArrowLeft, LayoutGrid, List, Eye, Users, Briefcase, Layers } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft, Eye, Users, Briefcase, Layers } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { DepartmentService } from '@adminvault/shared-services';
@@ -25,7 +25,6 @@ export const DepartmentsMasterView: React.FC<DepartmentsMasterViewProps> = ({ on
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [departmentToDelete, setDepartmentToDelete] = useState<{ id: number; name: string } | null>(null);
     const [formData, setFormData] = useState({ name: '', description: '', status: '', isActive: true });
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const initialized = useRef(false);
@@ -128,22 +127,6 @@ export const DepartmentsMasterView: React.FC<DepartmentsMasterViewProps> = ({ on
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Departments</h3>
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                title="Grid View"
-                            >
-                                <LayoutGrid className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                title="List View"
-                            >
-                                <List className="h-4 w-4" />
-                            </button>
-                        </div>
                         {onBack && (
                             <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
                                 Back to Masters
@@ -155,91 +138,49 @@ export const DepartmentsMasterView: React.FC<DepartmentsMasterViewProps> = ({ on
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                    {viewMode === 'list' ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
-                                <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
-                                    <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Name</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-gray-900">
-                                    {departments?.length === 0 ? (
-                                        <tr><td colSpan={3} className="p-8 text-center text-slate-500">No departments found</td></tr>
-                                    ) : (
-                                        departments?.map((d: Department) => (
-                                            <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{d.name}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${d.isActive
-                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                                                        }`}>
-                                                        {d.isActive ? 'Active' : 'Inactive'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <div className="flex justify-center gap-2">
-                                                        <button onClick={() => { setSelectedDepartment(d); setIsDetailModalOpen(true); }} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="View">
-                                                            <Eye className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleEdit(d)} className="h-7 w-7 flex items-center justify-center rounded bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-sm" title="Edit">
-                                                            <Pencil className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleDelete(d)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                            {departments?.length === 0 ? (
-                                <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700">
-                                    <p>No departments found</p>
-                                </div>
-                            ) : (
-                                departments?.map((d: Department) => (
-                                    <div key={d.id} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-lg transition-all transform hover:-translate-y-1">
-                                        <div className="p-4">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 group-hover:scale-110 transition-transform">
-                                                    <Users className="h-6 w-6" />
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
+                            <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Name</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-900">
+                                {departments?.length === 0 ? (
+                                    <tr><td colSpan={3} className="p-8 text-center text-slate-500">No departments found</td></tr>
+                                ) : (
+                                    departments?.map((d: Department) => (
+                                        <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{d.name}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${d.isActive
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                    }`}>
+                                                    {d.isActive ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                <div className="flex justify-center gap-2">
+                                                    <button onClick={() => { setSelectedDepartment(d); setIsDetailModalOpen(true); }} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="View">
+                                                        <Eye className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => handleEdit(d)} className="h-7 w-7 flex items-center justify-center rounded bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-sm" title="Edit">
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(d)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
                                                 </div>
-                                                <div className="flex gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => { setSelectedDepartment(d); setIsDetailModalOpen(true); }} className="p-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"><Eye className="h-3.5 w-3.5" /></button>
-                                                    <button onClick={() => handleEdit(d)} className="p-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"><Pencil className="h-3.5 w-3.5" /></button>
-                                                    <button onClick={() => handleDelete(d)} className="p-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"><Trash2 className="h-3.5 w-3.5" /></button>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">{d.name}</h4>
-                                                <div className="flex items-center justify-between">
-                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${d.isActive
-                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                                                        }`}>
-                                                        {d.isActive ? 'Active' : 'Inactive'}
-                                                    </span>
-                                                </div>
-                                                <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2 min-h-[2.5em]">{d.description || 'No description provided'}</p>
-                                            </div>
-                                        </div>
-                                        <div className="absolute top-0 right-0 p-2 pointer-events-none opacity-5 group-hover:opacity-10 transition-opacity">
-                                            <Briefcase className="h-16 w-16" />
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
 

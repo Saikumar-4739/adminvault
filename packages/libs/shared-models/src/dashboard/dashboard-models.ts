@@ -20,22 +20,15 @@ export class DashboardStats {
         expiringSoon: {
             id: number;
             applicationName: string;
-            expiryDate: Date | string; // Allow string for serialization
+            expiryDate: Date | string;
             assignedTo: string;
         }[];
     };
-    systemHealth: {
-        assetUtilization: number;
-        ticketResolutionRate: number;
-        openCriticalTickets: number;
-    };
-    security: {
-        score: number;
-        metrics: {
-            identity: number;
-            devices: number;
-            compliance: number;
-        };
+    procurement: {
+        totalPOs: number;
+        totalSpend: number;
+        activeVendors: number;
+        recent: any[];
     };
 
     constructor(
@@ -43,15 +36,13 @@ export class DashboardStats {
         tickets: { total: number; byStatus: { status: string; count: string }[]; byPriority: { priority: string; count: string }[]; recent: any[] },
         employees: { total: number; byDepartment: { department: string; count: string }[] },
         licenses: { total: number; expiringSoon: { id: number; applicationName: string; expiryDate: Date | string; assignedTo: string }[] },
-        systemHealth: { assetUtilization: number; ticketResolutionRate: number; openCriticalTickets: number },
-        security: { score: number; metrics: { identity: number; devices: number; compliance: number } }
+        procurement: { totalPOs: number; totalSpend: number; activeVendors: number; recent: any[] }
     ) {
         this.assets = assets;
         this.tickets = tickets;
         this.employees = employees;
         this.licenses = licenses;
-        this.systemHealth = systemHealth;
-        this.security = security;
+        this.procurement = procurement;
     }
 }
 

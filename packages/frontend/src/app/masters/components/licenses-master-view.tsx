@@ -5,7 +5,7 @@ import { CreateLicenseMasterModel, UpdateLicenseMasterModel, License } from '@ad
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Plus, Pencil, Trash2, ArrowLeft, LayoutGrid, List, Eye, Key, ShieldCheck, Calendar, Info } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft, Eye, Key, ShieldCheck, Calendar, Info } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/Input';
@@ -25,7 +25,6 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
     const [formData, setFormData] = useState({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const licenseService = new LicenseMasterService();
@@ -135,22 +134,6 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Licenses</h3>
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                title="Grid View"
-                            >
-                                <LayoutGrid className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                title="List View"
-                            >
-                                <List className="h-4 w-4" />
-                            </button>
-                        </div>
                         {onBack && (
                             <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
                                 Back to Masters
@@ -162,98 +145,53 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                    {viewMode === 'list' ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
-                                <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
-                                    <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">License Name</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Expiry Date</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
-                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-gray-900">
-                                    {licenses?.length === 0 ? (
-                                        <tr><td colSpan={4} className="p-8 text-center text-slate-500">No licenses found</td></tr>
-                                    ) : (
-                                        licenses?.map((item: License) => (
-                                            <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white uppercase tracking-tight">{item.name}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{formatDate(item.expiryDate)}</td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
-                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                                                        }`}>
-                                                        {item.isActive ? 'Active' : 'Inactive'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                    <div className="flex justify-center gap-2">
-                                                        <button onClick={() => { setSelectedLicense(item); setIsDetailModalOpen(true); }} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="View">
-                                                            <Eye className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-sm" title="Edit">
-                                                            <Pencil className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                            {licenses?.length === 0 ? (
-                                <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700">
-                                    <p>No licenses found</p>
-                                </div>
-                            ) : (
-                                licenses?.map((item: License) => (
-                                    <div key={item.id} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-lg transition-all transform hover:-translate-y-1">
-                                        <div className="p-4">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800 group-hover:scale-110 transition-transform">
-                                                    <Key className="h-6 w-6" />
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
+                            <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">License Name</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Expiry Date</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-900">
+                                {licenses?.length === 0 ? (
+                                    <tr><td colSpan={5} className="p-8 text-center text-slate-500">No licenses found</td></tr>
+                                ) : (
+                                    licenses?.map((item: License) => (
+                                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white uppercase tracking-tight">{item.name}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500 truncate max-w-[200px]">{item.description || '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500 italic uppercase">{(item as any).expiryDate ? new Date((item as any).expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                    }`}>
+                                                    {item.isActive ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                <div className="flex justify-center gap-2">
+                                                    <button onClick={() => { setSelectedLicense(item); setIsDetailModalOpen(true); }} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="View">
+                                                        <Eye className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-sm" title="Edit">
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
                                                 </div>
-                                                <div className="flex gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => { setSelectedLicense(item); setIsDetailModalOpen(true); }} className="p-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"><Eye className="h-3.5 w-3.5" /></button>
-                                                    <button onClick={() => handleEdit(item)} className="p-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"><Pencil className="h-3.5 w-3.5" /></button>
-                                                    <button onClick={() => handleDeleteClick(item.id)} className="p-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"><Trash2 className="h-3.5 w-3.5" /></button>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate uppercase tracking-tight">{item.name}</h4>
-                                                <div className="flex items-center justify-between">
-                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
-                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                                                        }`}>
-                                                        {item.isActive ? 'Active' : 'Inactive'}
-                                                    </span>
-                                                    {item.expiryDate && (
-                                                        <span className="flex items-center gap-1 text-[9px] text-red-500 font-bold uppercase tracking-wider">
-                                                            <Calendar className="h-3 w-3" /> {formatDate(item.expiryDate)}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2 min-h-[2.5em]">{item.description || 'No description provided'}</p>
-                                            </div>
-                                        </div>
-                                        <div className="absolute top-0 right-0 p-2 pointer-events-none opacity-5 group-hover:opacity-10 transition-opacity">
-                                            <ShieldCheck className="h-16 w-16" />
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
 

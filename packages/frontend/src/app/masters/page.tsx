@@ -8,7 +8,6 @@ import { Building2, Users, Package, Smartphone, AppWindow, Store, Search, FileTe
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
-import { BulkImportModal } from './components/BulkImportModal';
 
 const CompaniesMasterView = dynamic(() => import('./components/companies-master-view').then(mod => mod.CompaniesMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Companies...</p> });
 const DepartmentsMasterView = dynamic(() => import('./components/departments-master-view').then(mod => mod.DepartmentsMasterView), { loading: () => <p className="animate-pulse p-8 text-center text-xs font-black uppercase tracking-widest text-slate-400">Loading Departments...</p> });
@@ -107,7 +106,6 @@ const MastersPage: React.FC = () => {
 
     const selectedMasterData = masters.find(m => m.id === selectedMaster);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
 
     const filteredMasters = masters.filter(master =>
@@ -160,11 +158,6 @@ const MastersPage: React.FC = () => {
                         </div>
                     </div>
                 </PageHeader>
-
-                <BulkImportModal
-                    isOpen={isImportModalOpen}
-                    onClose={() => setIsImportModalOpen(false)}
-                />
 
                 {/* Master Grid Layout */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-12">

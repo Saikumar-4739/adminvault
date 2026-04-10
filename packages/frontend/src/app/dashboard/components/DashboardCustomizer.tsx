@@ -74,8 +74,8 @@ export const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
                             <div
                                 key={widget.id}
                                 className={`flex items-center justify-between p-3 rounded-2xl border transition-all duration-300 ${isVisible
-                                        ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
-                                        : 'bg-slate-50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-800/50 opacity-60'
+                                    ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                                    : 'bg-slate-50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-800/50 opacity-60'
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
@@ -91,8 +91,8 @@ export const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
                                 <button
                                     onClick={() => handleToggle(widget.id)}
                                     className={`p-2 rounded-xl transition-all ${isVisible
-                                            ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30'
-                                            : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30'
+                                        : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
                                         }`}
                                 >
                                     {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}

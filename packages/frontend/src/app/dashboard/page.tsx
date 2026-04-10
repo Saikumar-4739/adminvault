@@ -9,13 +9,8 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Select } from '@/components/ui/Select';
-import {
-    Users, Package, Ticket, Lock, RefreshCcw, TrendingUp, Activity,
-    PieChart as PieChartIcon, BarChart2, Mail,
-    Clock, AlertTriangle, CheckCircle, ArrowUpRight, Zap,
-    Key, LayoutGrid, Settings2
-} from 'lucide-react';
-import { DashboardCustomizer, WidgetConfig, WidgetSettings } from '@/features/dashboard/components/DashboardCustomizer';
+import { Users, Package, Ticket, Lock, RefreshCcw, TrendingUp, Activity, PieChart as PieChartIcon, BarChart2, Mail, Clock, AlertTriangle, CheckCircle, ArrowUpRight, Zap, Key, LayoutGrid, Settings2 } from 'lucide-react';
+import { DashboardCustomizer, WidgetConfig, WidgetSettings } from './components/DashboardCustomizer';
 import { formatNumber } from '@/lib/utils';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
@@ -24,21 +19,21 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Lazy load chart components
-const AssetDistributionChart = dynamic(() => import('@/features/dashboard/components/AssetDistributionChart').then(mod => mod.AssetDistributionChart), {
+const AssetDistributionChart = dynamic(() => import('./components/AssetDistributionChart').then(mod => mod.AssetDistributionChart), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const TicketPriorityChart = dynamic(() => import('@/features/dashboard/components/TicketPriorityChart'), {
+const TicketPriorityChart = dynamic(() => import('./components/TicketPriorityChart'), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
-const EmployeeDeptChart = dynamic(() => import('@/features/dashboard/components/EmployeeDeptChart').then(mod => mod.EmployeeDeptChart), {
+const EmployeeDeptChart = dynamic(() => import('./components/EmployeeDeptChart').then(mod => mod.EmployeeDeptChart), {
     ssr: false,
     loading: () => <div className="h-48 animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg"></div>
 });
 
 // Lazy load Enterprise Widgets
-const RenewalsWidget = dynamic(() => import('@/features/dashboard/components/RenewalsWidget').then(mod => mod.RenewalsWidget), {
+const ProcurementWidget = dynamic(() => import('./components/ProcurementWidget').then(mod => mod.ProcurementWidget), {
     ssr: false,
     loading: () => <div className="h-full animate-pulse bg-white/50 dark:bg-slate-800/50 rounded-lg p-4"></div>
 });
@@ -67,19 +62,6 @@ export interface DashboardStats {
             assignedTo: string;
         }[];
     };
-    systemHealth?: {
-        assetUtilization: number;
-        ticketResolutionRate: number;
-        openCriticalTickets: number;
-    };
-    security?: {
-        score: number;
-        metrics: {
-            identity: number;
-            devices: number;
-            compliance: number;
-        };
-    };
 }
 
 const DashboardPage: React.FC = () => {
@@ -101,7 +83,7 @@ const DashboardPage: React.FC = () => {
         { id: 'kpi_employees', label: 'KPI: Employees', category: 'KPI', description: 'Global registry count' },
         { id: 'kpi_licenses', label: 'KPI: Licenses', category: 'KPI', description: 'Software subscriptions count' },
         { id: 'support_criticality_matrix', label: 'Support Criticality', category: 'Analytics', description: 'Ticket priority distribution' },
-        { id: 'software_renewals', label: 'Upcoming Renewals', category: 'Operations', description: 'Licenses expiring soon' },
+        { id: 'procurement_pulse', label: 'Procurement Pulse', category: 'Operations', description: 'Real-time spend and orders' },
         { id: 'asset_lifecycle', label: 'Asset Lifecycle', category: 'Analytics', description: 'Asset status distribution' },
         { id: 'workforce_architecture', label: 'Workforce Depts', category: 'Analytics', description: 'Department distribution' },
         { id: 'quick_launch', label: 'Quick Launch', category: 'Operations', description: 'Common actions links' },
@@ -392,55 +374,55 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 {/* Analytics & Priority Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                     {/* Ticket Priorities */}
                     {widgetSettings['support_criticality_matrix']?.isVisible !== false && (
-                        <motion.div variants={itemVariants}>
-                            <Card className="p-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
-                                <h3 className="text-sm font-black text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                    <div className="p-2 rounded-lg bg-orange-500/10 text-orange-600 shadow-inner border border-orange-500/10">
-                                        <AlertTriangle className="h-4 w-4" />
+                        <motion.div variants={itemVariants} className="lg:col-span-8">
+                            <Card className="p-3 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none h-full flex flex-col">
+                                <h3 className="text-[11px] font-black text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                                    <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 shadow-inner border border-orange-500/10">
+                                        <AlertTriangle className="h-3.5 w-3.5" />
                                     </div>
                                     Support Criticality Matrix
                                 </h3>
-                                <div className="h-48">
+                                <div className="flex-1 min-h-[300px]">
                                     <TicketPriorityChart data={ticketPriorityData} />
                                 </div>
                             </Card>
                         </motion.div>
                     )}
 
-                    {/* Renewals Widget */}
-                    {widgetSettings['software_renewals']?.isVisible !== false && (
-                        <motion.div variants={itemVariants}>
-                            <RenewalsWidget stats={stats as any} />
+                    {/* Procurement Widget */}
+                    {widgetSettings['procurement_pulse']?.isVisible !== false && (
+                        <motion.div variants={itemVariants} className="lg:col-span-4 h-full">
+                            <ProcurementWidget stats={stats as any} />
                         </motion.div>
                     )}
                 </div>
 
                 {/* Distribution Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                     {/* Asset Distribution */}
                     {widgetSettings['asset_lifecycle']?.isVisible !== false && (
-                        <motion.div variants={itemVariants}>
-                            <Card className="p-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 shadow-inner border border-emerald-500/10">
-                                            <PieChartIcon className="h-4 w-4" />
+                        <motion.div variants={itemVariants} className="lg:col-span-5">
+                            <Card className="p-3 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none h-full flex flex-col">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-[11px] font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                        <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 shadow-inner border border-emerald-500/10">
+                                            <PieChartIcon className="h-3.5 w-3.5" />
                                         </div>
                                         Asset Lifecycle Status
                                     </h3>
                                     <Link href="/assets">
-                                        <Button variant="outline" className="rounded-lg px-3 h-7 text-[9px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800">
-                                            Inventory <ArrowUpRight className="h-3 w-3 ml-1.5" />
+                                        <Button variant="outline" className="rounded-lg px-2.5 h-6 text-[8px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800">
+                                            Inventory <ArrowUpRight className="h-2.5 w-2.5 ml-1" />
                                         </Button>
                                     </Link>
                                 </div>
                                 {isLoading ? (
-                                    <div className="h-48 animate-pulse bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
+                                    <div className="flex-1 animate-pulse bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
                                 ) : (
-                                    <div className="h-48">
+                                    <div className="flex-1 min-h-[220px]">
                                         <AssetDistributionChart data={assetData} />
                                     </div>
                                 )}
@@ -450,25 +432,25 @@ const DashboardPage: React.FC = () => {
 
                     {/* Employee Distribution */}
                     {widgetSettings['workforce_architecture']?.isVisible !== false && (
-                        <motion.div variants={itemVariants}>
-                            <Card className="p-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                        <div className="p-2 rounded-lg bg-violet-500/10 text-violet-600 shadow-inner border border-violet-500/10">
-                                            <Activity className="h-4 w-4" />
+                        <motion.div variants={itemVariants} className="lg:col-span-7">
+                            <Card className="p-3 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-white dark:border-slate-800/50 shadow-lg shadow-slate-200/50 dark:shadow-none h-full flex flex-col">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-[11px] font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                        <div className="p-1.5 rounded-lg bg-violet-500/10 text-violet-600 shadow-inner border border-violet-500/10">
+                                            <Activity className="h-3.5 w-3.5" />
                                         </div>
                                         Workforce Architecture
                                     </h3>
                                     <Link href="/employees">
-                                        <Button variant="outline" className="rounded-lg px-3 h-7 text-[9px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800">
-                                            Directory <ArrowUpRight className="h-3 w-3 ml-1.5" />
+                                        <Button variant="outline" className="rounded-lg px-2.5 h-6 text-[8px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800">
+                                            Directory <ArrowUpRight className="h-2.5 w-2.5 ml-1" />
                                         </Button>
                                     </Link>
                                 </div>
                                 {isLoading ? (
-                                    <div className="h-48 animate-pulse bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
+                                    <div className="flex-1 animate-pulse bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
                                 ) : (
-                                    <div className="h-48">
+                                    <div className="flex-1 min-h-[300px]">
                                         <EmployeeDeptChart data={employeeDeptData} />
                                     </div>
                                 )}
@@ -478,10 +460,10 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 {/* Bottom Section: Operations & Pulse */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                     {/* Quick Access Grid */}
                     {widgetSettings['quick_launch']?.isVisible !== false && (
-                        <motion.div variants={itemVariants} className="lg:col-span-1">
+                        <motion.div variants={itemVariants} className="lg:col-span-3">
                             <Card className="p-4 bg-white dark:bg-slate-900 border-none shadow-lg shadow-slate-200/50 dark:shadow-none h-full">
                                 <h3 className="text-sm font-black text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                     <Zap className="h-4 w-4 text-amber-500" />

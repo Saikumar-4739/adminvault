@@ -9,7 +9,7 @@ import { TicketsEntity } from '../tickets/entities/tickets.entity';
 import { CompanyLicenseEntity } from '../licenses/entities/company-license.entity';
 
 @Module({
-    imports: [ TypeOrmModule.forFeature([ AssetInfoEntity, EmployeesEntity, TicketsEntity, CompanyLicenseEntity])],
+    imports: [TypeOrmModule.forFeature([AssetInfoEntity, EmployeesEntity, TicketsEntity, CompanyLicenseEntity])],
     controllers: [DashboardController],
     providers: [DashboardService, DashboardRepository],
     exports: [DashboardService]

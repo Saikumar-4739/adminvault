@@ -4,8 +4,8 @@ import { AssetInfoEntity } from '../../asset-info/entities/asset-info.entity';
 import { EmployeesEntity } from '../../employees/entities/employees.entity';
 import { TicketsEntity } from '../../tickets/entities/tickets.entity';
 import { CompanyLicenseEntity } from '../../licenses/entities/company-license.entity';
-import { AssetStatusEnum, TicketStatusEnum, TicketPriorityEnum } from '@adminvault/shared-models';
-import { AuthUsersEntity } from '../../auth-users/entities/auth-users.entity';
+import { TicketStatusEnum, TicketPriorityEnum, POStatusEnum } from '@adminvault/shared-models';
+import { PurchaseOrderEntity } from '../../procurement/entities/purchase-order.entity';
 
 @Injectable()
 export class DashboardRepository {
@@ -15,8 +15,7 @@ export class DashboardRepository {
         const repo = this.dataSource.getRepository(AssetInfoEntity);
         const where = companyId > 0 ? { companyId } : {};
         const total = await repo.count({ where });
-        const query = repo.createQueryBuilder('asset')
-            .select('asset.asset_status_enum as status, COUNT(asset.id) as count');
+        const query = repo.createQueryBuilder('asset').select('asset.asset_status_enum as status, COUNT(asset.id) as count');
         if (companyId > 0) {
             query.where('asset.company_id = :companyId', { companyId });
         }
@@ -31,21 +30,29 @@ export class DashboardRepository {
 
         const statusQuery = repo.createQueryBuilder('ticket')
             .select('ticket.ticket_status as status, COUNT(ticket.id) as count');
-        if (companyId > 0) statusQuery.where('ticket.company_id = :companyId', { companyId });
+        if (companyId > 0) {
+            statusQuery.where('ticket.company_id = :companyId', { companyId });
+        }
         const byStatus = await statusQuery.groupBy('ticket.ticket_status').getRawMany();
 
         const priorityQuery = repo.createQueryBuilder('ticket')
             .select('ticket.priority_enum as priority, COUNT(ticket.id) as count');
-        if (companyId > 0) priorityQuery.where('ticket.company_id = :companyId', { companyId });
+        if (companyId > 0) {
+            priorityQuery.where('ticket.company_id = :companyId', { companyId });
+        }
         const byPriority = await priorityQuery.groupBy('ticket.priority_enum').getRawMany();
 
         const recentQuery = repo.createQueryBuilder('ticket')
             .leftJoinAndMapOne('ticket.raisedByEmployee', EmployeesEntity, 'emp', 'emp.id = ticket.employeeId');
-        if (companyId > 0) recentQuery.where('ticket.company_id = :companyId', { companyId });
+        if (companyId > 0) {
+            recentQuery.where('ticket.company_id = :companyId', { companyId });
+        }
         const recent = await recentQuery.orderBy('ticket.createdAt', 'DESC').take(5).getMany();
 
         const openCriticalWhere: any = { priorityEnum: In([TicketPriorityEnum.HIGH, TicketPriorityEnum.URGENT]), ticketStatus: Not(In([TicketStatusEnum.CLOSED, TicketStatusEnum.RESOLVED])) };
-        if (companyId > 0) openCriticalWhere.companyId = companyId;
+        if (companyId > 0) {
+            openCriticalWhere.companyId = companyId;
+        }
         const openCritical = await repo.count({ where: openCriticalWhere });
 
         return { total, byStatus, byPriority, recent, openCritical };
@@ -95,28 +102,29 @@ export class DashboardRepository {
         return { total, expiring };
     }
 
-    async getSecurityStats(companyId: number) {
-        const userRepo = this.dataSource.getRepository(AuthUsersEntity);
-        const assetRepo = this.dataSource.getRepository(AssetInfoEntity);
-        const ticketRepo = this.dataSource.getRepository(TicketsEntity);
-
+    async getProcurementStats(companyId: number) {
+        const repo = this.dataSource.getRepository(PurchaseOrderEntity);
         const where: any = companyId > 0 ? { companyId } : {};
 
-        // Identity score
-        const totalUsers = await userRepo.count({ where });
-        const activeUsers = await userRepo.count({ where: { ...where, status: true } });
-        const identityScore = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 100;
+        const totalPOs = await repo.count({ where });
 
-        // Device score
-        const totalAssets = await assetRepo.count({ where });
-        const assignedAssets = await assetRepo.count({ where: { ...where, assetStatusEnum: In([AssetStatusEnum.IN_USE]) } });
-        const deviceScore = totalAssets > 0 ? (assignedAssets / totalAssets) * 100 : 100;
+        const spendQuery = repo.createQueryBuilder('po').select('SUM(po.total_amount)', 'totalSpend')
+            .where('po.status IN (:...statuses)', { statuses: [POStatusEnum.APPROVED, POStatusEnum.ORDERED, POStatusEnum.RECEIVED] });
 
-        // Compliance score
-        const totalTickets = await ticketRepo.count({ where });
-        const resolvedTickets = await ticketRepo.count({ where: { ...where, ticketStatus: In([TicketStatusEnum.CLOSED, TicketStatusEnum.RESOLVED]) } });
-        const complianceScore = totalTickets > 0 ? (resolvedTickets / totalTickets) * 100 : 100;
+        if (companyId > 0) {
+            spendQuery.andWhere('po.company_id = :companyId', { companyId });
+        }
+        const spendResult = await spendQuery.getRawOne();
+        const totalSpend = parseFloat(spendResult?.totalSpend || '0');
 
-        return { identity: Math.round(identityScore), devices: Math.round(deviceScore), compliance: Math.round(complianceScore) };
+        const vendorQuery = repo.createQueryBuilder('po').select('COUNT(DISTINCT po.vendor_id)', 'activeVendors');
+        if (companyId > 0) {
+            vendorQuery.where('po.company_id = :companyId', { companyId });
+        }
+        const vendorResult = await vendorQuery.getRawOne();
+        const activeVendors = parseInt(vendorResult?.activeVendors || '0');
+
+        const recent = await repo.find({ where, order: { createdAt: 'DESC' }, take: 5 });
+        return { totalPOs, totalSpend, activeVendors, recent };
     }
 }
