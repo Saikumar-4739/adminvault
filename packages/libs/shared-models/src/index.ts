@@ -15,7 +15,5 @@ export * from './common';
 export * from './procurement/procurement.models';
 export * from './websocket/websocket-events.model';
 export * from './audit-log/audit-log.models';
-export * from './onboarding';
 export * from './knowledge-base';
 export * from './network';
-export * from './security';

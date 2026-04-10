@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Lock, Plus, Search, ShieldCheck, Key, ShieldAlert, Fingerprint } from 'lucide-react';
+import { Lock, Plus, Search, ShieldCheck, Key, ShieldAlert, LayoutGrid, List } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { Button } from '@/components/ui/Button';
@@ -12,6 +12,7 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 
 const CredentialVaultPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isUnlocked, setIsUnlocked] = useState(false);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -188,6 +189,22 @@ const CredentialVaultPage: React.FC = () => {
                     gradient="from-blue-600 to-indigo-700"
                     actions={
                         <div className="flex items-center gap-3">
+                            <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg p-0.5">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    title="Grid View"
+                                >
+                                    <LayoutGrid className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    title="List View"
+                                >
+                                    <List className="h-3.5 w-3.5" />
+                                </button>
+                            </div>
                             <Button
                                 onClick={handleLock}
                                 variant="outline"
@@ -220,7 +237,7 @@ const CredentialVaultPage: React.FC = () => {
                 />
 
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <CredentialVaultMasterView ref={viewRef} searchTerm={searchTerm} />
+                    <CredentialVaultMasterView ref={viewRef} searchTerm={searchTerm} viewMode={viewMode} />
                 </div>
             </div>
         </RouteGuard>

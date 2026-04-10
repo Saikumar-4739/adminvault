@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft, LayoutGrid, List, Eye, Store, Truck, Phone, Mail, MapPin, User, Tag, ShieldCheck } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { VendorService } from '@adminvault/shared-services';
@@ -28,6 +28,9 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
     const [formData, setFormData] = useState({ name: '', description: '', contactPerson: '', email: '', phone: '', address: '', companyId: '', category: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const lastFetchedCompanyId = useRef<number | null>(null);
     const vendorService = new VendorService();
 
@@ -136,6 +139,22 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                 <CardHeader className="p-4 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 mb-0">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100">Vendors</h3>
                     <div className="flex items-center gap-3">
+                        <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                title="Grid View"
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                title="List View"
+                            >
+                                <List className="h-4 w-4" />
+                            </button>
+                        </div>
                         {onBack && (
                             <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
                                 Back to Masters
@@ -146,53 +165,104 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent className="flex-1 overflow-hidden p-4">
-                    <div className="overflow-x-auto h-full">
-                        <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
-                            <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
-                                <tr>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Name</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Contact Person</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Phone</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Category</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white dark:bg-gray-900">
-                                {vendors?.length === 0 ? (
-                                    <tr><td colSpan={6} className="p-8 text-center text-slate-500">No vendors found</td></tr>
-                                ) : (
-                                    vendors?.map((item: Vendor, index: number) => (
-                                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white">{item.name}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{item.contactPerson || '-'}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400">{formatPhoneNumberWithCountryCode(item.phone) || '-'}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm italic text-slate-500">{item.category || '-'}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${item.isActive
-                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                                                    }`}>
-                                                    {item.isActive ? 'Active' : 'Inactive'}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
-                                                <div className="flex justify-center gap-2">
-                                                    <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                    <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
+                <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                    {viewMode === 'list' ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse border border-slate-200 dark:border-slate-700">
+                                <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
+                                    <tr>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Vendor Name</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Contact</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Category</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
+                                        <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white dark:bg-gray-900">
+                                    {vendors?.length === 0 ? (
+                                        <tr><td colSpan={5} className="p-8 text-center text-slate-500">No vendors found</td></tr>
+                                    ) : (
+                                        vendors?.map((item: Vendor) => (
+                                            <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">{item.name}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400 truncate max-w-[150px]">{item.contactPerson || '-'}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-500 italic uppercase">{(item as any).category || '-'}</td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                        }`}>
+                                                        {item.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
+                                                    <div className="flex justify-center gap-2">
+                                                        <button onClick={() => { setSelectedVendor(item); setIsDetailModalOpen(true); }} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="View">
+                                                            <Eye className="h-4 w-4" />
+                                                        </button>
+                                                        <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-sm" title="Edit">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                            {vendors?.length === 0 ? (
+                                <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+                                    <p>No vendors found</p>
+                                </div>
+                            ) : (
+                                vendors?.map((item: Vendor) => (
+                                    <div key={item.id} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-lg transition-all transform hover:-translate-y-1">
+                                        <div className="p-4">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 group-hover:scale-110 transition-transform">
+                                                    <Store className="h-6 w-6" />
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                                <div className="flex gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => { setSelectedVendor(item); setIsDetailModalOpen(true); }} className="p-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"><Eye className="h-3.5 w-3.5" /></button>
+                                                    <button onClick={() => handleEdit(item)} className="p-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"><Pencil className="h-3.5 w-3.5" /></button>
+                                                    <button onClick={() => handleDeleteClick(item.id)} className="p-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"><Trash2 className="h-3.5 w-3.5" /></button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{(item as any).category || 'Vendor'}</span>
+                                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate uppercase tracking-tight">{item.name}</h4>
+                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{item.contactPerson || 'No contact person'}</p>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                        }`}>
+                                                        {item.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                    {item.phone && (
+                                                        <span className="flex items-center gap-1 text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                                                            <Phone className="h-3 w-3" /> {formatPhoneNumberWithCountryCode(item.phone)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="absolute top-0 right-0 p-2 pointer-events-none opacity-5 group-hover:opacity-10 transition-opacity">
+                                            <Truck className="h-16 w-16" />
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -239,6 +309,99 @@ export const VendorsMasterView: React.FC<VendorsMasterViewProps> = ({ onBack }) 
                 onConfirm={handleDeleteConfirm}
                 itemName="Vendor"
             />
+
+            <Modal
+                isOpen={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                title="Vendor Detailed Information"
+                size="md"
+            >
+                {selectedVendor && (
+                    <div className="space-y-6">
+                        <div className="flex flex-col items-center justify-center pb-6 border-b border-slate-100 dark:border-slate-800">
+                            <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 border border-indigo-100 dark:border-indigo-800 shadow-sm transition-transform hover:scale-105">
+                                <Store className="h-8 w-8" />
+                            </div>
+                            <div className="text-center">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">{(selectedVendor as any).category || 'Vendor Entity'}</p>
+                                <h4 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">{selectedVendor.name}</h4>
+                            </div>
+                            <span className={`mt-3 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${selectedVendor.isActive
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                }`}>
+                                {selectedVendor.isActive ? 'Active Partnership' : 'Inactive Partnership'}
+                            </span>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-indigo-200 transition-colors group">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <User className="h-3.5 w-3.5 text-blue-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Contact Person</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{selectedVendor.contactPerson || 'Not provided'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Tag className="h-3.5 w-3.5 text-emerald-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Business Type</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight">{(selectedVendor as any).category || 'General'}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Mail className="h-3.5 w-3.5 text-amber-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Email Address</span>
+                                    </div>
+                                    <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate" title={selectedVendor.email}>{selectedVendor.email || 'None'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Phone className="h-3.5 w-3.5 text-purple-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Primary Phone</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{formatPhoneNumberWithCountryCode(selectedVendor.phone) || 'Not available'}</p>
+                                </div>
+                            </div>
+
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <MapPin className="h-3.5 w-3.5 text-red-500" />
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Registered Address</span>
+                                </div>
+                                <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+                                    {selectedVendor.address || 'No registered office address available.'}
+                                </p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Vendor Overview</label>
+                                <div className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 leading-relaxed">
+                                    {selectedVendor.description || 'No additional business description or partnership notes provided.'}
+                                </div>
+                            </div>
+
+                            <div className="pt-2">
+                                <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/50">
+                                    <ShieldCheck className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                    <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                                        This vendor record is strictly for internal administrative use. Ensure all modifications align with contractual agreements.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <Button variant="primary" onClick={() => setIsDetailModalOpen(false)}>Close</Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </>
     );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle }
 import { CreateCredentialVaultModel, UpdateCredentialVaultModel, CredentialVaultModel, IdRequestModel } from '@adminvault/shared-models';
 import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Pencil, Trash2, Key, Eye, EyeOff, Copy, ExternalLink } from 'lucide-react';
+import { Pencil, Trash2, Key, Eye, EyeOff, Copy, ExternalLink, Shield, Hash, Globe, Mail, Fingerprint, ShieldCheck, User } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/Input';
@@ -12,13 +12,14 @@ import { CredentialVaultService } from '@adminvault/shared-services';
 interface CredentialVaultMasterViewProps {
     onBack?: () => void;
     searchTerm?: string;
+    viewMode?: 'grid' | 'list';
 }
 
 export interface CredentialVaultMasterViewHandle {
     showAddModal: () => void;
 }
 
-export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHandle, CredentialVaultMasterViewProps>(({ onBack, searchTerm = '' }, ref) => {
+export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHandle, CredentialVaultMasterViewProps>(({ onBack, searchTerm = '', viewMode = 'grid' }, ref) => {
     const { user } = useAuth();
     const [vaults, setVaults] = useState<CredentialVaultModel[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,6 +39,8 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [revealedPasswords, setRevealedPasswords] = useState<Record<number, boolean>>({});
+    const [selectedCredential, setSelectedCredential] = useState<CredentialVaultModel | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const vaultService = new CredentialVaultService();
     const initialized = useRef(false);
 
@@ -221,12 +224,65 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
                         <p className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto">No secrets found matching your query.</p>
                     </div>
                 </div>
+            ) : viewMode === 'list' ? (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50/50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                                    <th className="px-4 py-3 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Application</th>
+                                    <th className="px-4 py-3 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Description</th>
+                                    <th className="px-4 py-3 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Owner</th>
+                                    <th className="px-4 py-3 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Expiry</th>
+                                    <th className="px-4 py-3 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                    <th className="px-4 py-3 text-right text-[9px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                                {filteredVaults.map((item) => (
+                                    <tr key={item.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-7 w-7 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-800 shrink-0">
+                                                    <Key className="h-4 w-4" />
+                                                </div>
+                                                <span className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">{item.appName}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className="text-[10px] font-medium text-slate-500 truncate max-w-[150px] block">{item.description || '-'}</span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{item.owner || '-'}</span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className="text-[10px] font-medium text-slate-500">{formatDate(item.expireDate)}</span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${item.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
+                                                {item.isActive ? 'active' : 'inactive'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1.5">
+                                                <button onClick={(e) => { e.stopPropagation(); setSelectedCredential(item); setIsDetailModalOpen(true); }} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all"><Eye className="h-3.5 w-3.5" /></button>
+                                                <button onClick={(e) => handleEdit(item, e)} className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all"><Pencil className="h-3.5 w-3.5" /></button>
+                                                <button onClick={(e) => handleDeleteClick(item.id, e)} className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all"><Trash2 className="h-3.5 w-3.5" /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 pb-12">
                     {filteredVaults.map((item) => (
                         <div
                             key={item.id}
                             className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[1rem] shadow-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 p-3 overflow-hidden"
+                            onClick={() => { setSelectedCredential(item); setIsDetailModalOpen(true); }}
                         >
                             {/* Card Background Decoration */}
                             <div className="absolute top-0 right-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] group-hover:scale-110 transition-all duration-500">
@@ -303,7 +359,7 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
                                         </button>
                                     </div>
                                     {item.description?.includes('http') && (
-                                        <a href={item.description} target="_blank" rel="noopener noreferrer" className="p-0.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded text-blue-500 hover:text-blue-600 transition-colors">
+                                        <a href={item.description} target="_blank" rel="noopener noreferrer" className="p-0.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded text-blue-500 hover:text-blue-600 transition-colors" onClick={(e) => e.stopPropagation()}>
                                             <ExternalLink className="h-2.5 w-2.5" />
                                         </a>
                                     )}
@@ -366,6 +422,102 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
                 onConfirm={handleConfirmDelete}
                 itemName={`${filteredVaults.find(v => v.id === deletingId)?.appName} Credential`}
             />
+
+            <Modal
+                isOpen={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                title="Secret Security Detail"
+                size="md"
+            >
+                {selectedCredential && (
+                    <div className="space-y-6">
+                        <div className="flex flex-col items-center justify-center pb-6 border-b border-slate-100 dark:border-white/5">
+                            <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 border border-blue-100 dark:border-blue-800 shadow-lg shadow-blue-500/10">
+                                <Shield className="h-8 w-8" />
+                            </div>
+                            <div className="text-center">
+                                <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">{selectedCredential.appName}</h4>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">{selectedCredential.description || 'Secure System Credential'}</p>
+                            </div>
+                            <span className={`mt-3 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border ${selectedCredential.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
+                                {selectedCredential.isActive ? 'Verified Active' : 'Access Revoked'}
+                            </span>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 space-y-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <User className="h-3.5 w-3.5 text-blue-500" />
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Administrative Owner</span>
+                                    </div>
+                                    <p className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">{selectedCredential.owner || 'System Default'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 space-y-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Mail className="h-3.5 w-3.5 text-emerald-500" />
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Recovery Endpoint</span>
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{selectedCredential.recoveryEmail || 'None Configured'}</p>
+                                </div>
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-slate-900 dark:bg-black border border-white/10 shadow-inner group/pw">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <Fingerprint className="h-3.5 w-3.5 text-blue-400" />
+                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Encrypted Secret</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 opacity-0 group-hover/pw:opacity-100 transition-opacity">
+                                        <button onClick={(e) => toggleReveal(selectedCredential.id, e)} className="p-1 px-2 rounded-lg bg-white/5 text-slate-400 hover:text-blue-400 transition-colors text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
+                                            {revealedPasswords[selectedCredential.id] ? <><EyeOff className="h-2.5 w-2.5" /> Mask</> : <><Eye className="h-2.5 w-2.5" /> Reveal</>}
+                                        </button>
+                                        <button onClick={(e) => copyToClipboard(selectedCredential.password, e)} className="p-1 px-2 rounded-lg bg-white/5 text-slate-400 hover:text-blue-400 transition-colors text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
+                                            <Copy className="h-2.5 w-2.5" /> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                                <p className="text-xl font-mono font-black tracking-[0.25em] text-white overflow-hidden text-ellipsis bg-white/5 p-3 rounded-lg border border-white/5 shadow-inner">
+                                    {revealedPasswords[selectedCredential.id] ? selectedCredential.password : '••••••••••••'}
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 space-y-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Hash className="h-3.5 w-3.5 text-amber-500" />
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Serial Number</span>
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight">{selectedCredential.deviceSerialNumber || 'Not logged'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 space-y-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Globe className="h-3.5 w-3.5 text-purple-500" />
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">IP Binding</span>
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{selectedCredential.ipAddress || 'Any IP'}</p>
+                                </div>
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-500/20 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg shrink-0">
+                                        <ShieldCheck className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-amber-800 dark:text-amber-400 uppercase tracking-widest leading-none mb-1">Expiration Timeline</p>
+                                        <p className="text-[11px] font-bold text-amber-700 dark:text-amber-500">Scheduled for revision on {formatDate(selectedCredential.expireDate)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-white/5">
+                            <Button variant="primary" onClick={() => setIsDetailModalOpen(false)} className="rounded-xl px-12 h-12 uppercase tracking-widest text-[10px] font-black">Close Session</Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 });

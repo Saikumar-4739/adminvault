@@ -13,7 +13,6 @@ import { EmployeesRepository } from '../employees/repositories/employees.reposit
 import { TicketsGateway } from './tickets.gateway';
 import { TicketMessageEntity } from './entities/ticket-messages.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
-import { AdministrationModule } from '../administration/administration.module';
 import { TicketWorkLogEntity } from './entities/ticket-work-log.entity';
 import { AuditLogModule } from '../audit-log/audit-log.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -21,7 +20,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
     imports: [
         TypeOrmModule.forFeature([TicketsEntity, TicketCommentsEntity, TicketStatusLogsEntity, EmployeesEntity, TicketMessageEntity, AuthUsersEntity, TicketWorkLogEntity]),
-        AdministrationModule,
         AuditLogModule,
         NotificationsModule
     ],

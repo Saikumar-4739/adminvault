@@ -10,7 +10,8 @@ import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import {
     FileText, Upload, Download, Trash2, Search, Plus, File as FileIcon,
-    Lock, ArrowLeft, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Eye
+    Lock, ArrowLeft, FileSpreadsheet, Image as ImageIcon, FileCode, FileArchive, Eye,
+    LayoutGrid, List
 } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +31,7 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
     const [tags, setTags] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState<string>('All');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
     // Delete state
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -191,13 +193,18 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
             }
 
             const blob = await documentsService.downloadFile(id);
-            // Create a new blob with the correct mime type from our record
             const viewBlob = new Blob([blob], { type: doc?.mimeType || blob.type });
             const url = window.URL.createObjectURL(viewBlob);
 
-            setPreviewUrl(url);
-            setPreviewDoc(doc || null);
-            setIsPreviewModalOpen(true);
+            // Open in new tab
+            const newWindow = window.open(url, '_blank');
+            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                // Fallback to modal if popup is blocked
+                if (previewUrl) window.URL.revokeObjectURL(previewUrl);
+                setPreviewUrl(url);
+                setPreviewDoc(doc || null);
+                setIsPreviewModalOpen(true);
+            }
 
         } catch (error) {
             console.error('View failed:', error);
@@ -274,6 +281,22 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                             />
                         </div>
                         <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                            <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 mr-1">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    title="Grid View"
+                                >
+                                    <LayoutGrid className="h-4 w-4" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    title="List View"
+                                >
+                                    <List className="h-4 w-4" />
+                                </button>
+                            </div>
                             {onBack && (
                                 <Button size="xs" variant="primary" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>
                                     Back to Masters
@@ -285,76 +308,123 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="flex-1 overflow-hidden p-4">
-                    <div className="overflow-x-auto h-full">
-                        <table className="w-full text-left border-collapse border border-slate-200 dark:border-slate-700">
-                            <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
-                                <tr>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Document Name</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Category</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Size & Type</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
-                                {filteredDocuments.length === 0 ? (
-                                    <tr><td colSpan={4} className="p-8 text-center text-slate-500">No documents found</td></tr>
-                                ) : (
-                                    filteredDocuments.map((doc) => (
-                                        <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
-                                                        {getFileIcon(doc.mimeType)}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <p className="font-medium text-slate-900 dark:text-white text-sm truncate max-w-xs">{doc.originalName}</p>
-                                                            {doc.isSecure && <Lock className="w-3 h-3 text-amber-500" />}
+                <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                    {viewMode === 'list' ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse border border-slate-200 dark:border-slate-700">
+                                <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
+                                    <tr>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Document Name</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Category</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Size & Type</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
+                                    {filteredDocuments.length === 0 ? (
+                                        <tr><td colSpan={4} className="p-8 text-center text-slate-500">No documents found</td></tr>
+                                    ) : (
+                                        filteredDocuments.map((doc) => (
+                                            <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                <td className="px-6 py-4 border border-slate-200 dark:border-slate-700">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
+                                                            {getFileIcon(doc.mimeType)}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="font-medium text-slate-900 dark:text-white text-sm truncate max-w-xs">{doc.originalName}</p>
+                                                                {doc.isSecure && <Lock className="w-3 h-3 text-amber-500" />}
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                </td>
+                                                <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <span className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium border border-slate-200 dark:border-slate-700">
+                                                        {doc.category || 'General'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className="text-sm text-slate-700 dark:text-slate-300 font-medium">{formatFileSize(doc.fileSize)}</div>
+                                                    <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase mt-0.5">{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</div>
+                                                </td>
+                                                <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className="flex justify-center gap-2">
+                                                        <button
+                                                            onClick={() => handleView(doc.id)}
+                                                            className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm"
+                                                            title="View"
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDownload(doc.id)}
+                                                            className="h-7 w-7 flex items-center justify-center rounded bg-emerald-500 hover:bg-emerald-600 text-white transition-colors shadow-sm"
+                                                            title="Download"
+                                                        >
+                                                            <Download className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteClick(doc)}
+                                                            className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                            {filteredDocuments.length === 0 ? (
+                                <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+                                    <FileIcon className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                                    <p>No documents found</p>
+                                </div>
+                            ) : (
+                                filteredDocuments.map((doc) => (
+                                    <div key={doc.id} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-lg transition-all transform hover:-translate-y-1">
+                                        <div className="p-4">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 group-hover:scale-110 transition-transform">
+                                                    {getFileIcon(doc.mimeType)}
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
-                                                <span className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium border border-slate-200 dark:border-slate-700">
-                                                    {doc.category || 'General'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
-                                                <div className="text-sm text-slate-700 dark:text-slate-300 font-medium">{formatFileSize(doc.fileSize)}</div>
-                                                <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase mt-0.5">{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</div>
-                                            </td>
-                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
-                                                <div className="flex justify-center gap-2">
-                                                    <button
-                                                        onClick={() => handleView(doc.id)}
-                                                        className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm"
-                                                        title="View"
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDownload(doc.id)}
-                                                        className="h-7 w-7 flex items-center justify-center rounded bg-emerald-500 hover:bg-emerald-600 text-white transition-colors shadow-sm"
-                                                        title="Download"
-                                                    >
-                                                        <Download className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteClick(doc)}
-                                                        className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
+                                                <div className="flex gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => handleView(doc.id)} className="p-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"><Eye className="h-3.5 w-3.5" /></button>
+                                                    <button onClick={() => handleDownload(doc.id)} className="p-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors shadow-sm"><Download className="h-3.5 w-3.5" /></button>
+                                                    <button onClick={() => handleDeleteClick(doc)} className="p-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"><Trash2 className="h-3.5 w-3.5" /></button>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate" title={doc.originalName}>
+                                                        {doc.originalName}
+                                                    </h4>
+                                                    {doc.isSecure && <Lock className="h-3 h-3 text-amber-500 shrink-0" />}
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                        {doc.category || 'General'}
+                                                    </span>
+                                                    <span className="text-[10px] font-medium text-slate-400">
+                                                        {formatFileSize(doc.fileSize)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="absolute top-0 right-0 p-2 pointer-events-none opacity-5 group-hover:opacity-10 transition-opacity">
+                                            <FileIcon className="h-16 w-16" />
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -519,17 +589,11 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
                     {previewUrl && previewDoc && (
                         <>
                             {previewDoc.mimeType.toLowerCase().includes('pdf') ? (
-                                <object
-                                    data={previewUrl}
-                                    type="application/pdf"
-                                    className="w-full h-full rounded-lg border border-slate-200 dark:border-slate-700"
-                                >
-                                    <iframe
-                                        src={previewUrl}
-                                        className="w-full h-full rounded-lg border border-slate-200 dark:border-slate-700"
-                                        title="PDF Preview"
-                                    />
-                                </object>
+                                <iframe
+                                    src={`${previewUrl}#toolbar=0`}
+                                    className="w-full h-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white"
+                                    title="PDF Preview"
+                                />
                             ) : previewDoc.mimeType.toLowerCase().includes('image') ? (
                                 <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
                                     <img

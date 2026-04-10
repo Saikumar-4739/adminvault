@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Plus, Pencil, Trash2, ArrowLeft, User, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft, User, Search, LayoutGrid, List, Eye, Slack, Hash, Shield, Phone, Mail, AtSign, Briefcase, MapPin, Tag } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { DepartmentService, EmployeesService, SlackUserService, CompanyService } from '@adminvault/shared-services';
@@ -51,6 +51,9 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
     const [formData, setFormData] = useState({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [selectedSlackUser, setSelectedSlackUser] = useState<SlackUserModel | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const lastFetchedCompanyId = useRef<number | null>(null);
 
     useEffect(() => {
@@ -222,6 +225,22 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                         <h3 className="font-bold text-slate-800 dark:text-slate-100">Slack Users</h3>
                     </div>
                     <div className="flex items-center gap-3">
+                        <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 mr-2">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                title="Grid View"
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                title="List View"
+                            >
+                                <List className="h-4 w-4" />
+                            </button>
+                        </div>
                         <select
                             value={filterCompanyId}
                             onChange={(e) => setFilterCompanyId(e.target.value)}
@@ -234,7 +253,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                 </option>
                             ))}
                         </select>
-                        <div className="relative w-64 hidden md:block">
+                        <div className="relative w-48 hidden md:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
@@ -250,83 +269,127 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                             </Button>
                         )}
                         <Button size="xs" variant="success" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
-                            Add Slack User
+                            Add User
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent className="flex-1 overflow-hidden p-4">
-                    <div className="overflow-x-auto h-full">
-                        <table className="w-full text-left border-collapse border border-slate-200 dark:border-slate-700">
-                            <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
-                                <tr>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">User Details</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Company</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Phone</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Slack ID</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Role & Dept</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border border-slate-200 dark:border-slate-700">Status</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border border-slate-200 dark:border-slate-700">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
-                                {filteredUsers.length === 0 ? (
-                                    <tr><td colSpan={7} className="p-8 text-center text-slate-500">No users found</td></tr>
-                                ) : (
-                                    filteredUsers.map((item, index) => (
-                                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
-                                                <div className="flex items-center justify-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0">
-                                                        <User className="h-4 w-4" />
+                <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                    {viewMode === 'list' ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse border border-slate-200 dark:border-slate-700">
+                                <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
+                                    <tr>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">User</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Company</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700 text-center">Slack ID</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border border-slate-200 dark:border-slate-700">Status</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center border border-slate-200 dark:border-slate-700">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
+                                    {filteredUsers.length === 0 ? (
+                                        <tr><td colSpan={5} className="p-8 text-center text-slate-500">No users found</td></tr>
+                                    ) : (
+                                        filteredUsers.map((item) => (
+                                            <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className="flex items-center justify-center gap-3">
+                                                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 border border-indigo-100 dark:border-indigo-800">
+                                                            <User className="h-4 w-4" />
+                                                        </div>
+                                                        <div className="text-left">
+                                                            <div className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-tight">{item.name}</div>
+                                                            <div className="text-xs text-slate-500 dark:text-slate-400">{item.email}</div>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-left">
-                                                        <div className="font-medium text-slate-900 dark:text-white text-sm">{item.name}</div>
-                                                        <div className="text-xs text-slate-500 dark:text-slate-400">{item.email}</div>
+                                                </td>
+                                                <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
+                                                    <div className="text-xs text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider">{item.companyName || '-'}</div>
+                                                </td>
+                                                <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
+                                                    {item.slackUserId ? (
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-800">{item.slackUserId}</span>
+                                                        </div>
+                                                    ) : '-'}
+                                                </td>
+                                                <td className="px-6 py-4 text-center border border-slate-200 dark:border-slate-700">
+                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                        }`}>
+                                                        {item.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-center border border-slate-200 dark:border-slate-700">
+                                                    <div className="flex justify-center gap-2">
+                                                        <button onClick={() => { setSelectedSlackUser(item); setIsDetailModalOpen(true); }} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="View">
+                                                            <Eye className="h-4 w-4" />
+                                                        </button>
+                                                        <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-sm" title="Edit">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
                                                     </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                            {filteredUsers.length === 0 ? (
+                                <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+                                    <p>No users found</p>
+                                </div>
+                            ) : (
+                                filteredUsers.map((item) => (
+                                    <div key={item.id} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-lg transition-all transform hover:-translate-y-1">
+                                        <div className="p-4">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 group-hover:scale-110 transition-transform">
+                                                    <Slack className="h-6 w-6" />
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
-                                                <div className="text-sm text-slate-700 dark:text-slate-300 font-medium">{item.companyName || '-'}</div>
-                                            </td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400 truncate max-w-[150px]" title={item.phone}>
-                                                {formatPhoneNumberWithCountryCode(item.phone) || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
-                                                {item.slackUserId ? (
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-sm font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit">{item.slackUserId}</span>
-                                                        <span className="text-xs text-indigo-500 mt-0.5">@{item.displayName || '-'}</span>
-                                                    </div>
-                                                ) : '-'}
-                                            </td>
-                                            <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
-                                                <div className="text-sm text-slate-700 dark:text-slate-300">{item.role || '-'}</div>
-                                                {item.department && <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{item.department}</div>}
-                                            </td>
-                                            <td className="px-6 py-4 text-center border border-slate-200 dark:border-slate-700">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide border ${item.isActive
-                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                                    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                                                    }`}>
-                                                    {item.isActive ? 'Active' : 'Inactive'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center border border-slate-200 dark:border-slate-700">
-                                                <div className="flex justify-center gap-2">
-                                                    <button onClick={() => handleEdit(item)} className="h-7 w-7 flex items-center justify-center rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm" title="Edit">
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                    <button onClick={() => handleDeleteClick(item.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
+                                                <div className="flex gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => { setSelectedSlackUser(item); setIsDetailModalOpen(true); }} className="p-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"><Eye className="h-3.5 w-3.5" /></button>
+                                                    <button onClick={() => handleEdit(item)} className="p-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"><Pencil className="h-3.5 w-3.5" /></button>
+                                                    <button onClick={() => handleDeleteClick(item.id)} className="p-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"><Trash2 className="h-3.5 w-3.5" /></button>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{item.companyName || 'Standard'}</span>
+                                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate uppercase tracking-tight">{item.name}</h4>
+                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{item.email}</p>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                        }`}>
+                                                        {item.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                    {item.slackUserId && (
+                                                        <span className="flex items-center gap-1 text-[9px] text-indigo-500 font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded">
+                                                            <Hash className="h-3 w-3" /> {item.slackUserId}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-1.5 p-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                    <Briefcase className="h-3 w-3 text-slate-400" />
+                                                    <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate">{item.role || 'Member'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -411,6 +474,114 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                 onConfirm={handleDeleteConfirm}
                 itemName="Slack User"
             />
+
+            <Modal
+                isOpen={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                title="Slack Member Profile"
+                size="md"
+            >
+                {selectedSlackUser && (
+                    <div className="space-y-6">
+                        <div className="flex flex-col items-center justify-center pb-6 border-b border-slate-100 dark:border-slate-800">
+                            <div className="relative">
+                                <div className="w-20 h-20 rounded-3xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4 border border-indigo-100 dark:border-indigo-800 shadow-sm relative z-10">
+                                    <User className="h-10 w-10" />
+                                </div>
+                                <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm z-20">
+                                    <Slack className="h-5 w-5 text-[#4A154B]" />
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <h4 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">{selectedSlackUser.name}</h4>
+                                <div className="flex items-center justify-center gap-2 mt-1">
+                                    <AtSign className="h-3 w-3 text-slate-400" />
+                                    <span className="text-sm text-slate-500 dark:text-slate-400">{selectedSlackUser.displayName || 'no-display-name'}</span>
+                                </div>
+                            </div>
+                            <span className={`mt-4 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${selectedSlackUser.isActive
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                }`}>
+                                {selectedSlackUser.isActive ? 'Active Account' : 'Inactive Account'}
+                            </span>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Hash className="h-3.5 w-3.5 text-indigo-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Slack User ID</span>
+                                    </div>
+                                    <p className="text-sm font-mono font-bold text-slate-700 dark:text-slate-200">{selectedSlackUser.slackUserId || 'Not synced'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Briefcase className="h-3.5 w-3.5 text-amber-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Designation</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{selectedSlackUser.role || 'Member'}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Mail className="h-3.5 w-3.5 text-blue-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Email Address</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{selectedSlackUser.email}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Phone className="h-3.5 w-3.5 text-emerald-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Contact Number</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{formatPhoneNumberWithCountryCode(selectedSlackUser.phone) || 'Not provided'}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <MapPin className="h-3.5 w-3.5 text-red-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Organization</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{selectedSlackUser.companyName || 'Not specified'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Tag className="h-3.5 w-3.5 text-purple-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Department</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{selectedSlackUser.department || 'General'}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Member Notes</label>
+                                <div className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 leading-relaxed">
+                                    {selectedSlackUser.notes || 'No administrative notes available for this Slack member.'}
+                                </div>
+                            </div>
+
+                            <div className="pt-2">
+                                <div className="flex items-center gap-3 p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50">
+                                    <Shield className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+                                    <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
+                                        Profile synchronization is enabled. Changes made here may be overwritten by Slack API sync.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <Button variant="primary" onClick={() => setIsDetailModalOpen(false)}>Close</Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </>
     );
 }

@@ -10,8 +10,7 @@ import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmplo
 import { EmailInfoService } from '../email/email-info.service';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { NotificationType, WorkflowType } from '@adminvault/shared-models';
-import { OnboardingService } from '../onboarding/onboarding.service';
+import { NotificationType } from '@adminvault/shared-models';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 
 @Injectable()
@@ -21,8 +20,7 @@ export class EmployeesService {
         private employeesRepo: EmployeesRepository,
         private emailInfoService: EmailInfoService,
         private auditLogService: AuditLogService,
-        private notificationsService: NotificationsService,
-        private onboardingService: OnboardingService
+        private notificationsService: NotificationsService
     ) { }
 
     async createEmployee(reqModel: CreateEmployeeModel): Promise<GlobalResponse> {
@@ -116,8 +114,6 @@ export class EmployeesService {
                 });
             }
 
-            // Initialize Onboarding Workflow
-            await this.onboardingService.initializeWorkflow(savedEmployee.id, reqModel.companyId, WorkflowType.ONBOARDING);
 
             return new GlobalResponse(true, 0, "Employee and Identity created successfully");
         } catch (error) {
@@ -353,8 +349,6 @@ export class EmployeesService {
                 'HR'
             );
 
-            // Initialize Offboarding Workflow
-            await this.onboardingService.initializeWorkflow(existingEmployee.id, existingEmployee.companyId, WorkflowType.OFFBOARDING);
 
             return new GlobalResponse(true, 0, "Employee deleted successfully");
         } catch (error) {

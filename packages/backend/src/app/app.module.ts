@@ -13,12 +13,10 @@ import { DatabaseModule } from '../database/database.module';
 import { ReportsModule } from './features/reports/reports.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { DocumentsModule } from './features/documents/documents.module';
-import { AdministrationModule } from './features/administration/administration.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { ProcurementModule } from './features/procurement/procurement.module';
 import { AuditLogModule } from './features/audit-log/audit-log.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
-import { OnboardingModule } from './features/onboarding/onboarding.module';
 import { ContractModule } from './features/contracts/contract.module';
 import configuration from '../config/configuration';
 import { APP_GUARD } from '@nestjs/core';
@@ -26,8 +24,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { WebSocketModule } from './features/websocket/websocket.module';
 import { EmailModule } from './features/email/email.module';
-import { SecurityModule } from './features/security/security.module';
-
 
 @Module({
   imports: [
@@ -49,17 +45,14 @@ import { SecurityModule } from './features/security/security.module';
     ReportsModule,
     DashboardModule,
     DocumentsModule,
-    AdministrationModule,
     KnowledgeBaseModule,
     ProcurementModule,
     AuditLogModule,
     NotificationsModule,
-    OnboardingModule,
     ContractModule,
     EventEmitterModule.forRoot(),
     WebSocketModule,
     EmailModule,
-    SecurityModule,
   ],
   controllers: [AppController],
   providers: [
