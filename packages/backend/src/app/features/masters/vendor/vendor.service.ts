@@ -24,10 +24,6 @@ export class VendorService {
                 throw new ErrorResponse(0, "Vendor with this name already exists");
             }
 
-            if (reqModel.phone && !/^\d{10}$/.test(reqModel.phone)) {
-                throw new ErrorResponse(0, "Phone number must be exactly 10 digits");
-            }
-
             await transManager.startTransaction();
             const saveEntity = new VendorsMasterEntity();
             saveEntity.name = reqModel.name;
@@ -63,11 +59,6 @@ export class VendorService {
             const existing = await this.vendorRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
                 throw new ErrorResponse(404, 'Vendor not found');
-            }
-
-            await transManager.startTransaction();
-            if (reqModel.phone && !/^\d{10}$/.test(reqModel.phone)) {
-                throw new ErrorResponse(0, "Phone number must be exactly 10 digits");
             }
 
             await transManager.startTransaction();

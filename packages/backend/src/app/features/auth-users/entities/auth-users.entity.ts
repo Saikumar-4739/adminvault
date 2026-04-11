@@ -18,7 +18,7 @@ export class AuthUsersEntity {
   @Column('varchar', { name: 'email', length: 255, nullable: false, unique: true, comment: 'User email address' })
   email: string;
 
-  @Column('varchar', { name: 'ph_number', length: 20, nullable: true, comment: 'Phone number' })
+  @Column('varchar', { name: 'ph_number', length: 50, nullable: true, comment: 'Phone number' })
   phNumber: string;
 
   @Column('text', { name: 'password_hash', nullable: true, comment: 'Hashed password' })
@@ -53,6 +53,12 @@ export class AuthUsersEntity {
 
   @Column('timestamp', { name: 'password_changed_at', nullable: true, comment: 'Timestamp of last password change' })
   passwordChangedAt: Date;
+
+  @Column('varchar', { name: 'vault_reset_otp', length: 10, nullable: true, comment: 'OTP for vault password reset' })
+  vaultResetOtp: string;
+
+  @Column('timestamp', { name: 'vault_reset_otp_expiry', nullable: true, comment: 'Expiry for vault reset OTP' })
+  vaultResetOtpExpiry: Date;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', comment: 'Record last update timestamp' })
   updatedAt: Date;

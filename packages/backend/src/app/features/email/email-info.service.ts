@@ -156,70 +156,40 @@ export class EmailInfoService {
 
     const emailUser = this.configService.get<string>('EMAIL_USER');
     const mailOptions = {
-      from: `"AdminVault System" <${emailUser}>`,
+      from: `"BOS Vault System" <${emailUser}>`,
       to: adminEmail,
       subject: `[Priority: Action Required] New Access Request from ${request.name}`,
       html: `
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
-  <tr>
-    <td align="center" style="padding:20px;">
-      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
-        
-        <!-- Header -->
-        <tr>
-          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
-            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
-          </td>
-        </tr>
-
-        <!-- Message -->
-        <tr>
-          <td style="padding:16px 20px;font-size:14px;color:#111827;">
-            Hello <strong>Admin</strong>,<br><br>
-            A new access request has been submitted by <strong>${request.name}</strong>.
-          </td>
-        </tr>
-
-        <!-- Horizontal Info Row -->
-        <tr>
-          <td style="padding:12px 20px;">
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                
-                <td width="40%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Applicant Name</div>
-                  <strong style="font-size:13px;">${request.name}</strong>
-                </td>
-
-                <td width="60%" style="padding:8px;">
-                  <div style="font-size:11px;color:#6b7280;">Work Email</div>
-                  <strong style="font-size:13px;color:#3b82f6;">${request.email}</strong>
-                </td>
-
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Button -->
-        <tr>
-          <td align="center" style="padding:20px;">
-            <a href="${frontendUrl}/dashboard"
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
-                     font-size:11px;color:#6b7280;">
-            Automated notification • Do not reply
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
+  <div style="border-bottom: 2px solid #4f46e5; padding-bottom: 10px; margin-bottom: 20px;">
+    <h2 style="color: #4f46e5; margin: 0;">BOS Vault</h2>
+  </div>
+  
+  <p>Hello <strong>Admin</strong>,</p>
+  <p>A new access request has been submitted by <strong>${request.name}</strong> (${request.email}).</p>
+  
+  <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="font-size: 11px; color: #64748b; text-transform: uppercase;">Applicant</td>
+        <td style="font-size: 11px; color: #64748b; text-transform: uppercase;">Work Email</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold; font-size: 14px;">${request.name}</td>
+        <td style="font-weight: bold; font-size: 14px; color: #4f46e5;">${request.email}</td>
+      </tr>
+    </table>
+  </div>
+  
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${frontendUrl}/dashboard" style="background: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+      Review Access Request
+    </a>
+  </div>
+  
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 11px; color: #94a3b8; text-align: center;">BOS Vault System • Automated notification • Do not reply</p>
+</div>
             `,
     };
 
@@ -250,97 +220,48 @@ export class EmailInfoService {
     const emailUser = this.configService.get<string>('EMAIL_USER');
 
     const mailOptions = {
-      from: `"AdminVault Support" <${emailUser}>`,
+      from: `"BOS Vault Support" <${emailUser}>`,
       to: recipientEmail,
       subject: `[Ticket Received] ${ticket.ticketCode} - ${ticket.subject}`,
       html: `
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb"
-       style="font-family:Arial,sans-serif;">
-  <tr>
-    <td align="center" style="padding:20px;">
-
-      <table width="700" cellpadding="0" cellspacing="0"
-             style="background:#ffffff;border:1px solid #e5e7eb;">
-        
-        <!-- Header -->
-        <tr>
-          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
-            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
-          </td>
-        </tr>
-
-        <!-- Message -->
-        <tr>
-          <td style="padding:16px 20px;font-size:14px;color:#111827;">
-            Hello <strong>${roleName}</strong>,<br><br>
-            Your ticket <strong>${ticket.ticketCode}</strong> has been created successfully.
-          </td>
-        </tr>
-
-        <!-- Horizontal Row -->
-        <tr>
-          <td style="padding:12px 20px;">
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-
-                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Ticket</div>
-                  <strong style="font-size:13px;">${ticket.ticketCode}</strong>
-                </td>
-
-                <td width="20%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Status</div>
-                  <strong style="font-size:13px;color:#3b82f6;">OPEN</strong>
-                </td>
-
-                <td width="20%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Priority</div>
-                  <strong style="font-size:13px;color:${priorityColor};">
-                    ${ticket.priorityEnum}
-                  </strong>
-                </td>
-
-                <td width="35%" style="padding:8px;">
-                  <div style="font-size:11px;color:#6b7280;">Subject</div>
-                  <span style="font-size:13px;">
-                    ${ticket.subject}
-                  </span>
-                </td>
-
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Button -->
-        <tr>
-          <td align="center" style="padding:20px;">
-            <a href="${frontendUrl}/support?ticketId=${encodeURIComponent(
-        ticket.id
-      )}"
-               style="background:#4f46e5;color:#ffffff;
-                      padding:10px 18px;text-decoration:none;
-                      border-radius:4px;font-size:14px;font-weight:bold;
-                      display:inline-block;">
-              View Ticket
-            </a>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td align="center"
-              style="padding:12px 20px;border-top:1px solid #e5e7eb;
-                     font-size:11px;color:#6b7280;">
-            Automated notification • Do not reply
-          </td>
-        </tr>
-
-      </table>
-
-    </td>
-  </tr>
-</table>
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
+  <div style="border-bottom: 2px solid #4f46e5; padding-bottom: 10px; margin-bottom: 20px;">
+    <h2 style="color: #4f46e5; margin: 0;">BOS Vault Support</h2>
+  </div>
+  
+  <p>Hello <strong>${roleName}</strong>,</p>
+  <p>Ticket <strong>${ticket.ticketCode}</strong> has been created successfully.</p>
+  
+  <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="33%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">Ticket Code</td>
+        <td width="33%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">Priority</td>
+        <td width="33%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">Status</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold; font-size: 14px;">${ticket.ticketCode}</td>
+        <td style="font-weight: bold; font-size: 14px; color: ${priorityColor};">${ticket.priorityEnum}</td>
+        <td style="font-weight: bold; font-size: 14px; color: #3b82f6;">OPEN</td>
+      </tr>
+      <tr>
+        <td colspan="3" style="padding-top: 15px;">
+           <div style="font-size: 11px; color: #64748b; text-transform: uppercase;">Subject</div>
+           <div style="font-weight: bold; font-size: 13px;">${ticket.subject}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${frontendUrl}/support?ticketId=${encodeURIComponent(ticket.id)}" style="background: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+      View Ticket Progress
+    </a>
+  </div>
+  
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 11px; color: #94a3b8; text-align: center;">BOS Vault System • Automated notification • Do not reply</p>
+</div>
 `,
 
     };
@@ -378,86 +299,40 @@ export class EmailInfoService {
 
     const emailUser = this.configService.get<string>('EMAIL_USER');
     const mailOptions = {
-      from: `"AdminVault Support" < ${emailUser}> `,
+      from: `"BOS Vault Support" < ${emailUser}> `,
       to: recipientEmail,
       subject: `[Ticket Update] ${ticket.ticketCode} - Status Changed to ${newStatus} `,
       html: `
-<table width="100%" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;">
-  <tr>
-    <td align="center" style="padding:20px;">
-      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
-        
-        <!-- Header -->
-        <tr>
-          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
-            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
-          </td>
-        </tr>
-
-        <!-- Message -->
-        <tr>
-          <td style="padding:16px 20px;font-size:14px;color:#111827;">
-            Hello <strong>${roleName}</strong>,<br><br>
-            The status of ticket <strong>${ticket.ticketCode}</strong> has been updated.
-          </td>
-        </tr>
-
-        <!-- Horizontal Info Row -->
-        <tr>
-          <td style="padding:12px 20px;">
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                
-                <td width="25%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Ticket</div>
-                  <strong style="font-size:13px;">${ticket.ticketCode}</strong>
-                </td>
-
-                <td width="20%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Status</div>
-                  <span style="font-size:13px;color:#6b7280;">${oldStatus}</span>
-                  <span style="margin:0 4px;">→</span>
-                  <strong style="font-size:13px;color:${newStatusColor};">${newStatus}</strong>
-                </td>
-
-                <td width="20%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Priority</div>
-                  <strong style="font-size:13px;color:${priorityColor};">${ticket.priorityEnum}</strong>
-                </td>
-
-                <td width="35%" style="padding:8px;">
-                  <div style="font-size:11px;color:#6b7280;">Subject</div>
-                  <span style="font-size:13px;">${ticket.subject}</span>
-                </td>
-
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Button -->
-        <tr>
-          <td align="center" style="padding:20px;">
-            <a href="${frontendUrl}/support?ticketId=${encodeURIComponent(ticket.id)}"
-               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
-                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
-              Open Ticket
-            </a>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
-                     font-size:11px;color:#6b7280;">
-            Automated notification • Do not reply
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
+  <div style="border-bottom: 2px solid #4f46e5; padding-bottom: 10px; margin-bottom: 20px;">
+    <h2 style="color: #4f46e5; margin: 0;">BOS Vault Support</h2>
+  </div>
+  
+  <p>Hello <strong>${roleName}</strong>,</p>
+  <p>The status of ticket <strong>${ticket.ticketCode}</strong> has been updated.</p>
+  
+  <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="50%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">Previous Status</td>
+        <td width="50%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">New Status</td>
+      </tr>
+      <tr>
+        <td style="font-size: 14px; color: #64748b;">${oldStatus}</td>
+        <td style="font-weight: bold; font-size: 14px; color: ${newStatusColor};">${newStatus}</td>
+      </tr>
+    </table>
+  </div>
+  
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${frontendUrl}/support?ticketId=${encodeURIComponent(ticket.id)}" style="background: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+      View Ticket Update
+    </a>
+  </div>
+  
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 11px; color: #94a3b8; text-align: center;">BOS Vault System • Automated notification • Do not reply</p>
+</div>
             `,
 
     };
@@ -478,62 +353,33 @@ export class EmailInfoService {
 
     const emailUser = this.configService.get<string>('EMAIL_USER');
     const mailOptions = {
-      from: `"AdminVault Security" <${emailUser}>`,
+      from: `"BOS Vault Security" <${emailUser}>`,
       to: email,
       subject: `[Security] Password Reset Request`,
       html: `
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
-  <tr>
-    <td align="center" style="padding:20px;">
-      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
-        
-        <!-- Header -->
-        <tr>
-          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
-            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
-          </td>
-        </tr>
-
-        <!-- Message -->
-        <tr>
-          <td style="padding:16px 20px;font-size:14px;color:#111827;">
-            Hello,<br><br>
-            We received a request to reset your AdminVault password. Click the button below to choose a new one.
-          </td>
-        </tr>
-
-        <!-- Horizontal Info Row (Optional/Simplified) -->
-        <tr>
-            <td style="padding:12px 20px;">
-                <div style="background:#f9fafb;padding:12px;border-radius:4px;font-size:13px;color:#6b7280;">
-                    Note: This link expires in <strong>60 minutes</strong>. If you didn't request this, you can safely ignore this email.
-                </div>
-            </td>
-        </tr>
-
-        <!-- Button -->
-        <tr>
-          <td align="center" style="padding:20px;">
-            <a href="${resetLink}"
-               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
-                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
-              Reset Password
-            </a>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
-                     font-size:11px;color:#6b7280;">
-            Automated notification • Do not reply
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
+  <div style="border-bottom: 2px solid #ef4444; padding-bottom: 10px; margin-bottom: 20px;">
+    <h2 style="color: #ef4444; margin: 0;">BOS Vault Security</h2>
+  </div>
+  
+  <p>Hello,</p>
+  <p>We received a request to reset your BOS Vault password. If you initiated this, please use the button below to set a new password.</p>
+  
+  <div style="background: #fff5f5; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #feb2b2; text-align: center;">
+    <p style="margin: 0; font-size: 13px; color: #c53030;"><strong>Security Warning:</strong> This link will expire in 60 minutes.</p>
+  </div>
+  
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${resetLink}" style="background: #ef4444; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+      Reset My Password
+    </a>
+  </div>
+  
+  <p style="font-size: 12px; color: #718096; margin-top: 20px;">If you didn't request this, you can safely ignore this email.</p>
+  
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 11px; color: #94a3b8; text-align: center;">BOS Vault System • Automated notification • Do not reply</p>
+</div>
             `,
     };
 
@@ -587,80 +433,43 @@ export class EmailInfoService {
     }
 
     const mailOptions = {
-      from: `"AdminVault Assets" <${emailUser}>`,
+      from: `"BOS Vault Assets" <${emailUser}>`,
       to: recipientEmail,
       subject: subjectLine,
       html: `
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
-  <tr>
-    <td align="center" style="padding:20px;">
-      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
-        
-        <!-- Header -->
-        <tr>
-          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
-            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
-          </td>
-        </tr>
-
-        <!-- Message -->
-        <tr>
-          <td style="padding:16px 20px;font-size:14px;color:#111827;">
-            Hello <strong>${recipientName}</strong>,<br><br>
-            ${messageLine}
-            ${remarks ? `<br><br><em>Notes: "${remarks}"</em>` : ''}
-          </td>
-        </tr>
-
-        <!-- Horizontal Info Row -->
-        <tr>
-          <td style="padding:12px 20px;">
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                
-                <td width="40%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Asset</div>
-                  <strong style="font-size:13px;">${assetName}</strong>
-                </td>
-
-                <td width="30%" style="padding:8px;border-right:1px solid #e5e7eb;">
-                  <div style="font-size:11px;color:#6b7280;">Assigned By</div>
-                  <strong style="font-size:13px;">${assignedBy}</strong>
-                </td>
-
-                <td width="30%" style="padding:8px;">
-                  <div style="font-size:11px;color:#6b7280;">Date</div>
-                  <strong style="font-size:13px;">${new Date(assignedDate).toLocaleDateString()}</strong>
-                </td>
-
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Button -->
-        <tr>
-          <td align="center" style="padding:20px;">
-            <a href="${frontendUrl}/assets/my-assets"
-               style="background:#4f46e5;color:#ffffff;padding:10px 18px;
-                      text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;display:inline-block;">
-              View My Assets
-            </a>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td align="center" style="padding:12px 20px;border-top:1px solid #e5e7eb;
-                     font-size:11px;color:#6b7280;">
-            Automated notification • Do not reply
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
+  <div style="border-bottom: 2px solid #4f46e5; padding-bottom: 10px; margin-bottom: 20px;">
+    <h2 style="color: #4f46e5; margin: 0;">BOS Vault Assets</h2>
+  </div>
+  
+  <p>Hello <strong>${recipientName}</strong>,</p>
+  <p>${messageLine}</p>
+  ${remarks ? `<div style="padding: 10px; border-left: 4px solid #e5e7eb; background: #f9fafb; margin: 15px 0; font-style: italic; font-size: 13px;">"${remarks}"</div>` : ''}
+  
+  <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="40%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">Asset Name</td>
+        <td width="30%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">Assigned By</td>
+        <td width="30%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">Date</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold; font-size: 14px;">${assetName}</td>
+        <td style="font-weight: bold; font-size: 14px;">${assignedBy}</td>
+        <td style="font-weight: bold; font-size: 14px;">${new Date(assignedDate).toLocaleDateString()}</td>
+      </tr>
+    </table>
+  </div>
+  
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${frontendUrl}/assets/my-assets" style="background: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+      View My Assets
+    </a>
+  </div>
+  
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 11px; color: #94a3b8; text-align: center;">BOS Vault System • Automated notification • Do not reply</p>
+</div>
             `,
     };
 
@@ -683,79 +492,48 @@ export class EmailInfoService {
     const emailUser = this.configService.get<string>('EMAIL_USER');
 
     const mailOptions = {
-      from: `"AdminVault Procurement" <${emailUser}>`,
+      from: `"BOS Vault Procurement" <${emailUser}>`,
       to: recipientEmail,
       subject: `[Approval Required] New Purchase Order: ${poNumber}`,
       html: `
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="font-family:Arial,sans-serif;">
-  <tr>
-    <td align="center" style="padding:20px;">
-      <table width="700" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;">
-        
-        <!-- Header -->
-        <tr>
-          <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
-            <strong style="font-size:18px;color:#4f46e5;">AdminVault</strong>
-          </td>
-        </tr>
-
-        <!-- Message -->
-        <tr>
-          <td style="padding:16px 20px;font-size:14px;color:#111827;">
-            Hello <strong>${recipientName}</strong>,<br><br>
-            A new purchase order <strong>${poNumber}</strong> has been submitted and requires your approval.
-          </td>
-        </tr>
-
-        <!-- Horizontal Info Row -->
-        <tr>
-          <td style="padding:12px 20px;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc; border:1px solid #f1f5f9; border-radius: 8px;">
-              <tr>
-                <td width="33%" style="padding:12px; border-right:1px solid #f1f5f9;">
-                  <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">PO Number</div>
-                  <strong style="font-size:14px; color:#1e293b;">${poNumber}</strong>
-                </td>
-                <td width="33%" style="padding:12px; border-right:1px solid #f1f5f9;">
-                  <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">Total Amount</div>
-                  <strong style="font-size:14px; color:#1e293b;">$${totalAmount.toLocaleString()}</strong>
-                </td>
-                <td width="33%" style="padding:12px;">
-                  <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">Vendor</div>
-                  <strong style="font-size:14px; color:#1e293b;">${vendorName}</strong>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="3" style="padding:12px; border-top:1px solid #f1f5f9;">
-                   <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">Requester</div>
-                   <strong style="font-size:14px; color:#1e293b;">${requesterName}</strong>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Button -->
-        <tr>
-          <td align="center" style="padding:30px 20px;">
-            <a href="${frontendUrl}/procurement" 
-               style="background:#4f46e5; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-size:14px; font-weight:bold; display:inline-block; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1), 0 2px 4px -1px rgba(79, 70, 229, 0.06);">
-              Review & Approve PO
-            </a>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td align="center" style="padding:16px 20px; border-top:1px solid #f1f5f9; font-size:11px; color:#94a3b8; background-color: #fcfcfd;">
-            AdminVault Procurement System • Automated notification
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
+  <div style="border-bottom: 2px solid #4f46e5; padding-bottom: 10px; margin-bottom: 20px;">
+    <h2 style="color: #4f46e5; margin: 0;">BOS Vault Procurement</h2>
+  </div>
+  
+  <p>Hello <strong>${recipientName}</strong>,</p>
+  <p>A new purchase order <strong>${poNumber}</strong> has been submitted and requires your approval.</p>
+  
+  <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="33%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">PO Number</td>
+        <td width="33%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">Amount</td>
+        <td width="33%" style="font-size: 11px; color: #64748b; text-transform: uppercase;">Vendor</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold; font-size: 14px;">${poNumber}</td>
+        <td style="font-weight: bold; font-size: 14px; color: #1e293b;">$${totalAmount.toLocaleString()}</td>
+        <td style="font-weight: bold; font-size: 14px;">${vendorName}</td>
+      </tr>
+      <tr>
+        <td colspan="3" style="padding-top: 15px;">
+           <div style="font-size: 11px; color: #64748b; text-transform: uppercase;">Requester</div>
+           <div style="font-weight: bold; font-size: 13px;">${requesterName}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${frontendUrl}/procurement" style="background: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+      Review & Approve PO
+    </a>
+  </div>
+  
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 11px; color: #94a3b8; text-align: center;">BOS Vault System • Automated notification • Do not reply</p>
+</div>
       `,
     };
 
@@ -765,6 +543,43 @@ export class EmailInfoService {
       return true;
     } catch (error) {
       this.logger.error(`Error sending PO approval email for ${poNumber} to ${recipientEmail}`, error);
+      return false;
+    }
+  }
+
+  async sendVaultOtpEmail(email: string, otp: string): Promise<boolean> {
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+    const mailOptions = {
+      from: `"BOS Vault Security" <${emailUser}>`,
+      to: email,
+      subject: `[Security] Your Vault Security Key OTP`,
+      html: `
+<div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
+  <div style="border-bottom: 2px solid #4f46e5; padding-bottom: 10px; text-align: center; margin-bottom: 25px;">
+    <h2 style="color: #4f46e5; margin: 0;">BOS Vault Security</h2>
+  </div>
+  
+  <p style="text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 10px; color: #111827;">Vault Security OTP</p>
+  <p style="text-align: center; color: #4b5563; font-size: 14px;">Use the following code to reset your vault security key. This code expires in <strong>10 minutes</strong>.</p>
+  
+  <div style="background: #f3f4f6; padding: 25px; border-radius: 12px; text-align: center; margin: 30px 0; border: 1px dashed #d1d5db;">
+    <span style="font-family: 'Courier New', Courier, monospace; font-size: 42px; font-weight: bold; color: #1f2937; letter-spacing: 12px;">${otp}</span>
+  </div>
+  
+  <p style="font-size: 12px; color: #6b7280; text-align: center; margin-top: 20px;">If you did not request this, please secure your account immediately.</p>
+  
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 11px; color: #94a3b8; text-align: center;">BOS Vault System • Automated notification • Do not reply</p>
+</div>
+      `,
+    };
+
+    try {
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Vault OTP email sent to ${email}: ${info.messageId}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`Error sending vault OTP email to ${email}`, error);
       return false;
     }
   }

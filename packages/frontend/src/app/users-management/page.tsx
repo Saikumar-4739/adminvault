@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Select } from '@/components/ui/Select';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { authService } from '@/lib/api/services';
@@ -80,7 +81,6 @@ export default function UsersManagementPage() {
     // Edit state
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
-    const [countryCode, setCountryCode] = useState('+91');
 
     const fetchUsers = useCallback(async () => {
         if (!user?.companyId) return;
@@ -149,28 +149,11 @@ export default function UsersManagementPage() {
     const openEditModal = (u: UserRow) => {
         setIsEditMode(true);
         setEditingUserId(u.id);
-        const phone = u.phNumber || '';
-        let cleanPhone = phone;
-        if (phone.startsWith('+')) {
-            // Simple logic: if it starts with + and is >10 chars, the first part is country code
-            // But for now, we'll just check if it ends with 10 digits
-            const match = phone.match(/(\+\d+)(\d{10})$/);
-            if (match) {
-                setCountryCode(match[1]);
-                cleanPhone = match[2];
-            } else {
-                // Fallback
-                cleanPhone = phone.replace(/\D/g, '').slice(-10);
-            }
-        } else {
-            cleanPhone = phone.replace(/\D/g, '').slice(-10);
-        }
-
         setFormData({
             fullName: u.fullName,
             email: u.email,
             password: '',
-            phNumber: cleanPhone,
+            phNumber: u.phNumber || '',
             role: u.userRole as UserRoleEnum,
         });
         setIsModalOpen(true);
@@ -204,7 +187,7 @@ export default function UsersManagementPage() {
         e.preventDefault();
         const requestId = fromRequestId;
         setSubmitting(true);
-        const fullPhNumber = `${countryCode}${formData.phNumber.replace(/\D/g, '')}`;
+        const fullPhNumber = formData.phNumber;
 
         try {
             if (isEditMode && editingUserId) {
@@ -591,31 +574,13 @@ export default function UsersManagementPage() {
                                 </button>
                             </div>
                         </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                                Phone Number <span className="text-red-500">*</span>
-                            </label>
-                            <div className="flex gap-2">
-                                <select
-                                    value={countryCode}
-                                    onChange={e => setCountryCode(e.target.value)}
-                                    className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-2 focus:ring-indigo-500/20"
-                                >
-                                    <option value="+91">+91 (IN)</option>
-                                    <option value="+1">+1 (US)</option>
-                                    <option value="+44">+44 (UK)</option>
-                                    <option value="+971">+971 (UAE)</option>
-                                </select>
-                                <input
-                                    type="tel"
-                                    value={formData.phNumber}
-                                    onChange={e => setFormData({ ...formData, phNumber: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                                    required
-                                    placeholder="10 digit number"
-                                    className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-2 focus:ring-indigo-500/20"
-                                />
-                            </div>
-                        </div>
+                        <PhoneInput
+                            label="Phone Number"
+                            value={formData.phNumber}
+                            onChange={(val) => setFormData({ ...formData, phNumber: val })}
+                            required
+                            disabled={submitting}
+                        />
                         <Select
                             label="Role"
                             value={formData.role}

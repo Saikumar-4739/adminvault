@@ -19,4 +19,7 @@ export class LicensesMasterEntity extends MasterBaseEntity {
 
     @Column('date', { name: 'expiry_date', nullable: true, comment: 'License expiry date' })
     expiryDate: Date;
+
+    @Column('int', { name: 'total_quantity', default: 0, nullable: true, comment: 'Total number of licenses available' })
+    totalQuantity: number;
 }

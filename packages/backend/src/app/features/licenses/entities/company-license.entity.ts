@@ -17,10 +17,10 @@ export class CompanyLicenseEntity extends CommonBaseEntity {
     @Column({ name: 'purchase_date', type: 'date', nullable: true })
     purchaseDate: Date | null;
 
-    @Column({ type: 'date', nullable: true })
+    @Column({ name: 'expiry_date', type: 'date', nullable: true })
     expiryDate: Date | null;
 
-    @Column({ type: 'text', nullable: true })
+    @Column({ name: 'remarks', type: 'text', nullable: true })
     remarks: string | null;
 
     @Column({ name: 'assigned_employee_id', nullable: true })

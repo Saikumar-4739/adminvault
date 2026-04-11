@@ -5,6 +5,14 @@ import * as XLSX from 'xlsx';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { TicketsEntity } from '../tickets/entities/tickets.entity';
+import { AssetInfoEntity } from '../asset-info/entities/asset-info.entity';
+import { AssetTypeMasterEntity } from '../masters/asset-type/entities/asset-type.entity';
+import { DeviceConfigEntity } from '../masters/brand/entities/brand.entity';
+import { DepartmentsMasterEntity } from '../masters/department/entities/department.entity';
+import { CompanyInfoEntity } from '../masters/company-info/entities/company-info.entity';
+import { CompanyLicenseEntity } from '../licenses/entities/company-license.entity';
+import { LicensesMasterEntity } from '../masters/license/entities/license.entity';
+import { TicketStatusEnum, TicketPriorityEnum, AssetStatusEnum } from '@adminvault/shared-models';
 
 @Injectable()
 export class ReportsService {
@@ -172,34 +180,33 @@ export class ReportsService {
 
     async getAssetReports(format = 'summary') {
         // Use raw query with manual joins
-        const query = `
-            SELECT 
-                a.id AS "assetId",
-                a.serial_number AS "serialNumber",
-                a.model,
-                a.configuration,
-                a.box_no AS "boxNo",
-                a.asset_status_enum AS "status",
-                a.purchase_date AS "purchaseDate",
-                a.warranty_expiry AS "warrantyExpiry",
-                a.user_assigned_date AS "userAssignedDate",
-                a.last_return_date AS "lastReturnDate",
-                a.created_at AS "createdAt",
-                a.updated_at AS "updatedAt",
-                d.name AS "deviceName",
-                b.laptop_company AS "brandName",
-                CONCAT(e1.first_name, ' ', e1.last_name) AS "assignedTo",
-                e1.email AS "assignedEmail",
-                CONCAT(e2.first_name, ' ', e2.last_name) AS "previousUser"
-            FROM asset_info a
-            LEFT JOIN asset_types d ON a.device_id = d.id
-            LEFT JOIN device_configs b ON a.device_config_id = b.id
-            LEFT JOIN employees e1 ON a.assigned_to_employee_id = e1.id
-            LEFT JOIN employees e2 ON a.previous_user_employee_id = e2.id
-            ORDER BY a.id DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(AssetInfoEntity)
+            .createQueryBuilder('a')
+            .leftJoin(AssetTypeMasterEntity, 'd', 'a.deviceId = d.id')
+            .leftJoin(DeviceConfigEntity, 'b', 'a.deviceConfigId = b.id')
+            .leftJoin(EmployeesEntity, 'e1', 'a.assignedToEmployeeId = e1.id')
+            .leftJoin(EmployeesEntity, 'e2', 'a.previousUserEmployeeId = e2.id')
+            .select([
+                'a.id AS "assetId"',
+                'a.serial_number AS "serialNumber"',
+                'a.model AS "model"',
+                'a.configuration AS "configuration"',
+                'a.box_no AS "boxNo"',
+                'a.asset_status_enum AS "status"',
+                'a.purchase_date AS "purchaseDate"',
+                'a.warranty_expiry AS "warrantyExpiry"',
+                'a.user_assigned_date AS "userAssignedDate"',
+                'a.last_return_date AS "lastReturnDate"',
+                'a.created_at AS "createdAt"',
+                'a.updated_at AS "updatedAt"',
+                'd.name AS "deviceName"',
+                'b.laptop_company AS "brandName"',
+                "CONCAT(e1.first_name, ' ', e1.last_name) AS \"assignedTo\"",
+                'e1.email AS "assignedEmail"',
+                "CONCAT(e2.first_name, ' ', e2.last_name) AS \"previousUser\""
+            ])
+            .orderBy('a.id', 'DESC')
+            .getRawMany();
 
         const formattedAssets = rawResults.map((asset: any) => ({
             'Serial Number': asset.serialNumber,
@@ -224,30 +231,31 @@ export class ReportsService {
     }
 
     async getAssetAllocationReports(format = 'summary') {
-        const query = `
-            SELECT 
-                a.id AS "assetId",
-                a.serial_number AS "serialNumber",
-                a.model,
-                a.configuration,
-                a.asset_status_enum AS "status",
-                a.user_assigned_date AS "userAssignedDate",
-                d.name AS "deviceName",
-                b.laptop_company AS "brandName",
-                CONCAT(e1.first_name, ' ', e1.last_name) AS "assignedTo",
-                e1.email AS "assignedEmail",
-                e1.ph_number AS "assignedPhone",
-                dept.name AS "assignedDepartment"
-            FROM asset_info a
-            LEFT JOIN asset_types d ON a.device_id = d.id
-            LEFT JOIN device_configs b ON a.device_config_id = b.id
-            INNER JOIN employees e1 ON a.assigned_to_employee_id = e1.id
-            LEFT JOIN departments dept ON e1.department_id = dept.id
-            WHERE a.assigned_to_employee_id IS NOT NULL
-            ORDER BY e1.first_name, e1.last_name, a.id DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(AssetInfoEntity)
+            .createQueryBuilder('a')
+            .leftJoin(AssetTypeMasterEntity, 'd', 'a.deviceId = d.id')
+            .leftJoin(DeviceConfigEntity, 'b', 'a.deviceConfigId = b.id')
+            .innerJoin(EmployeesEntity, 'e1', 'a.assignedToEmployeeId = e1.id')
+            .leftJoin(DepartmentsMasterEntity, 'dept', 'e1.departmentId = dept.id')
+            .select([
+                'a.id AS "assetId"',
+                'a.serial_number AS "serialNumber"',
+                'a.model AS "model"',
+                'a.configuration AS "configuration"',
+                'a.asset_status_enum AS "status"',
+                'a.user_assigned_date AS "userAssignedDate"',
+                'd.name AS "deviceName"',
+                'b.laptop_company AS "brandName"',
+                "CONCAT(e1.first_name, ' ', e1.last_name) AS \"assignedTo\"",
+                'e1.email AS "assignedEmail"',
+                'e1.ph_number AS "assignedPhone"',
+                'dept.name AS "assignedDepartment"'
+            ])
+            .where('a.assignedToEmployeeId IS NOT NULL')
+            .orderBy('e1.first_name', 'ASC')
+            .addOrderBy('e1.last_name', 'ASC')
+            .addOrderBy('a.id', 'DESC')
+            .getRawMany();
 
         return rawResults.map((asset: any) => ({
             'Serial Number': asset.serialNumber,
@@ -271,27 +279,25 @@ export class ReportsService {
             return { totalEmployees };
         }
 
-        const query = `
-            SELECT 
-                e.id, 
-                e.first_name AS "firstName", 
-                e.last_name AS "lastName", 
-                e.email, 
-                e.ph_number AS "phone", 
-                e.emp_status AS "status",
-                e.created_at AS "joinDate",
-                d.name AS "departmentName",
-                c.company_name AS "companyName"
-            FROM employees e
-            LEFT JOIN departments d ON e.department_id = d.id
-            LEFT JOIN company_info c ON e.company_id = c.id
-            ORDER BY e.id DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(EmployeesEntity)
+            .createQueryBuilder('e')
+            .leftJoin(DepartmentsMasterEntity, 'd', 'e.departmentId = d.id')
+            .leftJoin(CompanyInfoEntity, 'c', 'e.companyId = c.id')
+            .select([
+                'e.id AS "id"',
+                'e.first_name AS "firstName"',
+                'e.last_name AS "lastName"',
+                'e.email AS "email"',
+                'e.ph_number AS "phone"',
+                'e.emp_status AS "status"',
+                'e.created_at AS "joinDate"',
+                'd.name AS "departmentName"',
+                'c.company_name AS "companyName"'
+            ])
+            .orderBy('e.id', 'DESC')
+            .getRawMany();
 
         return rawResults.map((emp: any) => ({
-            'ID': emp.id,
             'Full Name': `${emp.firstName} ${emp.lastName}`,
             'Email': emp.email,
             'Phone': emp.phone || 'N/A',
@@ -313,24 +319,23 @@ export class ReportsService {
             return { totalTickets, ticketsByStatus };
         }
 
-        const query = `
-            SELECT 
-                t.ticket_code AS "ticketCode",
-                t.subject,
-                t.priority_enum AS "priority",
-                t.category_enum AS "category",
-                t.ticket_status AS "status",
-                t.created_at AS "createdAt",
-                t.resolved_at AS "resolvedAt",
-                CONCAT(e1.first_name, ' ', e1.last_name) AS "raisedBy",
-                CONCAT(e2.first_name, ' ', e2.last_name) AS "assignedTo"
-            FROM tickets t
-            LEFT JOIN employees e1 ON t.employee_id = e1.id
-            LEFT JOIN employees e2 ON t.assign_admin_id = e2.id
-            ORDER BY t.created_at DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(TicketsEntity)
+            .createQueryBuilder('t')
+            .leftJoin(EmployeesEntity, 'e1', 't.employeeId = e1.id')
+            .leftJoin(EmployeesEntity, 'e2', 't.assignAdminId = e2.id')
+            .select([
+                't.ticket_code AS "ticketCode"',
+                't.subject AS "subject"',
+                't.priority_enum AS "priority"',
+                't.category_enum AS "category"',
+                't.ticket_status AS "status"',
+                't.created_at AS "createdAt"',
+                't.resolved_at AS "resolvedAt"',
+                "CONCAT(e1.first_name, ' ', e1.last_name) AS \"raisedBy\"",
+                "CONCAT(e2.first_name, ' ', e2.last_name) AS \"assignedTo\""
+            ])
+            .orderBy('t.created_at', 'DESC')
+            .getRawMany();
 
         return rawResults.map((t: any) => ({
             'Ticket Code': t.ticketCode,
@@ -347,27 +352,26 @@ export class ReportsService {
 
     // New Asset Reports
     async getAssetWarrantyExpiryReport(format = 'summary') {
-        const query = `
-            SELECT 
-                a.id AS "assetId",
-                a.serial_number AS "serialNumber",
-                a.model,
-                a.warranty_expiry AS "warrantyExpiry",
-                a.purchase_date AS "purchaseDate",
-                d.name AS "deviceName",
-                b.laptop_company AS "brandName",
-                CONCAT(e1.first_name, ' ', e1.last_name) AS "assignedTo",
-                (a.warranty_expiry - CURRENT_DATE) AS "daysUntilExpiry"
-            FROM asset_info a
-            LEFT JOIN asset_types d ON a.device_id = d.id
-            LEFT JOIN device_configs b ON a.device_config_id = b.id
-            LEFT JOIN employees e1 ON a.assigned_to_employee_id = e1.id
-            WHERE a.warranty_expiry IS NOT NULL 
-            AND a.warranty_expiry >= CURRENT_DATE
-            ORDER BY a.warranty_expiry ASC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(AssetInfoEntity)
+            .createQueryBuilder('a')
+            .leftJoin(AssetTypeMasterEntity, 'd', 'a.deviceId = d.id')
+            .leftJoin(DeviceConfigEntity, 'b', 'a.deviceConfigId = b.id')
+            .leftJoin(EmployeesEntity, 'e1', 'a.assignedToEmployeeId = e1.id')
+            .select([
+                'a.id AS "assetId"',
+                'a.serial_number AS "serialNumber"',
+                'a.model AS "model"',
+                'a.warranty_expiry::date AS "warrantyExpiry"',
+                'a.purchase_date::date AS "purchaseDate"',
+                'd.name AS "deviceName"',
+                'b.laptop_company AS "brandName"',
+                "CONCAT(e1.first_name, ' ', e1.last_name) AS \"assignedTo\"",
+                '(a.warranty_expiry::date - CURRENT_DATE) AS "daysUntilExpiry"'
+            ])
+            .where('a.warranty_expiry IS NOT NULL')
+            .andWhere('a.warranty_expiry::date >= CURRENT_DATE')
+            .orderBy('a.warranty_expiry::date', 'ASC')
+            .getRawMany();
 
         return rawResults.map((asset: any) => ({
             'Serial Number': asset.serialNumber,
@@ -382,24 +386,26 @@ export class ReportsService {
     }
 
     async getAssetByDepartmentReport(format = 'summary') {
-        const query = `
-            SELECT 
-                dept.name AS "departmentName",
-                d.name AS "deviceName",
-                b.laptop_company AS "brandName",
-                COUNT(a.id) AS "assetCount",
-                STRING_AGG(a.serial_number, ', ') AS "serialNumbers"
-            FROM asset_info a
-            INNER JOIN employees e ON a.assigned_to_employee_id = e.id
-            INNER JOIN departments dept ON e.department_id = dept.id
-            LEFT JOIN asset_types d ON a.device_id = d.id
-            LEFT JOIN device_configs b ON a.device_config_id = b.id
-            WHERE a.assigned_to_employee_id IS NOT NULL
-            GROUP BY dept.name, d.name, b.laptop_company
-            ORDER BY dept.name, "assetCount" DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(AssetInfoEntity)
+            .createQueryBuilder('a')
+            .innerJoin(EmployeesEntity, 'e', 'a.assignedToEmployeeId = e.id')
+            .innerJoin(DepartmentsMasterEntity, 'dept', 'e.departmentId = dept.id')
+            .leftJoin(AssetTypeMasterEntity, 'd', 'a.deviceId = d.id')
+            .leftJoin(DeviceConfigEntity, 'b', 'a.deviceConfigId = b.id')
+            .select([
+                'dept.name AS "departmentName"',
+                'd.name AS "deviceName"',
+                'b.laptop_company AS "brandName"',
+                'COUNT(a.id) AS "assetCount"',
+                "STRING_AGG(a.serial_number, ', ') AS \"serialNumbers\""
+            ])
+            .where('a.assignedToEmployeeId IS NOT NULL')
+            .groupBy('dept.name')
+            .addGroupBy('d.name')
+            .addGroupBy('b.laptop_company')
+            .orderBy('dept.name', 'ASC')
+            .addOrderBy('"assetCount"', 'DESC')
+            .getRawMany();
 
         return rawResults.map((row: any) => ({
             'Department': row.departmentName,
@@ -411,23 +417,26 @@ export class ReportsService {
     }
 
     async getAssetByDeviceTypeReport(format = 'summary') {
-        const query = `
-            SELECT 
-                d.name AS "deviceName",
-                b.laptop_company AS "brandName",
-                a.model,
-                a.asset_status_enum AS "status",
-                COUNT(a.id) AS "totalAssets",
-                SUM(CASE WHEN a.assigned_to_employee_id IS NOT NULL THEN 1 ELSE 0 END) AS "assignedCount",
-                SUM(CASE WHEN a.assigned_to_employee_id IS NULL THEN 1 ELSE 0 END) AS "unassignedCount"
-            FROM asset_info a
-            LEFT JOIN asset_types d ON a.device_id = d.id
-            LEFT JOIN device_configs b ON a.device_config_id = b.id
-            GROUP BY d.name, b.laptop_company, a.model, a.asset_status_enum
-            ORDER BY d.name, "totalAssets" DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(AssetInfoEntity)
+            .createQueryBuilder('a')
+            .leftJoin(AssetTypeMasterEntity, 'd', 'a.deviceId = d.id')
+            .leftJoin(DeviceConfigEntity, 'b', 'a.deviceConfigId = b.id')
+            .select([
+                'd.name AS "deviceName"',
+                'b.laptop_company AS "brandName"',
+                'a.model AS "model"',
+                'a.asset_status_enum AS "status"',
+                'COUNT(a.id) AS "totalAssets"',
+                'SUM(CASE WHEN a.assigned_to_employee_id IS NOT NULL THEN 1 ELSE 0 END) AS "assignedCount"',
+                'SUM(CASE WHEN a.assigned_to_employee_id IS NULL THEN 1 ELSE 0 END) AS "unassignedCount"'
+            ])
+            .groupBy('d.name')
+            .addGroupBy('b.laptop_company')
+            .addGroupBy('a.model')
+            .addGroupBy('a.asset_status_enum')
+            .orderBy('d.name', 'ASC')
+            .addOrderBy('"totalAssets"', 'DESC')
+            .getRawMany();
 
         return rawResults.map((row: any) => ({
             'Device Type': row.deviceName || 'N/A',
@@ -441,24 +450,23 @@ export class ReportsService {
     }
 
     async getUnassignedAssetsReport(format = 'summary') {
-        const query = `
-            SELECT 
-                a.id AS "assetId",
-                a.serial_number AS "serialNumber",
-                a.model,
-                a.configuration,
-                a.asset_status_enum AS "status",
-                a.purchase_date AS "purchaseDate",
-                d.name AS "deviceName",
-                b.laptop_company AS "brandName"
-            FROM asset_info a
-            LEFT JOIN asset_types d ON a.device_id = d.id
-            LEFT JOIN device_configs b ON a.device_config_id = b.id
-            WHERE a.assigned_to_employee_id IS NULL
-            ORDER BY a.created_at DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(AssetInfoEntity)
+            .createQueryBuilder('a')
+            .leftJoin(AssetTypeMasterEntity, 'd', 'a.deviceId = d.id')
+            .leftJoin(DeviceConfigEntity, 'b', 'a.deviceConfigId = b.id')
+            .select([
+                'a.id AS "assetId"',
+                'a.serial_number AS "serialNumber"',
+                'a.model AS "model"',
+                'a.configuration AS "configuration"',
+                'a.asset_status_enum AS "status"',
+                'a.purchase_date AS "purchaseDate"',
+                'd.name AS "deviceName"',
+                'b.laptop_company AS "brandName"'
+            ])
+            .where('a.assignedToEmployeeId IS NULL')
+            .orderBy('a.created_at', 'DESC')
+            .getRawMany();
 
         return rawResults.map((asset: any) => ({
             'Serial Number': asset.serialNumber,
@@ -473,18 +481,17 @@ export class ReportsService {
 
     // Employee Reports
     async getEmployeesByDepartmentReport(format = 'summary') {
-        const query = `
-            SELECT 
-                dept.name AS "departmentName",
-                COUNT(e.id) AS "employeeCount",
-                STRING_AGG(CONCAT(e.first_name, ' ', e.last_name), ', ') AS "employees"
-            FROM employees e
-            LEFT JOIN departments dept ON e.department_id = dept.id
-            GROUP BY dept.name
-            ORDER BY "employeeCount" DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(EmployeesEntity)
+            .createQueryBuilder('e')
+            .leftJoin(DepartmentsMasterEntity, 'dept', 'e.departmentId = dept.id')
+            .select([
+                'dept.name AS "departmentName"',
+                'COUNT(e.id) AS "employeeCount"',
+                "STRING_AGG(CONCAT(e.first_name, ' ', e.last_name), ', ') AS \"employees\""
+            ])
+            .groupBy('dept.name')
+            .orderBy('"employeeCount"', 'DESC')
+            .getRawMany();
 
         return rawResults.map((row: any) => ({
             'Department': row.departmentName || 'Unassigned',
@@ -495,25 +502,25 @@ export class ReportsService {
 
     // Ticket Reports
     async getOpenTicketsReport(format = 'summary') {
-        const query = `
-            SELECT 
-                t.ticket_code AS "ticketCode",
-                t.subject,
-                t.priority_enum AS "priority",
-                t.category_enum AS "category",
-                t.ticket_status AS "status",
-                t.created_at AS "createdAt",
-                CONCAT(e1.first_name, ' ', e1.last_name) AS "raisedBy",
-                CONCAT(e2.first_name, ' ', e2.last_name) AS "assignedTo",
-                (CURRENT_DATE - t.created_at::date) AS "daysOpen"
-            FROM tickets t
-            LEFT JOIN employees e1 ON t.employee_id = e1.id
-            LEFT JOIN employees e2 ON t.assign_admin_id = e2.id
-            WHERE t.ticket_status != 'Resolved' AND t.ticket_status != 'Closed'
-            ORDER BY t.priority_enum DESC, t.created_at ASC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(TicketsEntity)
+            .createQueryBuilder('t')
+            .leftJoin(EmployeesEntity, 'e1', 't.employeeId = e1.id')
+            .leftJoin(EmployeesEntity, 'e2', 't.assignAdminId = e2.id')
+            .select([
+                't.ticket_code AS "ticketCode"',
+                't.subject AS "subject"',
+                't.priority_enum AS "priority"',
+                't.category_enum AS "category"',
+                't.ticket_status AS "status"',
+                't.created_at AS "createdAt"',
+                "CONCAT(e1.first_name, ' ', e1.last_name) AS \"raisedBy\"",
+                "CONCAT(e2.first_name, ' ', e2.last_name) AS \"assignedTo\"",
+                '(CURRENT_DATE - t.created_at::date) AS "daysOpen"'
+            ])
+            .where('t.ticket_status NOT IN (:...statuses)', { statuses: [TicketStatusEnum.RESOLVED, TicketStatusEnum.CLOSED] })
+            .orderBy('t.priority_enum', 'DESC')
+            .addOrderBy('t.created_at', 'ASC')
+            .getRawMany();
 
         return rawResults.map((t: any) => ({
             'Ticket Code': t.ticketCode,
@@ -529,25 +536,24 @@ export class ReportsService {
     }
 
     async getResolvedTicketsReport(format = 'summary') {
-        const query = `
-            SELECT 
-                t.ticket_code AS "ticketCode",
-                t.subject,
-                t.priority_enum AS "priority",
-                t.category_enum AS "category",
-                t.created_at AS "createdAt",
-                t.resolved_at AS "resolvedAt",
-                CONCAT(e1.first_name, ' ', e1.last_name) AS "raisedBy",
-                CONCAT(e2.first_name, ' ', e2.last_name) AS "resolvedBy",
-                (t.resolved_at::date - t.created_at::date) AS "resolutionDays"
-            FROM tickets t
-            LEFT JOIN employees e1 ON t.employee_id = e1.id
-            LEFT JOIN employees e2 ON t.assign_admin_id = e2.id
-            WHERE t.ticket_status = 'Resolved' OR t.ticket_status = 'Closed'
-            ORDER BY t.resolved_at DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(TicketsEntity)
+            .createQueryBuilder('t')
+            .leftJoin(EmployeesEntity, 'e1', 't.employeeId = e1.id')
+            .leftJoin(EmployeesEntity, 'e2', 't.assignAdminId = e2.id')
+            .select([
+                't.ticket_code AS "ticketCode"',
+                't.subject AS "subject"',
+                't.priority_enum AS "priority"',
+                't.category_enum AS "category"',
+                't.created_at AS "createdAt"',
+                't.resolved_at AS "resolvedAt"',
+                "CONCAT(e1.first_name, ' ', e1.last_name) AS \"raisedBy\"",
+                "CONCAT(e2.first_name, ' ', e2.last_name) AS \"resolvedBy\"",
+                '(t.resolved_at::date - t.created_at::date) AS "resolutionDays"'
+            ])
+            .where('t.ticket_status IN (:...statuses)', { statuses: [TicketStatusEnum.RESOLVED, TicketStatusEnum.CLOSED] })
+            .orderBy('t.resolvedAt', 'DESC')
+            .getRawMany();
 
         return rawResults.map((t: any) => ({
             'Ticket Code': t.ticketCode,
@@ -563,26 +569,28 @@ export class ReportsService {
     }
 
     async getTicketsByPriorityReport(format = 'summary') {
-        const query = `
-            SELECT 
-                t.priority_enum AS "priority",
-                t.ticket_status AS "status",
-                COUNT(t.id) AS "ticketCount",
-                AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS "avgResolutionDays"
-            FROM tickets t
-            GROUP BY t.priority_enum, t.ticket_status
-            ORDER BY 
-                CASE t.priority_enum
-                    WHEN 'Critical' THEN 1
-                    WHEN 'High' THEN 2
-                    WHEN 'Medium' THEN 3
-                    WHEN 'Low' THEN 4
+        const rawResults = await this.dataSource.getRepository(TicketsEntity)
+            .createQueryBuilder('t')
+            .select([
+                't.priority_enum AS "priority"',
+                't.ticket_status AS "status"',
+                'COUNT(t.id) AS "ticketCount"',
+                'AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS "avgResolutionDays"'
+            ])
+            .groupBy('t.priority_enum')
+            .addGroupBy('t.ticketStatus')
+            .orderBy(
+                `CASE t.priority_enum::text
+                    WHEN 'urgent' THEN 1
+                    WHEN 'high' THEN 2
+                    WHEN 'medium' THEN 3
+                    WHEN 'low' THEN 4
                     ELSE 5
-                END,
-                t.ticket_status
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+                END`,
+                'ASC'
+            )
+            .addOrderBy('t.ticketStatus', 'ASC')
+            .getRawMany();
 
         return rawResults.map((row: any) => ({
             'Priority': row.priority,
@@ -593,18 +601,18 @@ export class ReportsService {
     }
 
     async getTicketsByCategoryReport(format = 'summary') {
-        const query = `
-            SELECT 
-                t.category_enum AS "category",
-                t.ticket_status AS "status",
-                COUNT(t.id) AS "ticketCount",
-                AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS "avgResolutionDays"
-            FROM tickets t
-            GROUP BY t.category_enum, t.ticket_status
-            ORDER BY "ticketCount" DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(TicketsEntity)
+            .createQueryBuilder('t')
+            .select([
+                't.category_enum AS "category"',
+                't.ticket_status AS "status"',
+                'COUNT(t.id) AS "ticketCount"',
+                'AVG(COALESCE(t.resolved_at::date, CURRENT_DATE) - t.created_at::date) AS "avgResolutionDays"'
+            ])
+            .groupBy('t.category_enum')
+            .addGroupBy('t.ticketStatus')
+            .orderBy('"ticketCount"', 'DESC')
+            .getRawMany();
 
         return rawResults.map((row: any) => ({
             'Category': row.category,
@@ -616,19 +624,18 @@ export class ReportsService {
 
     // Master Data Reports
     async getDepartmentSummaryReport(format = 'summary') {
-        const query = `
-            SELECT 
-                d.name AS "departmentName",
-                COUNT(DISTINCT e.id) AS "employeeCount",
-                COUNT(DISTINCT a.id) AS "assetCount"
-            FROM departments d
-            LEFT JOIN employees e ON d.id = e.department_id
-            LEFT JOIN asset_info a ON e.id = a.assigned_to_employee_id
-            GROUP BY d.name
-            ORDER BY "employeeCount" DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(DepartmentsMasterEntity)
+            .createQueryBuilder('d')
+            .leftJoin(EmployeesEntity, 'e', 'd.id = e.departmentId')
+            .leftJoin(AssetInfoEntity, 'a', 'e.id = a.assignedToEmployeeId')
+            .select([
+                'd.name AS "departmentName"',
+                'COUNT(DISTINCT e.id) AS "employeeCount"',
+                'COUNT(DISTINCT a.id) AS "assetCount"'
+            ])
+            .groupBy('d.name')
+            .orderBy('"employeeCount"', 'DESC')
+            .getRawMany();
 
         return rawResults.map((row: any) => ({
             'Department': row.departmentName,
@@ -638,28 +645,26 @@ export class ReportsService {
     }
 
     async getLicenseReports(format = 'summary') {
-        const query = `
-            SELECT 
-                l.id,
-                l.license_key AS "licenseKey",
-                l.purchase_date AS "purchaseDate",
-                l.assigned_date AS "assignedDate",
-                l.expiry_date AS "expiryDate",
-                l.remarks,
-                c.company_name AS "companyName",
-                a.name AS "softwareName",
-                CONCAT(e.first_name, ' ', e.last_name) AS "assignedEmployee"
-            FROM licenses l
-            LEFT JOIN company_info c ON l.company_id = c.id
-            LEFT JOIN license_masters a ON l.application_id = a.id
-            LEFT JOIN employees e ON l.assigned_employee_id = e.id
-            ORDER BY l.created_at DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(CompanyLicenseEntity)
+            .createQueryBuilder('l')
+            .leftJoin(CompanyInfoEntity, 'c', 'l.companyId = c.id')
+            .leftJoin(LicensesMasterEntity, 'a', 'l.applicationId = a.id')
+            .leftJoin(EmployeesEntity, 'e', 'l.assignedEmployeeId = e.id')
+            .select([
+                'l.id AS "id"',
+                'l.license_key AS "licenseKey"',
+                'l.purchase_date AS "purchaseDate"',
+                'l.assigned_date AS "assignedDate"',
+                'l.expiry_date AS "expiryDate"',
+                'l.remarks AS "remarks"',
+                'c.company_name AS "companyName"',
+                'a.name AS "softwareName"',
+                "CONCAT(e.first_name, ' ', e.last_name) AS \"assignedEmployee\""
+            ])
+            .orderBy('l.created_at', 'DESC')
+            .getRawMany();
 
         return rawResults.map((row: any) => ({
-            'ID': row.id,
             'Software': row.softwareName || 'N/A',
             'License Key': row.licenseKey || '---',
             'Company': row.companyName || 'N/A',
@@ -672,19 +677,19 @@ export class ReportsService {
     }
 
     async getDeviceConfigsReport(format = 'summary') {
-        const query = `
-            SELECT 
-                b.laptop_company AS "brandName",
-                d.name AS "deviceType",
-                COUNT(a.id) AS "assetCount"
-            FROM device_configs b
-            LEFT JOIN asset_info a ON b.id = a.device_config_id
-            LEFT JOIN asset_types d ON a.device_id = d.id
-            GROUP BY b.laptop_company, d.name
-            ORDER BY "assetCount" DESC
-        `;
-
-        const rawResults = await this.dataSource.query(query);
+        const rawResults = await this.dataSource.getRepository(DeviceConfigEntity)
+            .createQueryBuilder('b')
+            .leftJoin(AssetInfoEntity, 'a', 'b.id = a.deviceConfigId')
+            .leftJoin(AssetTypeMasterEntity, 'd', 'a.deviceId = d.id')
+            .select([
+                'b.laptop_company AS "brandName"',
+                'd.name AS "deviceType"',
+                'COUNT(a.id) AS "assetCount"'
+            ])
+            .groupBy('b.laptop_company')
+            .addGroupBy('d.name')
+            .orderBy('"assetCount"', 'DESC')
+            .getRawMany();
 
         return rawResults.map((row: any) => ({
             'Device Configuration': row.brandName,
@@ -695,7 +700,7 @@ export class ReportsService {
 
     async generateReport(type: string, filters: any, userId?: number, ipAddress?: string) {
         const format = filters.format || 'summary';
-        let data: any[] = [];
+        let data: any;
 
         // Check format
         const isExcel = format === 'excel';

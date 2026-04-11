@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { CommonAxiosService } from "../common-axios-service";
-import { DeleteUserModel, GetAllUsersModel, GlobalResponse, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, RequestAccessModel, UpdateUserModel, ForgotPasswordModel, ResetPasswordModel, IdRequestModel, AccessRequestsListModel } from '@adminvault/shared-models';
+import { DeleteUserModel, GetAllUsersModel, GlobalResponse, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, RequestAccessModel, UpdateUserModel, ForgotPasswordModel, ResetPasswordModel, IdRequestModel, AccessRequestsListModel, RequestVaultOtpModel, ResetVaultPasswordOtpModel } from '@adminvault/shared-models';
 
 export class AuthUsersService extends CommonAxiosService {
     private getURLwithMainEndPoint(childUrl: string) {
@@ -53,6 +53,14 @@ export class AuthUsersService extends CommonAxiosService {
 
     async verifyVaultPassword(password: string, config?: AxiosRequestConfig): Promise<GlobalResponse> {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('verify-vault-password'), { password }, config);
+    }
+
+    async requestVaultOtp(reqObj: RequestVaultOtpModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('request-vault-otp'), reqObj, config);
+    }
+
+    async resetVaultPasswordWithOtp(reqObj: ResetVaultPasswordOtpModel, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('reset-vault-password-otp'), reqObj, config);
     }
 
     async getMe(config?: AxiosRequestConfig): Promise<LoginResponseModel> {

@@ -352,12 +352,6 @@ export class AuthUsersService {
             if (reqModel.role) updateData.userRole = reqModel.role as any;
             if (reqModel.companyId) updateData.companyId = reqModel.companyId;
 
-            if (reqModel.phNumber) {
-                const cleanNumber = reqModel.phNumber.replace(/\D/g, '');
-                if (cleanNumber.length !== 10) {
-                    throw new ErrorResponse(0, "Phone number must be exactly 10 digits")
-                }
-            }
             await this.authUsersRepo.update({ id: existingUser.id }, updateData);
 
             await transManager.completeTransaction();
@@ -531,6 +525,59 @@ export class AuthUsersService {
             const userInfo = new UserResponseModel(user.id, user.fullName, user.companyId, user.email, user.phNumber, user.userRole);
 
             return new LoginResponseModel(true, 0, "Profile retrieved successfully", userInfo, undefined, undefined, menus);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async requestVaultReset(email: string): Promise<GlobalResponse> {
+        try {
+            const user = await this.authUsersRepo.findOne({ where: { email } });
+            if (!user) {
+                // Security best practice: don't reveal if user exists
+                return new GlobalResponse(true, 0, "If your account is registered, you will receive an OTP shortly.");
+            }
+
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiry = new Date();
+            expiry.setMinutes(expiry.getMinutes() + 10);
+
+            user.vaultResetOtp = otp;
+            user.vaultResetOtpExpiry = expiry;
+            await this.authUsersRepo.save(user);
+
+            const success = await this.emailService.sendVaultOtpEmail(user.email, otp);
+            if (!success) {
+                throw new ErrorResponse(0, "Failed to send OTP email. Please try again later.");
+            }
+
+            return new GlobalResponse(true, 0, "OTP has been sent to your registered email.");
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async resetVaultPasswordWithOtp(email: string, otp: string, newPassword: string): Promise<GlobalResponse> {
+        try {
+            const user = await this.authUsersRepo.findOne({ where: { email } });
+            if (!user) {
+                throw new ErrorResponse(0, "User not found");
+            }
+
+            if (!user.vaultResetOtp || user.vaultResetOtp !== otp) {
+                throw new ErrorResponse(0, "Invalid OTP");
+            }
+
+            if (!user.vaultResetOtpExpiry || user.vaultResetOtpExpiry < new Date()) {
+                throw new ErrorResponse(0, "OTP has expired");
+            }
+
+            user.vaultPasswordHash = await bcrypt.hash(newPassword, 10);
+            user.vaultResetOtp = null;
+            user.vaultResetOtpExpiry = null;
+            await this.authUsersRepo.save(user);
+
+            return new GlobalResponse(true, 0, "Vault security key has been reset successfully.");
         } catch (error) {
             throw error;
         }

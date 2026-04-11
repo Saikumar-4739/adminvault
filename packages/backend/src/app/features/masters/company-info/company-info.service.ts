@@ -33,9 +33,6 @@ export class CompanyInfoService {
             }
 
             if (reqModel.phone) {
-                if (!/^\d{10}$/.test(reqModel.phone)) {
-                    throw new ErrorResponse(0, 'Phone number must be exactly 10 digits');
-                }
                 const phoneExists = await this.companyInfoRepo.findOne({ where: { phone: reqModel.phone } });
                 if (phoneExists) {
                     throw new ErrorResponse(0, 'Phone number already in use');
@@ -91,9 +88,6 @@ export class CompanyInfoService {
             }
 
             if (reqModel.phone) {
-                if (!/^\d{10}$/.test(reqModel.phone)) {
-                    throw new ErrorResponse(0, 'Phone number must be exactly 10 digits');
-                }
                 const phoneExists = await this.companyInfoRepo.findOne({ where: { phone: reqModel.phone, id: Not(reqModel.id) } });
                 if (phoneExists) {
                     throw new ErrorResponse(0, 'Phone number already in use');

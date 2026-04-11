@@ -5,6 +5,7 @@ import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateLicenseMasterModel, UpdateLicenseMasterModel, GetAllLicenseMastersResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { LicensesMasterEntity } from './entities/license.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
+import { CompanyLicenseEntity } from '../../licenses/entities/company-license.entity';
 
 @Injectable()
 export class LicenseService {
@@ -45,6 +46,7 @@ export class LicenseService {
                     newLicense.expiryDate = reqModel.expiryDate;
                 }
             }
+            newLicense.totalQuantity = reqModel.totalQuantity || 0;
 
             await transManager.getRepository(LicensesMasterEntity).save(newLicense);
             await transManager.completeTransaction();
@@ -70,9 +72,25 @@ export class LicenseService {
     async getAllLicenses(): Promise<GetAllLicenseMastersResponseModel> {
         try {
             const licenses = await this.licenseRepo.find();
-            // Map to response model if needed, or just return entities if model matches
-            // In shared-models, GetAllLicenseMastersResponseModel expects List<License>
-            return new GetAllLicenseMastersResponseModel(true, 200, 'Licenses retrieved successfully', licenses);
+
+            // Fetch used quantities for each license
+            const usage = await this.dataSource.getRepository(CompanyLicenseEntity)
+                .createQueryBuilder('l')
+                .select('l.applicationId', 'applicationId')
+                .addSelect('COUNT(*)', 'count')
+                .groupBy('l.applicationId')
+                .getRawMany();
+
+            const usageMap = new Map<number, number>(
+                usage.map(u => [Number(u.applicationId), Number(u.count)])
+            );
+
+            const licensesWithUsage = licenses.map(l => ({
+                ...l,
+                usedQuantity: usageMap.get(Number(l.id)) || 0
+            }));
+
+            return new GetAllLicenseMastersResponseModel(true, 200, 'Licenses retrieved successfully', licensesWithUsage as any);
         } catch (error) {
             throw error;
         }
@@ -98,7 +116,8 @@ export class LicenseService {
                 description: reqModel.description,
                 isActive: reqModel.isActive,
                 purchaseDate: reqModel.purchaseDate,
-                expiryDate: reqModel.expiryDate
+                expiryDate: reqModel.expiryDate,
+                totalQuantity: reqModel.totalQuantity
             };
 
             await transManager.getRepository(LicensesMasterEntity).update(reqModel.id, updateData);

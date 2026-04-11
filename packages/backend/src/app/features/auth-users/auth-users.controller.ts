@@ -3,7 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthUsersService } from './auth-users.service';
-import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel, RefreshTokenModel, IdRequestModel, AccessRequestsListModel, GlobalResponse } from '@adminvault/shared-models';
+import { DeleteUserModel, GetAllUsersModel, LoginResponseModel, LoginUserModel, LogoutUserModel, RegisterUserModel, UpdateUserModel, RequestAccessModel, ForgotPasswordModel, ResetPasswordModel, RefreshTokenModel, IdRequestModel, AccessRequestsListModel, GlobalResponse, RequestVaultOtpModel, ResetVaultPasswordOtpModel } from '@adminvault/shared-models';
 import { Request, Response } from 'express';
 import { Public } from '../../decorators/public.decorator';
 import { returnException } from '@adminvault/backend-utils';
@@ -182,6 +182,28 @@ export class AuthUsersController {
             } else {
                 return new GlobalResponse(false, 1, "Invalid vault password");
             }
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('request-vault-otp')
+    @ApiBody({ type: RequestVaultOtpModel })
+    async requestVaultOtp(@Req() req: any, @Body() reqModel: RequestVaultOtpModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.requestVaultReset(reqModel.email);
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('reset-vault-password-otp')
+    @ApiBody({ type: ResetVaultPasswordOtpModel })
+    async resetVaultPasswordOtp(@Req() req: any, @Body() reqModel: ResetVaultPasswordOtpModel): Promise<GlobalResponse> {
+        try {
+            return await this.service.resetVaultPasswordWithOtp(reqModel.email, reqModel.otp, reqModel.newPassword);
         } catch (error) {
             return returnException(GlobalResponse, error);
         }

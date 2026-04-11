@@ -22,7 +22,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true });
+    const [formData, setFormData] = useState({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true, totalQuantity: 0 });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
@@ -57,7 +57,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
         try {
 
             if (isEditMode && editingId) {
-                const model = new UpdateLicenseMasterModel(editingId, formData.name, formData.description, formData.isActive, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined);
+                const model = new UpdateLicenseMasterModel(editingId, formData.name, formData.description, formData.isActive, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined, formData.totalQuantity);
                 const response = await licenseService.updateLicense(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -67,7 +67,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateLicenseMasterModel(user.id, user.companyId, formData.name, formData.description, formData.isActive ?? true, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined);
+                const model = new CreateLicenseMasterModel(user.id, user.companyId, formData.name, formData.description, formData.isActive ?? true, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined, undefined, formData.totalQuantity);
                 const response = await licenseService.createLicense(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -90,7 +90,8 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
             description: item.description || '',
             purchaseDate: item.purchaseDate ? new Date(item.purchaseDate).toISOString().split('T')[0] : '',
             expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString().split('T')[0] : '',
-            isActive: item.isActive ?? true
+            isActive: item.isActive ?? true,
+            totalQuantity: (item as any).totalQuantity || 0
         });
         setIsModalOpen(true);
     };
@@ -120,7 +121,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true });
+        setFormData({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true, totalQuantity: 0 });
     };
 
     const formatDate = (date: Date | string | null | undefined): string => {
@@ -150,8 +151,8 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10">
                                 <tr>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">License Name</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Description</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Expiry Date</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Total</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Used</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                 </tr>
@@ -163,8 +164,8 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
                                     licenses?.map((item: License) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white uppercase tracking-tight">{item.name}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500 truncate max-w-[200px]">{item.description || '-'}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500 italic uppercase">{(item as any).expiryDate ? new Date((item as any).expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500 font-bold">{(item as any).totalQuantity || 0}</td>
+                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500 font-bold">{(item as any).usedQuantity || 0}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                 <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
                                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
@@ -199,6 +200,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input label="License Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-14" required />
                     <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="h-14" />
+                    <Input label="Total Quantity" type="number" value={formData.totalQuantity} onChange={(e) => setFormData({ ...formData, totalQuantity: parseInt(e.target.value) || 0 })} className="h-14" required />
                     <div className="grid grid-cols-2 gap-4">
                         <Input label="Purchase Date" type="date" value={formData.purchaseDate} onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })} className="h-14" />
                         <Input label="Expiry Date" type="date" value={formData.expiryDate} onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} className="h-14" />
@@ -267,6 +269,21 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
                                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Expiry Date</span>
                                     </div>
                                     <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{formatDate(selectedLicense.expiryDate)}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="p-3 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/50">
+                                    <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider block mb-1">Total</span>
+                                    <p className="text-lg font-black text-blue-600 dark:text-blue-400">{(selectedLicense as any).totalQuantity || 0}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/50">
+                                    <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block mb-1">Used</span>
+                                    <p className="text-lg font-black text-amber-600 dark:text-amber-400">{(selectedLicense as any).usedQuantity || 0}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/50">
+                                    <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Available</span>
+                                    <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">{Math.max(0, ((selectedLicense as any).totalQuantity || 0) - ((selectedLicense as any).usedQuantity || 0))}</p>
                                 </div>
                             </div>
 

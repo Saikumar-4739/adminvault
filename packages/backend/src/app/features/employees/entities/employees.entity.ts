@@ -15,7 +15,7 @@ export class EmployeesEntity extends CommonBaseEntity {
   @Column('varchar', { name: 'email', length: 255, nullable: false, comment: 'Employee email address' })
   email: string;
 
-  @Column('varchar', { name: 'ph_number', length: 20, nullable: true, comment: 'Employee phone number' })
+  @Column('varchar', { name: 'ph_number', length: 50, nullable: true, comment: 'Employee phone number' })
   phNumber: string;
 
   @Column('enum', { name: 'emp_status', enum: EmployeeStatusEnum, default: EmployeeStatusEnum.ACTIVE, nullable: false, comment: 'Employee employment status' })

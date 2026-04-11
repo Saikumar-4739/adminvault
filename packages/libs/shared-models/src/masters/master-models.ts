@@ -246,6 +246,8 @@ export class License extends MasterBase {
     purchaseDate?: Date;
     expiryDate?: Date;
     companyName?: string;
+    totalQuantity?: number;
+    usedQuantity?: number;
 
     constructor(
         id: number,
@@ -258,12 +260,16 @@ export class License extends MasterBase {
         expiryDate?: Date,
         companyName?: string,
         createdAt?: Date,
-        updatedAt?: Date
+        updatedAt?: Date,
+        totalQuantity?: number,
+        usedQuantity?: number
     ) {
         super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
         this.purchaseDate = purchaseDate;
         this.expiryDate = expiryDate;
         this.companyName = companyName;
+        this.totalQuantity = totalQuantity;
+        this.usedQuantity = usedQuantity;
     }
 }
 
@@ -947,11 +953,13 @@ export class GetAllRemoteMasterResponseModel extends GlobalResponse {
 export class CreateLicenseMasterModel extends CreateMasterModel {
     purchaseDate?: Date;
     expiryDate?: Date;
+    totalQuantity?: number;
 
-    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, purchaseDate?: Date, expiryDate?: Date, id?: number) {
+    constructor(userId: number, companyId: number, name: string, description?: string, isActive?: boolean, purchaseDate?: Date, expiryDate?: Date, id?: number, totalQuantity?: number) {
         super(userId, companyId, name, description, isActive, id);
         this.purchaseDate = purchaseDate;
         this.expiryDate = expiryDate;
+        this.totalQuantity = totalQuantity;
     }
 }
 
@@ -962,14 +970,16 @@ export class UpdateLicenseMasterModel {
     isActive: boolean;
     purchaseDate?: Date;
     expiryDate?: Date;
+    totalQuantity?: number;
 
-    constructor(id: number, name: string, description?: string, isActive = true, purchaseDate?: Date, expiryDate?: Date) {
+    constructor(id: number, name: string, description?: string, isActive = true, purchaseDate?: Date, expiryDate?: Date, totalQuantity?: number) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.isActive = isActive;
         this.purchaseDate = purchaseDate;
         this.expiryDate = expiryDate;
+        this.totalQuantity = totalQuantity;
     }
 }
 
@@ -997,6 +1007,24 @@ export class UpdateLicenseMasterResponseModel extends GlobalResponse {
     constructor(status: boolean, code: number, message: string, license: License) {
         super(status, code, message);
         this.license = license;
+    }
+}
+
+export class RequestVaultOtpModel {
+    email: string;
+    constructor(email: string) {
+        this.email = email;
+    }
+}
+
+export class ResetVaultPasswordOtpModel {
+    email: string;
+    otp: string;
+    newPassword: string;
+    constructor(email: string, otp: string, newPassword: string) {
+        this.email = email;
+        this.otp = otp;
+        this.newPassword = newPassword;
     }
 }
 
