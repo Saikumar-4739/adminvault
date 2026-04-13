@@ -1,7 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Index } from 'typeorm';
 
 @Entity('auth_tokens')
-@Index('idx_token_user', ['userId'])
 export class AuthTokensEntity {
     @PrimaryGeneratedColumn({ name: 'id', type: 'bigint', comment: 'Primary key for auth tokens' })
     id: number;

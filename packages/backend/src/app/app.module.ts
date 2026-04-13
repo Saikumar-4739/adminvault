@@ -16,7 +16,6 @@ import { DocumentsModule } from './features/documents/documents.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { ProcurementModule } from './features/procurement/procurement.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
-import { ContractModule } from './features/contracts/contract.module';
 import configuration from '../config/configuration';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -47,7 +46,6 @@ import { EmailModule } from './features/email/email.module';
     KnowledgeBaseModule,
     ProcurementModule,
     NotificationsModule,
-    ContractModule,
     EventEmitterModule.forRoot(),
     WebSocketModule,
     EmailModule,

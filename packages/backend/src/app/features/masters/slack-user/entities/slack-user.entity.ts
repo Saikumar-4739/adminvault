@@ -2,8 +2,6 @@ import { Column, Entity, Index } from 'typeorm';
 import { MasterBaseEntity } from '../../../../../database/master-base.entity';
 
 @Entity('slack_users')
-@Index('idx_slack_user_email', ['email'])
-@Index('idx_slack_user_slack_id', ['slackUserId'])
 export class SlackUsersMasterEntity extends MasterBaseEntity {
     @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'User full name' })
     name: string;

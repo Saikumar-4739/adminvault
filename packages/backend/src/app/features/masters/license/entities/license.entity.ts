@@ -2,8 +2,6 @@ import { Column, Entity, Index } from 'typeorm';
 import { MasterBaseEntity } from '../../../../../database/master-base.entity';
 
 @Entity('license_masters')
-@Index('idx_license_master_name', ['name'])
-@Index('idx_license_master_user', ['userId'])
 export class LicensesMasterEntity extends MasterBaseEntity {
     @Column('varchar', { name: 'name', length: 255, nullable: false, comment: 'License name' })
     name: string;

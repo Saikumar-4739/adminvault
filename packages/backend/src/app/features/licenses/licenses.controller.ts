@@ -10,11 +10,6 @@ import { IAuthenticatedRequest } from '../../interfaces/auth.interface';
 export class LicensesController {
     constructor(private readonly licensesService: LicensesService) { }
 
-    /**
-     * Retrieve all license assignments, optionally filtered by company
-     * @param reqModel - Request with company ID
-     * @returns GetAllLicensesResponseModel with license data
-     */
     @Post('getAllLicenses')
     @ApiBody({ type: IdRequestModel })
     async getAllLicenses(@Body() reqModel: IdRequestModel): Promise<GetAllLicensesResponseModel> {
@@ -25,11 +20,6 @@ export class LicensesController {
         }
     }
 
-    /**
-     * Get license statistics for dashboard
-     * @param reqModel - Request with company ID
-     * @returns GetLicenseStatisticsResponseModel with license statistics
-     */
     @Post('getLicenseStatistics')
     @ApiBody({ type: IdRequestModel })
     async getLicenseStatistics(@Body() reqModel: IdRequestModel): Promise<GetLicenseStatisticsResponseModel> {
@@ -40,11 +30,6 @@ export class LicensesController {
         }
     }
 
-    /**
-     * Create a new license assignment
-     * @param reqModel - License assignment creation data
-     * @returns GlobalResponse indicating creation success
-     */
     @Post('createLicense')
     @ApiBody({ type: CreateLicenseModel })
     async createLicense(@Body() reqModel: CreateLicenseModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
@@ -57,11 +42,6 @@ export class LicensesController {
         }
     }
 
-    /**
-     * Update an existing license assignment
-     * @param reqModel - License update data with ID
-     * @returns GlobalResponse indicating update success
-     */
     @Post('updateLicense')
     @ApiBody({ type: UpdateLicenseModel })
     async updateLicense(@Body() reqModel: UpdateLicenseModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
@@ -74,11 +54,6 @@ export class LicensesController {
         }
     }
 
-    /**
-     * Remove a license assignment
-     * @param reqModel - Delete request with license ID
-     * @returns GlobalResponse indicating deletion success
-     */
     @Post('deleteLicense')
     @ApiBody({ type: DeleteLicenseModel })
     async deleteLicense(@Body() reqModel: DeleteLicenseModel, @Req() req: IAuthenticatedRequest): Promise<GlobalResponse> {
@@ -91,9 +66,6 @@ export class LicensesController {
         }
     }
 
-    /**
-     * Get license utilization stats
-     */
     @Post('getUtilization')
     @ApiBody({ type: IdRequestModel })
     async getUtilization(@Body() reqModel: IdRequestModel): Promise<any> {
@@ -104,9 +76,6 @@ export class LicensesController {
         }
     }
 
-    /**
-     * Get compliance report
-     */
     @Post('getComplianceReport')
     @ApiBody({ type: IdRequestModel })
     async getComplianceReport(@Body() reqModel: IdRequestModel): Promise<any> {
@@ -117,9 +86,6 @@ export class LicensesController {
         }
     }
 
-    /**
-     * Get cost optimization insights
-     */
     @Post('getCostOptimization')
     @ApiBody({ type: IdRequestModel })
     async getCostOptimization(@Body() reqModel: IdRequestModel): Promise<any> {

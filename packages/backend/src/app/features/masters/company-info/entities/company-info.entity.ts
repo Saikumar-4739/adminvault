@@ -1,7 +1,6 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('company_info')
-@Index('idx_company_user', ['userId'])
 export class CompanyInfoEntity {
 
   @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })

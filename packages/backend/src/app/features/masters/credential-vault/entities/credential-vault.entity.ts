@@ -2,7 +2,6 @@ import { Column, Entity, Index } from 'typeorm';
 import { MasterBaseEntity } from '../../../../../database/master-base.entity';
 
 @Entity('credential_vault')
-@Index('idx_cred_vault_app', ['appName'])
 export class CredentialVaultEntity extends MasterBaseEntity {
     @Column('varchar', { name: 'app_name', length: 255, nullable: false, comment: 'App Name' })
     appName: string;

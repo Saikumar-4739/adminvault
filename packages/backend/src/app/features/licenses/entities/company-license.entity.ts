@@ -2,7 +2,6 @@ import { Entity, Column, Index } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('licenses')
-@Index('idx_license_app', ['applicationId'])
 export class CompanyLicenseEntity extends CommonBaseEntity {
 
     @Column({ name: 'application_id', nullable: false })

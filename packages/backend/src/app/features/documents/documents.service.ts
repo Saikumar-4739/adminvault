@@ -165,17 +165,6 @@ export class DocumentsService {
     async getAllDocuments(reqModel: GetAllDocumentsRequestModel): Promise<GetAllDocumentsResponseModel> {
         try {
             const where: any = {};
-            // Fix for visibility bug: Handle companyId strictly only if it's a valid number
-            // If strict filtering is causing empty results, relax it for now OR verify what frontend sends.
-            // If companyId is not provided, maybe show all (for admin) or none?
-            // Assuming if reqModel.companyId is present, we filter.
-            // Global Vault: We no longer filter by companyId to ensure visibility across all companies
-            // if (reqModel.companyId) {
-            //     const cId = Number(reqModel.companyId);
-            //     if (!isNaN(cId) && cId > 0) {
-            //         where.companyId = cId;
-            //     }
-            // }
 
             if (reqModel.category) where.category = reqModel.category;
 

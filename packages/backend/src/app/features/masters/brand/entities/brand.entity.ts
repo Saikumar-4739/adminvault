@@ -2,7 +2,6 @@ import { Column, Entity, Index } from 'typeorm';
 import { MasterBaseEntity } from '../../../../../database/master-base.entity';
 
 @Entity('device_configs')
-@Index('idx_device_config_company', ['laptopCompany'])
 export class DeviceConfigEntity extends MasterBaseEntity {
 
     @Column('varchar', { name: 'laptop_company', length: 255, nullable: false, comment: 'Laptop Company' })

@@ -2,8 +2,6 @@ import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('documents')
-@Index('idx_document_uploader', ['uploadedBy'])
-@Index('idx_document_user', ['userId'])
 export class DocumentEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'company_id', nullable: false, comment: 'Company ID' })
     companyId: number;

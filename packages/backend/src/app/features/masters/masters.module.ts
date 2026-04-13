@@ -9,9 +9,6 @@ import { CompanyInfoModule } from './company-info/company-info.module';
 import { CredentialVaultModule } from './credential-vault/credential-vault.module';
 import { RemoteModule } from './remote/remote.module';
 
-import { MastersBulkController } from './bulk-import/masters-bulk.controller';
-import { MastersBulkService } from './bulk-import/masters-bulk.service';
-
 @Module({
     imports: [
         DepartmentModule,
@@ -24,7 +21,5 @@ import { MastersBulkService } from './bulk-import/masters-bulk.service';
         CredentialVaultModule,
         RemoteModule
     ],
-    controllers: [MastersBulkController],
-    providers: [MastersBulkService],
 })
 export class MastersModule { }

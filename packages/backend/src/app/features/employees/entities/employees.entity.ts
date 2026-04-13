@@ -3,8 +3,6 @@ import { EmployeeStatusEnum } from '@adminvault/shared-models';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('employees')
-@Index('idx_emp_company', ['companyId'])
-@Index('idx_emp_user', ['userId'])
 export class EmployeesEntity extends CommonBaseEntity {
   @Column('varchar', { name: 'first_name', length: 100, nullable: false, comment: 'Employee first name' })
   firstName: string;
