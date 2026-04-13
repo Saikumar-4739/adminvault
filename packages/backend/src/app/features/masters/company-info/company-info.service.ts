@@ -54,6 +54,8 @@ export class CompanyInfoService {
             newCompany.email = reqModel.email;
             newCompany.phone = reqModel.phone;
             newCompany.userId = reqModel.userId;
+            newCompany.slackBotToken = reqModel.slackBotToken;
+            newCompany.slackWorkspaceId = reqModel.slackWorkspaceId;
             await transManager.getRepository(CompanyInfoEntity).save(newCompany);
             await transManager.completeTransaction();
             return new GlobalResponse(true, 0, "Company created successfully");
@@ -102,7 +104,18 @@ export class CompanyInfoService {
             }
 
             await transManager.startTransaction();
-            const updateData: Partial<CompanyInfoEntity> = {};
+            const updateData: Partial<CompanyInfoEntity> = {
+                companyName: reqModel.companyName,
+                location: reqModel.location,
+                estDate: reqModel.estDate,
+                email: reqModel.email,
+                phone: reqModel.phone,
+                userId: reqModel.userId,
+                slackBotToken: reqModel.slackBotToken,
+                slackWorkspaceId: reqModel.slackWorkspaceId
+            };
+            Object.keys(updateData).forEach(key => (updateData[key as keyof CompanyInfoEntity] === undefined) && delete updateData[key as keyof CompanyInfoEntity]);
+
             if (Object.keys(updateData).length === 0) {
                 throw new ErrorResponse(0, 'No valid fields provided for update');
             }
@@ -127,7 +140,7 @@ export class CompanyInfoService {
                 throw new ErrorResponse(0, "Company not found");
             }
 
-            const companyDoc = new CompanyResponseModel(company.id, company.companyName, company.location, company.estDate as any, company.email, company.phone);
+            const companyDoc = new CompanyResponseModel(company.id, company.companyName, company.location, company.estDate as any, company.email, company.phone, company.slackBotToken, company.slackWorkspaceId);
             return new CompanyResponse(true, 0, "Company retrieved successfully", [companyDoc]);
         } catch (error) {
             throw error;
@@ -137,7 +150,7 @@ export class CompanyInfoService {
     async getAllCompanies(): Promise<CompanyResponse> {
         try {
             const companies = await this.companyInfoRepo.find();
-            const companyDocs = companies.map(company => new CompanyResponseModel(company.id, company.companyName, company.location, company.estDate, company.email, company.phone));
+            const companyDocs = companies.map(company => new CompanyResponseModel(company.id, company.companyName, company.location, company.estDate, company.email, company.phone, company.slackBotToken, company.slackWorkspaceId));
             return new CompanyResponse(true, 0, "Companies retrieved successfully", companyDocs);
         } catch (error) {
             throw error;

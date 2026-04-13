@@ -11,20 +11,24 @@ export class CreateCompanyModel {
     email?: string;
     phone?: string;
     userId?: number;
-    constructor(companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number) {
+    slackBotToken?: string;
+    slackWorkspaceId?: string;
+    constructor(companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number, slackBotToken?: string, slackWorkspaceId?: string) {
         this.companyName = companyName;
         this.location = location;
         this.estDate = estDate;
         this.email = email;
         this.phone = phone;
         this.userId = userId;
+        this.slackBotToken = slackBotToken;
+        this.slackWorkspaceId = slackWorkspaceId;
     }
 }
 
 export class UpdateCompanyModel extends CreateCompanyModel {
     id: number;
-    constructor(id: number, companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number) {
-        super(companyName, location, estDate, email, phone, userId);
+    constructor(id: number, companyName: string, location: string, estDate: Date, email?: string, phone?: string, userId?: number, slackBotToken?: string, slackWorkspaceId?: string) {
+        super(companyName, location, estDate, email, phone, userId, slackBotToken, slackWorkspaceId);
         this.id = id;
     }
 }
@@ -50,13 +54,17 @@ export class CompanyResponseModel {
     estDate: Date;
     email: string;
     phone: string;
+    slackBotToken?: string;
+    slackWorkspaceId?: string;
     constructor(
         id: number,
         companyName: string,
         location: string,
         estDate: Date,
         email: string,
-        phone: string
+        phone: string,
+        slackBotToken?: string,
+        slackWorkspaceId?: string
     ) {
         this.id = id;
         this.companyName = companyName;
@@ -64,6 +72,8 @@ export class CompanyResponseModel {
         this.estDate = estDate;
         this.email = email;
         this.phone = phone;
+        this.slackBotToken = slackBotToken;
+        this.slackWorkspaceId = slackWorkspaceId;
     }
 }
 

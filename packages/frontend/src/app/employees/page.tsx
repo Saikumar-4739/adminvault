@@ -9,9 +9,7 @@ import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import {
-    Plus, Search,
-    Building2, Users,
-    LayoutGrid, List, Mail, Phone, Edit
+    Plus, Search, Building2, Users, LayoutGrid, List, Mail, Phone, Edit, DollarSign
 } from 'lucide-react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum, CreateEmployeeModel, UpdateEmployeeModel, EmployeeStatusEnum, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
@@ -327,6 +325,7 @@ const EmployeesPage: React.FC = () => {
         active: employees.filter(e => e.empStatus?.toLowerCase() === 'active').length,
         inactive: employees.filter(e => e.empStatus?.toLowerCase() === 'inactive').length,
         deactivated: employees.filter(e => e.empStatus?.toLowerCase() === 'deactivated').length,
+        totalBilling: filteredEmployees.reduce((sum, emp) => sum + Number(emp.billingAmount || 0), 0),
     };
 
     const containerVariants = {
@@ -363,7 +362,9 @@ const EmployeesPage: React.FC = () => {
                         {[
                             { label: 'Total', value: stats.total, color: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' },
                             { label: 'Active', value: stats.active, color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
+                            { label: 'Inactive', value: stats.inactive, color: 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' },
                             { label: 'Deactivated', value: stats.deactivated, color: 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' },
+                            { label: 'Total Billing', value: `$${stats.totalBilling.toLocaleString()}`, color: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' },
                         ].map(s => (
                             <span key={s.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${s.color}`}>
                                 <span className="text-[10px] font-medium opacity-70">{s.label}</span> {s.value}
@@ -403,9 +404,11 @@ const EmployeesPage: React.FC = () => {
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="h-8 pl-2.5 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 flex-1 sm:flex-none"
+                            className="h-8 pl-2.5 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 flex-1 sm:flex-none uppercase font-bold"
                         >
+                            <option value="all">All</option>
                             <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
                             <option value="deactivated">Deactivated</option>
                         </select>
                         <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
@@ -499,6 +502,10 @@ const EmployeesPage: React.FC = () => {
                                                 <div className="flex items-center gap-1.5 text-indigo-500 dark:text-indigo-400">
                                                     <Users className="h-2.5 w-2.5 shrink-0 opacity-70" />
                                                     <span className="truncate">{emp.managerName || '-'}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
+                                                    <DollarSign className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                                                    <span>${Number(emp.billingAmount || 0).toLocaleString()}</span>
                                                 </div>
                                             </div>
                                         </div>

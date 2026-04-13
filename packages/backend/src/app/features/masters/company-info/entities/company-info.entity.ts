@@ -25,6 +25,12 @@ export class CompanyInfoEntity {
   @Column('varchar', { name: 'phone', length: 50, nullable: true, comment: 'Company phone number' })
   phone: string;
 
+  @Column('varchar', { name: 'slack_bot_token', length: 255, nullable: true, comment: 'Slack Bot Token for this company' })
+  slackBotToken: string;
+
+  @Column('varchar', { name: 'slack_workspace_id', length: 100, nullable: true, comment: 'Slack Workspace ID for this company' })
+  slackWorkspaceId: string;
+
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 

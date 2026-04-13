@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { slackUserService } from '@/lib/api/services';
-import { SlackUserModel } from '@adminvault/shared-models';
+import { slackUserService, companyService } from '@/lib/api/services';
+import { SlackUserModel, CompanyDropdownModel } from '@adminvault/shared-models';
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
     Search, RefreshCw, Download,
@@ -14,6 +14,7 @@ import { UserRoleEnum } from '@adminvault/shared-models';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatPhoneNumberWithCountryCode } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const openSlackChat = (slackUserId: string, teamId: string) => {
     if (!slackUserId) return;
@@ -24,12 +25,25 @@ const openSlackChat = (slackUserId: string, teamId: string) => {
 };
 
 const SlackUsersPage: React.FC = () => {
+    useAuth();
     const [users, setUsers] = useState<SlackUserModel[]>([]);
+    const [companies, setCompanies] = useState<CompanyDropdownModel[]>([]);
+    const [selectedSyncCompanyId, setSelectedSyncCompanyId] = useState<string>('all');
     const [isLoading, setIsLoading] = useState(true);
     const [isImporting, setIsImporting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
-    useEffect(() => { fetchUsers(); }, []);
+    useEffect(() => {
+        fetchUsers();
+        fetchCompanies();
+    }, []);
+
+    const fetchCompanies = async () => {
+        try {
+            const resp = await companyService.getAllCompaniesDropdown();
+            if (resp.status) setCompanies(resp.data || []);
+        } catch (e) { }
+    };
 
     const fetchUsers = async () => {
         try {
@@ -42,11 +56,41 @@ const SlackUsersPage: React.FC = () => {
     const handleImportFromSlack = async () => {
         try {
             setIsImporting(true);
-            const response = await slackUserService.importSlackUsers();
-            if (response.status) { AlertMessages.getSuccessMessage(response.message || 'Imported successfully'); fetchUsers(); }
-            else AlertMessages.getErrorMessage(response.message || 'Import failed');
-        } catch (e: any) { AlertMessages.getErrorMessage(e.message || 'Import failed'); }
-        finally { setIsImporting(false); }
+            if (selectedSyncCompanyId === 'all') {
+                if (companies.length === 0) {
+                    AlertMessages.getErrorMessage('No companies found to sync');
+                    return;
+                }
+
+                let successCount = 0;
+                let failCount = 0;
+
+                // Using for...of for sequential sync to avoid overwhelming rate limits
+                for (const comp of companies) {
+                    try {
+                        const response = await slackUserService.importSlackUsers(comp.id);
+                        if (response.status) successCount++;
+                        else failCount++;
+                    } catch (err) {
+                        failCount++;
+                    }
+                }
+
+                AlertMessages.getSuccessMessage(`Bulk sync complete. Success: ${successCount}, Failed: ${failCount}`);
+            } else {
+                const response = await slackUserService.importSlackUsers(Number(selectedSyncCompanyId));
+                if (response.status) {
+                    AlertMessages.getSuccessMessage(response.message || 'Imported successfully');
+                } else {
+                    AlertMessages.getErrorMessage(response.message || 'Import failed');
+                }
+            }
+            fetchUsers();
+        } catch (e: any) {
+            AlertMessages.getErrorMessage(e.message || 'Import failed');
+        } finally {
+            setIsImporting(false);
+        }
     };
 
     const filtered = users.filter(u =>
@@ -75,6 +119,19 @@ const SlackUsersPage: React.FC = () => {
                         }
                     ]}
                 >
+                    {/* Bulk Sync Selector */}
+                    <div className="flex items-center gap-2 mr-4">
+                        <select
+                            value={selectedSyncCompanyId}
+                            onChange={(e) => setSelectedSyncCompanyId(e.target.value)}
+                            className="bg-white/10 border border-white/20 text-white text-[11px] font-bold rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-white/30 cursor-pointer hover:bg-white/20 transition-all uppercase tracking-wide"
+                        >
+                            <option value="all" className="text-slate-900">All Companies</option>
+                            {companies.map(comp => (
+                                <option key={comp.id} value={comp.id} className="text-slate-900">{comp.name}</option>
+                            ))}
+                        </select>
+                    </div>
                     {/* Stats Pills */}
                     <div className="hidden md:flex items-center gap-1.5">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">

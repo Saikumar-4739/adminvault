@@ -3,6 +3,7 @@ export * from './assets'
 export * from './documents'
 export * from './employees'
 export * from './masters'
+export * from './masters/company-service';
 export * from './licenses'
 export * from './reports'
 export * from './tickets'

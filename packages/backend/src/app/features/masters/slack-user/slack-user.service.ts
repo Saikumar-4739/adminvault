@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataSource, In } from 'typeorm';
 import { SlackUsersRepository } from './repositories/slack-user.repository';
 import { EmployeesRepository } from '../../employees/repositories/employees.repository';
@@ -13,6 +13,8 @@ import { WebClient } from '@slack/web-api';
 
 @Injectable()
 export class SlackUserService {
+    private readonly logger = new Logger(SlackUserService.name);
+
     constructor(
         private dataSource: DataSource,
         private slackUserRepo: SlackUsersRepository,
@@ -22,16 +24,37 @@ export class SlackUserService {
 
 
     async importSlackUsers(companyId: number): Promise<GlobalResponse> {
-        const slackToken = process.env.SLACK_BOT_TOKEN;
-        if (!slackToken) {
-            throw new ErrorResponse(500, 'SLACK_BOT_TOKEN is not configured. Please set the environment variable.');
+        this.logger.log(`Importing users for Company ID: ${companyId}`);
+        let slackToken = process.env.SLACK_BOT_TOKEN;
+        let tokenSource = 'Environment Variable (System Default)';
+
+        // Try to fetch company-specific token
+        const companyIdNum = Number(companyId);
+        if (companyIdNum) {
+            const companyInfo = await this.companyRepo.findOne({ where: { id: companyIdNum } });
+            if (companyInfo) {
+                this.logger.log(`Found Company Info: ${companyInfo.companyName}`);
+                if (companyInfo.slackBotToken && companyInfo.slackBotToken.trim() !== '') {
+                    slackToken = companyInfo.slackBotToken;
+                    tokenSource = `Database (Company Master: ${companyInfo.companyName})`;
+                    this.logger.log(`Using company-specific token from Database`);
+                } else {
+                    this.logger.warn(`No Slack Token set for company ${companyInfo.companyName}, falling back to ENV`);
+                }
+            } else {
+                this.logger.warn(`Company with ID ${companyIdNum} not found in database`);
+            }
+        } else {
+            this.logger.warn(`No valid Company ID provided (${companyId}), using system default token`);
         }
 
-        // const companyInfo = await this.companyRepo.findOne({ where: { id: companyId } });
-        // if (!companyInfo) {
-        //     throw new ErrorResponse(400, 'Invalid Company ID or Company does not exist');
-        // }
+        if (!slackToken || slackToken.trim() === '') {
+            const errorMsg = `No Slack Token configured. Please set it in Company Masters for Company ID ${companyId} or as SLACK_BOT_TOKEN in environment.`;
+            this.logger.error(errorMsg);
+            throw new ErrorResponse(500, errorMsg);
+        }
 
+        this.logger.log(`Syncing with token from: ${tokenSource}`);
         const client = new WebClient(slackToken);
         let allMembers: any[] = [];
         let cursor: string | undefined;
