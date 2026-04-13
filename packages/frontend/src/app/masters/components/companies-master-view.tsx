@@ -174,7 +174,7 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
                                                     <button onClick={() => handleEdit(company)} className="h-7 w-7 flex items-center justify-center rounded bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-sm" title="Edit">
                                                         <Pencil className="h-4 w-4" />
                                                     </button>
-                                                    <button onClick={() => handleDeleteClick(company.id)} className="h-7 w-7 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors shadow-sm" title="Delete">
+                                                    <button disabled className="h-7 w-7 flex items-center justify-center rounded bg-red-500/50 text-white grayscale opacity-50 cursor-not-allowed shadow-sm" title="Delete disabled">
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
                                                 </div>

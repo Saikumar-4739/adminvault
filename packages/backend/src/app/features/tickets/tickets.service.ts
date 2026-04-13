@@ -14,7 +14,6 @@ import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { TicketWorkLogEntity } from './entities/ticket-work-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuditLogService } from '../audit-log/audit-log.service';
 
 @Injectable()
 export class TicketsService {
@@ -27,8 +26,7 @@ export class TicketsService {
         @InjectRepository(TicketWorkLogEntity)
         private workLogRepo: Repository<TicketWorkLogEntity>,
         private gateway: TicketsGateway,
-        private emailInfoService: EmailInfoService,
-        private auditLogService: AuditLogService
+        private emailInfoService: EmailInfoService
     ) {
         if (!fs.existsSync(this.uploadPath)) {
             fs.mkdirSync(this.uploadPath, { recursive: true });
@@ -128,20 +126,6 @@ export class TicketsService {
             const savedTicket = await transManager.getRepository(TicketsEntity).save(entity);
             await transManager.completeTransaction();
 
-            // Log activity
-            await this.auditLogService.logAction(
-                'CREATE',
-                'TICKET',
-                Number(savedTicket.id),
-                savedTicket.ticketCode,
-                userId,
-                employee.firstName + ' ' + employee.lastName,
-                emailToUse,
-                { subject: savedTicket.subject, priority: savedTicket.priorityEnum },
-                ipAddress,
-                'Support'
-            );
-
             // Notify admins via WebSocket
             this.gateway.emitTicketCreated(savedTicket);
 
@@ -173,7 +157,7 @@ export class TicketsService {
                 }
             }
 
-            return new GlobalResponse(true, 201, 'Ticket created successfully');
+            return new GlobalResponse(true, 201, "Ticket created successfully", savedTicket);
         } catch (error) {
             await transManager.releaseTransaction();
             throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to create ticket');
@@ -238,27 +222,13 @@ export class TicketsService {
             const updated = await this.ticketsRepo.findOne({ where: { id: reqModel.id } });
             this.gateway.emitTicketUpdated(updated);
 
-            // Log activity
-            await this.auditLogService.logAction(
-                'UPDATE',
-                'TICKET',
-                Number(updated.id),
-                updated.ticketCode,
-                userId,
-                '',
-                '',
-                { changes: reqModel, oldStatus, newStatus: updated.ticketStatus },
-                ipAddress,
-                'Support'
-            );
-
             // Send Email Notification if status logic is handled here (usually updateStatus is preferred, but updateTicket might change it too)
             // Determine new status from reqModel or updated entity
             if (updated.ticketStatus !== oldStatus) {
                 await this.sendStatusChangeEmails(updated, oldStatus, updated.ticketStatus);
             }
 
-            return new GlobalResponse(true, 200, 'Ticket updated successfully');
+            return new GlobalResponse(true, 200, "Ticket updated successfully");
         } catch (error) {
             await transManager.releaseTransaction();
             throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to update ticket');
@@ -397,7 +367,7 @@ export class TicketsService {
             await transManager.completeTransaction();
 
 
-            return new GlobalResponse(true, 200, 'Ticket deleted successfully');
+            return new GlobalResponse(true, 200, "Ticket deleted successfully");
         } catch (error) {
             await transManager.releaseTransaction();
             throw error instanceof ErrorResponse ? error : new ErrorResponse(500, 'Failed to delete ticket');
@@ -547,19 +517,6 @@ export class TicketsService {
         // Notify via WebSocket
         this.gateway.emitTicketUpdated(saved);
 
-        // Log activity
-        await this.auditLogService.logAction(
-            'UPDATE_STATUS',
-            'TICKET',
-            Number(saved.id),
-            saved.ticketCode,
-            undefined,
-            '',
-            '',
-            { oldStatus, newStatus: saved.ticketStatus },
-            undefined,
-            'Support'
-        );
 
         // Send Email Notification
         if (oldStatus !== reqModel.status) {

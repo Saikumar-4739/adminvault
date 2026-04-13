@@ -46,7 +46,7 @@ export class LicenseService {
                     newLicense.expiryDate = reqModel.expiryDate;
                 }
             }
-            newLicense.totalQuantity = reqModel.totalQuantity || 0;
+            newLicense.totalQuantity = reqModel.totalQuantity;
 
             await transManager.getRepository(LicensesMasterEntity).save(newLicense);
             await transManager.completeTransaction();

@@ -3,7 +3,6 @@ import { AssignmentPriorityEnum, NextAssignmentStatusEnum } from '@adminvault/sh
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('asset_next_assignment')
-@Index('idx_next_assign_employee', ['employeeId'])
 export class AssetNextAssignmentEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'employee_id', nullable: false, comment: 'Reference to employees table - who will receive the asset' })
     employeeId: number;

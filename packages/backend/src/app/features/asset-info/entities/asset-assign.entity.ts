@@ -2,7 +2,6 @@ import { Column, Entity, Index } from 'typeorm';
 import { CommonBaseEntity } from '../../../../database/common-base.entity';
 
 @Entity('asset_assign')
-@Index('idx_assign_asset', ['assetId'])
 export class AssetAssignEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'asset_id', nullable: false, comment: 'Reference to asset_info table' })
     assetId: number;

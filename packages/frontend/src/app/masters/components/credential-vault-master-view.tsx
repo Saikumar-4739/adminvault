@@ -267,7 +267,9 @@ export const CredentialVaultMasterView = forwardRef<CredentialVaultMasterViewHan
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button onClick={(e) => { e.stopPropagation(); setSelectedCredential(item); setIsDetailModalOpen(true); }} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all"><Eye className="h-3.5 w-3.5" /></button>
                                                 <button onClick={(e) => handleEdit(item, e)} className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all"><Pencil className="h-3.5 w-3.5" /></button>
-                                                <button onClick={(e) => handleDeleteClick(item.id, e)} className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all"><Trash2 className="h-3.5 w-3.5" /></button>
+                                                <button disabled className="h-7 w-7 flex items-center justify-center rounded bg-red-500/50 text-white grayscale opacity-50 cursor-not-allowed shadow-sm" title="Delete disabled">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

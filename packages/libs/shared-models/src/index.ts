@@ -14,6 +14,5 @@ export * from './dashboard/dashboard-models';
 export * from './common';
 export * from './procurement/procurement.models';
 export * from './websocket/websocket-events.model';
-export * from './audit-log/audit-log.models';
 export * from './knowledge-base';
 export * from './network';

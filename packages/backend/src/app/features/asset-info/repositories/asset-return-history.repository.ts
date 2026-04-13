@@ -9,9 +9,6 @@ export class AssetReturnHistoryRepository extends Repository<AssetReturnHistoryE
         super(AssetReturnHistoryEntity, dataSource.createEntityManager());
     }
 
-    /**
-     * Get asset return history records with joins
-     */
     async getReturnAssets(reqModel: GetReturnAssetsRequestModel) {
         const query = this.createQueryBuilder('returnHistory')
             .leftJoin('employees', 'employee', 'returnHistory.employee_id = employee.id')

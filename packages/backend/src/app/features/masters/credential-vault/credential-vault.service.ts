@@ -26,12 +26,12 @@ export class CredentialVaultService {
             const newVault = new CredentialVaultEntity();
             newVault.userId = reqModel.createdBy;
             newVault.appName = reqModel.appName;
-            newVault.description = reqModel.description || '';
+            newVault.description = reqModel.description;
             newVault.password = reqModel.password;
-            newVault.owner = reqModel.owner || '';
-            newVault.deviceSerialNumber = reqModel.deviceSerialNumber || '';
-            newVault.ipAddress = reqModel.ipAddress || '';
-            newVault.recoveryEmail = reqModel.recoveryEmail || '';
+            newVault.owner = reqModel.owner;
+            newVault.deviceSerialNumber = reqModel.deviceSerialNumber;
+            newVault.ipAddress = reqModel.ipAddress;
+            newVault.recoveryEmail = reqModel.recoveryEmail;
             newVault.isActive = reqModel.isActive ?? true;
 
             if (reqModel.expireDate) {

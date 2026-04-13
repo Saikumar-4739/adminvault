@@ -8,7 +8,6 @@ import { GenericTransactionManager } from '../../../database/typeorm-transaction
 import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CreateEmployeeModel, UpdateEmployeeModel, DeleteEmployeeModel, GetEmployeeModel, GetAllEmployeesResponseModel, GetEmployeeResponseModel, EmployeeResponseModel, IdRequestModel, CreateEmailInfoModel, EmailTypeEnum, GetAllEmployeesRequestModel, EmployeeStatusEnum } from '@adminvault/shared-models';
 import { EmailInfoService } from '../email/email-info.service';
-import { AuditLogService } from '../audit-log/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '@adminvault/shared-models';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
@@ -19,7 +18,6 @@ export class EmployeesService {
         private dataSource: DataSource,
         private employeesRepo: EmployeesRepository,
         private emailInfoService: EmailInfoService,
-        private auditLogService: AuditLogService,
         private notificationsService: NotificationsService
     ) { }
 
@@ -72,19 +70,6 @@ export class EmployeesService {
             newEmployee.groupEmails = reqModel.groupEmails;
             const savedEmployee = await transManager.getRepository(EmployeesEntity).save(newEmployee);
 
-            // Log activity
-            await this.auditLogService.logAction(
-                'CREATE',
-                'EMPLOYEE',
-                Number(savedEmployee.id),
-                savedEmployee.firstName + ' ' + savedEmployee.lastName,
-                reqModel.userId,
-                '',
-                '',
-                { email: savedEmployee.email, department: deptExists.name },
-                undefined,
-                'HR'
-            );
 
             // Automatically create Individual Identity (Email Info)
             const emailReq = new CreateEmailInfoModel(reqModel.companyId, EmailTypeEnum.USER, deptExists.name, reqModel.email, savedEmployee.id);
@@ -163,19 +148,6 @@ export class EmployeesService {
                 });
             }
 
-            // Log activity
-            await this.auditLogService.logAction(
-                'UPDATE',
-                'EMPLOYEE',
-                Number(reqModel.id),
-                existingEmployee.firstName + ' ' + existingEmployee.lastName,
-                undefined,
-                '',
-                '',
-                { changes: reqModel },
-                undefined,
-                'HR'
-            );
 
             return new GlobalResponse(true, 0, "Employee updated successfully");
         } catch (error) {
@@ -335,19 +307,6 @@ export class EmployeesService {
             await transManager.getRepository(EmployeesEntity).softDelete(reqModel.id);
             await transManager.completeTransaction();
 
-            // Log activity
-            await this.auditLogService.logAction(
-                'DELETE',
-                'EMPLOYEE',
-                Number(reqModel.id),
-                existingEmployee.firstName + ' ' + existingEmployee.lastName,
-                undefined,
-                '',
-                '',
-                {},
-                undefined,
-                'HR'
-            );
 
 
             return new GlobalResponse(true, 0, "Employee deleted successfully");

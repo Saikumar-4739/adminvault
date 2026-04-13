@@ -3,7 +3,6 @@ import { CommonBaseEntity } from '../../../../database/common-base.entity';
 import { AssetStatusEnum, ComplianceStatusEnum, EncryptionStatusEnum } from '@adminvault/shared-models';
 
 @Entity('asset_info')
-@Index('idx_asset_serial', ['serialNumber'])
 export class AssetInfoEntity extends CommonBaseEntity {
     @Column('bigint', { name: 'device_id', nullable: false, comment: 'Reference to device_info table' })
     deviceId: number;

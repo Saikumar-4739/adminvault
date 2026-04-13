@@ -61,7 +61,7 @@ export class DocumentsService {
             document.originalName = file.originalname;
             document.fileSize = file.size;
             document.mimeType = file.mimetype;
-            document.category = reqModel.category || 'General';
+            document.category = reqModel.category;
             document.filePath = filePath;
             document.uploadedBy = Number(reqModel.userId);
             document.description = reqModel.description;

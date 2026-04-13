@@ -6,11 +6,10 @@ import { EmployeesController } from './employees.controller';
 import { EmployeesRepository } from './repositories/employees.repository';
 import { EmployeesBulkService } from './employees-bulk.service';
 import { DepartmentRepository } from '../masters/department/repositories/department.repository';
-import { AuditLogModule } from '../audit-log/audit-log.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([EmployeesEntity]), AuditLogModule, NotificationsModule],
+    imports: [TypeOrmModule.forFeature([EmployeesEntity]), NotificationsModule],
     controllers: [EmployeesController],
     providers: [EmployeesService, EmployeesRepository, EmployeesBulkService, DepartmentRepository],
     exports: [EmployeesService, EmployeesRepository],

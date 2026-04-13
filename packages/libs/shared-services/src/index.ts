@@ -8,7 +8,6 @@ export * from './licenses'
 export * from './reports'
 export * from './tickets'
 export * from './dashboard'
-export * from './audit-log';
 export * from './notifications';
 export * from './config';
 export * from './knowledge-base';

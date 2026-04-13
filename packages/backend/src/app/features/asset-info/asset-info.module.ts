@@ -15,13 +15,11 @@ import { AssetReturnHistoryRepository } from './repositories/asset-return-histor
 import { AssetNextAssignmentRepository } from './repositories/asset-next-assignment.repository';
 import { AssetAssignRepository } from './repositories/asset-assign.repository';
 import { EmployeesRepository } from '../employees/repositories/employees.repository';
-import { AuditLogModule } from '../audit-log/audit-log.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([AssetInfoEntity, AssetReturnHistoryEntity, AssetNextAssignmentEntity, AssetAssignEntity, EmployeesEntity]),
-        AuditLogModule,
         NotificationsModule
     ],
     controllers: [AssetInfoController],

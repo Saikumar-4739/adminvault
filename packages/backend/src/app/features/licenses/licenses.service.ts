@@ -199,14 +199,14 @@ export class LicensesService {
             companyId: reqModel.companyId,
             applicationId: reqModel.applicationId,
             assignedEmployeeId: reqModel.assignedEmployeeId,
-            licenseKey: reqModel.licenseKey || null,
-            purchaseDate: reqModel.purchaseDate || null,
-            assignedDate: reqModel.assignedDate || null,
-            expiryDate: reqModel.expiryDate || null,
-            remarks: reqModel.remarks || null,
+            licenseKey: reqModel.licenseKey,
+            purchaseDate: reqModel.purchaseDate,
+            assignedDate: reqModel.assignedDate,
+            expiryDate: reqModel.expiryDate,
+            remarks: reqModel.remarks,
             totalSeats: reqModel.seats || 1,
-            costPerSeat: (reqModel as any).costPerSeat || 0,
-            billingCycle: (reqModel as any).billingCycle || 'MONTHLY',
+            costPerSeat: (reqModel as any).costPerSeat,
+            billingCycle: (reqModel as any).billingCycle,
             role: reqModel.role || null
         };
 
@@ -245,13 +245,13 @@ export class LicensesService {
         const updateData: Partial<CompanyLicenseEntity> = {
             applicationId: reqModel.applicationId,
             assignedEmployeeId: reqModel.assignedEmployeeId,
-            licenseKey: reqModel.licenseKey || null,
-            purchaseDate: reqModel.purchaseDate || null,
-            assignedDate: reqModel.assignedDate || null,
-            expiryDate: reqModel.expiryDate || null,
-            remarks: reqModel.remarks || null,
-            costPerSeat: reqModel.costPerSeat || 0,
-            billingCycle: reqModel.billingCycle || 'MONTHLY',
+            licenseKey: reqModel.licenseKey,
+            purchaseDate: reqModel.purchaseDate,
+            assignedDate: reqModel.assignedDate,
+            expiryDate: reqModel.expiryDate,
+            remarks: reqModel.remarks,
+            costPerSeat: reqModel.costPerSeat,
+            billingCycle: reqModel.billingCycle,
             role: reqModel.role || null
         };
 

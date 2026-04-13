@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { RegisterUserModel, UserRoleEnum } from '@adminvault/shared-models';
 import Link from 'next/link';
+import { hashPassword } from '@/lib/utils';
 
 const RegisterPage: React.FC = () => {
     const router = useRouter();
@@ -43,14 +44,15 @@ const RegisterPage: React.FC = () => {
 
         setIsLoading(true);
         try {
+            // Hash the password on frontend before sending to backend
+            const hashedPassword = await hashPassword(formData.password);
             const registerModel = new RegisterUserModel(
                 formData.fullName,
                 Number(formData.companyId),
                 formData.email,
                 formData.phNumber,
-                formData.password,
-                UserRoleEnum.USER,
-                'LOCAL'
+                hashedPassword,
+                UserRoleEnum.USER
             );
 
             const response = await authService.registerUser(registerModel);

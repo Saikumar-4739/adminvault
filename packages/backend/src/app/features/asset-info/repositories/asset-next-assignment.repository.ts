@@ -9,9 +9,6 @@ export class AssetNextAssignmentRepository extends Repository<AssetNextAssignmen
         super(AssetNextAssignmentEntity, dataSource.createEntityManager());
     }
 
-    /**
-     * Get pending and assigned next assignments with joins
-     */
     async getNextAssignments(reqModel: GetNextAssignmentsRequestModel) {
         const companyId = reqModel.companyId;
         return await this.createQueryBuilder('assignment')

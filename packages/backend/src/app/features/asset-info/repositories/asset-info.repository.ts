@@ -9,9 +9,6 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
         super(AssetInfoEntity, dataSource.createEntityManager());
     }
 
-    /**
-     * Get all assets that are available/in storage (not assigned)
-     */
     async getStoreAssets(reqModel: IdRequestModel) {
         const companyId = reqModel.id;
         return await this.createQueryBuilder('asset')
@@ -39,10 +36,6 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
             .getRawMany();
     }
 
-    /**
-     * Get assets with their assignment information using TypeORM Query Builder
-     * This method joins with device_info, asset_assign, and employees tables
-     */
     async getAssetsWithAssignments(reqModel: IdRequestModel) {
         const companyId = reqModel.id;
         const query = this.createQueryBuilder('asset')
@@ -84,7 +77,6 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
 
         const results = await query.orderBy('asset.createdAt', 'DESC').getRawMany();
 
-        // Deduplicate results by asset ID to prevent UI crashes if multiple assignments exist
         const uniqueResults = [];
         const seenIds = new Set();
         for (const row of results) {
@@ -98,9 +90,6 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
         return uniqueResults;
     }
 
-    /**
-     * Get asset statistics by status for a company
-     */
     async getAssetStatistics(reqModel: IdRequestModel) {
         const companyId = reqModel.id;
         const query = this.createQueryBuilder('asset')
@@ -114,9 +103,6 @@ export class AssetInfoRepository extends Repository<AssetInfoEntity> {
         return await query.groupBy('asset.asset_status_enum').getRawMany();
     }
 
-    /**
-     * Search assets by serial number or device name
-     */
     async searchAssets(reqModel: import('@adminvault/shared-models').AssetSearchRequestModel) {
         const query = this.createQueryBuilder('asset')
             .leftJoin('asset_types', 'device', 'asset.device_id = device.id')

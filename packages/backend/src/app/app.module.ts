@@ -15,7 +15,6 @@ import { DashboardModule } from './features/dashboard/dashboard.module';
 import { DocumentsModule } from './features/documents/documents.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { ProcurementModule } from './features/procurement/procurement.module';
-import { AuditLogModule } from './features/audit-log/audit-log.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
 import { ContractModule } from './features/contracts/contract.module';
 import configuration from '../config/configuration';
@@ -47,7 +46,6 @@ import { EmailModule } from './features/email/email.module';
     DocumentsModule,
     KnowledgeBaseModule,
     ProcurementModule,
-    AuditLogModule,
     NotificationsModule,
     ContractModule,
     EventEmitterModule.forRoot(),

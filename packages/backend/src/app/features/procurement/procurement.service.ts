@@ -55,7 +55,7 @@ export class ProcurementService {
             poEntity.notes = notes;
             poEntity.timeSpentMinutes = timeSpentMinutes;
             poEntity.invoiceUrl = invoiceUrl;
-            poEntity.currency = currency || 'USD';
+            poEntity.currency = currency;
             poEntity.vendorName = vendorName;
 
             const savedPO = await transManager.getRepository(PurchaseOrderEntity).save(poEntity);

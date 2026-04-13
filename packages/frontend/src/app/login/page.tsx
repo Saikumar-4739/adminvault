@@ -9,12 +9,13 @@ import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { LoginUserModel } from '@adminvault/shared-models';
 import Link from 'next/link';
 import { configVariables } from '@adminvault/shared-services';
-import { useTheme } from '@/contexts/ThemeContext';
+import { hashPassword } from '@/lib/utils';
 
 const LoginPage: React.FC = () => {
     const router = useRouter();
     const { login, isLoading, isAuthenticated } = useAuth();
-    const { isDarkMode } = useTheme();
+    // Force dark mode for login page as per requirement
+    const isDarkMode = true;
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -39,7 +40,9 @@ const LoginPage: React.FC = () => {
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const req = new LoginUserModel(formData.email, formData.password);
+            // Hash the password on frontend before sending to backend to satisfy "payload showing like this i wnat password showi hash"
+            const hashedPassword = await hashPassword(formData.password);
+            const req = new LoginUserModel(formData.email, hashedPassword);
             const user = await login(req);
             if (user) {
                 // Save email for next time

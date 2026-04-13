@@ -13,7 +13,6 @@ import { EmailInfoService } from '../email/email-info.service';
 import { EmployeesEntity } from '../employees/entities/employees.entity';
 import { AuthUsersEntity } from '../auth-users/entities/auth-users.entity';
 import { AssetReturnHistoryEntity } from './entities/asset-return-history.entity';
-import { AuditLogService } from '../audit-log/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ErrorResponse } from '@adminvault/backend-utils';
 
@@ -24,7 +23,6 @@ export class AssetInfoService {
         private assetInfoRepo: AssetInfoRepository,
         private assignRepo: AssetAssignRepository,
         private emailInfoService: EmailInfoService,
-        private auditLogService: AuditLogService,
         private notificationsService: NotificationsService
     ) { }
 
@@ -61,16 +59,16 @@ export class AssetInfoService {
             entity.warrantyExpiry = reqModel.warrantyExpiry ? new Date(reqModel.warrantyExpiry) : null;
             entity.userAssignedDate = reqModel.userAssignedDate ? new Date(reqModel.userAssignedDate) : null;
             entity.lastReturnDate = reqModel.lastReturnDate ? new Date(reqModel.lastReturnDate) : null;
-            entity.complianceStatus = reqModel.complianceStatus || ComplianceStatusEnum.UNKNOWN;
+            entity.complianceStatus = reqModel.complianceStatus;
             entity.lastSync = reqModel.lastSync ? new Date(reqModel.lastSync) : null;
-            entity.encryptionStatus = reqModel.encryptionStatus || EncryptionStatusEnum.UNKNOWN;
+            entity.encryptionStatus = reqModel.encryptionStatus;
             entity.batteryLevel = reqModel.batteryLevel;
             entity.storageAvailable = reqModel.storageAvailable;
-            entity.purchaseCost = reqModel.purchaseCost || 0;
-            entity.currentValue = reqModel.currentValue || reqModel.purchaseCost || 0;
-            entity.depreciationMethod = reqModel.depreciationMethod || 'STRAIGHT_LINE';
-            entity.usefulLifeYears = reqModel.usefulLifeYears || 5;
-            entity.salvageValue = reqModel.salvageValue || 0;
+            entity.purchaseCost = reqModel.purchaseCost;
+            entity.currentValue = reqModel.currentValue;
+            entity.depreciationMethod = reqModel.depreciationMethod;
+            entity.usefulLifeYears = reqModel.usefulLifeYears;
+            entity.salvageValue = reqModel.salvageValue;
             entity.assetStatusEnum = reqModel.assignedToEmployeeId ? ((reqModel.assetStatusEnum === AssetStatusEnum.MAINTENANCE || reqModel.assetStatusEnum === AssetStatusEnum.RETIRED) ? reqModel.assetStatusEnum : AssetStatusEnum.IN_USE) : (reqModel.assetStatusEnum || AssetStatusEnum.AVAILABLE);
             const saved = await transManager.getRepository(AssetInfoEntity).save(entity);
             await transManager.completeTransaction();
@@ -142,19 +140,6 @@ export class AssetInfoService {
             const saved = await transManager.getRepository(AssetInfoEntity).save(existing);
             await transManager.completeTransaction();
 
-            // Log activity
-            await this.auditLogService.logAction(
-                'UPDATE',
-                'ASSET',
-                Number(saved.id),
-                saved.model + ' (' + saved.serialNumber + ')',
-                userId,
-                '',
-                '',
-                { changes: reqModel, status: saved.assetStatusEnum },
-                undefined,
-                'Inventory'
-            );
 
             return new GlobalResponse(true, 0, "Asset updated successfully");
         } catch (error) {
@@ -386,19 +371,6 @@ export class AssetInfoService {
 
             await transManager.completeTransaction();
 
-            // Log activity
-            await this.auditLogService.logAction(
-                'ASSIGN',
-                'ASSET',
-                Number(asset.id),
-                asset.model + ' (' + asset.serialNumber + ')',
-                userId,
-                '',
-                '',
-                { assignedToEmployeeId: employeeId, isReassignment, remarks },
-                undefined,
-                'Inventory'
-            );
 
             // Send Emails (Independent of transaction success/failure after commit)
             try {
@@ -560,19 +532,6 @@ export class AssetInfoService {
 
             await transManager.completeTransaction();
 
-            // Log activity
-            await this.auditLogService.logAction(
-                'RETURN',
-                'ASSET',
-                Number(asset.id),
-                asset.model + ' (' + asset.serialNumber + ')',
-                userId,
-                '',
-                '',
-                { previousUserId, targetStatus: asset.assetStatusEnum, remarks },
-                undefined,
-                'Inventory'
-            );
 
             // --- PERSISTENT NOTIFICATIONS ---
             try {

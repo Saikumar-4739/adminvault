@@ -3,21 +3,99 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { ExternalLink, Cloud, Code, Shield, Zap, Rocket } from 'lucide-react';
 
 const WelcomePage: React.FC = () => {
     const { user } = useAuth();
     const { isDarkMode } = useTheme();
 
+    const companies = [
+        {
+            name: "5Y Business Solutions",
+            url: "https://www.5yinc.com/",
+            description: "Driving digital transformation through legacy modernization and cloud-native engineering.",
+            features: [
+                { icon: <Code className="w-4 h-4" />, text: "Legacy Modernization" },
+                { icon: <Cloud className="w-4 h-4" />, text: "Cloud Engineering" },
+                { icon: <Shield className="w-4 h-4" />, text: "DevSecOps" }
+            ],
+            gradient: "from-blue-600/10 to-indigo-600/10 dark:from-blue-600/20 dark:to-indigo-600/20",
+            border: "border-slate-200 dark:border-blue-500/20",
+            shadow: "hover:shadow-blue-500/10"
+        },
+        {
+            name: "BOS Framework",
+            url: "https://www.bosframework.com/",
+            description: "Comprehensive cloud enablement platform automating orchestration, CI/CD, and security.",
+            features: [
+                { icon: <Zap className="w-4 h-4" />, text: "Cloud Orchestration" },
+                { icon: <Rocket className="w-4 h-4" />, text: "Automated CI/CD" },
+                { icon: <Shield className="w-4 h-4" />, text: "Security Compliance" }
+            ],
+            gradient: "from-purple-600/10 to-indigo-600/10 dark:from-purple-600/20 dark:to-indigo-600/20",
+            border: "border-slate-200 dark:border-purple-500/20",
+            shadow: "hover:shadow-purple-500/10"
+        }
+    ];
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-[85vh] p-8 -mt-8 animate-slide-up">
+        <div className="flex flex-col items-center justify-center min-h-[85vh] p-8 -mt-8 animate-slide-up space-y-12">
             <div className="max-w-2xl text-center space-y-4">
-                <h1 className="text-2xl md:text-3xl font-black tracking-tight">
+                <h1 className="text-2xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
                     Welcome to <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent animate-gradient">BOS Vault</span>
                     {user?.fullName ? `,  ${user.fullName}` : ''}
                 </h1>
-                <p className={`text-sm leading-relaxed font-medium ${isDarkMode ? 'text-gray-400' : 'text-slate-600'}`}>
+                <p className={`text-sm md:text-base leading-relaxed font-medium ${isDarkMode ? 'text-gray-400' : 'text-slate-600'}`}>
                     Streamlined hardware, software, and human capital management. Built for modern IT teams to operate securely and efficiently. Explore the features below.
                 </p>
+            </div>
+
+            <div className="w-full max-w-4xl">
+                <div className="flex flex-col space-y-8">
+                    <div className="flex items-center space-x-4 opacity-50">
+                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-500 to-transparent"></div>
+                        <h2 className={`text-[10px] font-bold uppercase tracking-[0.3em] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Our Ecosystem Partners
+                        </h2>
+                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-500 to-transparent"></div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {companies.map((company, idx) => (
+                            <a
+                                key={idx}
+                                href={company.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`group relative p-8 rounded-2xl border ${company.border} bg-white dark:bg-white/5 backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${company.shadow} overflow-hidden`}
+                            >
+                                <div className={`absolute inset-0 bg-gradient-to-br ${company.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
+
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:scale-[1.02] transition-transform origin-left">
+                                            {company.name}
+                                        </h3>
+                                        <ExternalLink className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white group-hover:rotate-12 transition-all" />
+                                    </div>
+
+                                    <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'} group-hover:text-slate-900 dark:group-hover:text-slate-300 transition-colors`}>
+                                        {company.description}
+                                    </p>
+
+                                    <div className="flex flex-wrap gap-2">
+                                        {company.features.map((feature, fIdx) => (
+                                            <div key={fIdx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/50 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white group-hover:border-slate-300 dark:group-hover:border-slate-700 transition-all">
+                                                <span className="text-blue-600 dark:text-blue-500 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{feature.icon}</span>
+                                                {feature.text}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             <style jsx>{`
@@ -29,8 +107,8 @@ const WelcomePage: React.FC = () => {
                     0%, 100% { background-position: 0% 50%; }
                     50% { background-position: 100% 50%; }
                 }
-                .animate-slide-up { animation: slide-up 0.6s ease-out; }
-                .animate-gradient { background-size: 200% 200%; animation: gradient 3s ease infinite; }
+                .animate-slide-up { animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+                .animate-gradient { background-size: 200% 200%; animation: gradient 4s ease infinite; }
             `}</style>
         </div>
     );
