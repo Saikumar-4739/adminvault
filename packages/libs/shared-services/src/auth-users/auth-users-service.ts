@@ -75,6 +75,10 @@ export class AuthUsersService extends CommonAxiosService {
         return await this.axiosPostCall(this.getURLwithMainEndPoint('closeAccessRequest'), { id }, config);
     }
 
+    async deleteAccessRequest(id: number, config?: AxiosRequestConfig): Promise<GlobalResponse> {
+        return await this.axiosPostCall(this.getURLwithMainEndPoint('deleteAccessRequest'), { id }, config);
+    }
+
     getGoogleAuthUrl() {
         return this.URL + this.getURLwithMainEndPoint('google');
     }

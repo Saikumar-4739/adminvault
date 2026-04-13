@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { companyService, emailService, departmentService, employeeService } from '@/lib/api/services';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { EmailInfoResponseModel, EmailTypeEnum, IdRequestModel, EmployeeStatusEnum, UserRoleEnum, DepartmentEnum, DeleteEmailInfoModel, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
+import { EmailInfoResponseModel, EmailTypeEnum, IdRequestModel, UserRoleEnum, DepartmentEnum, DeleteEmailInfoModel, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
 import {
     Mail, Building2, Plus, Trash2, Search,
-    Headphones, ShieldCheck, Landmark, Settings,
+    Headphones, ShieldCheck, Landmark, Settings, Pencil,
     TrendingUp, Megaphone, Users2,
     User, Users, Globe, ChevronDown, ChevronRight
 } from 'lucide-react';
@@ -109,21 +109,13 @@ const EmailRow: React.FC<{
                         )}
                     </div>
                 </td>
-                <td className="p-4">
-                    <div className="flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${acc.employeeStatus === EmployeeStatusEnum.INACTIVE ? 'bg-amber-400' : 'bg-emerald-500'} shadow-sm`} />
-                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                            {acc.employeeStatus || 'Active'}
-                        </span>
-                    </div>
-                </td>
                 <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                         <button
                             onClick={() => onEdit(acc)}
                             className="h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all shadow-sm"
                         >
-                            <Settings className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                         </button>
                         <button
                             onClick={() => onDelete(acc.id)}
@@ -137,7 +129,7 @@ const EmailRow: React.FC<{
             <AnimatePresence>
                 {isMembersOpen && (
                     <tr>
-                        <td colSpan={4} className="p-0 border-0">
+                        <td colSpan={3} className="p-0 border-0">
                             <motion.div
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
@@ -179,8 +171,9 @@ const InfoEmailsPage: React.FC = () => {
     const [itemToDelete, setItemToDelete] = useState<any>(null);
 
     const fetchEmployeesForLookup = useCallback(async () => {
+        if (!selectedOrg) return;
         try {
-            const req = new GetAllEmployeesRequestModel(Number(selectedOrg) || 0);
+            const req = new GetAllEmployeesRequestModel(Number(selectedOrg));
             const response = await employeeService.getAllEmployees(req);
             if (response.status) {
                 setEmployees(response.data || []);
@@ -250,6 +243,7 @@ const InfoEmailsPage: React.FC = () => {
             setSelectedOrg(companies[0].id.toString());
         }
     }, [companies, selectedOrg]);
+
 
     const handleUpsertEmailInfo = async (data: any) => {
         try {
@@ -329,24 +323,34 @@ const InfoEmailsPage: React.FC = () => {
             return groups;
         }
 
-        const emailDepts = [...new Set(filteredEmails.map(e => e.department || 'Unassigned'))];
-        const masterDepts = departments.map(d => d.name);
+        filteredEmails.forEach(email => {
+            const company = companies.find(c => c.id === email.companyId);
+            const companyName = company ? (company.companyName || company.name) : 'Unknown';
+            const deptName = email.department || 'Unassigned';
 
-        const allPossibleDepts = [...new Set([...masterDepts, ...emailDepts])];
-        if (!allPossibleDepts.includes('Unassigned')) allPossibleDepts.push('Unassigned');
+            // Create a unique key that includes company name if in "All Companies" view
+            const groupKey = selectedOrg === '' ? `${companyName} | ${deptName}` : deptName;
 
-        allPossibleDepts.forEach(dept => {
-            const emailsInDept = filteredEmails.filter(email => {
-                const emailDept = email.department || 'Unassigned';
-                return emailDept === dept;
-            });
-
-            if (emailsInDept.length > 0) {
-                groups[dept] = emailsInDept;
-            } else if (searchQuery === '' && masterDepts.includes(dept)) {
-                groups[dept] = [];
-            }
+            if (!groups[groupKey]) groups[groupKey] = [];
+            groups[groupKey].push(email);
         });
+
+        // If not searching, ensure all departments from the selected company (or all) are shown
+        if (searchQuery === '') {
+            if (selectedOrg === '') {
+                companies.forEach(company => {
+                    const companyName = company.companyName || company.name;
+                    departments.forEach(dept => {
+                        const groupKey = `${companyName} | ${dept.name}`;
+                        if (!groups[groupKey]) groups[groupKey] = [];
+                    });
+                });
+            } else {
+                departments.forEach(dept => {
+                    if (!groups[dept.name]) groups[dept.name] = [];
+                });
+            }
+        }
 
         return groups;
     }, [filteredEmails, departments, searchQuery, activeTab]);
@@ -498,7 +502,6 @@ const InfoEmailsPage: React.FC = () => {
                                                                 <tr className="bg-slate-50/50 dark:bg-white/[0.01] border-b border-slate-50 dark:border-white/5">
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Type</th>
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Email Address</th>
-                                                                    <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                                                                     <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                                                 </tr>
                                                             </thead>

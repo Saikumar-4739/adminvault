@@ -7,9 +7,10 @@ import { LicensesService } from './licenses.service';
 import { LicenseRepository } from './repositories/license.repository';
 
 import { NotificationsModule } from '../notifications/notifications.module';
+import { LicenseModule } from '../masters/license/license.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([CompanyLicenseEntity]), NotificationsModule],
+    imports: [TypeOrmModule.forFeature([CompanyLicenseEntity]), NotificationsModule, LicenseModule],
     controllers: [LicensesController],
     providers: [LicensesService, LicenseRepository],
     exports: [LicensesService, LicenseRepository]

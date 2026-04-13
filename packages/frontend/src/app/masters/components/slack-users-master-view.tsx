@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Modal } from '@/components/ui/Modal';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Plus, Pencil, Trash2, ArrowLeft, User, Search, LayoutGrid, List, Eye, Slack, Hash, Shield, Phone, Mail, AtSign, Briefcase, MapPin, Tag } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft, User, Search, LayoutGrid, List, Eye, Slack, Hash, Shield, Phone, Mail, AtSign, Briefcase, MapPin, Tag, Globe, Activity, Settings, RefreshCw } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { DepartmentService, EmployeesService, SlackUserService, CompanyService } from '@adminvault/shared-services';
@@ -48,12 +48,16 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
     const companyService = new CompanyService();
     const [companies, setCompanies] = useState<CompanyDropdownModel[]>([]);
     const [filterCompanyId, setFilterCompanyId] = useState<string>('all');
-    const [formData, setFormData] = useState({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true });
+    const [formData, setFormData] = useState({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true, avatarUrl: '', isAdmin: false });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [selectedSlackUser, setSelectedSlackUser] = useState<SlackUserModel | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+    const [configCompanyId, setConfigCompanyId] = useState<string>('');
+    const [configFormData, setConfigFormData] = useState({ slackBotToken: '', slackWorkspaceId: '' });
+    const [isSyncing, setIsSyncing] = useState(false);
     const lastFetchedCompanyId = useRef<number | null>(null);
 
     useEffect(() => {
@@ -134,7 +138,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         try {
             const companyIdToUse = Number(formData.companyId) || user?.companyId || 0;
             if (isEditMode && editingId) {
-                const model = new UpdateSlackUserModel(editingId, formData.name, formData.email, formData.notes, formData.isActive, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, companyIdToUse, undefined, formData.employeeId ? Number(formData.employeeId) : undefined);
+                const model = new UpdateSlackUserModel(editingId, formData.name, formData.email, undefined, formData.isActive, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, companyIdToUse, formData.avatarUrl, formData.employeeId ? Number(formData.employeeId) : undefined, formData.isAdmin);
                 const response = await slackUserService.updateSlackUser(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -144,7 +148,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateSlackUserModel(user?.id || 0, companyIdToUse, formData.name, formData.email, formData.notes, formData.isActive ?? true, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, undefined, formData.employeeId ? Number(formData.employeeId) : undefined);
+                const model = new CreateSlackUserModel(user?.id || 0, companyIdToUse, formData.name, formData.email, undefined, formData.isActive ?? true, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, formData.avatarUrl, formData.employeeId ? Number(formData.employeeId) : undefined);
                 const response = await slackUserService.createSlackUser(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -173,7 +177,9 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
             notes: item.notes || '',
             companyId: item.companyId?.toString() || '',
             employeeId: item.employeeId?.toString() || '',
-            isActive: item.isActive ?? true
+            isActive: item.isActive ?? true,
+            avatarUrl: item.avatarUrl || '',
+            isAdmin: item.isAdmin ?? false
         });
         setIsModalOpen(true);
     };
@@ -204,7 +210,72 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true });
+        setFormData({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true, avatarUrl: '', isAdmin: false });
+    };
+
+    const handleOpenConfig = async (companyId: string) => {
+        if (!companyId || companyId === 'all') {
+            AlertMessages.getErrorMessage('Please select a company to configure Slack settings.');
+            return;
+        }
+        setConfigCompanyId(companyId);
+        try {
+            const response = await companyService.getAllCompanies();
+            if (response.status) {
+                const comp = response.data.find((c: any) => c.id.toString() === companyId);
+                if (comp) {
+                    setConfigFormData({
+                        slackBotToken: comp.slackBotToken || '',
+                        slackWorkspaceId: comp.slackWorkspaceId || ''
+                    });
+                    setIsConfigModalOpen(true);
+                }
+            }
+        } catch (error) {
+            AlertMessages.getErrorMessage('Failed to fetch company settings');
+        }
+    };
+
+    const handleSaveConfig = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await companyService.updateCompany({
+                id: Number(configCompanyId),
+                slackBotToken: configFormData.slackBotToken,
+                slackWorkspaceId: configFormData.slackWorkspaceId
+            } as any);
+
+            if (response.status) {
+                AlertMessages.getSuccessMessage('Slack settings saved successfully');
+                setIsConfigModalOpen(false);
+                fetchDependencies(); // Refresh companies list
+            } else {
+                AlertMessages.getErrorMessage(response.message);
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message);
+        }
+    };
+
+    const handleSyncFromSlack = async () => {
+        if (!filterCompanyId || filterCompanyId === 'all') {
+            AlertMessages.getErrorMessage('Please select a specific company to sync members from Slack.');
+            return;
+        }
+        setIsSyncing(true);
+        try {
+            const response = await slackUserService.importSlackUsers(Number(filterCompanyId));
+            if (response.status) {
+                AlertMessages.getSuccessMessage(response.message);
+                getAllSlackUsers();
+            } else {
+                AlertMessages.getErrorMessage(response.message);
+            }
+        } catch (error: any) {
+            AlertMessages.getErrorMessage(error.message);
+        } finally {
+            setIsSyncing(false);
+        }
     };
 
     const filteredUsers = users.filter((u: SlackUserModel) => {
@@ -268,6 +339,25 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                 Back to Masters
                             </Button>
                         )}
+                        <Button
+                            size="xs"
+                            variant="outline"
+                            className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                            leftIcon={<Settings className="h-4 w-4" />}
+                            onClick={() => handleOpenConfig(filterCompanyId)}
+                        >
+                            Config
+                        </Button>
+                        <Button
+                            size="xs"
+                            variant="secondary"
+                            className="bg-purple-50 text-purple-600 hover:bg-purple-100 border-purple-100"
+                            leftIcon={<RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />}
+                            onClick={handleSyncFromSlack}
+                            disabled={isSyncing}
+                        >
+                            Sync Slack
+                        </Button>
                         <Button size="xs" variant="success" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsModalOpen(true)}>
                             Add User
                         </Button>
@@ -294,12 +384,21 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                             <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td className="px-6 py-4 border border-slate-200 dark:border-slate-700 text-center">
                                                     <div className="flex items-center justify-center gap-3">
-                                                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 border border-indigo-100 dark:border-indigo-800">
-                                                            <User className="h-4 w-4" />
+                                                        <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 border border-indigo-100 dark:border-indigo-800 overflow-hidden shadow-sm">
+                                                            {item.avatarUrl ? (
+                                                                <img src={item.avatarUrl} alt={item.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <User className="h-5 w-5" />
+                                                            )}
                                                         </div>
                                                         <div className="text-left">
-                                                            <div className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-tight">{item.name}</div>
-                                                            <div className="text-xs text-slate-500 dark:text-slate-400">{item.email}</div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-tight">{item.name}</div>
+                                                                {item.isAdmin && (
+                                                                    <Shield className="h-3 w-3 text-indigo-500" />
+                                                                )}
+                                                            </div>
+                                                            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[150px]">{item.email}</div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -351,8 +450,19 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                     <div key={item.id} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-lg transition-all transform hover:-translate-y-1">
                                         <div className="p-4">
                                             <div className="flex items-start justify-between mb-3">
-                                                <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 group-hover:scale-110 transition-transform">
-                                                    <Slack className="h-6 w-6" />
+                                                <div className="relative group/avatar">
+                                                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center overflow-hidden shadow-md group-hover:scale-110 transition-transform">
+                                                        {item.avatarUrl ? (
+                                                            <img src={item.avatarUrl} alt={item.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <Slack className="h-6 w-6" />
+                                                        )}
+                                                    </div>
+                                                    {item.isAdmin && (
+                                                        <div className="absolute -top-1 -right-1 p-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm z-10">
+                                                            <Shield className="h-3 w-3 text-indigo-500" />
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="flex gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                     <button onClick={() => { setSelectedSlackUser(item); setIsDetailModalOpen(true); }} className="p-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"><Eye className="h-3.5 w-3.5" /></button>
@@ -367,12 +477,19 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                                     <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{item.email}</p>
                                                 </div>
                                                 <div className="flex items-center justify-between">
-                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
-                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                                        : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                                                        }`}>
-                                                        {item.isActive ? 'Active' : 'Inactive'}
-                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
+                                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                                            : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
+                                                            }`}>
+                                                            {item.isActive ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                        {item.isAdmin && (
+                                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800">
+                                                                Admin
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     {item.slackUserId && (
                                                         <span className="flex items-center gap-1 text-[9px] text-indigo-500 font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded">
                                                             <Hash className="h-3 w-3" /> {item.slackUserId}
@@ -485,8 +602,12 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                     <div className="space-y-6">
                         <div className="flex flex-col items-center justify-center pb-6 border-b border-slate-100 dark:border-slate-800">
                             <div className="relative">
-                                <div className="w-20 h-20 rounded-3xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4 border border-indigo-100 dark:border-indigo-800 shadow-sm relative z-10">
-                                    <User className="h-10 w-10" />
+                                <div className="w-24 h-24 rounded-3xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4 border border-indigo-100 dark:border-indigo-800 shadow-md relative z-10 overflow-hidden">
+                                    {selectedSlackUser.avatarUrl ? (
+                                        <img src={selectedSlackUser.avatarUrl} alt={selectedSlackUser.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="h-12 w-12" />
+                                    )}
                                 </div>
                                 <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm z-20">
                                     <Slack className="h-5 w-5 text-[#4A154B]" />
@@ -494,9 +615,17 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                             </div>
                             <div className="text-center">
                                 <h4 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">{selectedSlackUser.name}</h4>
-                                <div className="flex items-center justify-center gap-2 mt-1">
-                                    <AtSign className="h-3 w-3 text-slate-400" />
-                                    <span className="text-sm text-slate-500 dark:text-slate-400">{selectedSlackUser.displayName || 'no-display-name'}</span>
+                                <div className="flex flex-col items-center gap-1 mt-1">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <AtSign className="h-3 w-3 text-slate-400" />
+                                        <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">{selectedSlackUser.displayName || 'no-display-name'}</span>
+                                    </div>
+                                    {selectedSlackUser.isAdmin && (
+                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/50 mt-1">
+                                            <Shield className="h-3 w-3" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Workspace Administrator</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <span className={`mt-4 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${selectedSlackUser.isActive
@@ -559,6 +688,23 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Globe className="h-3.5 w-3.5 text-orange-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Timezone</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{selectedSlackUser.timezone || 'Not set'} ({selectedSlackUser.timezoneLabel || 'UTC'})</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Activity className="h-3.5 w-3.5 text-cyan-500" />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Slack Team ID</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{selectedSlackUser.teamId || 'Default'}</p>
+                                </div>
+                            </div>
+
                             <div className="space-y-1">
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Member Notes</label>
                                 <div className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 leading-relaxed">
@@ -581,6 +727,41 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                         </div>
                     </div>
                 )}
+            </Modal>
+
+            <Modal isOpen={isConfigModalOpen} onClose={() => setIsConfigModalOpen(false)} title="Slack Integration Settings" size="md">
+                <form onSubmit={handleSaveConfig} className="space-y-6">
+                    <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl mb-6">
+                        <div className="flex gap-3">
+                            <Slack className="h-5 w-5 text-indigo-600 shrink-0" />
+                            <p className="text-xs text-indigo-700 dark:text-indigo-300 leading-relaxed font-medium">
+                                Configure your Slack Bot Token and Workspace ID here. These credentials are required to sync members and profile data.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <Input
+                            label="Slack Bot Token"
+                            value={configFormData.slackBotToken}
+                            onChange={(e) => setConfigFormData({ ...configFormData, slackBotToken: e.target.value })}
+                            placeholder="xoxb-..."
+                            className="h-14"
+                        />
+                        <Input
+                            label="Slack Workspace ID"
+                            value={configFormData.slackWorkspaceId}
+                            onChange={(e) => setConfigFormData({ ...configFormData, slackWorkspaceId: e.target.value })}
+                            placeholder="T0123..."
+                            className="h-14"
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                        <Button variant="outline" onClick={() => setIsConfigModalOpen(false)} type="button">Cancel</Button>
+                        <Button variant="primary" type="submit">Save Configuration</Button>
+                    </div>
+                </form>
             </Modal>
         </>
     );

@@ -11,12 +11,14 @@ import { EmployeesEntity } from '../employees/entities/employees.entity';
 
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '@adminvault/shared-models';
+import { LicenseService as LicenseMasterService } from '../masters/license/license.service';
 
 @Injectable()
 export class LicensesService {
     constructor(
         private repo: LicenseRepository,
-        private notificationsService: NotificationsService
+        private notificationsService: NotificationsService,
+        private licenseMasterService: LicenseMasterService
     ) { }
 
     /**
@@ -231,6 +233,12 @@ export class LicensesService {
             }
         } catch (e) { console.error("License notification failed", e); }
 
+        try {
+            await this.licenseMasterService.updateUsedCount(reqModel.applicationId);
+        } catch (e) {
+            console.error('Failed to sync license usage count', e);
+        }
+
         return new GlobalResponse(true, 201, 'License assigned successfully');
     }
 
@@ -257,6 +265,12 @@ export class LicensesService {
 
         await this.repo.update(reqModel.id, updateData);
 
+        try {
+            await this.licenseMasterService.updateUsedCount(reqModel.applicationId);
+        } catch (e) {
+            console.error('Failed to sync license usage count', e);
+        }
+
         return new GlobalResponse(true, 200, 'License updated successfully');
     }
 
@@ -268,7 +282,16 @@ export class LicensesService {
      * @returns GlobalResponse indicating deletion success
      */
     async deleteLicense(reqModel: DeleteLicenseModel, userId?: number, ipAddress?: string): Promise<GlobalResponse> {
+        const license = await this.repo.findOne({ where: { id: reqModel.id } });
         await this.repo.delete(reqModel.id);
+
+        if (license) {
+            try {
+                await this.licenseMasterService.updateUsedCount(license.applicationId);
+            } catch (e) {
+                console.error('Failed to sync license usage count', e);
+            }
+        }
 
         return new GlobalResponse(true, 200, 'License removed successfully');
     }

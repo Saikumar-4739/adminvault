@@ -283,6 +283,29 @@ export class AuthUsersService {
 
     async requestAccess(reqModel: RequestAccessModel): Promise<GlobalResponse> {
         try {
+            // 1. Check if email exists in employees table
+            const empRecord = await this.dataSource.query(
+                `SELECT id FROM employees WHERE email = $1 AND deleted_at IS NULL LIMIT 1`,
+                [reqModel.email]
+            );
+            if (!empRecord || empRecord.length === 0) {
+                throw new ErrorResponse(0, "Your email is not registered in our employee directory. Please contact HR.");
+            }
+
+            // 2. Check if a login account already exists
+            const existingUser = await this.authUsersRepo.findOne({ where: { email: reqModel.email } });
+            if (existingUser) {
+                throw new ErrorResponse(0, "A login account already exists for this email. Please try logging in.");
+            }
+
+            // 3. Check if an access request is already pending
+            const pendingRequest = await this.accessRequestRepo.findOne({
+                where: { email: reqModel.email, status: AccessRequestStatus.PENDING }
+            });
+            if (pendingRequest) {
+                throw new ErrorResponse(0, "An access request for this email has already been raised and is pending review.");
+            }
+
             const entity = new AccessRequestEntity();
             entity.name = reqModel.name;
             entity.email = reqModel.email;
@@ -317,6 +340,19 @@ export class AuthUsersService {
             entity.status = AccessRequestStatus.COMPLETED;
             await this.accessRequestRepo.save(entity);
             return new GlobalResponse(true, 0, 'Access request closed');
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async deleteAccessRequest(id: number): Promise<GlobalResponse> {
+        try {
+            const entity = await this.accessRequestRepo.findOne({ where: { id } });
+            if (!entity) {
+                throw new ErrorResponse(0, 'Access request not found');
+            }
+            await this.accessRequestRepo.delete(id);
+            return new GlobalResponse(true, 0, 'Access request deleted successfully');
         } catch (error) {
             throw error;
         }

@@ -73,26 +73,35 @@ export class LicenseService {
         try {
             const licenses = await this.licenseRepo.find();
 
-            // Fetch used quantities for each license
-            const usage = await this.dataSource.getRepository(CompanyLicenseEntity)
-                .createQueryBuilder('l')
-                .select('l.applicationId', 'applicationId')
-                .addSelect('COUNT(*)', 'count')
-                .groupBy('l.applicationId')
-                .getRawMany();
-
-            const usageMap = new Map<number, number>(
-                usage.map(u => [Number(u.applicationId), Number(u.count)])
-            );
-
-            const licensesWithUsage = licenses.map(l => ({
-                ...l,
-                usedQuantity: usageMap.get(Number(l.id)) || 0
-            }));
-
-            return new GetAllLicenseMastersResponseModel(true, 200, 'Licenses retrieved successfully', licensesWithUsage as any);
+            // Return licenses directly as usedCount is now a persisted field
+            // We can still verify with a quick check if needed, but for better performance 
+            // and based on user request to have it "increase", we lean on the persisted column.
+            return new GetAllLicenseMastersResponseModel(true, 200, 'Licenses retrieved successfully', licenses as any);
         } catch (error) {
             throw error;
+        }
+    }
+
+    async updateUsedCount(applicationId: number | string): Promise<void> {
+        try {
+            const count = await this.dataSource.getRepository(CompanyLicenseEntity)
+                .count({
+                    where: {
+                        applicationId: Number(applicationId),
+                        assignedEmployeeId: BigInt(0) as any // Placeholder check, better explicitly check not null
+                    }
+                });
+
+            // Use QueryBuilder for more control over NOT NULL
+            const result = await this.dataSource.getRepository(CompanyLicenseEntity)
+                .createQueryBuilder('l')
+                .where('l.applicationId = :applicationId', { applicationId })
+                .andWhere('l.assignedEmployeeId IS NOT NULL')
+                .getCount();
+
+            await this.licenseRepo.update(applicationId, { usedCount: result });
+        } catch (error) {
+            console.error(`Failed to update used count for license ${applicationId}`, error);
         }
     }
 

@@ -294,9 +294,13 @@ export class SlackUserModel extends MasterBase {
     department?: string;
     phone?: string;
     notes?: string;
-    avatar?: string;
+    avatarUrl?: string;
     employeeId?: number;
     companyName?: string;
+    isAdmin?: boolean;
+    timezone?: string;
+    timezoneLabel?: string;
+    teamId?: string;
 
     constructor(
         id: number,
@@ -312,11 +316,13 @@ export class SlackUserModel extends MasterBase {
         department?: string,
         phone?: string,
         notes?: string,
-        avatar?: string,
+        avatarUrl?: string,
         employeeId?: number,
         companyName?: string,
         createdAt?: Date,
-        updatedAt?: Date
+        updatedAt?: Date,
+        isAdmin?: boolean,
+        timezone?: string
     ) {
         super(id, userId, name, isActive, companyId, description, createdAt, updatedAt);
         this.email = email;
@@ -326,9 +332,11 @@ export class SlackUserModel extends MasterBase {
         this.department = department;
         this.phone = phone;
         this.notes = notes;
-        this.avatar = avatar;
+        this.avatarUrl = avatarUrl;
         this.employeeId = employeeId;
         this.companyName = companyName;
+        this.isAdmin = isAdmin;
+        this.timezone = timezone;
     }
 }
 
@@ -394,10 +402,14 @@ export class CreateSlackUserModel extends CreateMasterModel {
     department?: string;
     phone?: string;
     notes?: string;
-    avatar?: string;
+    avatarUrl?: string;
     employeeId?: number;
+    timezone?: string;
+    timezoneLabel?: string;
+    teamId?: string;
+    isAdmin?: boolean;
 
-    constructor(userId: number, companyId: number, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatar?: string, employeeId?: number, id?: number) {
+    constructor(userId: number, companyId: number, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatarUrl?: string, employeeId?: number, id?: number, timezone?: string, timezoneLabel?: string, teamId?: string, isAdmin?: boolean) {
         super(userId, companyId, name, description, isActive, id);
         this.email = email;
         this.slackUserId = slackUserId;
@@ -406,9 +418,13 @@ export class CreateSlackUserModel extends CreateMasterModel {
         this.department = department;
         this.phone = phone;
         this.notes = notes;
-        this.avatar = avatar;
+        this.avatarUrl = avatarUrl;
         this.employeeId = employeeId;
         this.isActive = isActive ?? true;
+        this.timezone = timezone;
+        this.timezoneLabel = timezoneLabel;
+        this.teamId = teamId;
+        this.isAdmin = isAdmin;
     }
 }
 
@@ -690,10 +706,14 @@ export class UpdateSlackUserModel {
     phone?: string;
     notes?: string;
     companyId?: number;
-    avatar?: string;
+    avatarUrl?: string;
+    isAdmin?: boolean;
     employeeId?: number;
+    timezone?: string;
+    timezoneLabel?: string;
+    teamId?: string;
 
-    constructor(id: number, name: string, email: string, description?: string, isActive = true, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, companyId?: number, avatar?: string, employeeId?: number) {
+    constructor(id: number, name: string, email: string, description?: string, isActive = true, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, companyId?: number, avatarUrl?: string, employeeId?: number, isAdmin?: boolean, timezone?: string, timezoneLabel?: string, teamId?: string) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -706,8 +726,12 @@ export class UpdateSlackUserModel {
         this.phone = phone;
         this.notes = notes;
         this.companyId = companyId;
-        this.avatar = avatar;
+        this.avatarUrl = avatarUrl;
         this.employeeId = employeeId;
+        this.isAdmin = isAdmin;
+        this.timezone = timezone;
+        this.timezoneLabel = timezoneLabel;
+        this.teamId = teamId;
     }
 }
 

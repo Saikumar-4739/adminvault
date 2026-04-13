@@ -25,36 +25,28 @@ export class SlackUserService {
 
     async importSlackUsers(companyId: number): Promise<GlobalResponse> {
         this.logger.log(`Importing users for Company ID: ${companyId}`);
-        let slackToken = process.env.SLACK_BOT_TOKEN;
-        let tokenSource = 'Environment Variable (System Default)';
+        let slackToken = '';
 
-        // Try to fetch company-specific token
+        // Fetch company-specific token mandatory
         const companyIdNum = Number(companyId);
         if (companyIdNum) {
             const companyInfo = await this.companyRepo.findOne({ where: { id: companyIdNum } });
             if (companyInfo) {
-                this.logger.log(`Found Company Info: ${companyInfo.companyName}`);
                 if (companyInfo.slackBotToken && companyInfo.slackBotToken.trim() !== '') {
                     slackToken = companyInfo.slackBotToken;
-                    tokenSource = `Database (Company Master: ${companyInfo.companyName})`;
-                    this.logger.log(`Using company-specific token from Database`);
+                    this.logger.log(`Using company-specific token from Database: ${companyInfo.companyName}`);
                 } else {
-                    this.logger.warn(`No Slack Token set for company ${companyInfo.companyName}, falling back to ENV`);
+                    const errorMsg = `Slack Bot Token is not configured for company "${companyInfo.companyName}". Please set it in the Company Master settings.`;
+                    this.logger.error(errorMsg);
+                    throw new ErrorResponse(400, errorMsg);
                 }
             } else {
-                this.logger.warn(`Company with ID ${companyIdNum} not found in database`);
+                throw new ErrorResponse(404, `Company with ID ${companyIdNum} not found`);
             }
         } else {
-            this.logger.warn(`No valid Company ID provided (${companyId}), using system default token`);
+            throw new ErrorResponse(400, `A valid Company ID is required for Slack import`);
         }
 
-        if (!slackToken || slackToken.trim() === '') {
-            const errorMsg = `No Slack Token configured. Please set it in Company Masters for Company ID ${companyId} or as SLACK_BOT_TOKEN in environment.`;
-            this.logger.error(errorMsg);
-            throw new ErrorResponse(500, errorMsg);
-        }
-
-        this.logger.log(`Syncing with token from: ${tokenSource}`);
         const client = new WebClient(slackToken);
         let allMembers: any[] = [];
         let cursor: string | undefined;
@@ -88,6 +80,27 @@ export class SlackUserService {
             const timezoneLabel = member.tz_label || '';
             const isAdmin = member.is_admin || false;
 
+            // Try to find matching employee by email to auto-link and update their Slack info
+            let matchedEmployeeId: number | undefined = undefined;
+            let matchedEmp: EmployeesEntity | null = null;
+            if (email && email.trim() !== '') {
+                matchedEmp = await this.employeeRepo.findOne({
+                    where: { email: email.trim(), companyId: Number(companyId) }
+                });
+                if (matchedEmp) {
+                    matchedEmployeeId = Number(matchedEmp.id);
+                    // Sync Slack info to Employee table immediately
+                    matchedEmp.slackUserId = member.id;
+                    matchedEmp.slackDisplayName = displayName || matchedEmp.slackDisplayName;
+                    matchedEmp.slackAvatar = avatarUrl || matchedEmp.slackAvatar;
+                    matchedEmp.slackIsAdmin = isAdmin;
+                    matchedEmp.slackTimezone = timezone;
+                    matchedEmp.slackTeamId = teamId;
+                    matchedEmp.isSlackActive = true;
+                    await this.employeeRepo.save(matchedEmp);
+                }
+            }
+
             const existingUser = await this.slackUserRepo.findOne({ where: { slackUserId: member.id } });
 
             if (existingUser) {
@@ -102,6 +115,9 @@ export class SlackUserService {
                 existingUser.timezoneLabel = timezoneLabel || existingUser.timezoneLabel;
                 existingUser.isAdmin = isAdmin;
                 existingUser.isActive = true;
+                if (!existingUser.employeeId && matchedEmployeeId) {
+                    existingUser.employeeId = matchedEmployeeId;
+                }
                 await this.slackUserRepo.save(existingUser);
                 updated++;
             } else {
@@ -120,6 +136,7 @@ export class SlackUserService {
                 newEntity.isAdmin = isAdmin;
                 newEntity.isActive = true;
                 newEntity.notes = '';
+                newEntity.employeeId = matchedEmployeeId;
                 await this.slackUserRepo.save(newEntity);
                 imported++;
             }
@@ -155,13 +172,21 @@ export class SlackUserService {
             saveEntity.phone = reqModel.phone;
             saveEntity.notes = reqModel.notes;
             saveEntity.userId = reqModel.userId;
+            saveEntity.avatarUrl = reqModel.avatarUrl;
+            saveEntity.isAdmin = reqModel.isAdmin;
+            saveEntity.timezone = reqModel.timezone;
+            saveEntity.timezoneLabel = reqModel.timezoneLabel;
+            saveEntity.teamId = reqModel.teamId;
             await transManager.getRepository(SlackUsersMasterEntity).save(saveEntity);
 
             // Sync with Employee Table
             if (empInfo) {
                 empInfo.slackUserId = reqModel.slackUserId;
                 empInfo.slackDisplayName = reqModel.displayName;
-                empInfo.slackAvatar = reqModel.avatar;
+                empInfo.slackAvatar = reqModel.avatarUrl;
+                empInfo.slackIsAdmin = reqModel.isAdmin || false;
+                empInfo.slackTimezone = reqModel.timezone;
+                empInfo.slackTeamId = reqModel.teamId;
                 empInfo.isSlackActive = reqModel.isActive;
                 await transManager.getRepository(EmployeesEntity).save(empInfo);
             }
@@ -204,7 +229,23 @@ export class SlackUserService {
             }
 
             await transManager.startTransaction();
-            await transManager.getRepository(SlackUsersMasterEntity).update(reqModel.id, { name: reqModel.name, email: reqModel.email, slackUserId: reqModel.slackUserId, displayName: reqModel.displayName, role: reqModel.role, department: reqModel.department, phone: reqModel.phone, notes: reqModel.notes, isActive: reqModel.isActive, employeeId: reqModel.employeeId });
+            await transManager.getRepository(SlackUsersMasterEntity).update(reqModel.id, {
+                name: reqModel.name,
+                email: reqModel.email,
+                slackUserId: reqModel.slackUserId,
+                displayName: reqModel.displayName,
+                role: reqModel.role,
+                department: reqModel.department,
+                phone: reqModel.phone,
+                notes: reqModel.notes,
+                isActive: reqModel.isActive,
+                employeeId: reqModel.employeeId,
+                avatarUrl: reqModel.avatarUrl,
+                isAdmin: reqModel.isAdmin,
+                timezone: reqModel.timezone,
+                timezoneLabel: reqModel.timezoneLabel,
+                teamId: reqModel.teamId
+            });
 
             const targetEmployeeId = reqModel.employeeId || existing.employeeId;
             if (targetEmployeeId) {
@@ -213,7 +254,10 @@ export class SlackUserService {
                     empInfo.slackUserId = reqModel.slackUserId;
                     empInfo.slackDisplayName = reqModel.displayName;
                     empInfo.isSlackActive = reqModel.isActive;
-                    if (reqModel.avatar) empInfo.slackAvatar = reqModel.avatar;
+                    empInfo.slackAvatar = reqModel.avatarUrl;
+                    empInfo.slackIsAdmin = reqModel.isAdmin || false;
+                    empInfo.slackTimezone = reqModel.timezone;
+                    empInfo.slackTeamId = reqModel.teamId;
                     await transManager.getRepository(EmployeesEntity).save(empInfo);
                 }
             }

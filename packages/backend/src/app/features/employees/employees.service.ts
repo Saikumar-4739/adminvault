@@ -77,28 +77,6 @@ export class EmployeesService {
 
             await transManager.completeTransaction();
 
-            // Persistent notification for creator
-            if (reqModel.userId) {
-                await this.notificationsService.createNotification(reqModel.userId, {
-                    title: 'Employee Record Created',
-                    message: `Employee record for ${savedEmployee.firstName} ${savedEmployee.lastName} has been created.`,
-                    type: NotificationType.SUCCESS,
-                    category: 'hr',
-                    link: '/employees'
-                });
-            }
-
-            // If employee has a userId (e.g. they already had an auth account), notify them too
-            if (savedEmployee.userId) {
-                await this.notificationsService.createNotification(savedEmployee.userId, {
-                    title: 'Onboarding Initiated',
-                    message: `Welcome! Your employee profile has been set up at ${deptExists.name}.`,
-                    type: NotificationType.INFO,
-                    category: 'onboarding',
-                    link: '/dashboard'
-                });
-            }
-
 
             return new GlobalResponse(true, 0, "Employee and Identity created successfully");
         } catch (error) {
@@ -137,16 +115,6 @@ export class EmployeesService {
             updateData.groupEmails = reqModel.groupEmails;
             await transManager.getRepository(EmployeesEntity).update(reqModel.id, updateData);
             await transManager.completeTransaction();
-
-            // Persistent notification for employee
-            if (existingEmployee.userId) {
-                await this.notificationsService.createNotification(existingEmployee.userId, {
-                    title: 'Profile Updated',
-                    message: `Your employee profile has been updated by an administrator.`,
-                    type: NotificationType.INFO,
-                    category: 'hr'
-                });
-            }
 
 
             return new GlobalResponse(true, 0, "Employee updated successfully");

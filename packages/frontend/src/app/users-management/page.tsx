@@ -21,11 +21,9 @@ const TABS = [
 
 const ROLE_OPTIONS = [
     { value: UserRoleEnum.USER, label: 'User' },
-    { value: UserRoleEnum.ADMIN, label: 'Admin' },
     { value: UserRoleEnum.MANAGER, label: 'Manager' },
-    { value: UserRoleEnum.VIEWER, label: 'Viewer' },
     { value: UserRoleEnum.SUPPORT_ADMIN, label: 'Support Admin' },
-    { value: UserRoleEnum.SITE_ADMIN, label: 'Site Admin' },
+    { value: UserRoleEnum.SUPER_ADMIN, label: 'Super Admin' },
 ];
 
 interface UserRow {
@@ -77,6 +75,8 @@ export default function UsersManagementPage() {
     const [fromRequestId, setFromRequestId] = useState<number | null>(null);
     const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
     const [deleteTargetUser, setDeleteTargetUser] = useState<UserRow | null>(null);
+    const [deletingReqId, setDeletingReqId] = useState<number | null>(null);
+    const [deleteTargetReq, setDeleteTargetReq] = useState<AccessRequest | null>(null);
 
     // Edit state
     const [isEditMode, setIsEditMode] = useState(false);
@@ -180,6 +180,30 @@ export default function UsersManagementPage() {
             AlertMessages.getErrorMessage(err.message || 'Failed to delete user');
         } finally {
             setDeletingUserId(null);
+        }
+    };
+
+    const handleDeleteRequest = (req: AccessRequest) => {
+        setDeleteTargetReq(req);
+    };
+
+    const confirmDeleteRequest = async () => {
+        if (!deleteTargetReq) return;
+        const id = deleteTargetReq.id;
+        setDeletingReqId(id);
+        setDeleteTargetReq(null);
+        try {
+            const res = await authService.deleteAccessRequest(id);
+            if (res.status) {
+                AlertMessages.getSuccessMessage('Access request deleted');
+                fetchAccessRequests();
+            } else {
+                AlertMessages.getErrorMessage(res.message || 'Failed to delete request');
+            }
+        } catch (err: any) {
+            AlertMessages.getErrorMessage(err.message || 'Failed to delete request');
+        } finally {
+            setDeletingReqId(null);
         }
     };
 
@@ -497,15 +521,27 @@ export default function UsersManagementPage() {
                                                         {formatDate(r.createdAt)}
                                                     </td>
                                                     <td className="px-4 py-2.5 text-right">
-                                                        {r.status?.toUpperCase() !== 'COMPLETED' && (
+                                                        <div className="flex justify-end gap-2">
+                                                            {r.status?.toUpperCase() !== 'COMPLETED' && (
+                                                                <button
+                                                                    onClick={() => openCreateFromRequest(r)}
+                                                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+                                                                >
+                                                                    <UserPlus className="h-3 w-3" />
+                                                                    Approve
+                                                                </button>
+                                                            )}
                                                             <button
-                                                                onClick={() => openCreateFromRequest(r)}
-                                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+                                                                onClick={() => handleDeleteRequest(r)}
+                                                                disabled={deletingReqId === r.id}
+                                                                className="inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
+                                                                title="Delete request"
                                                             >
-                                                                <UserPlus className="h-3 w-3" />
-                                                                Approve
+                                                                {deletingReqId === r.id
+                                                                    ? <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-red-400 border-t-transparent" />
+                                                                    : <Trash2 className="h-3.5 w-3.5" />}
                                                             </button>
-                                                        )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -640,6 +676,49 @@ export default function UsersManagementPage() {
                                 className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors disabled:opacity-50"
                             >
                                 {deletingUserId ? (
+                                    <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
+                                ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
+
+                {/* ── Delete Request Confirmation Modal ── */}
+                <Modal
+                    isOpen={!!deleteTargetReq}
+                    onClose={() => setDeleteTargetReq(null)}
+                    title="Delete Access Request"
+                    size="sm"
+                >
+                    <div className="flex flex-col items-center text-center gap-3 py-2">
+                        <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                            <Trash2 className="h-6 w-6 text-red-500" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold text-slate-800 dark:text-white">
+                                Delete request from <span className="text-red-500">{deleteTargetReq?.name}</span>?
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {deleteTargetReq?.email}
+                            </p>
+                        </div>
+                        <div className="flex gap-2 pt-1 w-full">
+                            <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => setDeleteTargetReq(null)}
+                            >
+                                Cancel
+                            </Button>
+                            <button
+                                onClick={confirmDeleteRequest}
+                                disabled={!!deletingReqId}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors disabled:opacity-50"
+                            >
+                                {deletingReqId ? (
                                     <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
                                 ) : (
                                     <Trash2 className="h-3.5 w-3.5" />

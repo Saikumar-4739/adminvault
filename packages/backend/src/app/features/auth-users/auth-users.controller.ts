@@ -143,6 +143,16 @@ export class AuthUsersController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Post('deleteAccessRequest')
+    async deleteAccessRequest(@Body() body: { id: number }): Promise<GlobalResponse> {
+        try {
+            return await this.service.deleteAccessRequest(Number(body.id));
+        } catch (error) {
+            return returnException(GlobalResponse, error);
+        }
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Post('verify-password')
     async verifyPassword(@Req() req: any, @Body() body: { password: string }): Promise<GlobalResponse> {
         try {

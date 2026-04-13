@@ -158,6 +158,7 @@ export class EmailInfoService {
     const mailOptions = {
       from: `"BOS Vault System" <${emailUser}>`,
       to: adminEmail,
+      replyTo: request.email,
       subject: `[Priority: Action Required] New Access Request from ${request.name}`,
       html: `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
@@ -196,8 +197,39 @@ export class EmailInfoService {
     try {
       this.logger.log(`Access request email info generated for ${request.email}`);
 
+      // 1. Admin Notification
       const info = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Access request email sent: ${info.messageId}`);
+      this.logger.log(`Access request admin notification sent: ${info.messageId}`);
+
+      // 2. Requester Acknowledgement
+      const ackMailOptions = {
+        from: `"BOS Vault Security" <${emailUser}>`,
+        to: request.email,
+        subject: `Acknowledgement: We've received your access request`,
+        html: `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
+  <div style="border-bottom: 2px solid #4f46e5; padding-bottom: 10px; margin-bottom: 20px;">
+    <h2 style="color: #4f46e5; margin: 0;">BOS Vault</h2>
+  </div>
+  
+  <p>Hello <strong>${request.name}</strong>,</p>
+  <p>Thank you for your interest in <strong>BOS Vault</strong>. We've successfully received your request for access.</p>
+  
+  <p>Our administrative team is currently reviewing your application. You will receive a separate email once your access has been approved.</p>
+  
+  <div style="background: #f0fdf4; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #dcfce7;">
+    <p style="margin: 0; font-size: 13px; color: #166534;"><strong>Next Steps:</strong> No action is required from your side at this moment.</p>
+  </div>
+  
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="font-size: 11px; color: #94a3b8; text-align: center;">BOS Vault System • Automated acknowledgement • Do not reply</p>
+</div>
+        `,
+      };
+
+      await this.transporter.sendMail(ackMailOptions);
+      this.logger.log(`Access request acknowledgement sent to ${request.email}`);
+
       return true;
     } catch (error) {
       this.logger.error('Failed to send access request email', error);

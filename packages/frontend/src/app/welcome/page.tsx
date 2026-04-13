@@ -11,19 +11,6 @@ const WelcomePage: React.FC = () => {
 
     const companies = [
         {
-            name: "5Y Business Solutions",
-            url: "https://www.5yinc.com/",
-            description: "Driving digital transformation through legacy modernization and cloud-native engineering.",
-            features: [
-                { icon: <Code className="w-4 h-4" />, text: "Legacy Modernization" },
-                { icon: <Cloud className="w-4 h-4" />, text: "Cloud Engineering" },
-                { icon: <Shield className="w-4 h-4" />, text: "DevSecOps" }
-            ],
-            gradient: "from-blue-600/10 to-indigo-600/10 dark:from-blue-600/20 dark:to-indigo-600/20",
-            border: "border-slate-200 dark:border-blue-500/20",
-            shadow: "hover:shadow-blue-500/10"
-        },
-        {
             name: "BOS Framework",
             url: "https://www.bosframework.com/",
             description: "Comprehensive cloud enablement platform automating orchestration, CI/CD, and security.",
@@ -35,22 +22,39 @@ const WelcomePage: React.FC = () => {
             gradient: "from-purple-600/10 to-indigo-600/10 dark:from-purple-600/20 dark:to-indigo-600/20",
             border: "border-slate-200 dark:border-purple-500/20",
             shadow: "hover:shadow-purple-500/10"
+        },
+        {
+            name: "5Y Business Solutions",
+            url: "https://www.5yinc.com/",
+            description: "Driving digital transformation through legacy modernization and cloud-native engineering.",
+            features: [
+                { icon: <Code className="w-4 h-4" />, text: "Legacy Modernization" },
+                { icon: <Cloud className="w-4 h-4" />, text: "Cloud Engineering" },
+                { icon: <Shield className="w-4 h-4" />, text: "DevSecOps" }
+            ],
+            gradient: "from-blue-600/10 to-indigo-600/10 dark:from-blue-600/20 dark:to-indigo-600/20",
+            border: "border-slate-200 dark:border-blue-500/20",
+            shadow: "hover:shadow-blue-500/10"
         }
     ];
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[85vh] p-8 -mt-8 animate-slide-up space-y-12">
-            <div className="max-w-2xl text-center space-y-4">
-                <h1 className="text-2xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+        <div className="flex flex-col items-center justify-center min-h-[85vh] p-8 -mt-12 animate-slide-up space-y-10">
+            <div className="max-w-2xl text-center space-y-3">
+                <h1 className="text-xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
                     Welcome to <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent animate-gradient">BOS Vault</span>
-                    {user?.fullName ? `,  ${user.fullName}` : ''}
+                    {user?.fullName && (
+                        <span className="text-lg md:text-xl font-bold text-slate-500 dark:text-slate-400 opacity-80 ml-2">
+                            / {user.fullName}
+                        </span>
+                    )}
                 </h1>
-                <p className={`text-sm md:text-base leading-relaxed font-medium ${isDarkMode ? 'text-gray-400' : 'text-slate-600'}`}>
+                <p className={`text-xs md:text-sm leading-relaxed font-medium ${isDarkMode ? 'text-gray-400' : 'text-slate-600'}`}>
                     Streamlined hardware, software, and human capital management. Built for modern IT teams to operate securely and efficiently. Explore the features below.
                 </p>
             </div>
 
-            <div className="w-full max-w-4xl">
+            <div className="w-full max-w-2xl">
                 <div className="flex flex-col space-y-8">
                     <div className="flex items-center space-x-4 opacity-50">
                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-500 to-transparent"></div>
@@ -60,32 +64,32 @@ const WelcomePage: React.FC = () => {
                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-500 to-transparent"></div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {companies.map((company, idx) => (
                             <a
                                 key={idx}
                                 href={company.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className={`group relative p-8 rounded-2xl border ${company.border} bg-white dark:bg-white/5 backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${company.shadow} overflow-hidden`}
+                                className={`group relative p-4 rounded-lg border ${company.border} bg-white dark:bg-white/5 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${company.shadow} overflow-hidden`}
                             >
                                 <div className={`absolute inset-0 bg-gradient-to-br ${company.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
 
                                 <div className="relative z-10 space-y-6">
                                     <div className="flex justify-between items-start">
-                                        <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:scale-[1.02] transition-transform origin-left">
+                                        <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-white group-hover:scale-[1.02] transition-transform origin-left">
                                             {company.name}
                                         </h3>
-                                        <ExternalLink className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white group-hover:rotate-12 transition-all" />
+                                        <ExternalLink className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white group-hover:rotate-12 transition-all" />
                                     </div>
 
-                                    <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'} group-hover:text-slate-900 dark:group-hover:text-slate-300 transition-colors`}>
+                                    <p className={`text-[10px] leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'} group-hover:text-slate-900 dark:group-hover:text-slate-300 transition-colors`}>
                                         {company.description}
                                     </p>
 
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-wrap gap-1">
                                         {company.features.map((feature, fIdx) => (
-                                            <div key={fIdx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/50 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white group-hover:border-slate-300 dark:group-hover:border-slate-700 transition-all">
+                                            <div key={fIdx} className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/50 text-[7px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white group-hover:border-slate-300 dark:group-hover:border-slate-700 transition-all">
                                                 <span className="text-blue-600 dark:text-blue-500 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{feature.icon}</span>
                                                 {feature.text}
                                             </div>

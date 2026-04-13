@@ -195,9 +195,9 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
                     <Input label="Contact Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-14" required />
                     <PhoneInput label="Contact Phone" value={formData.phone} onChange={(val) => setFormData({ ...formData, phone: val })} required />
                     <Input label="Establishment Date" type="date" max="2026-12-31" value={formData.estDate} onChange={(e) => setFormData({ ...formData, estDate: e.target.value })} className="h-14" required />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Slack Bot Token" value={formData.slackBotToken} onChange={(e) => setFormData({ ...formData, slackBotToken: e.target.value })} className="h-14" placeholder="xoxb-..." />
-                        <Input label="Slack Workspace ID" value={formData.slackWorkspaceId} onChange={(e) => setFormData({ ...formData, slackWorkspaceId: e.target.value })} className="h-14" placeholder="T..." />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Slack Bot Token" value={formData.slackBotToken || ''} onChange={(e) => setFormData({ ...formData, slackBotToken: e.target.value })} placeholder="xoxb-..." className="h-14" />
+                        <Input label="Slack Workspace ID" value={formData.slackWorkspaceId || ''} onChange={(e) => setFormData({ ...formData, slackWorkspaceId: e.target.value })} placeholder="T0123..." className="h-14" />
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>
@@ -250,26 +250,6 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
                                     <Calendar className="h-4 w-4 text-amber-500" /> {formatDate(selectedCompany.estDate)}
                                 </p>
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Company ID</label>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                    <span className="h-4 w-4 flex items-center justify-center text-[10px] font-bold bg-slate-100 dark:bg-slate-800 rounded-sm">ID</span> #{selectedCompany.id}
-                                </p>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Slack Workspace ID</label>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                    <span className="h-4 w-4 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-sm">
-                                        <svg width="12" height="12" viewBox="0 0 100 100" className="opacity-70"><path d="M25 62.5c0 6.9-5.6 12.5-12.5 12.5S0 69.4 0 62.5s5.6-12.5 12.5-12.5H25v12.5zm6.3 0c0-6.9 5.6-12.5 12.5-12.5s12.5 5.6 12.5 12.5v31.3c0 6.9-5.6 12.5-12.5 12.5S31.3 100.7 31.3 93.8V62.5zM37.5 25c-6.9 0-12.5-5.6-12.5-12.5S30.6 0 37.5 0s12.5 5.6 12.5 12.5V25H37.5zm0 6.3c6.9 0 12.5 5.6 12.5 12.5s-5.6 12.5-12.5 12.5H6.2c-6.9 0-12.5-5.6-12.5-12.5S-0.7 31.3 6.2 31.3H37.5zM75 37.5c0-6.9 5.6-12.5 12.5-12.5S100 30.6 100 37.5s-5.6 12.5-12.5 12.5H75V37.5zm-6.3 0c0 6.9-5.6 12.5-12.5 12.5s-12.5-5.6-12.5-12.5V6.2c0-6.9 5.6-12.5 12.5-12.5S68.8-0.7 68.8 6.2V37.5zM62.5 75c6.9 0 12.5 5.6 12.5 12.5S69.4 100 62.5 100s-12.5-5.6-12.5-12.5V75h12.5zm0-6.3c-6.9 0-12.5-5.6-12.5-12.5s5.6-12.5 12.5-12.5h31.3c6.9 0 12.5 5.6 12.5 12.5s-5.6 12.5-12.5 12.5H62.5z" fill="currentColor" /></svg>
-                                    </span> {selectedCompany.slackWorkspaceId || 'N/A'}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Slack Bot Token</label>
-                            <p className="text-sm font-mono font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800 truncate">
-                                {selectedCompany.slackBotToken ? '••••••••••••••••••••' : 'Not Configured'}
-                            </p>
                         </div>
 
                         <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800">

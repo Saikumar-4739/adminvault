@@ -710,6 +710,7 @@ const EmployeesPage: React.FC = () => {
                                 ))}
                             </div>
                         </div>
+
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Additional Remarks</label>
                             <textarea

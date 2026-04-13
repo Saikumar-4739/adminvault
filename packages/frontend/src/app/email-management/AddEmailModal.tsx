@@ -175,7 +175,18 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                             <Select
                                 label="Department"
                                 value={formData.department}
-                                onChange={e => setFormData({ ...formData, department: e.target.value })}
+                                onChange={e => {
+                                    const newDept = e.target.value;
+                                    setFormData(prev => {
+                                        const selectedEmp = employees.find(emp => String(emp.id) === prev.employeeId);
+                                        const shouldClearEmployee = selectedEmp && selectedEmp.departmentName !== newDept;
+                                        return {
+                                            ...prev,
+                                            department: newDept,
+                                            employeeId: shouldClearEmployee ? '' : prev.employeeId
+                                        };
+                                    });
+                                }}
                                 options={[
                                     { value: '', label: 'Choose Department' },
                                     ...departments.map(dept => ({
@@ -236,13 +247,23 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                         <Select
                             label={isGroup ? 'Owner / Primary Contact' : 'Employee Name'}
                             value={formData.employeeId}
-                            onChange={e => setFormData({ ...formData, employeeId: e.target.value })}
+                            onChange={e => {
+                                const employeeId = e.target.value;
+                                const selectedEmp = employees.find(emp => String(emp.id) === employeeId);
+                                setFormData(prev => ({
+                                    ...prev,
+                                    employeeId,
+                                    department: selectedEmp?.departmentName || prev.department
+                                }));
+                            }}
                             options={[
                                 { value: '', label: 'Unassigned' },
-                                ...employees.map(emp => ({
-                                    value: String(emp.id),
-                                    label: `${emp.firstName} ${emp.lastName}`
-                                }))
+                                ...employees
+                                    .filter(emp => !formData.department || emp.departmentName === formData.department)
+                                    .map(emp => ({
+                                        value: String(emp.id),
+                                        label: `${emp.firstName} ${emp.lastName}`
+                                    }))
                             ]}
                         />
 

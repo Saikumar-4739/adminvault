@@ -245,20 +245,6 @@ export const DepartmentsMasterView: React.FC<DepartmentsMasterViewProps> = ({ on
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 pt-2">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Department ID</label>
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                        <Layers className="h-4 w-4 text-indigo-500" /> #{selectedDepartment.id}
-                                    </p>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Updated</label>
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                        <Briefcase className="h-4 w-4 text-emerald-500" /> Professional
-                                    </p>
-                                </div>
-                            </div>
                         </div>
 
                         <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800">

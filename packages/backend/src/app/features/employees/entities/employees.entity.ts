@@ -37,6 +37,15 @@ export class EmployeesEntity extends CommonBaseEntity {
   @Column('varchar', { name: 'slack_avatar', length: 500, nullable: true, comment: 'Slack Avatar URL' })
   slackAvatar: string;
 
+  @Column('boolean', { name: 'slack_is_admin', default: false, nullable: false, comment: 'Whether user is a workspace admin' })
+  slackIsAdmin: boolean;
+
+  @Column('varchar', { name: 'slack_timezone', length: 100, nullable: true, comment: 'User Slack timezone' })
+  slackTimezone: string;
+
+  @Column('varchar', { name: 'slack_team_id', length: 100, nullable: true, comment: 'Slack team/workspace ID' })
+  slackTeamId: string;
+
   @Column('boolean', { name: 'is_slack_active', default: false, nullable: false, comment: 'Whether slack user is active' })
   isSlackActive: boolean;
 
