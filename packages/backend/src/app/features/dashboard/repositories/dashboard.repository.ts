@@ -6,6 +6,8 @@ import { TicketsEntity } from '../../tickets/entities/tickets.entity';
 import { CompanyLicenseEntity } from '../../licenses/entities/company-license.entity';
 import { TicketStatusEnum, TicketPriorityEnum, POStatusEnum } from '@adminvault/shared-models';
 import { PurchaseOrderEntity } from '../../procurement/entities/purchase-order.entity';
+import { DepartmentsMasterEntity } from '../../masters/department/entities/department.entity';
+import { LicensesMasterEntity } from '../../masters/license/entities/license.entity';
 
 @Injectable()
 export class DashboardRepository {
@@ -64,7 +66,7 @@ export class DashboardRepository {
         const total = await repo.count({ where });
 
         const query = repo.createQueryBuilder('emp')
-            .leftJoin('departments', 'dept', 'dept.id = emp.department_id')
+            .leftJoin(DepartmentsMasterEntity, 'dept', 'dept.id = emp.department_id')
             .select('COALESCE(dept.name, \'Unassigned\') as department, COUNT(emp.id) as count');
         if (companyId > 0) {
             query.where('emp.company_id = :companyId', { companyId });
@@ -77,8 +79,8 @@ export class DashboardRepository {
     async getLicenseStats(companyId: number) {
         const repo = this.dataSource.getRepository(CompanyLicenseEntity);
         const query = repo.createQueryBuilder('license')
-            .leftJoin('applications', 'app', 'app.id = license.application_id')
-            .leftJoin('employees', 'emp', 'emp.id = license.assigned_employee_id')
+            .leftJoin(LicensesMasterEntity, 'app', 'app.id = license.application_id')
+            .leftJoin(EmployeesEntity, 'emp', 'emp.id = license.assigned_employee_id')
             .select([
                 'license.id as id',
                 'license.application_id as applicationId',

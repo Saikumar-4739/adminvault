@@ -14,19 +14,19 @@ import "reflect-metadata";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const allowedOrigins = ['https://adminvault.inolyse.live', 'https://inolyse.live', 'https://www.inolyse.live', 'http://localhost:3000', 'http://localhost:4200'];
+  const allowedOrigins = ['*'];
+
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   });
 
   app.setGlobalPrefix('api');

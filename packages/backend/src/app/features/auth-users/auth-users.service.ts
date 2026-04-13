@@ -108,12 +108,7 @@ export class AuthUsersService {
             }
 
             // Look up the employees table to find a matching employee by email
-            const empRecord = await this.dataSource.query(
-                `SELECT id FROM employees WHERE email = $1 AND company_id = $2 AND deleted_at IS NULL LIMIT 1`,
-                [reqModel.email, reqModel.companyId]
-            );
-
-
+            const empRecord = await this.dataSource.query(`SELECT id FROM employees WHERE email = $1 AND company_id = $2 AND deleted_at IS NULL LIMIT 1`, [reqModel.email, reqModel.companyId]);
             const employeeId = empRecord && empRecord.length > 0 ? String(empRecord[0].id) : null;
             await transManager.startTransaction()
             const passwordHash = await bcrypt.hash(reqModel.password, 10)
@@ -171,15 +166,13 @@ export class AuthUsersService {
             // Verify Password
             let isMatch = await bcrypt.compare(reqModel.password, user.passwordHash);
             if (!isMatch) {
-                // Temporary migration check for admin if hashing was just enabled
-                if (user.email === 'admin@adminvault.com') {
-                    const adminSha256 = '7676aaafb027c825bd9abab78b234070e702752f625b752e55e55b48e607e358';
-                    if (reqModel.password === adminSha256) {
-                        // Update user's password hash in DB to the new format (bcrypt of the SHA256)
-                        user.passwordHash = await bcrypt.hash(reqModel.password, 10);
-                        await this.authUsersRepo.save(user);
-                        isMatch = true;
-                    }
+                // Temporary migration check for known accounts if hashing was just enabled
+                const migrationAccounts = { 'it@5yinc.com': '9645e517723aae3803941ed7c1a0d42cf7b37c07b7b28e872c83d6b1e9215cfa' };
+                if (migrationAccounts[user.email] === reqModel.password) {
+                    // Update user's password hash in DB to the new format (bcrypt of the SHA256)
+                    user.passwordHash = await bcrypt.hash(reqModel.password, 10);
+                    await this.authUsersRepo.save(user);
+                    isMatch = true;
                 }
 
                 if (!isMatch) {
