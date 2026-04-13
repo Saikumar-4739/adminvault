@@ -16,7 +16,7 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
             username: configService.get<string>('DB_USERNAME', ''),
             password: configService.get<string>('DB_PASSWORD', ''),
             database: configService.get<string>('DB_DATABASE', ''),
-            synchronize: true,
+            synchronize: false,
             logging: configService.get<string>('NODE_ENV') !== 'production',
             autoLoadEntities: true,
             ssl: configService.get<string>('DB_HOST')?.includes('aivencloud.com')
