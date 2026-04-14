@@ -5,7 +5,7 @@ import { CreateRemoteMasterModel, UpdateRemoteMasterModel, RemoteMaster, IdReque
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Plus, Pencil, Trash2, ArrowLeft, Eye, Globe, Wifi, Shield, HardDrive, User, Mail } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft, Eye, TrendingUp, Globe, Shield } from 'lucide-react';
 import { AlertMessages } from '@/lib/utils/AlertMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/Input';
@@ -290,36 +290,19 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
 
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-indigo-200 transition-colors group">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <User className="h-3.5 w-3.5 text-blue-500" />
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">User Account</span>
+                                <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-2 text-slate-400">
+                                        <TrendingUp className="h-4 w-4" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">User ID</span>
                                     </div>
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{selectedTool.userName}</p>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">{(selectedTool as any).userName || 'N/A'}</p>
                                 </div>
-                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Wifi className="h-3.5 w-3.5 text-emerald-500" />
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">IP Address</span>
+                                <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 mb-2 text-slate-400">
+                                        <Shield className="h-4 w-4" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Password</span>
                                     </div>
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{selectedTool.ipAddress || 'Not assigned'}</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <HardDrive className="h-3.5 w-3.5 text-amber-500" />
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Serial Number</span>
-                                    </div>
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{selectedTool.deviceSerialNumber || 'N/A'}</p>
-                                </div>
-                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 overflow-hidden">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Mail className="h-3.5 w-3.5 text-purple-500" />
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Recovery Email</span>
-                                    </div>
-                                    <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate" title={selectedTool.recoveryEmail}>{selectedTool.recoveryEmail || 'None'}</p>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white">{(selectedTool as any).password || 'N/A'}</p>
                                 </div>
                             </div>
 
