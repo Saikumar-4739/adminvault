@@ -325,7 +325,7 @@ const EmployeesPage: React.FC = () => {
         active: employees.filter(e => e.empStatus?.toLowerCase() === 'active').length,
         inactive: employees.filter(e => e.empStatus?.toLowerCase() === 'inactive').length,
         deactivated: employees.filter(e => e.empStatus?.toLowerCase() === 'deactivated').length,
-        totalBilling: filteredEmployees.reduce((sum, emp) => sum + Number(emp.billingAmount || 0), 0),
+        totalBilling: employees.filter(e => e.empStatus?.toLowerCase() !== 'deactivated').reduce((sum, emp) => sum + Number(emp.billingAmount || 0), 0),
     };
 
     const containerVariants = {
@@ -614,7 +614,6 @@ const EmployeesPage: React.FC = () => {
                                 onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
                                 options={[{ value: '', label: '' }, ...companies.map(c => ({ value: c.id, label: c.companyName }))]}
                                 required
-                                disabled={!!editingEmployee}
                             />
                             <PhoneInput
                                 label="Phone Number"
@@ -689,40 +688,22 @@ const EmployeesPage: React.FC = () => {
                             </motion.div>
                         )}
 
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Group Emails</label>
-                            <div className="flex flex-wrap gap-2 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                                {['HR Team', 'Engineering', 'Marketing', 'Finance', 'All Staff'].map(group => (
-                                    <label key={group} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-500 transition-all">
-                                        <input
-                                            type="checkbox"
-                                            className="accent-indigo-500"
-                                            checked={formData.groupEmails?.includes(group)}
-                                            onChange={(e) => {
-                                                const next = e.target.checked
-                                                    ? [...(formData.groupEmails || []), group]
-                                                    : (formData.groupEmails || []).filter(g => g !== group);
-                                                setFormData({ ...formData, groupEmails: next });
-                                            }}
-                                        />
-                                        <span className="text-xs font-medium">{group}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div>
+                        <div className="space-y-4">
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Additional Remarks</label>
                             <textarea
                                 value={formData.remarks}
                                 onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
                                 rows={2}
                                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none text-sm resize-none"
+                                placeholder="Any additional notes about the employee..."
                             />
                         </div>
+
                         <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
                             <Button variant="outline" onClick={handleCloseModal} type="button">Cancel</Button>
-                            <Button variant="primary" type="submit">{editingEmployee ? 'Save Changes' : 'Add Employee'}</Button>
+                            <Button variant="primary" type="submit" isLoading={isLoading}>
+                                {editingEmployee ? 'Update Profile' : 'Add Employee'}
+                            </Button>
                         </div>
                     </form>
                 </Modal>

@@ -196,8 +196,8 @@ export const CompaniesMasterView: React.FC<CompaniesMasterViewProps> = ({ onBack
                     <PhoneInput label="Contact Phone" value={formData.phone} onChange={(val) => setFormData({ ...formData, phone: val })} required />
                     <Input label="Establishment Date" type="date" max="2026-12-31" value={formData.estDate} onChange={(e) => setFormData({ ...formData, estDate: e.target.value })} className="h-14" required />
                     <div className="grid grid-cols-2 gap-4">
-                        <Input label="Slack Bot Token" value={formData.slackBotToken || ''} onChange={(e) => setFormData({ ...formData, slackBotToken: e.target.value })} placeholder="xoxb-..." className="h-14" />
-                        <Input label="Slack Workspace ID" value={formData.slackWorkspaceId || ''} onChange={(e) => setFormData({ ...formData, slackWorkspaceId: e.target.value })} placeholder="T0123..." className="h-14" />
+                        <Input label="Slack Bot Token" value={formData.slackBotToken || ''} onChange={(e) => setFormData({ ...formData, slackBotToken: e.target.value })} className="h-14" />
+                        <Input label="Slack Workspace ID" value={formData.slackWorkspaceId || ''} onChange={(e) => setFormData({ ...formData, slackWorkspaceId: e.target.value })} className="h-14" />
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>

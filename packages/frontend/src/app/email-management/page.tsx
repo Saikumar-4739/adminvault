@@ -393,9 +393,9 @@ const InfoEmailsPage: React.FC = () => {
                                     onChange={(e) => setSelectedOrg(e.target.value)}
                                     className="w-full pl-9 pr-8 h-8 bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-[10px] appearance-none outline-none cursor-pointer uppercase tracking-widest"
                                 >
-                                    <option value="">All Companies</option>
+                                    <option value="" className="text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800">All Companies</option>
                                     {companies.map(c => (
-                                        <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
+                                        <option key={c.id} value={c.id} className="text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800">{c.companyName || c.name}</option>
                                     ))}
                                 </select>
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">

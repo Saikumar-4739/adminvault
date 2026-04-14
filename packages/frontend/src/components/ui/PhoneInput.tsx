@@ -166,7 +166,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
             }
         }
 
-        const digitsOnly = raw.replace(/\D/g, '').slice(0, 15);
+        const digitsOnly = raw.replace(/\D/g, '').slice(0, 10);
         setPhoneNumber(digitsOnly);
         onChange(`${selectedCode} ${digitsOnly}`.trim());
     };

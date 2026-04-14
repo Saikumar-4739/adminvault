@@ -154,7 +154,6 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
             }
 
             const blob = await documentsService.downloadFile(id);
-            // Create a new blob with the correct mime type from our record
             const downloadBlob = new Blob([blob], { type: doc?.mimeType || blob.type });
             const url = window.URL.createObjectURL(downloadBlob);
             const link = document.createElement('a');
@@ -198,7 +197,7 @@ export const DocumentsMasterView: React.FC<DocumentsMasterViewProps> = ({ onBack
             console.error('View failed:', error);
             AlertMessages.getErrorMessage('Failed to open document preview.');
         }
-    }, [documents]);
+    }, [documents, previewUrl]);
 
     const handleSecureDownload = async () => {
         if (!secureDocId || !securePassword) return;

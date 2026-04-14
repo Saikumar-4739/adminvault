@@ -22,7 +22,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true, totalQuantity: 0 });
+    const [formData, setFormData] = useState<{ name: string, description: string, purchaseDate: string, expiryDate: string, isActive: boolean, totalQuantity: string | number }>({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true, totalQuantity: '' });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
@@ -57,7 +57,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
         try {
 
             if (isEditMode && editingId) {
-                const model = new UpdateLicenseMasterModel(editingId, formData.name, formData.description, formData.isActive, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined, formData.totalQuantity);
+                const model = new UpdateLicenseMasterModel(editingId, formData.name, formData.description, formData.isActive, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined, Number(formData.totalQuantity));
                 const response = await licenseService.updateLicense(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -67,7 +67,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateLicenseMasterModel(user.id, user.companyId, formData.name, formData.description, formData.isActive ?? true, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined, undefined, formData.totalQuantity);
+                const model = new CreateLicenseMasterModel(user.id, user.companyId!, formData.name, formData.description, formData.isActive, formData.purchaseDate ? new Date(formData.purchaseDate) : undefined, formData.expiryDate ? new Date(formData.expiryDate) : undefined, Number(formData.totalQuantity));
                 const response = await licenseService.createLicense(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -121,7 +121,7 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true, totalQuantity: 0 });
+        setFormData({ name: '', description: '', purchaseDate: '', expiryDate: '', isActive: true, totalQuantity: '' });
     };
 
     const formatDate = (date: Date | string | null | undefined): string => {
@@ -200,9 +200,8 @@ export const LicensesMasterView: React.FC<LicensesMasterViewProps> = ({ onBack }
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input label="License Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-14" required />
                     <Input label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="h-14" />
-                    <Input label="Total Quantity" type="number" value={formData.totalQuantity} onChange={(e) => setFormData({ ...formData, totalQuantity: parseInt(e.target.value) || 0 })} className="h-14" required />
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input label="Purchase Date" type="date" value={formData.purchaseDate} onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })} className="h-14" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input label="Total Quantity" type="number" value={formData.totalQuantity} onChange={e => setFormData({ ...formData, totalQuantity: Number(e.target.value) })} />
                         <Input label="Expiry Date" type="date" value={formData.expiryDate} onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} className="h-14" />
                     </div>
 
