@@ -5,6 +5,9 @@ import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateAssetTypeModel, UpdateAssetTypeModel, GetAllAssetTypesResponseModel, CreateAssetTypeResponseModel, AssetTypeDropdownModel, AssetTypeDropdownResponse, IdRequestModel } from '@adminvault/shared-models';
 import { AssetTypeMasterEntity } from './entities/asset-type.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
+import { PurchaseOrderItemEntity } from '../../procurement/entities/purchase-order-item.entity';
+import { DeviceConfigEntity } from '../brand/entities/brand.entity';
+import { AssetInfoEntity } from '../../asset-info/entities/asset-info.entity';
 
 @Injectable()
 export class AssetTypeService {
@@ -117,6 +120,18 @@ export class AssetTypeService {
             const existing = await this.assetTypeRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
                 throw new ErrorResponse(0, 'Asset Type not found');
+            }
+
+            // Check if asset type is being used in purchase order items
+            const poItemCount = await this.dataSource.getRepository(PurchaseOrderItemEntity).count({ where: { assetTypeId: reqModel.id } });
+            if (poItemCount > 0) {
+                throw new ErrorResponse(0, `Cannot delete asset type as it is associated with ${poItemCount} purchase order item(s)`);
+            }
+
+            // Check if asset type is being used in device configurations (by name)
+            const deviceConfigCount = await this.dataSource.getRepository(DeviceConfigEntity).count({ where: { assetType: existing.name } });
+            if (deviceConfigCount > 0) {
+                throw new ErrorResponse(0, `Cannot delete asset type as it is associated with ${deviceConfigCount} device configuration(s)`);
             }
 
             await transManager.startTransaction();

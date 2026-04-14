@@ -183,7 +183,6 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
                                 <tr>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Tool Name</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">User</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">IP Address</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Status</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Actions</th>
                                 </tr>
@@ -196,7 +195,6 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white uppercase tracking-tight">{item.remoteToolName}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500 truncate max-w-[150px]">{item.userFullname || item.userName}</td>
-                                            <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm text-slate-500">{item.ipAddress || '-'}</td>
                                             <td className="px-4 py-3 text-center border border-slate-200 dark:border-slate-700 text-sm">
                                                 <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${item.isActive
                                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
@@ -232,11 +230,10 @@ export const RemoteMasterView: React.FC<RemoteMasterViewProps> = ({ onBack }) =>
                     <Input label="Tool Name" value={formData.remoteToolName} onChange={(e) => setFormData({ ...formData, remoteToolName: e.target.value })} className="h-12" required />
                     <div className="grid grid-cols-2 gap-4">
                         <Input label="User ID" value={formData.userName} onChange={(e) => setFormData({ ...formData, userName: e.target.value })} className="h-12" required />
-                        <Input label="User" value={formData.userFullname} onChange={(e) => setFormData({ ...formData, userFullname: e.target.value })} className="h-12" />
+                        <Input label="Password" type="text" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-12" required />
                     </div>
-                    <Input label="Password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-12" required />
+                    <Input label="User Full Name" value={formData.userFullname} onChange={(e) => setFormData({ ...formData, userFullname: e.target.value })} className="h-12" />
                     <Input label="Description" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="h-12" />
-
                     <div className="flex items-center gap-2">
                         <input
                             type="checkbox"
