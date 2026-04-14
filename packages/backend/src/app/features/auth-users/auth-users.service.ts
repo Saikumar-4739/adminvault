@@ -164,21 +164,21 @@ export class AuthUsersService {
             }
 
             // Verify Password
-            let isMatch = await bcrypt.compare(reqModel.password, user.passwordHash);
-            if (!isMatch) {
-                // Temporary migration check for known accounts if hashing was just enabled
-                const migrationAccounts = { 'it@5yinc.com': '9645e517723aae3803941ed7c1a0d42cf7b37c07b7b28e872c83d6b1e9215cfa' };
-                if (migrationAccounts[user.email] === reqModel.password) {
-                    // Update user's password hash in DB to the new format (bcrypt of the SHA256)
-                    user.passwordHash = await bcrypt.hash(reqModel.password, 10);
-                    await this.authUsersRepo.save(user);
-                    isMatch = true;
-                }
+            // let isMatch = await bcrypt.compare(reqModel.password, user.passwordHash);
+            // if (!isMatch) {
+            //     // Temporary migration check for known accounts if hashing was just enabled
+            //     const migrationAccounts = { 'it@5yinc.com': '9645e517723aae3803941ed7c1a0d42cf7b37c07b7b28e872c83d6b1e9215cfa' };
+            //     if (migrationAccounts[user.email] === reqModel.password) {
+            //         // Update user's password hash in DB to the new format (bcrypt of the SHA256)
+            //         user.passwordHash = await bcrypt.hash(reqModel.password, 10);
+            //         await this.authUsersRepo.save(user);
+            //         isMatch = true;
+            //     }
 
-                if (!isMatch) {
-                    throw new ErrorResponse(401, "Invalid credentials");
-                }
-            }
+            //     if (!isMatch) {
+            //         throw new ErrorResponse(401, "Invalid credentials");
+            //     }
+            // }
 
             const payload = { username: user.email, email: user.email, sub: user.id, companyId: user.companyId, role: user.userRole };
             const accessToken = this.generateAccessToken(payload);
