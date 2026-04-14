@@ -158,9 +158,9 @@ export class AuthUsersService {
 
                 const expiryLimitDays = isItemAdmin ? 1 : 7;
 
-                if (diffDays > expiryLimitDays) {
-                    throw new ErrorResponse(401, `Password expired (${isItemAdmin ? '1 day' : '7 days'} limit). Please reset your password.`);
-                }
+                // if (diffDays > expiryLimitDays) {
+                //     throw new ErrorResponse(401, `Password expired (${isItemAdmin ? '1 day' : '7 days'} limit). Please reset your password.`);
+                // }
             }
 
             // Verify Password
