@@ -291,7 +291,7 @@ export class SlackUserModel extends MasterBase {
     slackUserId?: string;
     displayName?: string;
     role?: string;
-    department?: string;
+
     phone?: string;
     notes?: string;
     avatarUrl?: string;
@@ -313,7 +313,7 @@ export class SlackUserModel extends MasterBase {
         slackUserId?: string,
         displayName?: string,
         role?: string,
-        department?: string,
+
         phone?: string,
         notes?: string,
         avatarUrl?: string,
@@ -329,7 +329,7 @@ export class SlackUserModel extends MasterBase {
         this.slackUserId = slackUserId;
         this.displayName = displayName;
         this.role = role;
-        this.department = department;
+
         this.phone = phone;
         this.notes = notes;
         this.avatarUrl = avatarUrl;
@@ -399,7 +399,7 @@ export class CreateSlackUserModel extends CreateMasterModel {
     slackUserId?: string;
     displayName?: string;
     role?: string;
-    department?: string;
+
     phone?: string;
     notes?: string;
     avatarUrl?: string;
@@ -409,13 +409,13 @@ export class CreateSlackUserModel extends CreateMasterModel {
     teamId?: string;
     isAdmin?: boolean;
 
-    constructor(userId: number, companyId: number, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, avatarUrl?: string, employeeId?: number, id?: number, timezone?: string, timezoneLabel?: string, teamId?: string, isAdmin?: boolean) {
+    constructor(userId: number, companyId: number, name: string, email: string, description?: string, isActive?: boolean, slackUserId?: string, displayName?: string, role?: string, phone?: string, notes?: string, avatarUrl?: string, employeeId?: number, id?: number, timezone?: string, timezoneLabel?: string, teamId?: string, isAdmin?: boolean) {
         super(userId, companyId, name, description, isActive, id);
         this.email = email;
         this.slackUserId = slackUserId;
         this.displayName = displayName;
         this.role = role;
-        this.department = department;
+
         this.phone = phone;
         this.notes = notes;
         this.avatarUrl = avatarUrl;
@@ -702,7 +702,7 @@ export class UpdateSlackUserModel {
     slackUserId?: string;
     displayName?: string;
     role?: string;
-    department?: string;
+
     phone?: string;
     notes?: string;
     companyId?: number;
@@ -713,7 +713,7 @@ export class UpdateSlackUserModel {
     timezoneLabel?: string;
     teamId?: string;
 
-    constructor(id: number, name: string, email: string, description?: string, isActive = true, slackUserId?: string, displayName?: string, role?: string, department?: string, phone?: string, notes?: string, companyId?: number, avatarUrl?: string, employeeId?: number, isAdmin?: boolean, timezone?: string, timezoneLabel?: string, teamId?: string) {
+    constructor(id: number, name: string, email: string, description?: string, isActive = true, slackUserId?: string, displayName?: string, role?: string, phone?: string, notes?: string, companyId?: number, avatarUrl?: string, employeeId?: number, isAdmin?: boolean, timezone?: string, timezoneLabel?: string, teamId?: string) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -722,7 +722,7 @@ export class UpdateSlackUserModel {
         this.slackUserId = slackUserId;
         this.displayName = displayName;
         this.role = role;
-        this.department = department;
+
         this.phone = phone;
         this.notes = notes;
         this.companyId = companyId;

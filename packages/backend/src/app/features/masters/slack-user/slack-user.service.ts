@@ -135,7 +135,6 @@ export class SlackUserService {
                 newEntity.timezoneLabel = timezoneLabel;
                 newEntity.isAdmin = isAdmin;
                 newEntity.isActive = true;
-                newEntity.notes = '';
                 newEntity.employeeId = matchedEmployeeId;
                 await this.slackUserRepo.save(newEntity);
                 imported++;
@@ -168,9 +167,8 @@ export class SlackUserService {
             saveEntity.slackUserId = reqModel.slackUserId;
             saveEntity.displayName = reqModel.displayName;
             saveEntity.role = reqModel.role;
-            saveEntity.department = reqModel.department;
+
             saveEntity.phone = reqModel.phone;
-            saveEntity.notes = reqModel.notes;
             saveEntity.userId = reqModel.userId;
             saveEntity.avatarUrl = reqModel.avatarUrl;
             saveEntity.isAdmin = reqModel.isAdmin;
@@ -235,9 +233,8 @@ export class SlackUserService {
                 slackUserId: reqModel.slackUserId,
                 displayName: reqModel.displayName,
                 role: reqModel.role,
-                department: reqModel.department,
+
                 phone: reqModel.phone,
-                notes: reqModel.notes,
                 isActive: reqModel.isActive,
                 employeeId: reqModel.employeeId,
                 avatarUrl: reqModel.avatarUrl,
