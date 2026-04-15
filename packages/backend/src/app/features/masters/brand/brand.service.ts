@@ -6,6 +6,7 @@ import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateDeviceConfigModel, UpdateDeviceConfigModel, IdRequestModel, GetAllDeviceConfigsResponseModel } from '@adminvault/shared-models';
 import { DeviceConfigEntity } from './entities/brand.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
+import { AssetInfoEntity } from '../../asset-info/entities/asset-info.entity';
 
 @Injectable()
 export class DeviceConfigService {
@@ -99,6 +100,12 @@ export class DeviceConfigService {
             if (!delEntity) {
                 throw new ErrorResponse(404, 'Device configuration not found');
             }
+            // Check if configuration is being used by assets
+            const assetsCount = await this.dataSource.getRepository(AssetInfoEntity).count({ where: { deviceConfigId: reqModel.id } });
+            if (assetsCount > 0) {
+                throw new ErrorResponse(0, `Cannot delete device configuration as it is associated with ${assetsCount} asset(s)`);
+            }
+
             await transManager.startTransaction();
             await transManager.getRepository(DeviceConfigEntity).remove(delEntity);
             await transManager.completeTransaction();

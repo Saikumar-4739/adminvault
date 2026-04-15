@@ -5,6 +5,7 @@ import { ErrorResponse, GlobalResponse } from '@adminvault/backend-utils';
 import { CompanyResponse, CompanyResponseModel, CreateCompanyModel, DeleteCompanyModel, GetCompanyModel, UpdateCompanyModel, CompanyDropdownResponse, CompanyDropdownModel } from '@adminvault/shared-models';
 import { CompanyInfoEntity } from './entities/company-info.entity';
 import { CompanyInfoRepository } from './repositories/company-info.repository';
+import { EmployeesEntity } from '../../employees/entities/employees.entity';
 
 @Injectable()
 export class CompanyInfoService {
@@ -177,6 +178,12 @@ export class CompanyInfoService {
             const existingCompany = await this.companyInfoRepo.findOne({ where: { id: reqModel.id } });
             if (!existingCompany) {
                 throw new ErrorResponse(0, "Company not found");
+            }
+
+            // Check if company is being used by employees
+            const employeesCount = await this.dataSource.getRepository(EmployeesEntity).count({ where: { companyId: reqModel.id } });
+            if (employeesCount > 0) {
+                throw new ErrorResponse(0, `Cannot delete company as it is associated with ${employeesCount} employee(s)`);
             }
 
             await transManager.startTransaction();

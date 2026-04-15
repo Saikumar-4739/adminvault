@@ -5,10 +5,7 @@ import { cn } from '@/lib/utils';
 import { slackUserService, companyService } from '@/lib/api/services';
 import { SlackUserModel, CompanyDropdownModel } from '@adminvault/shared-models';
 import { PageHeader } from '@/components/ui/PageHeader';
-import {
-    Search, RefreshCw, Download, Trash2,
-    Shield, Mail, Building2, Slack, MessageSquare, User, Briefcase, MapPin, Tag, Globe, Activity, AtSign, Hash
-} from 'lucide-react';
+import { Search, RefreshCw, Download, Trash2, Shield, Mail, Slack, MessageSquare, User, Briefcase, MapPin, Globe, Activity, AtSign, Hash } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { UserRoleEnum } from '@adminvault/shared-models';
@@ -257,12 +254,6 @@ const SlackUsersPage: React.FC = () => {
                                                 <span className="truncate">{u.email}</span>
                                             </div>
                                         )}
-                                        <div className="grid grid-cols-1 gap-1">
-                                            <div className="flex items-center gap-2 text-[10px] text-slate-600 dark:text-slate-400 px-0.5">
-                                                <Building2 className="h-3 w-3 text-slate-400 shrink-0" />
-                                                <span className="truncate">{u.role || 'Member'} {u.department ? ` • ${u.department}` : ''}</span>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div className="mt-auto pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
@@ -361,13 +352,6 @@ const SlackUsersPage: React.FC = () => {
                                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Company</span>
                                         </div>
                                         <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{(selectedUser as any).companyName || 'N/A'}</p>
-                                    </div>
-                                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Tag className="h-3.5 w-3.5 text-purple-500" />
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Dept</span>
-                                        </div>
-                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{selectedUser.department || 'N/A'}</p>
                                     </div>
                                 </div>
 

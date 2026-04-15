@@ -6,6 +6,7 @@ import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateVendorModel, UpdateVendorModel, GetAllVendorsResponseModel, IdRequestModel } from '@adminvault/shared-models';
 import { VendorsMasterEntity } from './entities/vendor.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
+import { PurchaseOrderEntity } from '../../procurement/entities/purchase-order.entity';
 
 @Injectable()
 export class VendorService {
@@ -74,6 +75,12 @@ export class VendorService {
     async deleteVendor(reqModel: IdRequestModel): Promise<GlobalResponse> {
         const transManager = new GenericTransactionManager(this.dataSource);
         try {
+            // Check if vendor is being used in purchase orders
+            const poCount = await this.dataSource.getRepository(PurchaseOrderEntity).count({ where: { vendorId: reqModel.id } });
+            if (poCount > 0) {
+                throw new ErrorResponse(0, `Cannot delete vendor as it is associated with ${poCount} purchase order(s)`);
+            }
+
             await transManager.startTransaction();
             await transManager.getRepository(VendorsMasterEntity).delete(reqModel.id);
             await transManager.completeTransaction();

@@ -5,6 +5,7 @@ import { GlobalResponse, ErrorResponse } from '@adminvault/backend-utils';
 import { CreateDepartmentModel, UpdateDepartmentModel, GetAllDepartmentsResponseModel, CreateDepartmentResponseModel, DepartmentDropdownModel, DepartmentDropdownResponse, IdRequestModel } from '@adminvault/shared-models';
 import { DepartmentsMasterEntity } from './entities/department.entity';
 import { GenericTransactionManager } from '../../../../database/typeorm-transactions';
+import { EmployeesEntity } from '../../employees/entities/employees.entity';
 
 @Injectable()
 export class DepartmentService {
@@ -110,6 +111,12 @@ export class DepartmentService {
             const existing = await this.deptRepo.findOne({ where: { id: reqModel.id } });
             if (!existing) {
                 throw new ErrorResponse(0, 'Department not found');
+            }
+
+            // Check if department is being used by employees
+            const employeesCount = await this.dataSource.getRepository(EmployeesEntity).count({ where: { departmentId: reqModel.id } });
+            if (employeesCount > 0) {
+                throw new ErrorResponse(0, `Cannot delete department as it is associated with ${employeesCount} employee(s)`);
             }
 
             await transManager.startTransaction();

@@ -92,18 +92,18 @@ const EmployeesPage: React.FC = () => {
             if (response.status) {
                 const data = response.data || [];
                 const mappedEmployees: Employee[] = data.map((item: any) => ({
-                    id: item.id,
+                    id: Number(item.id),
                     firstName: item.firstName,
                     lastName: item.lastName,
                     email: item.email,
                     phNumber: item.phNumber,
-                    companyId: item.companyId,
-                    departmentId: item.departmentId,
+                    companyId: Number(item.companyId || 0),
+                    departmentId: Number(item.departmentId || 0),
                     departmentName: item.departmentName,
                     empStatus: item.empStatus,
                     billingAmount: item.billingAmount,
                     remarks: item.remarks,
-                    managerId: item.managerId,
+                    managerId: item.managerId ? Number(item.managerId) : null,
                     managerName: item.managerName,
                     joiningDate: item.joiningDate,
                     emailCreatedDate: item.emailCreatedDate,
@@ -137,7 +137,6 @@ const EmployeesPage: React.FC = () => {
     }, []);
 
     const fetchDepartments = useCallback(async () => {
-        if (!user?.companyId) return;
         try {
             const response = await departmentService.getAllDepartments();
             if (response.status) {
@@ -240,9 +239,9 @@ const EmployeesPage: React.FC = () => {
     const handleEdit = (employee: any) => {
         setEditingEmployee(employee);
         setFormData({
-            firstName: employee.firstName,
-            lastName: employee.lastName,
-            email: employee.email,
+            firstName: employee.firstName || '',
+            lastName: employee.lastName || '',
+            email: employee.email || '',
             phone: employee.phNumber || '',
             companyId: String(employee.companyId || ''),
             departmentId: String(employee.departmentId || ''),
@@ -601,18 +600,18 @@ const EmployeesPage: React.FC = () => {
 
                 {/* Modals */}
                 <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingEmployee ? 'Edit Employee Profile' : 'Add New Employee'} size="4xl">
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form key={editingEmployee ? `edit-${editingEmployee.id}` : 'add'} onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input label="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required />
-                            <Input label="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required />
+                            <Input label="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="h-14" required />
+                            <Input label="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} className="h-14" required />
                         </div>
                         <Input label="Email Address" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Select
                                 label="Organization"
-                                value={formData.companyId}
+                                value={String(formData.companyId || '')}
                                 onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                                options={[{ value: '', label: '' }, ...companies.map(c => ({ value: c.id, label: c.companyName }))]}
+                                options={[{ value: '', label: 'Select Organization' }, ...companies.map(c => ({ value: String(c.id), label: c.companyName || 'Unknown Company' }))]}
                                 required
                             />
                             <PhoneInput
@@ -624,16 +623,16 @@ const EmployeesPage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Select
                                 label="Department"
-                                value={formData.departmentId}
+                                value={String(formData.departmentId || '')}
                                 onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                                options={[{ value: '', label: '' }, ...(departments?.filter(d => d.isActive).map(d => ({ value: d.id, label: d.name })) || [])]}
+                                options={[{ value: '', label: 'Select Department' }, ...(departments?.filter(d => d.isActive).map(d => ({ value: String(d.id), label: d.name })) || [])]}
                                 required
                             />
                             <Select
                                 label="Reporting Manager"
                                 value={formData.managerId}
                                 onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
-                                options={[{ value: '', label: '' }, ...filteredEmployees.filter(emp => !editingEmployee || emp.id !== editingEmployee.id).map(emp => ({ value: emp.id, label: `${emp.firstName} ${emp.lastName}` }))]}
+                                options={[{ value: '', label: '' }, ...employees.filter(emp => !editingEmployee || emp.id !== editingEmployee.id).map(emp => ({ value: String(emp.id), label: `${emp.firstName} ${emp.lastName}` }))]}
                             />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
