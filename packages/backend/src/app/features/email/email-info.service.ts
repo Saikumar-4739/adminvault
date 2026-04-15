@@ -49,7 +49,7 @@ export class EmailInfoService {
       newEmailInfo.department = reqModel.department;
       newEmailInfo.email = reqModel.email;
       newEmailInfo.employeeId = reqModel.employeeId;
-      newEmailInfo.status = EmailStatusEnum.ACTIVE;
+      newEmailInfo.status = reqModel.status || EmailStatusEnum.ACTIVE;
       newEmailInfo.memberIds = reqModel.memberIds;
       newEmailInfo.name = reqModel.name;
       newEmailInfo.billing = reqModel.billing;
@@ -81,6 +81,7 @@ export class EmailInfoService {
       emailInfo.billing = data.billing;
       emailInfo.createdDate = data.createdDate;
       emailInfo.description = data.description;
+      if (data.status) emailInfo.status = data.status;
 
       await this.emailInfoRepo.save(emailInfo);
       return new GlobalResponse(true, 200, 'Email info record updated successfully');
@@ -105,7 +106,8 @@ export class EmailInfoService {
       emailInfo.name,
       emailInfo.billing,
       emailInfo.createdDate,
-      emailInfo.description
+      emailInfo.description,
+      emailInfo.status
     );
     return new GetEmailInfoByIdModel(true, 200, "Email info retrieved successfully", response);
   }
@@ -125,7 +127,8 @@ export class EmailInfoService {
       result.name,
       Number(result.billing),
       result.created_date,
-      result.description
+      result.description,
+      result.status
     ));
     return new GetAllEmailInfoModel(true, 200, "Email info retrieved successfully", responses);
   }
