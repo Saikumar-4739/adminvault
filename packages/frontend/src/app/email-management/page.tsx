@@ -79,9 +79,6 @@ const EmailRow: React.FC<{
             <tr className={`group/row border-b last:border-0 border-slate-50 dark:border-white/[0.02] hover:bg-slate-50/50 dark:hover:bg-indigo-500/[0.02] transition-colors ${idx % 2 === 0 ? '' : 'bg-slate-50/[0.01]'}`}>
                 <td className="p-4 border border-slate-200 dark:border-white/10">
                     <div className="flex items-center justify-center gap-2">
-                        <span className="px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/10 text-[8px] font-black text-slate-500 uppercase tracking-widest">
-                            {acc.emailType}
-                        </span>
                         {(isCompany || isGroup) && acc.name && (
                             <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tight truncate max-w-[120px]">
                                 {acc.name}
@@ -524,7 +521,7 @@ const InfoEmailsPage: React.FC = () => {
                                                         <table className="w-full text-center border-collapse border border-slate-200 dark:border-white/10">
                                                             <thead>
                                                                 <tr className="bg-slate-50/50 dark:bg-white/[0.01]">
-                                                                    <th className="p-4 text-[9px] font-black text-center text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/10">Type</th>
+                                                                    <th className="p-4 text-[9px] font-black text-center text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/10">Full Name</th>
                                                                     <th className="p-4 text-[9px] font-black text-center text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/10">Email Address</th>
                                                                     <th className="p-4 text-[9px] font-black text-center text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/10">Status</th>
                                                                     <th className="p-4 text-[9px] font-black text-center text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/10">Actions</th>

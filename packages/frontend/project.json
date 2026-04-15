@@ -1,34 +1,33 @@
 {
-    "name": "@org/frontend",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "packages/frontend/src",
-    "projectType": "application",
-    "tags": [],
-    "targets": {
-      "build": {
-  "executor": "nx:run-commands",
-  "options": {
-    "command": "npx next build",
-    "cwd": "packages/frontend"
-  },
-  "outputs": [
-    "{projectRoot}/out"
-  ]
-},
-
-        "dev": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "npx next dev",
-                "cwd": "packages/frontend"
-            }
-        },
-        "serve": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "npx next start",
-                "cwd": "packages/frontend"
-            }
-        }
+  "name": "@org/frontend",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/frontend/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx next build && rm -rf ../../dist/frontend && cp -r out ../../dist/frontend",
+        "cwd": "packages/frontend"
+      },
+      "outputs": [
+        "{workspaceRoot}/dist/frontend"
+      ]
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx next dev",
+        "cwd": "packages/frontend"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx next start",
+        "cwd": "packages/frontend"
+      }
     }
+  }
 }

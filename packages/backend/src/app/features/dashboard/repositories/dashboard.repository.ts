@@ -62,8 +62,6 @@ export class DashboardRepository {
 
     async getEmployeeStats(companyId: number) {
         const repo = this.dataSource.getRepository(EmployeesEntity);
-        const where = companyId > 0 ? { companyId } : {};
-        const total = await repo.count({ where });
 
         const query = repo.createQueryBuilder('emp')
             .leftJoin(DepartmentsMasterEntity, 'dept', 'dept.id = emp.department_id')
@@ -72,6 +70,7 @@ export class DashboardRepository {
             query.where('emp.company_id = :companyId', { companyId });
         }
         const byDept = await query.groupBy('COALESCE(dept.name, \'Unassigned\')').getRawMany();
+        const total = byDept.reduce((sum, item) => sum + parseInt(item.count || '0'), 0);
 
         return { total, byDept };
     }
