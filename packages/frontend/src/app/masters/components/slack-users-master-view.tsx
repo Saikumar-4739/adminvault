@@ -48,7 +48,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
     const companyService = new CompanyService();
     const [companies, setCompanies] = useState<CompanyDropdownModel[]>([]);
     const [filterCompanyId, setFilterCompanyId] = useState<string>('all');
-    const [formData, setFormData] = useState({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true, avatarUrl: '', isAdmin: false });
+    const [formData, setFormData] = useState({ name: '', email: '', slackUserId: '', displayName: '', role: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true, avatarUrl: '', isAdmin: false });
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -126,7 +126,6 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                 name: emp.name,
                 email: emp.email,
                 phone: emp.phone || '',
-                department: emp.department || '',
                 slackUserId: emp.slackUserId || '',
                 employeeId: emp.id.toString()
             }));
@@ -138,7 +137,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         try {
             const companyIdToUse = Number(formData.companyId) || user?.companyId || 0;
             if (isEditMode && editingId) {
-                const model = new UpdateSlackUserModel(editingId, formData.name, formData.email, undefined, formData.isActive, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, companyIdToUse, formData.avatarUrl, formData.employeeId ? Number(formData.employeeId) : undefined, formData.isAdmin);
+                const model = new UpdateSlackUserModel(editingId, formData.name, formData.email, undefined, formData.isActive, formData.slackUserId, formData.displayName, formData.role, formData.phone, formData.notes, companyIdToUse, formData.avatarUrl, formData.employeeId ? Number(formData.employeeId) : undefined, formData.isAdmin);
                 const response = await slackUserService.updateSlackUser(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -148,7 +147,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                     AlertMessages.getErrorMessage(response.message);
                 }
             } else {
-                const model = new CreateSlackUserModel(user?.id || 0, companyIdToUse, formData.name, formData.email, undefined, formData.isActive ?? true, formData.slackUserId, formData.displayName, formData.role, formData.department, formData.phone, formData.notes, formData.avatarUrl, formData.employeeId ? Number(formData.employeeId) : undefined);
+                const model = new CreateSlackUserModel(user?.id || 0, companyIdToUse, formData.name, formData.email, undefined, formData.isActive ?? true, formData.slackUserId, formData.displayName, formData.role, formData.phone, formData.notes, formData.avatarUrl, formData.employeeId ? Number(formData.employeeId) : undefined);
                 const response = await slackUserService.createSlackUser(model);
                 if (response.status) {
                     AlertMessages.getSuccessMessage(response.message);
@@ -172,7 +171,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
             slackUserId: item.slackUserId || '',
             displayName: item.displayName || '',
             role: item.role || '',
-            department: item.department || '',
+
             phone: item.phone || '',
             notes: item.notes || '',
             companyId: item.companyId?.toString() || '',
@@ -210,7 +209,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
         setIsModalOpen(false);
         setIsEditMode(false);
         setEditingId(null);
-        setFormData({ name: '', email: '', slackUserId: '', displayName: '', role: '', department: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true, avatarUrl: '', isAdmin: false });
+        setFormData({ name: '', email: '', slackUserId: '', displayName: '', role: '', phone: '', notes: '', companyId: '', employeeId: '', isActive: true, avatarUrl: '', isAdmin: false });
     };
 
     const handleOpenConfig = async (companyId: string) => {
@@ -549,21 +548,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                 ))}
                             </select>
                         </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Department</label>
-                            <select
-                                value={formData.department}
-                                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                            >
-                                <option value="">Select Department</option>
-                                {departments.map((dept) => (
-                                    <option key={dept.id} value={dept.name}>
-                                        {dept.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -679,13 +664,7 @@ export const SlackUsersMasterView: React.FC<SlackUsersMasterViewProps> = ({ onBa
                                     </div>
                                     <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{selectedSlackUser.companyName || 'Not specified'}</p>
                                 </div>
-                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Tag className="h-3.5 w-3.5 text-purple-500" />
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Department</span>
-                                    </div>
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{selectedSlackUser.department || 'General'}</p>
-                                </div>
+
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
