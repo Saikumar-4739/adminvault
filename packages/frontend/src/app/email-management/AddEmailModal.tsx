@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { EmailTypeEnum, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
+import { EmailTypeEnum, GetAllEmployeesRequestModel, EmailStatusEnum } from '@adminvault/shared-models';
 import { employeeService, departmentService } from '@/lib/api/services';
 import { Select } from '@/components/ui/Select';
 import { MultiSelect } from '@/components/ui/MultiSelect';
@@ -38,7 +38,8 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
         name: '',
         billing: '',
         createdDate: '',
-        description: ''
+        description: '',
+        status: EmailStatusEnum.ACTIVE
     });
 
     const fetchEmployees = useCallback(async () => {
@@ -88,7 +89,8 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                     name: editData.name || '',
                     billing: editData.billing ? String(editData.billing) : '',
                     createdDate: editData.createdDate ? new Date(editData.createdDate).toISOString().split('T')[0] : '',
-                    description: editData.description || ''
+                    description: editData.description || '',
+                    status: editData.status || EmailStatusEnum.ACTIVE
                 });
             } else {
                 setFormData({
@@ -100,7 +102,8 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                     name: '',
                     billing: '',
                     createdDate: '',
-                    description: ''
+                    description: '',
+                    status: EmailStatusEnum.ACTIVE
                 });
             }
         }
@@ -130,7 +133,8 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                 name: '',
                 billing: '',
                 createdDate: '',
-                description: ''
+                description: '',
+                status: EmailStatusEnum.ACTIVE
             });
             onClose();
         }
@@ -147,7 +151,7 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
             size="4xl"
         >
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Input
                         label="Email Address"
                         type="email"
@@ -164,6 +168,17 @@ export const AddEmailModal: React.FC<AddEmailModalProps> = ({ isOpen, onClose, o
                             { value: EmailTypeEnum.USER, label: 'USER' },
                             { value: EmailTypeEnum.GROUP, label: 'GROUP' },
                             { value: EmailTypeEnum.COMPANY, label: 'COMPANY' }
+                        ]}
+                        required
+                    />
+                    <Select
+                        label="Status"
+                        value={formData.status}
+                        onChange={e => setFormData({ ...formData, status: e.target.value as EmailStatusEnum })}
+                        options={[
+                            { value: EmailStatusEnum.ACTIVE, label: 'ACTIVE' },
+                            { value: EmailStatusEnum.INACTIVE, label: 'INACTIVE' },
+                            { value: EmailStatusEnum.SUSPENDED, label: 'SUSPENDED' }
                         ]}
                         required
                     />

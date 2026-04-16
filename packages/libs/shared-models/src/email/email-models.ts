@@ -1,5 +1,5 @@
 import { GlobalResponse } from '../common/global-response';
-import { EmailTypeEnum, EmployeeStatusEnum } from '../enums';
+import { EmailTypeEnum, EmployeeStatusEnum, EmailStatusEnum } from '../enums';
 import { IsOptional, IsArray, IsString, IsEnum, IsNumber } from 'class-validator';
 
 export class CreateEmailInfoModel {
@@ -29,6 +29,10 @@ export class CreateEmailInfoModel {
     @IsString()
     description?: string;
 
+    @IsOptional()
+    @IsEnum(EmailStatusEnum)
+    status?: EmailStatusEnum;
+
     constructor(
         companyId: number,
         emailType: EmailTypeEnum,
@@ -39,7 +43,8 @@ export class CreateEmailInfoModel {
         name?: string,
         billing?: number,
         createdDate?: Date,
-        description?: string
+        description?: string,
+        status?: EmailStatusEnum
     ) {
         this.companyId = companyId;
         this.emailType = emailType;
@@ -51,6 +56,7 @@ export class CreateEmailInfoModel {
         this.billing = billing;
         this.createdDate = createdDate;
         this.description = description;
+        this.status = status;
     }
 }
 
@@ -68,9 +74,10 @@ export class UpdateEmailInfoModel extends CreateEmailInfoModel {
         name?: string,
         billing?: number,
         createdDate?: Date,
-        description?: string
+        description?: string,
+        status?: EmailStatusEnum
     ) {
-        super(companyId, emailType, department, email, employeeId, memberIds, name, billing, createdDate, description);
+        super(companyId, emailType, department, email, employeeId, memberIds, name, billing, createdDate, description, status);
         this.id = id;
     }
 }
@@ -105,6 +112,7 @@ export class EmailInfoResponseModel {
     billing?: number;
     createdDate?: Date;
     description?: string;
+    status?: EmailStatusEnum;
 
     constructor(
         id: number,
@@ -119,7 +127,8 @@ export class EmailInfoResponseModel {
         name?: string,
         billing?: number,
         createdDate?: Date,
-        description?: string
+        description?: string,
+        status?: EmailStatusEnum
     ) {
         this.id = id;
         this.companyId = companyId;
@@ -134,6 +143,7 @@ export class EmailInfoResponseModel {
         this.billing = billing;
         this.createdDate = createdDate;
         this.description = description;
+        this.status = status;
     }
 }
 

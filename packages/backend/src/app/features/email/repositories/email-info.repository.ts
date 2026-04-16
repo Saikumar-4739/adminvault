@@ -24,7 +24,8 @@ export class EmailInfoRepository extends Repository<EmailInfoEntity> {
                 'email.name as name',
                 'email.billing as billing',
                 'email.created_date as created_date',
-                'email.description as description'
+                'email.description as description',
+                'email.status as status'
             ])
             .where('(emp.id IS NULL OR emp.emp_status != :deactivatedStatus)', { deactivatedStatus: 'deactivated' });
 

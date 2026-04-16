@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { companyService, emailService, departmentService, employeeService } from '@/lib/api/services';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RouteGuard } from '@/components/auth/RouteGuard';
-import { EmailInfoResponseModel, EmailTypeEnum, IdRequestModel, UserRoleEnum, DepartmentEnum, DeleteEmailInfoModel, GetAllEmployeesRequestModel } from '@adminvault/shared-models';
+import { EmailInfoResponseModel, EmailTypeEnum, IdRequestModel, UserRoleEnum, DepartmentEnum, DeleteEmailInfoModel, GetAllEmployeesRequestModel, EmailStatusEnum } from '@adminvault/shared-models';
 import {
     Mail, Building2, Plus, Trash2, Search,
     Headphones, ShieldCheck, Landmark, Settings, Pencil,
@@ -60,7 +60,8 @@ const EmailRow: React.FC<{
     employees: any[];
     onDelete: (id: number) => void;
     onEdit: (data: EmailInfoResponseModel) => void;
-}> = ({ acc, idx, employees, onDelete, onEdit }) => {
+    onToggleStatus: (data: EmailInfoResponseModel) => void;
+}> = ({ acc, idx, employees, onDelete, onEdit, onToggleStatus }) => {
     const [isMembersOpen, setIsMembersOpen] = useState(false);
     const memberNames = useMemo(() => {
         if (!acc.memberIds) return [];
@@ -76,11 +77,8 @@ const EmailRow: React.FC<{
     return (
         <>
             <tr className={`group/row border-b last:border-0 border-slate-50 dark:border-white/[0.02] hover:bg-slate-50/50 dark:hover:bg-indigo-500/[0.02] transition-colors ${idx % 2 === 0 ? '' : 'bg-slate-50/[0.01]'}`}>
-                <td className="p-4">
-                    <div className="flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/10 text-[8px] font-black text-slate-500 uppercase tracking-widest">
-                            {acc.emailType}
-                        </span>
+                <td className="p-4 border border-slate-200 dark:border-white/10">
+                    <div className="flex items-center justify-center gap-2">
                         {(isCompany || isGroup) && acc.name && (
                             <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tight truncate max-w-[120px]">
                                 {acc.name}
@@ -93,15 +91,15 @@ const EmailRow: React.FC<{
                         )}
                     </div>
                 </td>
-                <td className="p-4">
-                    <div className="flex flex-col">
+                <td className="p-4 border border-slate-200 dark:border-white/10 text-center">
+                    <div className="flex flex-col items-center justify-center">
                         <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover/row:text-indigo-600 dark:group-hover/row:text-indigo-400 transition-colors uppercase tracking-tight">
                             {acc.email}
                         </span>
                         {isGroup && memberNames.length > 0 && (
                             <button
                                 onClick={() => setIsMembersOpen(!isMembersOpen)}
-                                className="flex items-center gap-1 mt-1 text-[9px] font-bold text-slate-400 hover:text-indigo-500 uppercase tracking-widest transition-colors"
+                                className="flex items-center justify-center gap-1 mt-1 text-[9px] font-bold text-slate-400 hover:text-indigo-500 uppercase tracking-widest transition-colors"
                             >
                                 {isMembersOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                                 {memberNames.length} Members
@@ -109,8 +107,22 @@ const EmailRow: React.FC<{
                         )}
                     </div>
                 </td>
-                <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                <td className="p-4 border border-slate-200 dark:border-white/10">
+                    <div className="flex items-center justify-center w-full">
+                        <button
+                            onClick={() => onToggleStatus(acc)}
+                            className={`px-3 py-1 flex items-center justify-center text-[10px] font-black tracking-widest rounded-lg border transition-all shadow-sm ${acc.status === EmailStatusEnum.ACTIVE
+                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30 dark:hover:bg-emerald-900/50'
+                                : 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 hover:border-rose-300 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/30 dark:hover:bg-rose-900/50'
+                                }`}
+                            title="Click to toggle status"
+                        >
+                            {acc.status === EmailStatusEnum.ACTIVE ? 'ACTIVE' : 'INACTIVE'}
+                        </button>
+                    </div>
+                </td>
+                <td className="p-4 border border-slate-200 dark:border-white/10 text-center">
+                    <div className="flex items-center justify-center gap-2">
                         <button
                             onClick={() => onEdit(acc)}
                             className="h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all shadow-sm"
@@ -129,7 +141,7 @@ const EmailRow: React.FC<{
             <AnimatePresence>
                 {isMembersOpen && (
                     <tr>
-                        <td colSpan={3} className="p-0 border-0">
+                        <td colSpan={4} className="p-0 border-0">
                             <motion.div
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
@@ -263,6 +275,15 @@ const InfoEmailsPage: React.FC = () => {
             AlertMessages.getErrorMessage(err.message || `Failed to ${data.id ? 'update' : 'create'} email info`);
             return false;
         }
+    };
+
+    const handleToggleStatus = async (data: EmailInfoResponseModel) => {
+        const newStatus = data.status === 'active' ? 'inactive' : 'active';
+        const payload = {
+            ...data,
+            status: newStatus
+        };
+        await handleUpsertEmailInfo(payload);
     };
 
     const handleEdit = (data: EmailInfoResponseModel) => {
@@ -497,12 +518,13 @@ const InfoEmailsPage: React.FC = () => {
                                                     </div>
                                                 ) : (
                                                     <div className="overflow-x-auto">
-                                                        <table className="w-full text-left border-collapse">
+                                                        <table className="w-full text-center border-collapse border border-slate-200 dark:border-white/10">
                                                             <thead>
-                                                                <tr className="bg-slate-50/50 dark:bg-white/[0.01] border-b border-slate-50 dark:border-white/5">
-                                                                    <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Type</th>
-                                                                    <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Email Address</th>
-                                                                    <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                                                <tr className="bg-slate-50/50 dark:bg-white/[0.01]">
+                                                                    <th className="p-4 text-[9px] font-black text-center text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/10">Full Name</th>
+                                                                    <th className="p-4 text-[9px] font-black text-center text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/10">Email Address</th>
+                                                                    <th className="p-4 text-[9px] font-black text-center text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/10">Status</th>
+                                                                    <th className="p-4 text-[9px] font-black text-center text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/10">Actions</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -514,6 +536,7 @@ const InfoEmailsPage: React.FC = () => {
                                                                         employees={employees}
                                                                         onDelete={handleDeleteEmailInfo}
                                                                         onEdit={handleEdit}
+                                                                        onToggleStatus={handleToggleStatus}
                                                                     />
                                                                 ))}
                                                             </tbody>
